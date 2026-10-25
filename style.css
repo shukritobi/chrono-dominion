@@ -107,3 +107,9 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
   background:#21425a;border:1px solid #70aab6;border-radius:4px;
   color:#b7f4ef;text-decoration:none;font-size:12px;font-weight:800;letter-spacing:.8px}
 .menuToolLink:hover,.menuToolLink:focus-visible{background:#346476;color:#f4ffff;border-color:#9bf5e0}
+
+/* v1.3 optional procedural audio control */
+.soundToggle{min-width:63px;padding:7px 8px;font-size:10px;white-space:nowrap;letter-spacing:.7px;color:#a8bdca;border:1px solid #4b667c;background:#182d3d;border-radius:4px}
+.soundToggle[aria-pressed="true"]{color:#baf0d2;border-color:#68bcac;background:#244d47}
+.soundToggle:focus-visible{outline:2px solid #7de8d5;outline-offset:2px}
+@media(max-width:650px){.soundToggle{min-width:46px;padding:6px 3px;font-size:9px}}
