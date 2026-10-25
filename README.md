@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.9.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.0.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.0 Map Forge editor and custom skirmishes
+
+- **[Open Map Forge](map-editor.html)**: an interactive 34×34 map editor designed for desktop and touch devices. Paint water/land, place/remove ore, choose a terrain theme and start from one of three templates or a blank grid.
+- **Save & Play**: locally save a validated custom battlefield, then play it in the existing three-faction skirmish engine. The Custom Battlefield option appears automatically after saving a valid design.
+- **JSON import and export**: download or import a custom map backup; browser local storage holds one active custom design, not a cloud-synced map library.
+- **Spawn protection and map validation** prevent water from blocking starting bases, and enforce usable ore deposits.
+- **Saved-match compatibility**: saved battles now embed their authored map so that they remain playable even if the separate editor design is changed or deleted.
+- [v1.0 release notes](docs/RELEASE-1.0.md) | [Map Forge tests](tests/map-forge-v100.test.mjs).
 
 ## v0.9 battle reports and editable map data
 
