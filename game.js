@@ -3,6 +3,7 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const WORLD_SIZE = 34, TW = 64, TH = 32;
+  const SAVE_KEY='chrono-dominion-skirmish-v1';
   const COLORS = {
     coalition: {name:'COALITION FORCES',color:'#55c8e8',top:'#66879b',side:'#263e54',trim:'#8ce5ef',badge:'◈'},
     federation: {name:'IRON FEDERATION',color:'#e37665',top:'#8c7770',side:'#493b40',trim:'#f3a06d',badge:'★'},
@@ -54,7 +55,7 @@
       this.vehicleAtlases=null;
       if(window.ChronoVehicleArt){try{this.vehicleAtlases=window.ChronoVehicleArt.createAtlases();}catch(err){console.warn('Directional atlas fallback:',err);}}
       this.settings={playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'standard'};
-      this.setupEvents();this.resize();requestAnimationFrame(t=>this.frame(t));
+      this.setupEvents();this.resize();this.updateSaveButtons();requestAnimationFrame(t=>this.frame(t));
     }
     loadPilotSprites(){
       if(typeof Image==='undefined')return;
@@ -71,6 +72,9 @@
     setupEvents(){
       window.addEventListener('resize',()=>this.resize());
       window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(e.target?.closest?.('input,select,textarea'))return;
+        if(k==='f6'&&(this.state==='playing'||this.state==='paused')){e.preventDefault();this.saveGame();return;}
+        if(k==='f9'){e.preventDefault();this.loadGame();return;}
+        if(k==='s'&&e.ctrlKey&&(this.state==='playing'||this.state==='paused')){e.preventDefault();this.saveGame();return;}
         if(this.state==='playing'&&/^[1-9]$/.test(k)){
           e.preventDefault();
           if(e.ctrlKey){this.groups[k]=this.selected.filter(id=>{const unit=this.entityById(id);return unit&&unit.owner===0&&unit.type==='unit';});this.notify('Group '+k+' assigned ('+this.groups[k].length+' units)');}
@@ -102,10 +106,83 @@
       $('restart').onclick=()=>this.newMatch(this.settings);
       $('quit').onclick=()=>this.returnMenu();$('resultQuit').onclick=()=>this.returnMenu();
       $('playAgain').onclick=()=>this.newMatch(this.settings);
+      $('saveGame').onclick=()=>this.saveGame();
+      $('loadMain').onclick=()=>this.loadGame();
+      $('loadPaused').onclick=()=>this.loadGame();
     }
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
-    returnMenu(){this.state='menu';this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateUI(true);}
-    pause(){if(this.state==='playing'){this.state='paused';this.showMenu('pauseMenu');}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
+    returnMenu(){this.state='menu';this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
+    pause(){if(this.state==='playing'){this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
+    hasSave(){
+      try{return typeof localStorage!=='undefined'&&!!localStorage.getItem(SAVE_KEY);}
+      catch(err){return false;}
+    }
+    updateSaveButtons(){
+      for(const name of ['loadMain','loadPaused'])$(name).disabled=!this.hasSave();
+    }
+    saveGame(){
+      if(this.state!=='playing'&&this.state!=='paused')return false;
+      if(typeof localStorage==='undefined'){this.notify('Browser storage is unavailable');return false;}
+      const state={
+        version:1,createdAt:new Date().toISOString(),settings:this.settings,
+        players:this.players,entities:this.entities,ores:this.ores,queues:this.queues,
+        projectiles:this.projectiles,particles:this.particles,
+        time:this.time,nextAI:this.nextAI,nextId:this.nextId,
+        selected:this.selected,groups:this.groups,camera:this.camera,
+        fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
+      };
+      try{
+        localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+        this.updateSaveButtons();this.notify('Skirmish saved in this browser');return true;
+      }catch(err){this.notify('Unable to save: browser storage unavailable or full');return false;}
+    }
+    loadGame(){
+      if(typeof localStorage==='undefined'){this.notify('Browser storage is unavailable');return false;}
+      let saved;
+      try{saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}
+      catch(err){this.notify('Saved game is unreadable');return false;}
+      if(!saved){this.notify('No saved skirmish in this browser');return false;}
+      const validFaction=x=>Object.hasOwn(COLORS,x);
+      // Validate before mutating the current game. A broken older snapshot must never destroy a live session.
+      const valid= saved.version===1&&saved.settings&&
+        validFaction(saved.settings.playerFaction)&&validFaction(saved.settings.enemyFaction)&&
+        ['verdant','desert','snow'].includes(saved.settings.map)&&
+        ['recruit','standard','veteran'].includes(saved.settings.difficulty)&&
+        Array.isArray(saved.players)&&saved.players.length===2&&saved.players.every(p=>p&&validFaction(p.faction)&&Number.isFinite(p.credits)&&p.credits>=0)&&
+        Array.isArray(saved.entities)&&saved.entities.length<2000&&
+        saved.entities.every(e=>e&&Number.isInteger(e.id)&&e.id>0&&(e.owner===0||e.owner===1)&&
+          (Object.hasOwn(BUILD,e.kind)||Object.hasOwn(UNITS,e.kind))&&
+          Number.isFinite(e.x)&&Number.isFinite(e.y)&&e.x>=0&&e.y>=0&&e.x<=WORLD_SIZE&&e.y<=WORLD_SIZE&&
+          Number.isFinite(e.hp)&&Number.isFinite(e.maxHp)&&e.maxHp>0)&&
+        Array.isArray(saved.ores)&&saved.ores.length<=5000&&
+        Array.isArray(saved.queues)&&saved.queues.length<=200&&
+        Array.isArray(saved.fog)&&saved.fog.length===WORLD_SIZE&&
+        saved.fog.every(row=>Array.isArray(row)&&row.length===WORLD_SIZE);
+      if(!valid){this.notify('Saved game is incompatible with this version');return false;}
+      this.settings={...saved.settings};
+      this.players=saved.players.map(p=>({...p}));
+      this.entities=saved.entities.map(e=>({...e}));
+      this.ores=saved.ores.map(o=>({...o}));
+      this.queues=saved.queues.map(q=>({...q}));
+      this.projectiles=Array.isArray(saved.projectiles)?saved.projectiles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
+      this.particles=Array.isArray(saved.particles)?saved.particles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
+      this.time=Number.isFinite(saved.time)?Math.max(0,saved.time):0;
+      this.nextAI=Number.isFinite(saved.nextAI)?Math.max(this.time,saved.nextAI):this.time+5;
+      this.nextId=Math.max(...this.entities.map(e=>e.id),0)+1;
+      this.selected=Array.isArray(saved.selected)?saved.selected.filter(id=>this.entities.some(e=>e.id===id&&e.hp>0)):[];
+      this.groups=saved.groups&&typeof saved.groups==='object'?saved.groups:{};
+      this.camera=saved.camera&&Number.isFinite(saved.camera.x)&&Number.isFinite(saved.camera.y)&&Number.isFinite(saved.camera.zoom)?{
+        x:clamp(saved.camera.x,-1020,1020),y:clamp(saved.camera.y,50,1080),zoom:clamp(saved.camera.zoom,.65,1.8)
+      }:{x:0,y:370,zoom:1};
+      this.fog=saved.fog.map(row=>row.map(seen=>({seen:!!seen,visible:false})));
+      this.placing=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;
+      this.keys.clear();this.nextUi=0;this.nextFog=0;
+      this.state='playing';
+      for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
+      this.updateFog();this.updateUI(true);this.updateSaveButtons();
+      $('overlay').classList.add('hidden');
+      this.notify('Saved skirmish loaded');return true;
+    }
     centerHQ(){
       const h=this.entities.find(e=>e.owner===0&&e.kind==='hq'&&e.hp>0);
       if(h){const p=iso(h.x,h.y);this.camera.x=p.x;this.camera.y=p.y;}
@@ -140,7 +217,7 @@
         this.add(side,'tank',a.x+4*sign,a.y+5*sign);
         const h=this.add(side,'harvester',a.x+2*sign,a.y+5*sign);h.order={type:'harvest'};
       }
-      this.updateFog();$('overlay').classList.add('hidden');this.updateUI(true);this.notify('Command established. Construct a War Factory to build tanks.');
+      this.updateFog();$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
     }
     initMap(){
       const oreSites=[[10,12],[13,15],[18,17],[23,21],[25,24],[19,11],[12,21]];
@@ -712,6 +789,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.4.0',build:'combat-and-economy'};
+  window.ChronoDominion={version:'0.5.0',build:'save-and-strategy'};
   new Game();
 })();
