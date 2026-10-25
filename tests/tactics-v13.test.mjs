@@ -78,8 +78,8 @@ assert.ok(Math.hypot(a.x-b.x,a.y-b.y)>.2,'squad units keep separation');
 
 // Flanking uses navigable points on opposite sides of a remembered goal.
 g.water=()=>false;
-const origin={x:27,y:24},memory={x:10,y:12};
-const left=g.chooseFlank(origin,memory,0),right=g.chooseFlank(origin,memory,1);
+const origin={x:27,y:24},enemyReport={x:10,y:12};
+const left=g.chooseFlank(origin,enemyReport,0),right=g.chooseFlank(origin,enemyReport,1);
 assert.ok(left&&right,'AI chooses two reachable flanks');
 assert.notEqual(left.x+','+left.y,right.x+','+right.y,'different squads use different sides');
 assert.ok(g.walkable(left.x,left.y)&&g.walkable(right.x,right.y));
