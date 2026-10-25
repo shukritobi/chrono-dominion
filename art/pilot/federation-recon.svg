@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Original Iron Patrol isometric recon vehicle">
+<defs><linearGradient id="armor" x1=".1" y1="0" x2=".85" y2="1"><stop stop-color="#ba8470"/><stop offset=".55" stop-color="#865145"/><stop offset="1" stop-color="#392b2d"/></linearGradient>
+<radialGradient id="shadow"><stop stop-color="#041020" stop-opacity=".63"/><stop offset="1" stop-color="#041020" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="80" cy="126" rx="66" ry="20" fill="url(#shadow)"/>
+<path d="M25 98L63 72 131 93 91 128Z" fill="#392b2d" stroke="#152838" stroke-width="4"/>
+<path d="M25 98L91 128 91 141 24 110Z M91 128L131 93 130 110 91 141Z" fill="#392b2d" stroke="#152334" stroke-width="3"/>
+<path d="M27 104L44 112 44 124 27 117Z M111 110L132 99 132 113 111 126Z" fill="#202b34"/>
+<path d="M34 95L67 72 123 92 91 120Z" fill="url(#armor)" stroke="#392b2d" stroke-width="3"/>
+<path d="M44 93L69 78 104 90 81 106Z" fill="#ba8470" stroke="#392b2d" stroke-width="2"/>
+<path d="M50 106L82 120 115 100" fill="none" stroke="#f6ae64" stroke-width="3"/>
+<path d="M39 97L43 91 52 95 47 103Z M113 98L122 94 126 98 119 103Z" fill="#f6ae64"/>
+<path d="M54 76L71 65 92 71 101 84 81 96 58 90Z" fill="url(#armor)" stroke="#392b2d" stroke-width="3"/>
+<path d="M61 80L73 70 92 76 85 87Z" fill="#223e53" stroke="#f6ae64" stroke-width="2"/>
+<path d="M51 57L51 28 62 22 73 29 72 60Z" fill="#70493e" stroke="#3b2f30" stroke-width="3"/><path d="M53 29L62 25 70 31" fill="none" stroke="#ffb970" stroke-width="3"/><path d="M93 61L130 45 138 52 98 76Z" fill="#665b57" stroke="#382f2f" stroke-width="4"/><path d="M130 45L143 42 147 52 138 56Z" fill="#34333a" stroke="#eaa16b" stroke-width="2"/><path d="M52 38L42 17 M69 32L70 10" stroke="#f3ac62" stroke-width="3"/><circle cx="70" cy="10" r="4" fill="#ffa85a"/>
+<path d="M31 109L91 136 126 109" fill="none" stroke="#f6ae64" opacity=".65" stroke-width="2"/>
+</svg>
