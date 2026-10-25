@@ -1,4 +1,4 @@
-/* Chrono Dominion v0.9 — battle statistics, map files and reconnaissance patrols. */
+/* Chrono Dominion v1.0 — editable battlefields, map validation and skirmish tools. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -72,6 +72,7 @@
       if(window.ChronoVehicleArt){try{this.vehicleAtlases=window.ChronoVehicleArt.createAtlases();}catch(err){console.warn('Directional atlas fallback:',err);}}
       this.loadRenderedAtlases();
       this.settings={playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'standard'};
+      this.refreshCustomMap();
       this.setupEvents();this.resize();this.updateSaveButtons();requestAnimationFrame(t=>this.frame(t));
     }
     loadPilotSprites(){
@@ -172,6 +173,25 @@
       $('loadMain').onclick=()=>this.loadGame();
       $('loadPaused').onclick=()=>this.loadGame();
     }
+    installCustomMap(map){
+      if(!window.ChronoMaps?.validate(map).valid)return false;
+      const copy=JSON.parse(JSON.stringify(map));
+      Object.defineProperty(copy,'_waterSet',{value:new Set(copy.waterTiles.map(p=>p.join(','))),enumerable:false});
+      MAPS.custom=copy;
+      const option=$('mapSelect').querySelector('option[value="custom"]');
+      if(option){option.disabled=false;option.textContent='CUSTOM · '+copy.name.toUpperCase();}
+      return true;
+    }
+    refreshCustomMap(){
+      if(!window.ChronoMaps)return false;
+      const custom=window.ChronoMaps.load();
+      const installed=custom&&this.installCustomMap(custom);
+      if(installed&&typeof location!=='undefined'){
+        try{if(new URLSearchParams(location.search).get('map')==='custom')$('mapSelect').value='custom';}
+        catch(err){/* Browser URL unavailable in embedded tests. */}
+      }
+      return !!installed;
+    }
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
     returnMenu(){this.state='menu';this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
     pause(){if(this.state==='playing'){this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
@@ -191,6 +211,7 @@
         projectiles:this.projectiles,particles:this.particles,
         time:this.time,nextAI:this.nextAI,nextId:this.nextId,
         selected:this.selected,groups:this.groups,camera:this.camera,stats:this.stats,
+        customMap:this.settings.map==='custom'?MAPS.custom:null,
         fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
       };
       try{
@@ -205,10 +226,13 @@
       catch(err){this.notify('Saved game is unreadable');return false;}
       if(!saved){this.notify('No saved skirmish in this browser');return false;}
       const validFaction=x=>Object.hasOwn(COLORS,x);
+      const loadedCustom=saved?.settings?.map==='custom'&&(saved.customMap||MAPS.custom);
+      const validMap=Object.hasOwn(MAPS,saved?.settings?.map)||
+        (saved?.settings?.map==='custom'&&window.ChronoMaps?.validate(loadedCustom)?.valid);
       // Validate before mutating the current game. A broken older snapshot must never destroy a live session.
       const valid= saved.version===1&&saved.settings&&
         validFaction(saved.settings.playerFaction)&&validFaction(saved.settings.enemyFaction)&&
-        ['verdant','desert','snow'].includes(saved.settings.map)&&
+        validMap&&
         ['recruit','standard','veteran'].includes(saved.settings.difficulty)&&
         Array.isArray(saved.players)&&saved.players.length===2&&saved.players.every(p=>p&&validFaction(p.faction)&&Number.isFinite(p.credits)&&p.credits>=0)&&
         Array.isArray(saved.entities)&&saved.entities.length<2000&&
@@ -221,6 +245,7 @@
         Array.isArray(saved.fog)&&saved.fog.length===WORLD_SIZE&&
         saved.fog.every(row=>Array.isArray(row)&&row.length===WORLD_SIZE);
       if(!valid){this.notify('Saved game is incompatible with this version');return false;}
+      if(saved.settings.map==='custom'&&loadedCustom)this.installCustomMap(loadedCustom);
       this.settings={...saved.settings};
       this.players=saved.players.map(p=>({...p}));
       this.stats=Array.isArray(saved.stats)&&saved.stats.length===2?saved.stats.map(v=>({...this.newStats(),...v})): [this.newStats(),this.newStats()];
@@ -277,7 +302,7 @@
       const width=canvas.width||272,height=canvas.height||144;
       const sx=width/WORLD_SIZE,sy=height/WORLD_SIZE;
       ctx.clearRect(0,0,width,height);
-      const colors=terrain[map]||terrain.verdant;
+      const colors=terrain[cfg.theme||map]||terrain.verdant;
       for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){
         const filled=this.water(x+.5,y+.5,map);
         ctx.fillStyle=filled?cfg.waterColor:colors[Math.floor(rand(x,y)*colors.length)];
@@ -294,6 +319,7 @@
       ctx.strokeStyle='#7191a9';ctx.lineWidth=1;ctx.strokeRect(.5,.5,width-1,height-1);
     }
     newMatch(s){
+      if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
@@ -319,6 +345,8 @@
     }
     water(x,y,map=this.settings.map){
       const def=MAPS[map]||MAPS.verdant;
+      if(def._waterSet)return def._waterSet.has(Math.floor(x)+','+Math.floor(y));
+      if(Array.isArray(def.waterTiles))return def.waterTiles.some(([tx,ty])=>tx===Math.floor(x)&&ty===Math.floor(y));
       return (def.waterRects||[]).some(rect=>x>rect[0]&&x<rect[1]&&y>rect[2]&&y<rect[3]);
     }
     buildingAt(x,y){return this.entities.find(e=>e.type==='building'&&e.hp>0&&Math.abs(e.x-x)<1.7&&Math.abs(e.y-y)<1.7);}
@@ -1090,12 +1118,12 @@
       const p=iso(x,y),c=this.ctx;c.beginPath();c.moveTo(p.x,p.y-TH/2);c.lineTo(p.x+TW/2,p.y);c.lineTo(p.x,p.y+TH/2);c.lineTo(p.x-TW/2,p.y);c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=.55;c.stroke();}
     }
     drawTerrain(){
-      const c=this.ctx,palette=terrain[this.settings.map]||terrain.verdant;
+      const c=this.ctx,palette=terrain[(MAPS[this.settings.map]||MAPS.verdant).theme||this.settings.map]||terrain.verdant;
       for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){
         const r=rand(x,y),water=this.water(x+.5,y+.5);
         this.drawDiamond(x+.5,y+.5,water?(MAPS[this.settings.map]||MAPS.verdant).waterColor:palette[Math.floor(r*palette.length)],'#091e243b');
         if(water&&r>.7){const p=iso(x+.5,y+.5);c.strokeStyle='#77b9c580';c.beginPath();c.moveTo(p.x-9,p.y);c.lineTo(p.x+6,p.y-3);c.stroke();}
-        else if(!water&&r>.965){const p=iso(x+.5,y+.5);c.fillStyle='#223c34';c.beginPath();c.ellipse(p.x,p.y-3,4,2,0,0,Math.PI*2);c.fill();c.fillStyle=this.settings.map==='snow'?'#d7dfe0':'#294f3e';c.beginPath();c.moveTo(p.x-5,p.y-4);c.lineTo(p.x,p.y-16);c.lineTo(p.x+6,p.y-4);c.fill();}
+        else if(!water&&r>.965){const p=iso(x+.5,y+.5);c.fillStyle='#223c34';c.beginPath();c.ellipse(p.x,p.y-3,4,2,0,0,Math.PI*2);c.fill();c.fillStyle=(MAPS[this.settings.map]?.theme||this.settings.map)==='snow'?'#d7dfe0':'#294f3e';c.beginPath();c.moveTo(p.x-5,p.y-4);c.lineTo(p.x,p.y-16);c.lineTo(p.x+6,p.y-4);c.fill();}
       }
       for(const o of this.ores){if(o.amount<=0)continue;const p=iso(o.x,o.y),n=Math.min(4,Math.ceil(o.amount/350));
         for(let k=0;k<n;k++){const dx=(rand(k,o.x,11)-.5)*17,dy=(rand(k,o.y,12)-.5)*8;c.fillStyle=k%3===0?'#bdf0d1':'#dfab65';c.strokeStyle='#604b30';c.lineWidth=.6;c.beginPath();c.moveTo(p.x+dx,p.y+dy-11);c.lineTo(p.x+dx+7,p.y+dy-2);c.lineTo(p.x+dx,p.y+dy+2);c.lineTo(p.x+dx-5,p.y+dy-3);c.closePath();c.fill();c.stroke();}
@@ -1243,6 +1271,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.9.0',build:'battle-results-and-patrols'};
+  window.ChronoDominion={version:'1.0.0',build:'map-forge'};
   new Game();
 })();
