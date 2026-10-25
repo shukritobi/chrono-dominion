@@ -46,7 +46,7 @@
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.orders=[];this.queues=[];this.nextId=1;
-      this.selected=[];this.dragStart=null;this.dragEnd=null;this.placing=null;this.tab='structures';
+      this.selected=[];this.groups={};this.dragStart=null;this.dragEnd=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
       this.sprites={};this.loadPilotSprites();
@@ -63,7 +63,16 @@
     }
     setupEvents(){
       window.addEventListener('resize',()=>this.resize());
-      window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(this.placing){this.placing=null;this.updateUI(true);}else if(this.state==='playing'||this.state==='paused')this.pause();}});
+      window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(e.target?.closest?.('input,select,textarea'))return;
+        if(this.state==='playing'&&/^[1-9]$/.test(k)){
+          e.preventDefault();
+          if(e.ctrlKey){this.groups[k]=this.selected.filter(id=>{const unit=this.entityById(id);return unit&&unit.owner===0&&unit.type==='unit';});this.notify('Group '+k+' assigned ('+this.groups[k].length+' units)');}
+          else {this.selected=(this.groups[k]||[]).filter(id=>{const unit=this.entityById(id);return unit&&unit.owner===0;});this.updateSelection();if(e.shiftKey)this.centerSelection();}
+          return;
+        }
+        if(this.state==='playing'&&k==='h'){this.centerHQ();return;}
+        if(this.state==='playing'&&k===' '){e.preventDefault();this.centerSelection();return;}
+        this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(this.placing){this.placing=null;this.updateUI(true);}else if(this.state==='playing'||this.state==='paused')this.pause();}});
       window.addEventListener('keyup',e=>this.keys.delete(e.key.toLowerCase()));
       this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
       this.canvas.addEventListener('pointerdown',e=>this.pointerDown(e));
@@ -86,6 +95,17 @@
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
     returnMenu(){this.state='menu';this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateUI(true);}
     pause(){if(this.state==='playing'){this.state='paused';this.showMenu('pauseMenu');}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
+    centerHQ(){
+      const h=this.entities.find(e=>e.owner===0&&e.kind==='hq'&&e.hp>0);
+      if(h){const p=iso(h.x,h.y);this.camera.x=p.x;this.camera.y=p.y;}
+    }
+    centerSelection(){
+      const live=this.selected.map(id=>this.entityById(id)).filter(Boolean);
+      if(!live.length)return;
+      const x=live.reduce((n,e)=>n+e.x,0)/live.length;
+      const y=live.reduce((n,e)=>n+e.y,0)/live.length;
+      const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;
+    }
     resize(){const b=this.canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);this.w=b.width;this.h=b.height;this.dpr=d;this.canvas.width=Math.round(this.w*d);this.canvas.height=Math.round(this.h*d);}
     add(owner,kind,x,y,built=true){
       const def=BUILD[kind]||UNITS[kind];const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:def.hp,maxHp:def.hp,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0};
@@ -93,7 +113,7 @@
     }
     newMatch(s){
       this.settings={...s};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.queues=[];this.selected=[];this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.queues=[];this.selected=[];this.groups={};this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:5000},{faction:s.enemyFaction,credits:5000}];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
@@ -150,7 +170,7 @@
       return {x,y,gx:wx/TW+wy/TH,gy:wy/TH-wx/TW};
     }
     pointerDown(e){if(this.state!=='playing')return;const p=this.pointerPosition(e);this.mouse={x:p.x,y:p.y,worldX:p.gx,worldY:p.gy};
-      if(e.button===2){e.preventDefault();if(this.placing){this.placing=null;this.updateUI(true);}else this.command(p);return;}
+      if(e.button===2){e.preventDefault();if(this.placing){this.placing=null;this.updateUI(true);}else this.command(p,e);return;}
       if(e.button!==0)return;this.dragStart=p;this.dragEnd=p;this.canvas.setPointerCapture?.(e.pointerId);
     }
     pointerMove(e){const p=this.pointerPosition(e);this.mouse={x:p.x,y:p.y,worldX:p.gx,worldY:p.gy};if(this.dragStart)this.dragEnd=p;}
@@ -165,11 +185,11 @@
     }
     screen(x,y){const p=iso(x,y);return{x:this.w/2+(p.x-this.camera.x)*this.camera.zoom,y:this.h/2+(p.y-this.camera.y)*this.camera.zoom};}
     pick(x,y){let best=null,bd=Infinity;for(const e of this.entities){if(e.hp<=0||e.owner===1&&!this.isVisible(e.x,e.y))continue;const d=Math.hypot(x-e.x,y-e.y);const hit=e.type==='building'?1.75:1.07;if(d<hit&&d<bd){best=e;bd=d;}}return best;}
-    command(p){
+    command(p,event){
       const chosen=this.entities.filter(e=>this.selected.includes(e.id)&&e.owner===0&&e.type==='unit'&&e.hp>0);if(!chosen.length)return;
       const enemy=this.pick(p.gx,p.gy);const target=enemy&&enemy.owner===1?enemy:null;
       for(let i=0;i<chosen.length;i++){const e=chosen[i],offset=(i-(chosen.length-1)/2)*.65;
-        e.order=target?{type:'attack',id:target.id}:{type:'move',x:clamp(p.gx+offset,1,32),y:clamp(p.gy+offset*.55,1,32)};
+        e.order=target?{type:'attack',id:target.id}:{type:event?.shiftKey?'attackMove':'move',x:clamp(p.gx+offset,1,32),y:clamp(p.gy+offset*.55,1,32)};
       }
       this.particles.push({x:p.gx,y:p.gy,life:.65,color:target?'#ff7c7c':'#80dbee',type:'marker'});
     }
@@ -293,7 +313,7 @@
           if(!target)target=this.nearest(e,b=>b.owner!==e.owner&&b.built,UNITS[e.kind].range+2.0);
           const range=UNITS[e.kind].range;
           if(target){if(dist(e,target)>range)this.move(e,target.x,target.y,dt);else if(e.ready<=0)this.shoot(e,target);}
-          else if(command?.type==='move'){if(this.move(e,command.x,command.y,dt))e.order=null;}
+          else if(command?.type==='move'||command?.type==='attackMove'){if(this.move(e,command.x,command.y,dt))e.order=null;}
           else if(e.owner===1){const home=this.nearest(e,b=>b.owner===0&&b.type==='building');if(home)this.move(e,home.x,home.y,dt);}
         }else if(BUILD[e.kind].damage&&!this.power(e.owner).low){
           const def=BUILD[e.kind];const target=this.nearest(e,b=>b.owner!==e.owner&&b.type==='unit'&&b.built,def.range);
