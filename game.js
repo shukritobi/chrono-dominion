@@ -49,7 +49,9 @@
       this.selected=[];this.groups={};this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
-      this.sprites={};this.loadPilotSprites();
+      this.sprites={};this.buildingSprites={};this.loadPilotSprites();
+      this.vehicleAtlases=null;
+      if(window.ChronoVehicleArt){try{this.vehicleAtlases=window.ChronoVehicleArt.createAtlases();}catch(err){console.warn('Directional atlas fallback:',err);}}
       this.settings={playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'standard'};
       this.setupEvents();this.resize();requestAnimationFrame(t=>this.frame(t));
     }
@@ -59,6 +61,8 @@
       for(const [faction,file] of Object.entries(files)){
         const img=new Image();img.decoding='async';img.src='./art/pilot/'+file+'.svg';
         this.sprites[faction]=img;
+        const power=new Image();power.decoding='async';power.src='./art/pilot/'+faction+'-power.svg';
+        this.buildingSprites[faction]=power;
       }
     }
     setupEvents(){
@@ -112,6 +116,7 @@
     resize(){const b=this.canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);this.w=b.width;this.h=b.height;this.dpr=d;this.canvas.width=Math.round(this.w*d);this.canvas.height=Math.round(this.h*d);}
     add(owner,kind,x,y,built=true){
       const def=BUILD[kind]||UNITS[kind];const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:def.hp,maxHp:def.hp,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0};
+      if(e.type==='unit'){e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;}
       this.entities.push(e);return e;
     }
     newMatch(s){
@@ -311,6 +316,8 @@
       else if(clear(e.x,e.y+vy)){e.y+=vy;e.stuck=0;}
       else {e.stuck=(e.stuck||0)+dt;if(e.stuck>.45){e.pathRecheck=0;e.stuck=0;}}
       e.heading=Math.atan2(dy*TH,dx*TW);
+      e.worldHeading=Math.atan2(dy,dx);
+      if(e.type==='unit'&&e.kind!=='harvester'&&!e.engaging)e.turretHeading=e.worldHeading;
       d=Math.hypot(tx-e.x,ty-e.y);
       return d<.24;
     }
@@ -353,6 +360,8 @@
           let target=command?.type==='attack'?this.entityById(command.id):null;
           if(!target)target=this.nearest(e,b=>b.owner!==e.owner&&b.built,UNITS[e.kind].range+2.0);
           const range=UNITS[e.kind].range;
+          e.engaging=!!target;
+          if(target)e.turretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){if(dist(e,target)>range)this.move(e,target.x,target.y,dt);else if(e.ready<=0)this.shoot(e,target);}
           else if(command?.type==='move'||command?.type==='attackMove'){if(this.move(e,command.x,command.y,dt))e.order=null;}
           else if(e.owner===1){const home=this.nearest(e,b=>b.owner===0&&b.type==='building');if(home)this.move(e,home.x,home.y,dt);}
@@ -442,7 +451,15 @@
     drawBuilding(e){
       const c=this.ctx,pal=COLORS[this.players[e.owner].faction],p=iso(e.x,e.y),h=(e.kind==='hq'?44:e.kind==='radar'?36:e.kind==='generator'?27:24)*Math.max(.25,e.construction);
       const shape=(pts,color)=>{c.beginPath();c.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)c.lineTo(...pts[i]);c.closePath();c.fillStyle=color;c.fill();};
-      c.save();c.translate(p.x,p.y);c.fillStyle='#050e17a3';c.beginPath();c.ellipse(6,5,54,20,0,0,Math.PI*2);c.fill();
+      c.save();c.translate(p.x,p.y);
+      const powerImage=e.kind==='generator'?this.buildingSprites[this.players[e.owner].faction]:null;
+      if(powerImage&&powerImage.complete&&powerImage.naturalWidth>0){
+        if(this.selected.includes(e.id))this.drawRing(0,2,51,pal.color);
+        c.save();c.globalAlpha=e.built?1:Math.max(.25,e.construction*.85);c.drawImage(powerImage,-72,-131,144,144);c.restore();
+        if(!e.built){c.fillStyle=pal.color;c.fillRect(-32,-9,64*e.construction,4);}
+        this.health(e,0,-114,62);c.restore();return;
+      }
+      c.fillStyle='#050e17a3';c.beginPath();c.ellipse(6,5,54,20,0,0,Math.PI*2);c.fill();
       const a=[0,-25],b=[45,-3],d=[0,19],left=[-45,-3];
       shape([[left[0],left[1]],[d[0],d[1]],[d[0],d[1]-h],[left[0],left[1]-h]],pal.side);
       shape([[d[0],d[1]],[b[0],b[1]],[b[0],b[1]-h],[d[0],d[1]-h]],'#192536');
@@ -466,6 +483,15 @@
     health(e,x,y,width){if(e.hp>=e.maxHp*.99)return;const c=this.ctx;c.fillStyle='#0e1622';c.fillRect(x-width/2,y,width,5);c.fillStyle=e.hp/e.maxHp>.4?'#77d381':'#e7776a';c.fillRect(x-width/2+1,y+1,(width-2)*Math.max(0,e.hp/e.maxHp),3);}
     drawUnit(e){
       const c=this.ctx,p=iso(e.x,e.y),pal=COLORS[this.players[e.owner].faction];c.save();c.translate(p.x,p.y);
+      const atlas=(e.kind==='tank')?this.vehicleAtlases?.[this.players[e.owner].faction]:null;
+      if(atlas?.hull&&atlas?.turret){
+        const art=window.ChronoVehicleArt,srcSize=art.frameSize,cols=art.columns;
+        const hullFrame=art.frameIndex(e.worldHeading),turretFrame=art.frameIndex(e.turretHeading??e.worldHeading);
+        const drawLayer=(sheet,frame)=>c.drawImage(sheet,(frame%cols)*srcSize,Math.floor(frame/cols)*srcSize,srcSize,srcSize,-49,-80,98,98);
+        if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
+        drawLayer(atlas.hull,hullFrame);drawLayer(atlas.turret,turretFrame);
+        this.health(e,0,-75,43);c.restore();return;
+      }
       const pilot=e.kind==='tank'?this.sprites[this.players[e.owner].faction]:null;
       if(pilot&&pilot.complete&&pilot.naturalWidth>0){
         if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
@@ -531,6 +557,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.2.1',build:'original-sprite-pilot'};
+  window.ChronoDominion={version:'0.3.0',build:'directional-atlas-pilot'};
   new Game();
 })();
