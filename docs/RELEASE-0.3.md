@@ -5,6 +5,7 @@
 - Generates 32 sprite frames for *each tank hull* and 32 for *each tank turret*, across Coalition, Federation and Psionic factions. That is **192 runtime frames**, generated from consistent geometric source rather than independently guessed angles.
 - Independent tank turret facing, automatically aimed at the current combat target.
 - Three original single-angle isometric power-generator SVGs: Fusion Array, Thermal Reactor and Bio Reactor.
+- Three original single-angle infantry SVG pilots: Coalition Ranger, Federation Rifleman and Psionic Acolyte.
 - These generator sprites render on the battlefield when the building is constructed.
 - Faction-specific tank and reactor thumbnails in the production sidebar.
 - Source art metadata registry at `art/manifest.json`.
@@ -12,6 +13,7 @@
 
 ## Important limitations
 - The 192 frames are currently **procedurally generated low-poly vector art**. They are not detailed Blender renders or exported professional sprites. Production atlas replacement remains next.
+- Infantry SVG sprites do not rotate yet or support moving/attacking/death animation states.
 - Tank rotation changes instantly to the direction of travel, without easing or track animation.
 - Reactors have only idle poses. Damage and construction are opacity/progress overlays, not finished bespoke frames.
 - No original commercial-game models, sprites or music are used.
