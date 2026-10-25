@@ -37,3 +37,10 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .hidden{display:none!important}
 @media(max-width:850px){#sidebar{width:207px;min-width:207px}.radarFrame{padding:6px}#radar{height:120px}.factionBox{padding:7px}#factionName{font-size:10px}.production{gap:4px;padding:5px}.buildItem{height:95px}.itemIcon{font-size:23px}.itemTitle{font-size:9px}.resources{gap:7px;font-size:11px}.brand{font-size:14px}#hint{font-size:9px;white-space:normal;width:90%;text-align:center}}
 @media(max-width:550px){#sidebar{width:145px;min-width:145px}#radar{height:95px}.factionBox{padding:5px;gap:5px}#factionBadge{width:24px;height:24px;font-size:13px}#factionInfo{display:none}.tabs span{font-size:7px}.buildItem{height:81px}.itemIcon{font-size:18px}.itemCost{font-size:10px}.itemTitle{font-size:8px}.selection{min-height:88px;padding:7px}#topbar{height:50px;padding:0 7px}.brand{font-size:11px;letter-spacing:0}.resources{font-size:10px;gap:5px}#army{display:none}#hint{display:none}.menu{padding:20px}.menu h1{font-size:45px}}
+
+/* v0.3 illustrated production thumbnails */
+.buildItem .itemAsset{display:block;width:68px;height:62px;object-fit:contain;filter:drop-shadow(0 4px 4px #07101dcc);pointer-events:none}
+.buildItem:focus-visible{outline:2px solid #8ddded;outline-offset:2px}
+.buildItem .itemTitle{position:relative;z-index:1}
+@media(max-width:850px){.buildItem .itemAsset{width:48px;height:44px}}
+@media(max-width:550px){.buildItem .itemAsset{width:39px;height:35px}}
