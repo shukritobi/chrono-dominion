@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "release": "0.3.0",
+  "assetLicenseStatus": "original artwork; redistribution license undecided",
+  "artDirection": "orthographic isometric retro-futurist",
+  "runtime": {
+    "vehicleAtlas": {
+      "renderer": "art/vehicle-renderer.js",
+      "framesPerFacing": 1,
+      "directions": 32,
+      "rows": 4,
+      "columns": 8,
+      "frameSize": [
+        128,
+        128
+      ],
+      "renderedLayers": [
+        "hull",
+        "turret"
+      ],
+      "sourceType": "procedural 3D-style vector projections"
+    },
+    "generator": {
+      "frameSize": [
+        160,
+        160
+      ],
+      "states": [
+        "idle"
+      ],
+      "sourceType": "hand-authored SVG"
+    }
+  },
+  "assets": [
+    {
+      "id": "COA-VEH-001",
+      "name": "Lynx Tank",
+      "faction": "coalition",
+      "role": "tank",
+      "concept": "art/pilot/coalition-lynx.svg",
+      "runtime": "generated:coalition.hull+turret"
+    },
+    {
+      "id": "FED-VEH-001",
+      "name": "Bull Tank",
+      "faction": "federation",
+      "role": "tank",
+      "concept": "art/pilot/federation-bull.svg",
+      "runtime": "generated:federation.hull+turret"
+    },
+    {
+      "id": "PSI-VEH-001",
+      "name": "Viper Tank",
+      "faction": "psionic",
+      "role": "tank",
+      "concept": "art/pilot/psionic-viper.svg",
+      "runtime": "generated:psionic.hull+turret"
+    },
+    {
+      "id": "CD-COA-POWER",
+      "name": "Fusion Array",
+      "faction": "coalition",
+      "role": "generator",
+      "file": "art/pilot/coalition-power.svg"
+    },
+    {
+      "id": "CD-FED-POWER",
+      "name": "Thermal Reactor",
+      "faction": "federation",
+      "role": "generator",
+      "file": "art/pilot/federation-power.svg"
+    },
+    {
+      "id": "CD-PSI-POWER",
+      "name": "Bio Reactor",
+      "faction": "psionic",
+      "role": "generator",
+      "file": "art/pilot/psionic-power.svg"
+    }
+  ],
+  "qualityNotes": [
+    "Directional tank atlas has correct 32 facing frames and an independently aimable turret.",
+    "Generator SVGs are single-state placeholders; animated damage/idle states remain planned.",
+    "Final Blender-based high-detail source models and cinematic images remain concept references, not these runtime sprites."
+  ]
+}
