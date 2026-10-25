@@ -53,3 +53,19 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .buildActions button[data-action="sell"]{border-color:#a28b57;color:#efd39c}
 .buildActions button:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:550px){.selection{min-height:116px}.buildActions{flex-direction:column;gap:4px}.buildActions button{min-height:27px;font-size:9px}}
+
+/* v0.6 tactics and production queue */
+.selection{min-height:132px;max-height:194px}
+.unitActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px}
+.unitActions button{min-height:30px;padding:4px 2px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:.2px}
+.unitActions button.chosen{border-color:#76cace;background:#2c5a62;color:#e0feff}
+.queueList{flex-shrink:0;min-height:42px;max-height:100px;overflow-y:auto;background:#0b1a2c;border-top:2px solid #405d75;padding:5px 8px}
+.queueList .queueHeader{font-size:9px;letter-spacing:1.6px;color:#8fb2c7;margin-bottom:3px}
+.queueList .queueEmpty{font-size:10px;color:#6c879c;padding:3px 0}
+.queueEntry{display:grid;grid-template-columns:minmax(0,1fr) 48px 22px;gap:6px;align-items:center;margin:4px 0}
+.queueEntry .name{font-size:10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.queueEntry .percent{font:10px Consolas,monospace;color:#85d5b0;text-align:right}
+.queueEntry button{height:22px;border-radius:3px;font-size:12px;background:#472c38;border-color:#744453}
+.queueEntry .track{grid-column:1/-1;height:3px;background:#23384a;margin-top:-4px}
+.queueEntry .bar{height:100%;background:#80d2c6}
+@media(max-width:550px){.unitActions{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.unitActions button{min-height:25px;font-size:8px}.queueList{padding:3px 5px;min-height:38px}.queueEntry{grid-template-columns:minmax(0,1fr) 21px}.queueEntry .percent{display:none}}
