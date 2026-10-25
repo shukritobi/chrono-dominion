@@ -176,8 +176,8 @@
       $('playAgain').onclick=()=>this.newMatch(this.settings);
       $('copyResult').onclick=()=>this.copyBattleReport();
       $('saveGame').onclick=()=>this.saveGame();
-      $('loadMain').onclick=()=>this.loadGame();
-      $('loadPaused').onclick=()=>this.loadGame();
+      $('loadMain').onclick=()=>{this.audio?.unlock();this.loadGame();};
+      $('loadPaused').onclick=()=>{this.audio?.unlock();this.loadGame();};
     }
     installCustomMap(map){
       if(!window.ChronoMaps?.validate(map).valid)return false;
@@ -968,7 +968,9 @@
       ];
       for(const p of options){
         const x=Math.round(clamp(p.x,1,WORLD_SIZE-2)),y=Math.round(clamp(p.y,1,WORLD_SIZE-2));
-        if(this.walkable(x,y)&&this.findPath(origin.x,origin.y,x,y).length)
+        if(!this.walkable(x,y))continue;
+        const route=this.findPath(origin.x,origin.y,x,y);
+        if(route.length&&Math.hypot(route[route.length-1].x-x,route[route.length-1].y-y)<.5)
           return {x,y};
       }
       return null;
