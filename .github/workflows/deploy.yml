@@ -25,6 +25,8 @@ jobs:
           node --check art/vehicle-renderer.js
           node tests/vehicle-art.test.mjs
           node tests/combat-economy.test.mjs
+          node tests/save-formation.test.mjs
+          python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py
       - name: Verify required files
         run: |
           test -f index.html
@@ -38,6 +40,9 @@ jobs:
           test -f art/pilot/federation-infantry.svg
           test -f art/pilot/psionic-infantry.svg
           test -f art/manifest.json
+          test -f art/rendered/manifest.json
+          test -f tools/blender/generate_tanks.py
+          test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
           test -f docs/asset-production/ASSET-PRODUCTION-PLAN.md
           test -f planning/AssetRegister.csv
