@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.1 — multi-map library, map editor and resilient skirmish storage. */
+/* Chrono Dominion v1.2 — navigation, fog-aware AI and visible battle damage. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -631,51 +631,44 @@
       return !this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5);
     }
     findPath(sx,sy,tx,ty){
-      // A* on the logical tile grid. Cache routes per unit to avoid solving every frame.
+      // A* explores reachable ground and gracefully selects the nearest
+      // accessible edge if the click lies across an impassable shoreline.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
-      const target={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
-      let goal=target;
-      if(!this.walkable(goal.x,goal.y)){
-        let closest=Infinity,candidate=null;
-        for(let radius=1;radius<=5;radius++){
-          for(let ox=-radius;ox<=radius;ox++)for(let oy=-radius;oy<=radius;oy++){
-            if(Math.max(Math.abs(ox),Math.abs(oy))!==radius)continue;
-            const x=target.x+ox,y=target.y+oy;
-            if(!this.walkable(x,y))continue;
-            const score=Math.hypot(x-tx,y-ty)+Math.hypot(x-sx,y-sy)*.04;
-            if(score<closest){closest=score;candidate={x,y};}
-          }
-          if(candidate)break;
+      const goal={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
+      const key=(x,y)=>x+','+y,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
+      const open=[{...start,key:begin,f:0}],costs=new Map([[begin,0]]),came=new Map(),closed=new Set();
+      const moves=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      let nearest=begin,nearestDist=Math.hypot(start.x-tx,start.y-ty),nearestCost=0;
+      const trace=(end)=>{
+        const path=[];let k=end;
+        while(k!==begin&&came.has(k)){
+          const [x,y]=k.split(',').map(Number);path.push({x,y});k=came.get(k);
         }
-        if(!candidate)return [];
-        goal=candidate;
-      }
-      const key=(x,y)=>x+','+y, begin=key(start.x,start.y),finish=key(goal.x,goal.y);
-      const open=[{x:start.x,y:start.y,key:begin,f:0}], g=new Map([[begin,0]]),came=new Map(),closed=new Set();
-      const directions=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-      let steps=0;
-      while(open.length&&steps++<1250){
+        path.reverse();return path;
+      };
+      let expansions=0;
+      while(open.length&&expansions++<1450){
         let best=0;for(let i=1;i<open.length;i++)if(open[i].f<open[best].f)best=i;
-        const node=open.splice(best,1)[0];if(closed.has(node.key))continue;
-        if(node.key===finish){
-          const path=[];let k=finish;
-          while(k!==begin&&came.has(k)){
-            const [x,y]=k.split(',').map(Number);path.push({x,y});k=came.get(k);
-          }
-          path.reverse();return path;
-        }
+        const node=open.splice(best,1)[0];
+        if(closed.has(node.key))continue;
         closed.add(node.key);
-        for(const [dx,dy] of directions){
+        const remaining=Math.hypot(node.x-tx,node.y-ty),travelled=costs.get(node.key);
+        if(remaining<nearestDist-.001||(Math.abs(remaining-nearestDist)<.001&&travelled<nearestCost)){
+          nearest=node.key;nearestDist=remaining;nearestCost=travelled;
+        }
+        if(node.key===finish)return trace(finish);
+        for(const [dx,dy] of moves){
           const x=node.x+dx,y=node.y+dy,k=key(x,y);
           if(closed.has(k)||!this.walkable(x,y))continue;
+          // Don't diagonally slip through touching buildings or water.
           if(dx&&dy&&(!this.walkable(node.x+dx,node.y)||!this.walkable(node.x,node.y+dy)))continue;
-          const cost=g.get(node.key)+(dx&&dy?1.4142:1);
-          if(cost>=(g.get(k)??Infinity))continue;
-          g.set(k,cost);came.set(k,node.key);
-          open.push({x,y,key:k,f:cost+Math.hypot(goal.x-x,goal.y-y)});
+          const candidate=travelled+(dx&&dy?Math.SQRT2:1);
+          if(candidate>=(costs.get(k)??Infinity))continue;
+          costs.set(k,candidate);came.set(k,node.key);
+          open.push({x,y,key:k,f:candidate+Math.hypot(goal.x-x,goal.y-y)});
         }
       }
-      return [];
+      return trace(nearest);
     }
     canOccupyUnit(e,x,y,ignoreUnits=false){
       const r=this.unitRadius(e);
@@ -708,18 +701,21 @@
     }
     move(e,tx,ty,dt){
       let d=Math.hypot(tx-e.x,ty-e.y);
-      if(d<.24){e.path=[];return true;}
+      if(d<.24){e.path=[];e.pathGoal=null;return true;}
       const old=e.pathTarget;
       if(!old||!e.path||Math.hypot(old.x-tx,old.y-ty)>1.2||e.pathRecheck<=0){
         e.path=this.findPath(e.x,e.y,tx,ty);
-        e.pathTarget={x:tx,y:ty};e.pathRecheck=1.6;
+        e.pathTarget={x:tx,y:ty};e.pathGoal=e.path.length?e.path[e.path.length-1]:null;
+        e.pathRecheck=1.6;
       }
       e.pathRecheck-=dt;
       while(e.path?.length&&Math.hypot(e.x-e.path[0].x,e.y-e.path[0].y)<.37)e.path.shift();
       const point=e.path?.[0];
       if(!point){
-        // For an unreachable clicked tile, accept the nearest reachable landing point.
-        return d<2.7||!this.walkable(Math.round(tx),Math.round(ty));
+        // Don't silently 'complete' impossible orders merely because the target
+        // is blocked. We complete only at an actual reachable terminal waypoint.
+        if(!e.pathGoal)return d<.36;
+        return Math.hypot(e.x-e.pathGoal.x,e.y-e.pathGoal.y)<.5;
       }
       const dx=point.x-e.x,dy=point.y-e.y,len=Math.hypot(dx,dy);
       if(len<.001)return false;
