@@ -49,10 +49,10 @@ const testTank=g.entities.find(e=>e.owner===0&&e.kind==='tank');
 const heading=testTank.worldHeading;
 testTank.desiredHeading=Math.PI;
 testTank.desiredTurretHeading=-Math.PI/2;
-testTank.order={type:'move',x:testTank.x+1,y:testTank.y};
+testTank.order=null;
 g.step(.02);
-assert.ok(Math.abs(testTank.worldHeading-heading)<.15,'hull turn is limited per tick');
-assert.ok(Math.abs(testTank.turretHeading-heading)<.20,'turret turn is also limited per tick');
+assert.ok(Math.abs(testTank.worldHeading-heading)>0&&Math.abs(testTank.worldHeading-heading)<.15,'hull turn is limited per tick');
+assert.ok(Math.abs(testTank.turretHeading-heading)>0&&Math.abs(testTank.turretHeading-heading)<.20,'turret turn is also limited per tick');
 
 // Repair toggling consumes funds, while selling refunds part of construction cost.
 setup();
@@ -67,7 +67,7 @@ assert.ok(structure.hp>damaged,'repair restored hit points');
 assert.ok(g.players[0].credits<before,'repair spent credits');
 assert.ok(g.buildingAction('repair'),'repair toggle can stop maintenance');
 assert.equal(structure.repairing,false);
-assert.ok(!g.buildingAction('sell') || structure.kind!=='generator','sale action returns a result');
+assert.equal(g.buildingAction('sell'),true,'selling a power plant succeeds');
 assert.equal(structure.hp,0,'selling removes the structure');
 assert.ok(g.players[0].credits>before-100,'selling pays a partial refund');
 const hq=g.entities.find(e=>e.owner===0&&e.kind==='hq');
