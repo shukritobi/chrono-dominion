@@ -23,7 +23,9 @@ const localStorage={
   getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v))
 };
 const win={addEventListener(){}};
-const globals={window:win,document,localStorage,console,performance:{now:()=>0},
+let copiedReport='';
+const navigator={clipboard:{writeText(text){copiedReport=text;return Promise.resolve();}}};
+const globals={window:win,document,localStorage,navigator,console,performance:{now:()=>0},
   requestAnimationFrame(){},devicePixelRatio:1,setTimeout:()=>1,clearTimeout(){}};
 runInNewContext(scriptMaps,globals,{timeout:2500});
 assert.equal(Object.keys(win.ChronoMapCatalog).length,3);
@@ -61,6 +63,8 @@ g.finish(true);
 assert.equal(elements.get('resultTitle').textContent,'VICTORY');
 assert.ok(elements.get('resultStats').innerHTML.includes('ORE DELIVERED'));
 assert.ok(elements.get('resultStats').innerHTML.includes('UNITS DESTROYED'));
+assert.equal(g.copyBattleReport(),true,'report copying is available');
+assert.ok(copiedReport.includes('\n'),'copied report is genuinely multiline');
 // An AI recon must advance to another waypoint when the previous one is reached.
 g.newMatch({playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'recruit'});
 const recon=g.add(1,'recon',24,24);g.runAI();
