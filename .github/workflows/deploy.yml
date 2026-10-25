@@ -1,0 +1,58 @@
+name: Check and deploy browser prototype
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check game.js
+      - name: Verify required files
+        run: |
+          test -f index.html
+          test -f style.css
+          test -f game.js
+          test -f docs/game-design/FULL-BLUEPRINT.md
+          test -f docs/asset-production/ASSET-PRODUCTION-PLAN.md
+          test -f planning/AssetRegister.csv
+      - name: Validate unique asset IDs
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const lines = fs.readFileSync('planning/AssetRegister.csv', 'utf8').trim().split(/\r?\n/);
+          const ids = lines.slice(1).map(l => l.split(',')[0]);
+          const duplicates = ids.filter((id,i) => ids.indexOf(id) !== i);
+          if (duplicates.length || ids.length !== 308) {
+            console.error('Asset register validation failed', {count:ids.length,duplicates});
+            process.exit(1);
+          }
+          console.log('Validated', ids.length, 'unique planned asset families');
+          NODE
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
