@@ -69,3 +69,9 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .queueEntry .track{grid-column:1/-1;height:3px;background:#23384a;margin-top:-4px}
 .queueEntry .bar{height:100%;background:#80d2c6}
 @media(max-width:550px){.unitActions{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.unitActions button{min-height:25px;font-size:8px}.queueList{padding:3px 5px;min-height:38px}.queueEntry{grid-template-columns:minmax(0,1fr) 21px}.queueEntry .percent{display:none}}
+
+/* v0.7 special ability panel */
+.specialAction{display:block;width:100%;margin-top:7px;min-height:32px;border-radius:4px;font-size:10px;letter-spacing:.6px;font-weight:900;color:#d8fff9;background:linear-gradient(105deg,#263e59,#304c62);border-color:#61b1ca}
+.specialAction:hover:not(:disabled){background:linear-gradient(105deg,#325571,#385e76);border-color:#9ae4ee}
+.specialAction:disabled{color:#7b8e9b;border-color:#364958;background:#142639;opacity:.68;cursor:not-allowed}
+@media(max-width:550px){.specialAction{min-height:27px;font-size:9px}}
