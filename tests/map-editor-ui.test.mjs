@@ -79,4 +79,12 @@ fire('deleteMap','click');
 assert.equal(window.ChronoMaps.list(localStorage).maps.length,2,'second click deletes only chosen slot');
 assert.ok(window.ChronoMaps.loadSlot(firstSlot,localStorage),'original survives duplication and deletion');
 assert.ok(window.ChronoMaps.loadSlot(secondSlot,localStorage),'second map remains in library');
+// Fast touch/mouse drags fill every tile between discrete pointer events.
+fire('tools','click',{target:{closest(){return {dataset:{tool:'water'}};}}});
+const brushBefore=Number(el('waterCount').textContent);
+fire('editorCanvas','pointerdown',point(13,17));
+fire('editorCanvas','pointermove',point(16,17));
+fire('editorCanvas','pointerup');
+assert.equal(Number(el('waterCount').textContent),brushBefore+4,
+  'fast pointer movement paints an unbroken four-tile line');
 console.log('PASS: editor paint/touch events, ore replacement, protected bases, save, and Save & Play');
