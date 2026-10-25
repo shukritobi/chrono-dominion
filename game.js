@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.2 — navigation, fog-aware AI and visible battle damage. */
+/* Chrono Dominion v1.3 — squad movement, tactical AI and sound controls. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -66,7 +66,7 @@
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
-      this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
+      this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
       if(window.ChronoVehicleArt){try{this.vehicleAtlases=window.ChronoVehicleArt.createAtlases();}catch(err){console.warn('Directional atlas fallback:',err);}}
@@ -161,8 +161,14 @@
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
       $('backHow').onclick=()=>this.showMenu('mainMenu');
-      $('start').onclick=()=>{const get=id=>$(id).value;this.newMatch({playerFaction:get('playerFaction'),enemyFaction:get('enemyFaction'),map:get('mapSelect'),difficulty:get('difficulty'),startingCredits:Number(get('startingCredits'))});};
+      $('start').onclick=()=>{const get=id=>$(id).value;this.audio?.unlock();this.newMatch({playerFaction:get('playerFaction'),enemyFaction:get('enemyFaction'),map:get('mapSelect'),difficulty:get('difficulty'),startingCredits:Number(get('startingCredits'))});};
       $('pauseBtn').onclick=()=>this.pause();$('resume').onclick=()=>this.pause();
+      $('soundToggle').onclick=()=>{
+        this.audio?.setEnabled(!this.audio.enabled);
+        this.updateSoundToggle();
+        if(this.audio?.enabled)this.audio.play('build');
+      };
+      this.updateSoundToggle();
       $('zoomIn').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom*1.15,.65,1.8);};
       $('zoomOut').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom/1.15,.65,1.8);};
       $('restart').onclick=()=>this.newMatch(this.settings);
@@ -197,6 +203,13 @@
         catch(err){/* Browser URL unavailable in embedded tests. */}
       }
       return !!installed;
+    }
+    updateSoundToggle(){
+      const control=$('soundToggle'),on=!!this.audio?.enabled;
+      control.textContent=on?'♪ ON':'♪ OFF';
+      control.setAttribute?.('aria-pressed',String(on));
+      control.setAttribute?.('aria-label',on?'Disable battle sound effects':'Enable battle sound effects');
+      control.title=on?'Mute synthesized effects':'Enable synthesized effects (off by default)';
     }
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
     returnMenu(){this.state='menu';this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
@@ -405,7 +418,7 @@
       const key=this.placing,def=BUILD[key];if(!key||!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
       if(this.players[0].credits<def.cost)return this.notify('Insufficient credits');
       this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;const e=this.add(0,key,Math.round(x),Math.round(y),false);e.buildTime=3.5+def.cost/650;
-      this.placing=null;this.selected=[e.id];this.notify(this.name(e)+' construction started');this.updateUI(true);
+      this.placing=null;this.selected=[e.id];this.audio?.play('build');this.notify(this.name(e)+' construction started');this.updateUI(true);
     }
     buildingAction(action){
       if(this.state!=='playing'||this.selected.length!==1)return false;
@@ -583,6 +596,7 @@
         this.particles.push({x:e.x,y:e.y,life:.85,color:ability.color,type:'abilityPulse',radius:ability.range*26});
       }
       e.abilityReadyAt=this.time+ability.cooldown;
+      if(e.owner===0||this.sideCanSee(0,e))this.audio?.play('ability');
       if(e.owner===0)this.notify(ability.name+' activated: '+ability.cooldown+'s cooldown');
       this.updateSelection();
       return true;
@@ -787,6 +801,7 @@
       const bonus=source.kind==='specialist'&&faction==='federation'?1.3:1;
       const psychic=source.kind==='specialist'&&faction==='psionic';
       // A shot is now a moving projectile. Damage is resolved on impact, not firing.
+      if(source.owner===0||this.sideCanSee(0,source))this.audio?.play('shot');
       this.projectiles.push({
         x:source.x,y:source.y,targetId:target.id,owner:source.owner,sourceId:source.id,
         sourceKind:source.kind,damage:damage*bonus,psychic,age:0,
@@ -817,6 +832,7 @@
         target.hp-=shot.damage;
         if(this.stats[shot.owner])this.stats[shot.owner].damageDealt+=Math.max(0,Math.min(shot.damage,target.hp+shot.damage));
         this.particles.push({x:target.x,y:target.y,life:.38,color:shot.color,type:'hit'});
+        if(this.sideCanSee(0,target))this.audio?.play('impact');
         if(target.hp<=0){
           this.recordLoss(target,shot.owner);
           const killer=this.entityById(shot.sourceId);
@@ -1206,6 +1222,7 @@
     finish(win){
       if(this.state==='finished')return;
       this.state='finished';
+      this.audio?.play(win?'win':'defeat');
       const battle=this.battleSummary(win);this.lastBattleSummary=battle;
       const label=(key)=>({oreHarvested:'ORE DELIVERED',enemyUnitsDestroyed:'UNITS DESTROYED',enemyBuildingsDestroyed:'STRUCTURES DESTROYED',unitsLost:'UNITS LOST',buildingsLost:'STRUCTURES LOST',unitsDeployed:'UNITS DEPLOYED',creditsSpent:'CREDITS SPENT'})[key];
       const format=n=>Math.round(n).toLocaleString();
@@ -1432,6 +1449,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'1.1.0',build:'map-library'};
+  window.ChronoDominion={version:'1.3.0',build:'tactical-audio'};
   new Game();
 })();
