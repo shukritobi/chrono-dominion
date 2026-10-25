@@ -44,3 +44,12 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .buildItem .itemTitle{position:relative;z-index:1}
 @media(max-width:850px){.buildItem .itemAsset{width:48px;height:44px}}
 @media(max-width:550px){.buildItem .itemAsset{width:39px;height:35px}}
+
+/* Version 0.4: contextual base management actions */
+.selection{min-height:132px;max-height:180px;overflow-y:auto}
+.buildActions{display:flex;gap:7px;margin-top:9px}
+.buildActions button{flex:1;min-height:32px;padding:6px 5px;font-size:10px;letter-spacing:.6px;font-weight:800;border-radius:4px}
+.buildActions button[data-action="repair"]{border-color:#588b9f}
+.buildActions button[data-action="sell"]{border-color:#a28b57;color:#efd39c}
+.buildActions button:disabled{opacity:.35;cursor:not-allowed}
+@media(max-width:550px){.selection{min-height:116px}.buildActions{flex-direction:column;gap:4px}.buildActions button{min-height:27px;font-size:9px}}
