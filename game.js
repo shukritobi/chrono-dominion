@@ -874,6 +874,7 @@
       if(!this.queues.some(q=>q.side===side)){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';
         else if(built('radar')&&built('barracks')&&!owned('specialist').length&&me.credits>=1400)unit='specialist';
         else if(built('factory')&&me.credits>1100){
           unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
@@ -899,11 +900,29 @@
           this.activateAbility(specialist);
         }
       }
+      // Recon units move toward strategically useful ore, but defend harvesters
+      // under attack. This produces an early contest rather than a blind HQ rush.
+      for(const scout of owned('recon')){
+        const endangered=this.entities.filter(u=>u.owner===side&&u.kind==='harvester'&&u.hp>0)
+          .map(h=>({h,threat:this.nearest(h,e=>e.owner===0&&e.type==='unit'&&e.hp>0,5.5)}))
+          .find(pair=>pair.threat);
+        if(endangered){
+          scout.order={type:'attack',id:endangered.threat.id};
+          continue;
+        }
+        if(scout.order?.type==='attack'&&this.entityById(scout.order.id))continue;
+        if(scout.order?.type==='move'||scout.order?.type==='attackMove')continue;
+        const ore=(MAPS[this.settings.map]||MAPS.verdant).ore;
+        // Two forward scouting objectives: the centre and the enemy's side.
+        const point=ore.find(pt=>pt[0]<20&&pt[1]<20)||[15,17];
+        scout.order={type:'attackMove',x:clamp(point[0]+1,1,32),y:clamp(point[1]+1,1,32)};
+      }
       // Local base defense always takes precedence over an offensive order.
       const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
       for(const fighter of fighters){
         const attacker=this.nearest(fighter,e=>e.owner===0&&e.type==='unit'&&e.hp>0,6.5);
         if(attacker){fighter.order={type:'attack',id:attacker.id};continue;}
+        if(fighter.kind==='recon'&&fighter.order?.type==='attackMove')continue;
         if(fighter.order?.type==='attack'&&this.entityById(fighter.order.id))continue;
         // Attack in groups; novices wait longer before committing.
         const minimum=this.settings.difficulty==='recruit'?5:this.settings.difficulty==='veteran'?2:3;
