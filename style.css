@@ -75,3 +75,9 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .specialAction:hover:not(:disabled){background:linear-gradient(105deg,#325571,#385e76);border-color:#9ae4ee}
 .specialAction:disabled{color:#7b8e9b;border-color:#364958;background:#142639;opacity:.68;cursor:not-allowed}
 @media(max-width:550px){.specialAction{min-height:27px;font-size:9px}}
+
+/* v0.8 skirmish map preview */
+.mapPreview{margin:9px 0 6px;padding:8px;background:#0c1c2d;border:1px solid #466276;border-radius:4px}
+#mapPreview{display:block;width:100%;height:122px;image-rendering:pixelated;border:1px solid #425b70;background:#0c1d24}
+.mapPreview p{padding:0;margin:7px 0 0!important;font-size:10px!important;color:#a3b9c8!important;line-height:1.35!important;text-align:left}
+@media(max-width:550px){#mapPreview{height:92px}.mapPreview{padding:5px}}
