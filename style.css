@@ -81,3 +81,9 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 #mapPreview{display:block;width:100%;height:122px;image-rendering:pixelated;border:1px solid #425b70;background:#0c1d24}
 .mapPreview p{padding:0;margin:7px 0 0!important;font-size:10px!important;color:#a3b9c8!important;line-height:1.35!important;text-align:left}
 @media(max-width:550px){#mapPreview{height:92px}.mapPreview{padding:5px}}
+
+/* v0.8: keep expanded skirmish setup accessible on compact screens */
+.overlay{overflow-y:auto;overscroll-behavior:contain;padding:12px 0}
+.menu{max-height:calc(100dvh - 24px);overflow-y:auto;scrollbar-color:#466a80 #0b1b2b;overscroll-behavior:contain}
+.scoutInfo{color:#8fd5c8!important;font-size:10px!important;letter-spacing:.45px}
+@media(max-height:720px){.menu{padding:15px 20px 13px}.menu h1{font-size:39px;margin:8px 0}.menu label{margin:7px 0}.menu button{height:37px;margin:6px auto}.menu .version{margin-top:10px}.mapPreview{margin:5px 0}#mapPreview{height:100px}}
