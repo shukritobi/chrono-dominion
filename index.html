@@ -19,6 +19,7 @@
           <span id="power">⚡ 0 / 0</span>
           <span id="army">♜ 0</span>
         </div>
+        <button id="soundToggle" class="soundToggle" aria-pressed="false" aria-label="Enable battle sound effects" title="Toggle synthesized effects (off by default)">♪ OFF</button>
         <div class="zoomControls"><button id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button><button id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button></div>
         <button id="pauseBtn" title="Pause / resume (Escape)">Ⅱ</button>
       </div>
@@ -67,7 +68,7 @@
             <button class="primary" id="playAgain">PLAY AGAIN</button>
             <button id="resultQuit">MAIN MENU</button>
           </div>
-          <div class="version">PROTOTYPE 1.2 · COMBAT & NAVIGATION</div>
+          <div class="version">PROTOTYPE 1.3 · TACTICAL UPGRADES</div>
         </section>
       </div>
     </main>
@@ -92,6 +93,7 @@
   <script src="./art/vehicle-renderer.js" defer></script>
   <script src="./maps/catalog.js" defer></script>
   <script src="./maps/map-core.js" defer></script>
+  <script src="./audio/sfx.js" defer></script>
   <script src="./game.js" defer></script>
 </body>
 </html>
