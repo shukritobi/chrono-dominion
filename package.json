@@ -1,13 +1,14 @@
 {
   "name": "chrono-dominion",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "Original-browser-RTS playable skirmish prototype",
   "scripts": {
-    "check": "node --check game.js && node --check art/vehicle-renderer.js && node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs",
-    "test": "node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs",
-    "serve": "python3 -m http.server 8080"
+    "check": "node --check game.js && node --check art/vehicle-renderer.js && node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs && node tests/save-formation.test.mjs",
+    "test": "node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs && node tests/save-formation.test.mjs",
+    "serve": "python3 -m http.server 8080",
+    "check:blender": "python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py"
   },
   "engines": {
     "node": ">=20"
