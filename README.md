@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.4.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.5.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v0.5 saving, squad orders and art pipeline
+
+- **Save/load skirmishes** to the same browser profile with F6 (save), F9 (load), Ctrl+S, or the pause/main-menu buttons. Saves are local to the browser, not cloud backups.
+- **Formation movement** assigns each selected friendly unit a unique walkable destination near the order location.
+- **Building placement grid** highlights a 3×3 logical structure footprint; shorelines reject partial water overlap.
+- **Reproducible original 3D artwork generator:** [Blender source script](tools/blender/generate_tanks.py), [PNG atlas packer](tools/blender/pack_atlas.py), and [render manifest](art/rendered/manifest.json). Rendering needs Blender installed separately; finalized Blender atlases are not yet included in this repo.
+- [v0.5 release notes](docs/RELEASE-0.5.md) | [Save and formation tests](tests/save-formation.test.mjs).
 
 ## v0.4 combat and economy
 
@@ -56,7 +64,7 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 | Sidebar | Queue units or choose a building to place |
 | WASD or arrow keys | Pan camera |\n| Ctrl+1–9 | Assign selected units to control group |\n| 1–9 | Recall a control group |\n| Shift + right-click | Attack-move to selected point |\n| H | Center camera on headquarters |\n| Space | Center camera on selection |
 | Mouse wheel | Zoom |
-| Escape | Cancel placement / pause match |
+| F6 / Ctrl+S | Save current skirmish to this browser |\n| F9 | Load saved skirmish from this browser |\n| Escape | Cancel placement / pause match |
 | Radar click | Jump camera |
 
 **Win condition:** eliminate the opposing side's buildings. This is a simple prototype rule, not the full release game-mode system.
