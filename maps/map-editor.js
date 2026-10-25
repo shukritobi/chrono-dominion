@@ -121,6 +121,8 @@
   }
   function save(forceNew=false){
     repaint();
+    const validation=core.validate(map);
+    if(!validation.valid){inform(validation.error,true);return false;}
     // Saving the active edit never changes a different selected map by accident.
     const slotExists=core.list().maps.some(item=>item.slotId===workingSlotId);
     if(slotExists&&!forceNew){
