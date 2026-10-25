@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Chrono Dominion Coalition Ranger original infantry sprite">
+<defs><linearGradient id="armor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#47789b"/><stop offset="1" stop-color="#223c51"/></linearGradient><radialGradient id="shade"><stop stop-color="#050d19" stop-opacity=".6"/><stop offset="1" stop-color="#050d19" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="50" cy="83" rx="27" ry="10" fill="url(#shade)"/>
+<path d="M40 55L38 76 46 80 52 57 55 78 65 81 62 55Z" fill="#223c51" stroke="#18222e" stroke-width="2"/>
+<path d="M36 76L47 77 47 85 36 84Z M56 76L68 78 69 84 55 84Z" fill="#222c3a" stroke="#70e7ee" stroke-width="1.5"/>
+<path d="M32 40Q42 31 51 32Q64 34 70 41L63 66 35 64Z" fill="url(#armor)" stroke="#223c51" stroke-width="3"/>
+<ellipse cx="51" cy="25" rx="11" ry="12" fill="#d5bc9f" stroke="#223c51" stroke-width="3"/>
+<path d="M39 18 51 15 62 22 58 29 41 29Z" fill="#5b91b2" stroke="#253f5a" stroke-width="2"/><path d="M41 26L59 25 56 30 44 30Z" fill="#69d3ee"/><path d="M37 41L43 35 55 37 61 44 57 58 43 58Z" fill="#2a506a"/><path d="M42 43 54 44M44 50 55 51" stroke="#b6d6e3" stroke-width="2"/><path d="M33 38L28 49 34 55M62 42L70 49 65 56" fill="none" stroke="#456d8c" stroke-width="7"/><path d="M66 43L81 38 84 43 67 51" fill="#172a36" stroke="#66d7df" stroke-width="2"/><path d="M31 42 59 55" stroke="#142c41" stroke-width="4"/>
+<path d="M43 61 57 61" stroke="#70e7ee" stroke-width="2"/>
+</svg>
