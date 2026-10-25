@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Chrono Dominion Federation Rifleman original infantry sprite">
+<defs><linearGradient id="armor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#975c4c"/><stop offset="1" stop-color="#49302e"/></linearGradient><radialGradient id="shade"><stop stop-color="#050d19" stop-opacity=".6"/><stop offset="1" stop-color="#050d19" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="50" cy="83" rx="27" ry="10" fill="url(#shade)"/>
+<path d="M40 55L38 76 46 80 52 57 55 78 65 81 62 55Z" fill="#49302e" stroke="#18222e" stroke-width="2"/>
+<path d="M36 76L47 77 47 85 36 84Z M56 76L68 78 69 84 55 84Z" fill="#222c3a" stroke="#f6a96a" stroke-width="1.5"/>
+<path d="M32 40Q42 31 51 32Q64 34 70 41L63 66 35 64Z" fill="url(#armor)" stroke="#49302e" stroke-width="3"/>
+<ellipse cx="51" cy="25" rx="11" ry="12" fill="#d1ad8e" stroke="#49302e" stroke-width="3"/>
+<path d="M37 20Q50 6 63 20L60 30 39 29Z" fill="#9f6653" stroke="#492c2d" stroke-width="3"/><path d="M37 25L65 24 61 30 42 30Z" fill="#b98465"/><path d="M37 40L44 33 55 33 64 42 60 59 38 58Z" fill="#7b4742" stroke="#402b2e" stroke-width="3"/><path d="M42 38L59 39 57 48 44 47Z" fill="#424347" stroke="#d88a60" stroke-width="2"/><path d="M31 37L26 51 32 56 M67 39L75 52 70 57" stroke="#8c5646" stroke-width="8" fill="none"/><path d="M63 44L84 40 88 43 69 50" fill="#303134" stroke="#dd8a5c" stroke-width="2"/><path d="M31 39 58 55" stroke="#303033" stroke-width="5"/>
+<path d="M43 61 57 61" stroke="#f6a96a" stroke-width="2"/>
+</svg>
