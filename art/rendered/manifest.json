@@ -1,0 +1,9 @@
+{
+  "format": "png-atlas-v1",
+  "directions": 32,
+  "frameSize": 128,
+  "columns": 8,
+  "rows": 4,
+  "atlases": {},
+  "status": "fallback-active-until-generated-art-committed"
+}
