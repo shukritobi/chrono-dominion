@@ -49,8 +49,17 @@
       this.selected=[];this.dragStart=null;this.dragEnd=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
+      this.sprites={};this.loadPilotSprites();
       this.settings={playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'standard'};
       this.setupEvents();this.resize();requestAnimationFrame(t=>this.frame(t));
+    }
+    loadPilotSprites(){
+      if(typeof Image==='undefined')return;
+      const files={coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'};
+      for(const [faction,file] of Object.entries(files)){
+        const img=new Image();img.decoding='async';img.src='./art/pilot/'+file+'.svg';
+        this.sprites[faction]=img;
+      }
     }
     setupEvents(){
       window.addEventListener('resize',()=>this.resize());
@@ -328,7 +337,14 @@
     drawRing(x,y,r,color){const c=this.ctx;c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.ellipse(x,y,r,r*.44,0,0,Math.PI*2);c.stroke();}
     health(e,x,y,width){if(e.hp>=e.maxHp*.99)return;const c=this.ctx;c.fillStyle='#0e1622';c.fillRect(x-width/2,y,width,5);c.fillStyle=e.hp/e.maxHp>.4?'#77d381':'#e7776a';c.fillRect(x-width/2+1,y+1,(width-2)*Math.max(0,e.hp/e.maxHp),3);}
     drawUnit(e){
-      const c=this.ctx,p=iso(e.x,e.y),pal=COLORS[this.players[e.owner].faction];c.save();c.translate(p.x,p.y);c.fillStyle='#050b11a6';c.beginPath();c.ellipse(2,3,e.kind==='heavy'?23:17,7,0,0,Math.PI*2);c.fill();
+      const c=this.ctx,p=iso(e.x,e.y),pal=COLORS[this.players[e.owner].faction];c.save();c.translate(p.x,p.y);
+      const pilot=e.kind==='tank'?this.sprites[this.players[e.owner].faction]:null;
+      if(pilot&&pilot.complete&&pilot.naturalWidth>0){
+        if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
+        c.drawImage(pilot,-47,-78,94,94);
+        this.health(e,0,-76,43);c.restore();return;
+      }
+      c.fillStyle='#050b11a6';c.beginPath();c.ellipse(2,3,e.kind==='heavy'?23:17,7,0,0,Math.PI*2);c.fill();
       if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='heavy'?27:21,pal.color);
       if(e.kind==='soldier'||e.kind==='specialist'){
         c.fillStyle='#0c1420';c.fillRect(-3,-5,3,9);c.fillRect(2,-5,3,9);
@@ -387,6 +403,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.1.0',build:'original-skirmish-slice'};
+  window.ChronoDominion={version:'0.2.0',build:'original-sprite-pilot'};
   new Game();
 })();
