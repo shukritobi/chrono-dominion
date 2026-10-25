@@ -30,6 +30,9 @@ jobs:
           node tests/abilities.test.mjs
           node tests/skirmish-v08.test.mjs
           node tests/battle-report-v09.test.mjs
+          node tests/map-forge-v100.test.mjs
+          node --check maps/map-core.js
+          node --check maps/map-editor.js
           node tools/maps/build.mjs --check
           python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py
       - name: Verify required files
@@ -59,6 +62,9 @@ jobs:
           test -f maps/desert.json
           test -f maps/snow.json
           test -f maps/catalog.js
+          test -f maps/map-core.js
+          test -f maps/map-editor.js
+          test -f map-editor.html
           test -f tools/maps/build.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
