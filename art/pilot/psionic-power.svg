@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="Original Chrono Dominion Biomorphic Chamber isometric sprite">
+<defs><linearGradient id="metal" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#785299"/><stop offset=".5" stop-color="#3a285a"/><stop offset="1" stop-color="#172335"/></linearGradient><radialGradient id="glow"><stop stop-color="#eefff9"/><stop offset=".4" stop-color="#67ffbb"/><stop offset="1" stop-color="#3a285a"/></radialGradient><radialGradient id="shadow"><stop stop-color="#030916" stop-opacity=".65"/><stop offset="1" stop-color="#030916" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="82" cy="121" rx="67" ry="24" fill="url(#shadow)"/>
+<path d="M27 102L68 79 130 101 89 135Z" fill="#192532" stroke="#496174" stroke-width="3"/>
+<path d="M27 102L89 135 89 146 27 115Z" fill="#3a285a" stroke="#1b2736" stroke-width="2"/>
+<path d="M89 135L130 101 130 114 89 146Z" fill="#1b2c40" stroke="#0d1c2a" stroke-width="2"/>
+<path d="M39 104L69 88 115 102 86 126Z" fill="#785299" stroke="#3a285a" stroke-width="3"/>
+<path d="M42 104Q34 86 54 78L67 64 103 72 122 103Q103 118 82 124L49 116Z" fill="url(#metal)" stroke="#261936" stroke-width="4"/>
+<path d="M52 99Q49 68 63 48L74 80 64 107Z" fill="#69498a" stroke="#312242" stroke-width="3"/>
+<path d="M111 99Q119 65 108 47L94 81 99 109Z" fill="#6f4490" stroke="#332142" stroke-width="3"/>
+<path d="M73 105L73 51Q87 38 103 52L103 102Q88 112 73 105Z" fill="url(#glow)" stroke="#3d2956" stroke-width="4"/>
+<ellipse cx="88" cy="52" rx="15" ry="7" fill="#472a63" stroke="#a97bc8" stroke-width="4"/><ellipse cx="88" cy="52" rx="9" ry="4" fill="#72ffc1"/>
+<path d="M57 74Q49 44 60 23Q69 50 73 59Z" fill="#4e2c72" stroke="#79ffc7" stroke-width="2"/>
+<path d="M104 72Q111 45 106 23Q93 47 93 56Z" fill="#43245c" stroke="#79ffc7" stroke-width="2"/>
+<path d="M77 44Q78 25 88 17Q99 31 99 44Z" fill="#43295d" stroke="#79ffc7" stroke-width="2"/>
+<path d="M49 102Q55 109 68 109 M99 109Q113 108 116 101" fill="none" stroke="#9c77b8" stroke-width="5"/>
+<path d="M61 117Q88 134 113 114" fill="none" stroke="#5cfcac" stroke-width="3"/>
+<circle cx="88" cy="75" r="7" fill="#bcffe1" opacity=".5"/>
+<path d="M34 113L86 141 124 113" fill="none" stroke="#67ffbb" opacity=".75" stroke-width="2"/>
+</svg>
