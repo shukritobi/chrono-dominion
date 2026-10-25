@@ -101,6 +101,17 @@
     if(result.valid)inform('Map is valid. Save it or export a JSON backup.');
     else inform(result.error,true);
   }
+  function paintLine(toX,toY){
+    if(!previousCell){paint(toX,toY);return;}
+    const [fromX,fromY]=previousCell.split(',').map(Number);
+    const steps=Math.max(Math.abs(toX-fromX),Math.abs(toY-fromY));
+    if(!steps)return;
+    // Interpolate missed pointer positions on fast swipes, also on touch screens.
+    for(let i=1;i<=steps;i++)paint(
+      Math.round(fromX+(toX-fromX)*i/steps),
+      Math.round(fromY+(toY-fromY)*i/steps)
+    );
+  }
   function chooseTool(t){
     if(!['water','land','ore','removeOre'].includes(t))return;
     tool=t;
@@ -186,7 +197,7 @@
   });
   canvas.addEventListener('pointermove',e=>{
     if(!painting)return;e.preventDefault();
-    const p=cellFromEvent(e);paint(p.x,p.y);
+    const p=cellFromEvent(e);paintLine(p.x,p.y);
   });
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,()=>{painting=false;previousCell='';});
   $('mapTheme').addEventListener('change',()=>{map.waterColor=catalog[$('mapTheme').value]?.waterColor||'#2d6179';repaint();});
