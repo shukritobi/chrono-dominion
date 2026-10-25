@@ -175,16 +175,83 @@
     }
     entityById(id){return this.entities.find(e=>e.id===id&&e.hp>0);}
     nearest(source,predicate,range=Infinity){let result=null,best=range;for(const e of this.entities){if(e===source||e.hp<=0||!predicate(e))continue;const d=dist(source,e);if(d<best){best=d;result=e;}}return result;}
+    walkable(x,y){
+      if(x<1||y<1||x>WORLD_SIZE-2||y>WORLD_SIZE-2||this.water(x,y))return false;
+      return !this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5);
+    }
+    findPath(sx,sy,tx,ty){
+      // A* on the logical tile grid. Cache routes per unit to avoid solving every frame.
+      const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
+      const target={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
+      let goal=target;
+      if(!this.walkable(goal.x,goal.y)){
+        let closest=Infinity,candidate=null;
+        for(let radius=1;radius<=5;radius++){
+          for(let ox=-radius;ox<=radius;ox++)for(let oy=-radius;oy<=radius;oy++){
+            if(Math.max(Math.abs(ox),Math.abs(oy))!==radius)continue;
+            const x=target.x+ox,y=target.y+oy;
+            if(!this.walkable(x,y))continue;
+            const score=Math.hypot(x-tx,y-ty)+Math.hypot(x-sx,y-sy)*.04;
+            if(score<closest){closest=score;candidate={x,y};}
+          }
+          if(candidate)break;
+        }
+        if(!candidate)return [];
+        goal=candidate;
+      }
+      const key=(x,y)=>x+','+y, begin=key(start.x,start.y),finish=key(goal.x,goal.y);
+      const open=[{x:start.x,y:start.y,key:begin,f:0}], g=new Map([[begin,0]]),came=new Map(),closed=new Set();
+      const directions=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      let steps=0;
+      while(open.length&&steps++<1250){
+        let best=0;for(let i=1;i<open.length;i++)if(open[i].f<open[best].f)best=i;
+        const node=open.splice(best,1)[0];if(closed.has(node.key))continue;
+        if(node.key===finish){
+          const path=[];let k=finish;
+          while(k!==begin&&came.has(k)){
+            const [x,y]=k.split(',').map(Number);path.push({x,y});k=came.get(k);
+          }
+          path.reverse();return path;
+        }
+        closed.add(node.key);
+        for(const [dx,dy] of directions){
+          const x=node.x+dx,y=node.y+dy,k=key(x,y);
+          if(closed.has(k)||!this.walkable(x,y))continue;
+          if(dx&&dy&&(!this.walkable(node.x+dx,node.y)||!this.walkable(node.x,node.y+dy)))continue;
+          const cost=g.get(node.key)+(dx&&dy?1.4142:1);
+          if(cost>=(g.get(k)??Infinity))continue;
+          g.set(k,cost);came.set(k,node.key);
+          open.push({x,y,key:k,f:cost+Math.hypot(goal.x-x,goal.y-y)});
+        }
+      }
+      return [];
+    }
     move(e,tx,ty,dt){
-      const d=Math.hypot(tx-e.x,ty-e.y);if(d<.2)return true;
-      const speed=UNITS[e.kind].speed*dt;const dx=(tx-e.x)/d,dy=(ty-e.y)/d;
-      const trial=(x,y)=>x>0.7&&y>0.7&&x<WORLD_SIZE-.7&&y<WORLD_SIZE-.7&&!this.water(x,y)&&!this.entities.some(b=>b.type==='building'&&b.hp>0&&Math.abs(b.x-x)<1.35&&Math.abs(b.y-y)<1.35);
-      const nx=e.x+dx*Math.min(speed,d),ny=e.y+dy*Math.min(speed,d);
-      if(trial(nx,ny)){e.x=nx;e.y=ny;}
-      else if(trial(nx,e.y))e.x=nx;
-      else if(trial(e.x,ny))e.y=ny;
-      else {e.stuck=(e.stuck||0)+dt;if(e.stuck>1.4){e.order={type:'move',x:clamp(tx+1.8,1,33),y:clamp(ty-1.3,1,33)};e.stuck=0;}}
-      e.heading=Math.atan2(dy*TH,dx*TW);return d<.3;
+      let d=Math.hypot(tx-e.x,ty-e.y);
+      if(d<.24){e.path=[];return true;}
+      const old=e.pathTarget;
+      if(!old||!e.path||Math.hypot(old.x-tx,old.y-ty)>1.2||e.pathRecheck<=0){
+        e.path=this.findPath(e.x,e.y,tx,ty);
+        e.pathTarget={x:tx,y:ty};e.pathRecheck=1.6;
+      }
+      e.pathRecheck-=dt;
+      while(e.path?.length&&Math.hypot(e.x-e.path[0].x,e.y-e.path[0].y)<.37)e.path.shift();
+      const point=e.path?.[0];
+      if(!point){
+        // For an unreachable clicked tile, accept the nearest reachable landing point.
+        return d<2.7||!this.walkable(Math.round(tx),Math.round(ty));
+      }
+      const dx=point.x-e.x,dy=point.y-e.y,len=Math.hypot(dx,dy);
+      if(len<.001)return false;
+      const move=Math.min(UNITS[e.kind].speed*dt,len),vx=dx/len*move,vy=dy/len*move;
+      const clear=(x,y)=>x>.7&&y>.7&&x<WORLD_SIZE-.7&&y<WORLD_SIZE-.7&&!this.water(x,y)&&!this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.28&&Math.abs(b.y-y)<1.28);
+      if(clear(e.x+vx,e.y+vy)){e.x+=vx;e.y+=vy;e.stuck=0;}
+      else if(clear(e.x+vx,e.y)){e.x+=vx;e.stuck=0;}
+      else if(clear(e.x,e.y+vy)){e.y+=vy;e.stuck=0;}
+      else {e.stuck=(e.stuck||0)+dt;if(e.stuck>.45){e.pathRecheck=0;e.stuck=0;}}
+      e.heading=Math.atan2(dy*TH,dx*TW);
+      d=Math.hypot(tx-e.x,ty-e.y);
+      return d<.24;
     }
     shoot(source,target){
       const def=this.getDef(source),damage=def.damage||0;if(!damage||!target)return;
