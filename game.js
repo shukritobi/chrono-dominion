@@ -133,6 +133,7 @@
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
       $('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){this.tab=b.dataset.tab;this.updateUI(true);}});
       $('production').addEventListener('click',e=>{const b=e.target.closest('button[data-key]');if(b)this.chooseProduction(b.dataset.key);});
+      $('queueList').addEventListener('click',e=>{const b=e.target.closest?.('button[data-cancel-key]');if(b)this.cancelProduction(b.dataset.cancelKey);});
       $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);
         const unit=e.target.closest?.('button[data-unit-action]');if(unit)this.unitAction(unit.dataset.unitAction);});
       $('openSkirmish').onclick=()=>this.showMenu('skirmishMenu');
@@ -291,6 +292,19 @@
       if(BUILD[key]){if(key==='hq')return;this.placing=key;this.notify('Choose a clear location near your base. Right-click to cancel.');}
       else{if(this.queues.some(q=>q.side===0&&q.key===key)){this.notify('Already producing '+this.name({owner:0,kind:key}));return;}this.players[0].credits-=def.cost;this.queues.push({side:0,key,elapsed:0,total:Math.max(2,def.cost/250)});this.notify('Training '+this.name({owner:0,kind:key}));}
       this.updateUI(true);
+    }
+    cancelProduction(key){
+      if(this.state!=='playing')return false;
+      const index=this.queues.findIndex(q=>q.side===0&&q.key===key);
+      if(index<0)return false;
+      const q=this.queues[index],def=BUILD[key]||UNITS[key];
+      if(!def)return false;
+      // No delivered unit or item: credit reservation is reversed in full.
+      this.players[0].credits+=def.cost;
+      this.queues.splice(index,1);
+      this.notify(this.name({owner:0,kind:key})+' cancelled: ¤'+def.cost+' refunded');
+      this.updateUI(true);
+      return true;
     }
     placeBuilding(x,y){
       const key=this.placing,def=BUILD[key];if(!key||!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
@@ -819,6 +833,10 @@
         const artwork=preview?'<img class="itemAsset" loading="lazy" alt="" src="'+preview+'">':'<span class="itemIcon">'+d.icon+'</span>';
         return '<button class="buildItem '+(!available?'locked ':'')+(this.placing===key?'selectedBuild':'')+'" data-key="'+key+'" '+(!available?'disabled':'')+' title="'+this.escape(label)+' '+this.escape(reason)+'">'+artwork+'<span class="itemTitle">'+this.escape(label)+'</span><span class="itemCost">¤ '+d.cost+'</span>'+(q?'<span class="progress" style="width:'+(q.elapsed/q.total*100)+'%"></span>':'')+'</button>';
       }).join('');
+      $('queueList').innerHTML='<div class="queueHeader">ACTIVE PRODUCTION</div>'+this.queues.filter(q=>q.side===0).slice(0,6).map(q=>{
+        const pct=Math.min(100,Math.max(0,Math.round(q.elapsed/q.total*100)));const name=this.escape(this.name({owner:0,kind:q.key}));
+        return '<div class="queueEntry"><span class="name">'+name+'</span><span class="percent">'+pct+'%</span><button data-cancel-key="'+q.key+'" title="Cancel and refund full production cost">×</button><div class="track"><div class="bar" style="width:'+pct+'%"></div></div></div>';
+      }).join('')+(this.queues.some(q=>q.side===0)?'':'<div class="queueEmpty">No units in production</div>');
       this.updateSelection();
     }
     finish(win){this.state='finished';$('resultText').textContent=win?'Enemy command neutralized. The battlefield is yours.':'Your command structure has fallen. Rebuild your strategy and try again.';this.showMenu('resultMenu');}
