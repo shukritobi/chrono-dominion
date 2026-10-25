@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101d30">
-<title>Map Forge | Chrono Dominion</title>
+<title>Map Forge v1.1 | Chrono Dominion</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif;background:#081420;color:#d6eaf3}
 *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(circle at 30% 0%,#21364e,#0b1522 66%)}
@@ -27,6 +27,10 @@ input[type=text],select{width:100%;padding:10px;border:1px solid #53728b;backgro
 .metric{padding:8px;background:#0b1b2e;border-radius:4px}.metric strong{display:block;font-size:20px;color:#a6efca}
 hr{border:0;border-top:1px solid #3b5062;margin:16px 0}
 #fileInput{display:none}
+#mapCount{color:#8bddcd;font:11px Consolas,monospace;letter-spacing:.3px;float:right}
+#mapLibrary{min-height:44px}
+#deleteMap{border-color:#9e6265;background:#4b303a}
+#deleteMap.confirmDelete{background:#a75050;color:#fff2e9;border-color:#ffd4b4}
 @media(max-width:800px){main{grid-template-columns:1fr;max-width:660px}.panel{padding:12px}h1{font-size:24px}}
 @media(max-width:420px){header{padding:10px}header a{font-size:11px}.toolRow button{font-size:10px}.buttonGrid{grid-template-columns:1fr}.wide{grid-column:auto}}
 </style>
@@ -63,16 +67,26 @@ hr{border:0;border-top:1px solid #3b5062;margin:16px 0}
 <select id="template"><option value="verdant">Verdant Front</option><option value="desert">Ashen Basin</option><option value="snow">Frostline</option><option value="blank">Blank Battlefield</option></select>
 <div class="buttonGrid"><button id="loadTemplate" class="wide">RESET FROM TEMPLATE</button></div>
 <hr>
+<h2>MY BATTLEFIELD LIBRARY <small id="mapCount">0 / 12</small></h2>
+<label for="mapLibrary">SELECT SAVED MAP</label>
+<select id="mapLibrary" aria-label="Saved custom battlefields"><option value="">No maps saved yet</option></select>
+<div class="buttonGrid">
+<button id="loadLibraryMap" class="wide">OPEN SELECTED MAP</button>
+<button id="duplicateMap">DUPLICATE MAP</button>
+<button id="deleteMap">DELETE MAP</button>
+</div>
+<hr>
 <h2>SAVE AND SHARE</h2>
 <div class="buttonGrid">
 <button id="saveMap" class="primary wide">SAVE MAP TO THIS BROWSER</button>
+<button id="saveAsMap" class="wide">SAVE AS NEW MAP</button>
 <button id="playMap" class="primary wide">SAVE & PLAY CUSTOM SKIRMISH</button>
 <button id="exportMap">EXPORT JSON</button>
 <button id="importMap">IMPORT JSON</button>
-<button id="restoreMap" class="wide">RESTORE SAVED MAP</button>
+<button id="restoreMap" class="wide">RESTORE ACTIVE MAP</button>
 </div>
 <input id="fileInput" type="file" accept=".json,application/json">
-<p class="hint">One custom battlefield is stored locally in this browser. Export its JSON to back it up or share it. You can still play the three built-in maps.</p>
+<p class="hint">Keep up to 12 custom maps in this browser. Save changes updates the map you opened; Save as New makes a separate copy. Export JSON backups before clearing browser data.</p>
 </aside>
 </main>
 <script src="./maps/catalog.js" defer></script>
