@@ -87,3 +87,17 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .menu{max-height:calc(100dvh - 24px);overflow-y:auto;scrollbar-color:#466a80 #0b1b2b;overscroll-behavior:contain}
 .scoutInfo{color:#8fd5c8!important;font-size:10px!important;letter-spacing:.45px}
 @media(max-height:720px){.menu{padding:15px 20px 13px}.menu h1{font-size:39px;margin:8px 0}.menu label{margin:7px 0}.menu button{height:37px;margin:6px auto}.menu .version{margin-top:10px}.mapPreview{margin:5px 0}#mapPreview{height:100px}}
+
+/* v0.9 post-battle command report */
+.resultTitle{font-family:Impact,'Arial Narrow',sans-serif;font-size:28px;letter-spacing:4px;color:#92e1e7;text-shadow:0 2px #10263b;margin:4px 0}
+.resultStats{text-align:left;background:#091827;border:1px solid #446077;border-radius:4px;padding:9px;margin:12px 0 8px}
+.resultGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.resultSide{padding:8px;background:linear-gradient(145deg,#1c3042,#0c1a29);border:1px solid #3d556b;border-radius:4px;min-width:0}
+.resultSide>strong{display:block;font-size:10px;letter-spacing:1px;color:#a6c6d5}
+.resultScore{margin:6px 0 8px;color:#9ee6d2;font:bold 24px Consolas,monospace}
+.resultScore small{font-size:10px;color:#95aab7}
+.resultMetric{display:flex;justify-content:space-between;gap:5px;padding:5px 0;border-top:1px solid #39506455;font-size:9px;color:#90aabf}
+.resultMetric b{color:#e2edf2;font:11px Consolas,monospace;white-space:nowrap}
+.resultActions button{height:32px!important;margin:6px auto!important}
+#resultMenu p{margin:8px 0 12px}
+@media(max-width:550px){.resultGrid{gap:5px}.resultStats{padding:5px}.resultSide{padding:5px}.resultMetric{font-size:8px}.resultScore{font-size:19px}.resultTitle{font-size:23px}}
