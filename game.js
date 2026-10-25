@@ -1007,7 +1007,77 @@
       }).join('')+(this.queues.some(q=>q.side===0)?'':'<div class="queueEmpty">No units in production</div>');
       this.updateSelection();
     }
-    finish(win){this.state='finished';$('resultText').textContent=win?'Enemy command neutralized. The battlefield is yours.':'Your command structure has fallen. Rebuild your strategy and try again.';this.showMenu('resultMenu');}
+    newStats(){
+      return {oreHarvested:0,creditsSpent:0,unitsDeployed:0,buildingsConstructed:0,unitsLost:0,buildingsLost:0,enemyUnitsDestroyed:0,enemyBuildingsDestroyed:0,damageDealt:0,buildingsSold:0};
+    }
+    recordLoss(entity,attackerOwner=null,sold=false){
+      if(!entity||entity.lossRecorded)return;
+      entity.lossRecorded=true;
+      const own=this.stats?.[entity.owner];
+      if(own){
+        if(sold)own.buildingsSold++;
+        else if(entity.type==='unit')own.unitsLost++;
+        else own.buildingsLost++;
+      }
+      const killer=this.stats?.[attackerOwner];
+      if(!sold&&killer&&attackerOwner!==entity.owner){
+        if(entity.type==='unit')killer.enemyUnitsDestroyed++;
+        else killer.enemyBuildingsDestroyed++;
+      }
+    }
+    battleSummary(win){
+      const score=(st)=>Math.max(0,Math.round(
+        st.oreHarvested*.1+st.enemyUnitsDestroyed*90+st.enemyBuildingsDestroyed*220+
+        st.damageDealt*.5+st.buildingsConstructed*12-st.unitsLost*14-st.buildingsLost*45
+      ));
+      const player=this.stats[0],enemy=this.stats[1];
+      return {
+        outcome:win?'VICTORY':'DEFEAT',duration:Math.round(this.time),
+        map:(MAPS[this.settings.map]||MAPS.verdant).name,
+        playerFaction:COLORS[this.players[0].faction].name,
+        enemyFaction:COLORS[this.players[1].faction].name,
+        player:{...player,score:score(player),credits:Math.floor(this.players[0].credits)},
+        enemy:{...enemy,score:score(enemy),credits:Math.floor(this.players[1].credits)}
+      };
+    }
+    copyBattleReport(){
+      if(!this.lastBattleSummary)return false;
+      const b=this.lastBattleSummary,format=n=>Number(n).toLocaleString();
+      const message=[
+        'CHRONO DOMINION · '+b.outcome,
+        'Map: '+b.map,
+        'Match duration: '+Math.floor(b.duration/60)+'m '+b.duration%60+'s',
+        'Player: '+b.playerFaction+' · '+format(b.player.score)+' points',
+        'Opponent: '+b.enemyFaction+' · '+format(b.enemy.score)+' points',
+        'Ore delivered: '+format(b.player.oreHarvested),
+        'Enemy units destroyed: '+b.player.enemyUnitsDestroyed,
+        'Enemy buildings destroyed: '+b.player.enemyBuildingsDestroyed,
+        'Friendly units lost: '+b.player.unitsLost
+      ].join('\\n');
+      if(typeof navigator==='undefined'||!navigator.clipboard?.writeText){
+        this.notify('Clipboard not available in this browser');return false;
+      }
+      navigator.clipboard.writeText(message).then(()=>this.notify('Battle report copied')).catch(()=>this.notify('Clipboard permission denied'));
+      return true;
+    }
+    finish(win){
+      if(this.state==='finished')return;
+      this.state='finished';
+      const battle=this.battleSummary(win);this.lastBattleSummary=battle;
+      const label=(key)=>({oreHarvested:'ORE DELIVERED',enemyUnitsDestroyed:'UNITS DESTROYED',enemyBuildingsDestroyed:'STRUCTURES DESTROYED',unitsLost:'UNITS LOST',buildingsLost:'STRUCTURES LOST',unitsDeployed:'UNITS DEPLOYED',creditsSpent:'CREDITS SPENT'})[key];
+      const format=n=>Math.round(n).toLocaleString();
+      const sides=[{name:'YOUR ARMY',data:battle.player},{name:'OPPONENT',data:battle.enemy}];
+      $('resultTitle').textContent=battle.outcome;
+      $('resultText').textContent=battle.playerFaction+' vs '+battle.enemyFaction+
+        ' · '+battle.map+' · '+String(Math.floor(battle.duration/60)).padStart(2,'0')+':'+String(battle.duration%60).padStart(2,'0');
+      $('resultStats').innerHTML='<div class="resultGrid">'+sides.map(side=>
+        '<section class="resultSide"><strong>'+side.name+'</strong><div class="resultScore">'+format(side.data.score)+' <small>PTS</small></div>'+
+        ['oreHarvested','enemyUnitsDestroyed','enemyBuildingsDestroyed','unitsLost','buildingsLost','unitsDeployed','creditsSpent'].map(key=>
+          '<div class="resultMetric"><span>'+label(key)+'</span><b>'+format(side.data[key])+'</b></div>'
+        ).join('')+'</section>'
+      ).join('')+'</div>';
+      this.showMenu('resultMenu');
+    }
     notify(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(this.toastTimer);this.toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
     drawDiamond(x,y,fill,stroke){
       const p=iso(x,y),c=this.ctx;c.beginPath();c.moveTo(p.x,p.y-TH/2);c.lineTo(p.x+TW/2,p.y);c.lineTo(p.x,p.y+TH/2);c.lineTo(p.x-TW/2,p.y);c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=.55;c.stroke();}
