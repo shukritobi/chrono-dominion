@@ -1,4 +1,4 @@
-/* Chrono Dominion v0.6 — original browser RTS vertical slice. No third-party game assets. */
+/* Chrono Dominion v0.7 — original browser RTS vertical slice. No third-party game assets. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -8,6 +8,11 @@
     coalition:{tank:{speed:1.12},heavy:{speed:1.10}},
     federation:{tank:{hp:1.18,damage:1.13,speed:.90},heavy:{hp:1.15,damage:1.12,speed:.88}},
     psionic:{tank:{speed:1.13,hp:.91,damage:.94},specialist:{range:1.14}}
+  };
+  const ABILITIES={
+    coalition:{name:'Chrono Jump',cooldown:20,range:6.2,color:'#8bdbf9'},
+    federation:{name:'Arc Discharge',cooldown:17,range:3.6,color:'#ffb36c'},
+    psionic:{name:'Neural Jam',cooldown:24,range:4.1,color:'#d292f8'}
   };
   const COLORS = {
     coalition: {name:'COALITION FORCES',color:'#55c8e8',top:'#66879b',side:'#263e54',trim:'#8ce5ef',badge:'◈'},
@@ -53,7 +58,7 @@
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
-      this.selected=[];this.groups={};this.attackMoveArmed=false;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
+      this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.loadPilotSprites();
@@ -118,13 +123,14 @@
           else {this.selected=(this.groups[k]||[]).filter(id=>{const unit=this.entityById(id);return unit&&unit.owner===0;});this.updateSelection();if(e.shiftKey)this.centerSelection();}
           return;
         }
+        if(this.state==='playing'&&k==='f'&&this.selected.length){e.preventDefault();this.useSpecialistAbility();return;}
         if(this.state==='playing'&&['x','g','b','v','t'].includes(k)&&this.selected.length){
           const actions={x:'stop',g:'guard',b:'hold',v:'aggressive',t:'attackMove'};
           e.preventDefault();this.unitAction(actions[k]);return;
         }
         if(this.state==='playing'&&k==='h'){this.centerHQ();return;}
         if(this.state==='playing'&&k===' '){e.preventDefault();this.centerSelection();return;}
-        this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(this.placing){this.placing=null;this.updateUI(true);}else if(this.state==='playing'||this.state==='paused')this.pause();}});
+        this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(this.placing){this.placing=null;this.updateUI(true);}else if(this.abilityArmedId){this.abilityArmedId=null;this.notify('Ability cancelled');this.updateSelection();}else if(this.state==='playing'||this.state==='paused')this.pause();}});
       window.addEventListener('keyup',e=>this.keys.delete(e.key.toLowerCase()));
       this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
       this.canvas.addEventListener('pointerdown',e=>this.pointerDown(e));
@@ -137,7 +143,8 @@
       $('production').addEventListener('click',e=>{const b=e.target.closest('button[data-key]');if(b)this.chooseProduction(b.dataset.key);});
       $('queueList').addEventListener('click',e=>{const b=e.target.closest?.('button[data-cancel-key]');if(b)this.cancelProduction(b.dataset.cancelKey);});
       $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);
-        const unit=e.target.closest?.('button[data-unit-action]');if(unit)this.unitAction(unit.dataset.unitAction);});
+        const unit=e.target.closest?.('button[data-unit-action]');if(unit)this.unitAction(unit.dataset.unitAction);
+        const special=e.target.closest?.('button[data-special]');if(special)this.useSpecialistAbility();});
       $('openSkirmish').onclick=()=>this.showMenu('skirmishMenu');
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
@@ -218,7 +225,7 @@
         x:clamp(saved.camera.x,-1020,1020),y:clamp(saved.camera.y,50,1080),zoom:clamp(saved.camera.zoom,.65,1.8)
       }:{x:0,y:370,zoom:1};
       this.fog=saved.fog.map(row=>row.map(seen=>({seen:!!seen,visible:false})));
-      this.placing=null;this.attackMoveArmed=false;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;
+      this.placing=null;this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;
       this.keys.clear();this.nextUi=0;this.nextFog=0;
       this.state='playing';
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
@@ -241,13 +248,13 @@
     add(owner,kind,x,y,built=true){
       const def=BUILD[kind]||UNITS[kind],modifier=FACTION_BALANCE[this.players[owner]?.faction]?.[kind]||{};
       const hitPoints=Math.round(def.hp*(modifier.hp||1));
-      const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:hitPoints,maxHp:hitPoints,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0};
+      const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:hitPoints,maxHp:hitPoints,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0,abilityReadyAt:0,stunnedUntil:0};
       if(e.type==='unit'){e.stance='guard';e.guardX=x;e.guardY=y;e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
       this.entities.push(e);return e;
     }
     newMatch(s){
       this.settings={...s};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:5000},{faction:s.enemyFaction,credits:5000}];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
@@ -408,6 +415,8 @@
     screen(x,y){const p=iso(x,y);return{x:this.w/2+(p.x-this.camera.x)*this.camera.zoom,y:this.h/2+(p.y-this.camera.y)*this.camera.zoom};}
     pick(x,y){let best=null,bd=Infinity;for(const e of this.entities){if(e.hp<=0||e.owner===1&&!this.isVisible(e.x,e.y))continue;const d=Math.hypot(x-e.x,y-e.y);const hit=e.type==='building'?1.75:1.07;if(d<hit&&d<bd){best=e;bd=d;}}return best;}
     command(p,event){
+      if(this.abilityArmedId){const operative=this.entityById(this.abilityArmedId);this.abilityArmedId=null;
+        if(operative)this.activateAbility(operative,{x:p.gx,y:p.gy});this.updateUI(true);return;}
       const chosen=this.entities.filter(e=>this.selected.includes(e.id)&&e.owner===0&&e.type==='unit'&&e.hp>0);if(!chosen.length)return;
       const enemy=this.pick(p.gx,p.gy);const target=enemy&&enemy.owner===1?enemy:null;
       // Grid formation: unique walkable slots around the clicked point, assigned
@@ -439,7 +448,7 @@
         this.updateSelection();return true;
       }
       if(!['stop','guard','hold','aggressive'].includes(action))return false;
-      this.attackMoveArmed=false;
+      this.attackMoveArmed=false;this.abilityArmedId=null;
       for(const e of units){
         if(action==='stop'){
           e.order=null;e.path=[];e.pathTarget=null;e.stance='guard';e.guardX=e.x;e.guardY=e.y;
@@ -989,6 +998,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.6.0',build:'tactical-movement'};
+  window.ChronoDominion={version:'0.7.0',build:'specialist-abilities'};
   new Game();
 })();
