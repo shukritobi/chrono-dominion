@@ -58,6 +58,7 @@ g.add(0,'factory',12,6);
 g.chooseProduction('recon');
 assert.equal(g.players[0].credits,credits-550,'recon queue charges correct price');
 assert.ok(g.queues.some(q=>q.side===0&&q.key==='recon'));
+g.tab='vehicles';g.updateUI(true);
 assert.ok(nodes.get('production').innerHTML.includes('coalition-recon.svg'),'recon art displayed in build palette');
 assert.ok(g.cancelProduction('recon'));
 assert.equal(g.players[0].credits,credits,'recon refund works');
