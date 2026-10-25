@@ -1,12 +1,12 @@
 {
   "name": "chrono-dominion",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "Original-browser-RTS playable skirmish prototype",
   "scripts": {
-    "check": "node --check game.js && node --check art/vehicle-renderer.js && node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs && node tests/save-formation.test.mjs && node tests/tactics.test.mjs && node tests/abilities.test.mjs && node tests/skirmish-v08.test.mjs && node tests/battle-report-v09.test.mjs && node tools/maps/build.mjs --check",
-    "test": "node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs && node tests/save-formation.test.mjs && node tests/tactics.test.mjs && node tests/abilities.test.mjs && node tests/skirmish-v08.test.mjs && node tests/battle-report-v09.test.mjs",
+    "check": "node --check game.js && node --check art/vehicle-renderer.js && node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs && node tests/save-formation.test.mjs && node tests/tactics.test.mjs && node tests/abilities.test.mjs && node tests/skirmish-v08.test.mjs && node tests/battle-report-v09.test.mjs && node tools/maps/build.mjs --check && node tests/map-forge-v100.test.mjs && node --check maps/map-core.js && node --check maps/map-editor.js",
+    "test": "node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs && node tests/save-formation.test.mjs && node tests/tactics.test.mjs && node tests/abilities.test.mjs && node tests/skirmish-v08.test.mjs && node tests/battle-report-v09.test.mjs && node tests/map-forge-v100.test.mjs",
     "serve": "python3 -m http.server 8080",
     "check:blender": "python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py",
     "maps:build": "node tools/maps/build.mjs",
