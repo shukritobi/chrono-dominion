@@ -68,6 +68,9 @@ game.pointerDown(moveTap);
 game.pointerUp(moveTap);
 assert.equal(firstTank.order?.type, 'move', 'second touch tap issues move command');
 
+// Reset after interaction tests so production and economy assertions remain deterministic.
+game.newMatch({ playerFaction: 'coalition', enemyFaction: 'federation', map: 'verdant', difficulty: 'standard' });
+
 game.chooseProduction('factory');
 assert.equal(game.placing, 'factory');
 game.placeBuilding(11, 6);
