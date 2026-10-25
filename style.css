@@ -1,0 +1,39 @@
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#dde9f3;background:#07111d;font-synthesis:none}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+button,select{font:inherit}button{cursor:pointer;color:#dce7ef;border:1px solid #41546c;background:linear-gradient(#20364e,#101d2e);transition:background .13s,border-color .13s}
+button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274763,#12273e)}button:disabled{opacity:.4;cursor:not-allowed}
+#app{display:flex;width:100vw;height:100dvh;min-height:400px}
+#battlefield{position:relative;min-width:0;flex:1;background:#182f2a;overflow:hidden;user-select:none;touch-action:none}
+#world{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+#topbar{position:absolute;top:0;left:0;right:0;height:57px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:linear-gradient(180deg,#0c1725ee,#0c1725bb 80%,transparent);pointer-events:none;gap:12px;z-index:2}
+#topbar>*{pointer-events:auto}.brand{font-family:Impact,Arial Narrow,sans-serif;font-size:18px;letter-spacing:2.2px;color:#9ad8e4;white-space:nowrap}.brand em{font-style:normal;color:#f0e6cd}
+.resources{display:flex;align-items:center;gap:23px;font-family:Consolas,monospace;font-size:14px;color:#c7deb8;font-weight:bold}.resources #power.low{color:#ff8585}#pauseBtn{width:34px;height:32px;border-radius:5px;font-size:17px}
+#hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);padding:7px 13px;background:#0a1726bc;border:1px solid #54728b77;border-radius:6px;color:#d1e2e9;font-size:11px;white-space:nowrap;pointer-events:none;z-index:2}
+#toast{position:absolute;top:67px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .2s;z-index:5;padding:10px 16px;background:#1d2e43eb;border:1px solid #70b9d2;border-radius:5px;font-weight:600;pointer-events:none}#toast.show{opacity:1}
+#sidebar{display:flex;flex-direction:column;width:278px;min-width:278px;background:linear-gradient(90deg,#1c2b41,#0c192b);border-left:3px solid #4e6e8b;box-shadow:-8px 0 16px #03070e66;z-index:3;overflow:hidden}
+.radarFrame{padding:9px 10px 7px;background:#0b1422;border-bottom:2px solid #395870;position:relative}
+#radar{display:block;width:100%;height:175px;background:#0c1523;border:2px solid #416077;image-rendering:pixelated}
+.radarLabel{display:flex;justify-content:space-between;margin-top:5px;font-weight:700;font-size:10px;letter-spacing:1.5px;color:#90afc5}
+.factionBox{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid #3e5369;background:#1b2b41}
+#factionBadge{display:grid;place-items:center;width:38px;height:38px;font-size:25px;border:2px solid #7ebcd5;color:#8ad2f4;background:#263f5c;clip-path:polygon(50% 0,100% 26%,100% 75%,50% 100%,0 75%,0 26%)}
+#factionName{font-size:12px;letter-spacing:1px;font-weight:900}#factionInfo{display:block;margin-top:4px;color:#839eb2;font-size:9px;letter-spacing:.7px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid #42627d}.tabs button{border-radius:0;padding:9px 2px 6px;font-size:19px;border-left:0;border-top:0}.tabs button.active{background:linear-gradient(#315775,#17324c);color:#bff3ff;box-shadow:inset 0 -3px #71d4e0}.tabs span{display:block;font-size:9px;letter-spacing:1px;margin-top:3px}
+.production{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}
+.buildItem{position:relative;border:1px solid #38536b;border-radius:6px;height:113px;display:flex;align-items:center;flex-direction:column;justify-content:flex-end;gap:5px;padding:5px;background:linear-gradient(145deg,#253951,#0e1d30)}
+.buildItem:hover:not(:disabled){border-color:#9bd2db}.buildItem.selectedBuild{border-color:#e5c97c;background:linear-gradient(#455539,#1a2935)}
+.buildItem.locked{opacity:.45}.itemIcon{font-size:30px;line-height:1.1;filter:drop-shadow(1px 3px 1px #050c13)}
+.itemTitle{font-size:10px;font-weight:800;line-height:1.1;text-align:center}.itemCost{font-family:Consolas,monospace;color:#9cd8a0;font-size:12px;font-weight:800}.buildItem .progress{position:absolute;bottom:0;left:0;height:3px;background:#83d0e3}
+.selection{border-top:2px solid #435f79;min-height:104px;padding:12px 13px;background:#111e30;color:#c2d9e7}.selection strong{font-size:12px;letter-spacing:1px}.selection p{font-size:11px;line-height:1.5;color:#9eb0c0;margin:7px 0 0}
+.sidebarFooter{text-align:center;font-size:9px;padding:7px 4px;color:#63819a;letter-spacing:1.3px;background:#07111e}
+.overlay{position:absolute;z-index:10;inset:0;display:flex;justify-content:center;align-items:center;background:radial-gradient(circle at center,#162d45cf,#030a15f4 78%);backdrop-filter:blur(3px)}
+.overlay.hidden{display:none}.menu{width:min(440px,90vw);padding:30px 30px 20px;border:1px solid #65839c;background:linear-gradient(145deg,#172f43f7,#071320fa 65%);box-shadow:0 16px 60px #000b, inset 0 0 0 4px #21384d;text-align:center}
+.kicker{font-size:10px;letter-spacing:3px;color:#83c6d5;font-weight:800}.menu h1{font-family:Impact,Arial Narrow,sans-serif;letter-spacing:3px;font-size:55px;line-height:.94;margin:18px 0 13px;color:#e3edf3;text-shadow:0 3px 0 #1f6c89}.menu h1 span{color:#8ccdd7}.menu p{font-size:13px;line-height:1.65;color:#b3c2d1;margin:13px 0 20px}
+.menu button{display:block;width:100%;height:44px;margin:9px auto;border-radius:3px;font-weight:800;letter-spacing:1.1px;font-size:12px}
+.menu button.primary{color:#061622;background:linear-gradient(#b0e4df,#5aacc0);border-color:#a7edf0}.menu button.primary:hover{background:linear-gradient(#cdf4e9,#74cbdb)}
+.menu button small{color:#8ca0b2;float:right;margin-right:7px;font-size:9px}
+.menu label{display:block;text-align:left;font-weight:800;font-size:10px;letter-spacing:1px;color:#8ebac5;margin:12px 0}
+.menu select{width:100%;margin-top:6px;padding:10px;border:1px solid #527087;background:#0c1b2b;color:#e3f0f6}
+.version{font:10px Consolas,monospace;color:#6e8ba3;letter-spacing:1px;margin-top:23px}
+.hidden{display:none!important}
+@media(max-width:850px){#sidebar{width:207px;min-width:207px}.radarFrame{padding:6px}#radar{height:120px}.factionBox{padding:7px}#factionName{font-size:10px}.production{gap:4px;padding:5px}.buildItem{height:95px}.itemIcon{font-size:23px}.itemTitle{font-size:9px}.resources{gap:7px;font-size:11px}.brand{font-size:14px}#hint{font-size:9px;white-space:normal;width:90%;text-align:center}}
+@media(max-width:550px){#sidebar{width:145px;min-width:145px}#radar{height:95px}.factionBox{padding:5px;gap:5px}#factionBadge{width:24px;height:24px;font-size:13px}#factionInfo{display:none}.tabs span{font-size:7px}.buildItem{height:81px}.itemIcon{font-size:18px}.itemCost{font-size:10px}.itemTitle{font-size:8px}.selection{min-height:88px;padding:7px}#topbar{height:50px;padding:0 7px}.brand{font-size:11px;letter-spacing:0}.resources{font-size:10px;gap:5px}#army{display:none}#hint{display:none}.menu{padding:20px}.menu h1{font-size:45px}}
