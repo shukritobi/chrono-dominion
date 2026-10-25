@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.0.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.1.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.1 Battlefield Library
+
+- **Up to 12 named custom battlefields**, accessible through the **[Map Forge editor](map-editor.html)**. Save changes to a selected map or use Save As New to keep multiple independent designs.
+- Open any existing map, duplicate it, or remove it using an intentional two-click delete confirmation.
+- The old single-map browser storage is **automatically migrated** into the new multi-map library, keeping the existing editable battlefield.
+- A faster editor redraw and continuous pen, mouse, and touch brush strokes make drawing water and placing ore much easier.
+- Select **Save & Play Custom Skirmish** to launch the active map. JSON export/import remains the recommended backup method, as maps are only stored on the current browser profile.
+- [v1.1 release notes](docs/RELEASE-1.1.md), [map-library tests](tests/map-library-v11.test.mjs).
 
 ## v1.0 Map Forge editor and custom skirmishes
 
