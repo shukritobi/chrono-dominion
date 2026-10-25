@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "0.6.0",
+  "release": "0.7.0",
   "assetLicenseStatus": "original artwork; redistribution license undecided",
   "artDirection": "orthographic isometric retro-futurist",
   "runtime": {
@@ -51,6 +51,17 @@
       ],
       "directions": 1,
       "sourceType": "hand-authored SVG"
+    },
+    "specialist": {
+      "frameSize": [
+        96,
+        96
+      ],
+      "states": [
+        "idle"
+      ],
+      "directions": 1,
+      "sourceType": "original hand-authored SVG"
     }
   },
   "assets": [
@@ -171,6 +182,41 @@
         "idle"
       ],
       "facings": 1
+    },
+    {
+      "id": "COA-INF-009",
+      "name": "Chrono Operative",
+      "assetRegisterName": "Phase Warden",
+      "faction": "coalition",
+      "role": "specialist",
+      "file": "art/pilot/coalition-specialist.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
+    },
+    {
+      "id": "FED-INF-005",
+      "name": "Arc Trooper",
+      "faction": "federation",
+      "role": "specialist",
+      "file": "art/pilot/federation-specialist.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
+    },
+    {
+      "id": "PSI-INF-005",
+      "name": "Neural Disciple (Specialist)",
+      "assetRegisterName": "Neural Controller",
+      "faction": "psionic",
+      "role": "specialist",
+      "file": "art/pilot/psionic-specialist.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
     }
   ],
   "qualityNotes": [
@@ -178,6 +224,7 @@
     "Generator SVGs are single-state placeholders; animated damage/idle states remain planned.",
     "Final Blender-based high-detail source models and cinematic images remain concept references, not these runtime sprites.",
     "Initial infantry illustrations are single-direction pilot sprites and will be replaced with eight-direction animation sheets.",
-    "Defense turret SVGs are single idle-state pilot sprites; animated swivel and damaged states not yet produced."
+    "Defense turret SVGs are single idle-state pilot sprites; animated swivel and damaged states not yet produced.",
+    "Faction specialist SVG pilots represent unique unit roles, but still lack 8-direction idle/walk/fire/ability/death animation."
   ]
 }
