@@ -27,6 +27,7 @@ jobs:
           node tests/combat-economy.test.mjs
           node tests/save-formation.test.mjs
           node tests/tactics.test.mjs
+          node tests/abilities.test.mjs
           python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py
       - name: Verify required files
         run: |
