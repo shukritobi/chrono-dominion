@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101d30">
+<title>Map Forge | Chrono Dominion</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif;background:#081420;color:#d6eaf3}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(circle at 30% 0%,#21364e,#0b1522 66%)}
+button,input,select{font:inherit}button{border:1px solid #51758b;color:#dcf9ff;border-radius:5px;background:#213b52;padding:10px 13px;min-height:40px;cursor:pointer}
+button:hover:not(:disabled){background:#32556e}button[aria-pressed=true],button.active{color:#0b2129;background:#86d9d4;border-color:#b8f7dd}button:disabled{opacity:.36;cursor:not-allowed}
+header{border-bottom:1px solid #35536d;padding:14px 20px;background:#111e2e;display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font:30px Impact,'Arial Narrow',sans-serif;letter-spacing:2px;margin:0;color:#91e9e9}h2{font-size:13px;letter-spacing:1.5px;color:#8dc1d1;margin:0 0 10px}
+header a{color:#9cdddd;text-decoration:none;font-size:13px}small,.hint{font-size:12px;color:#a2b9c9;line-height:1.5}
+main{width:min(1160px,100%);margin:18px auto;padding:0 15px 28px;display:grid;grid-template-columns:minmax(320px,1fr) minmax(260px,340px);gap:18px}
+.panel{background:#142538;border:1px solid #35536a;border-radius:7px;padding:15px;box-shadow:0 7px 28px #030c1844}
+#editorCanvas{display:block;width:min(100%,640px);height:auto;aspect-ratio:1/1;touch-action:none;cursor:crosshair;background:#345f4d;border:2px solid #56798a;image-rendering:pixelated;margin:auto}
+fieldset{border:0;padding:0;margin:0 0 12px}label{display:block;font-size:11px;color:#9dc5d5;margin:8px 0 4px}
+input[type=text],select{width:100%;padding:10px;border:1px solid #53728b;background:#0a1827;color:#e8fbff;border-radius:4px}
+.toolRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0 12px}.toolRow button{padding:8px 3px;font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:9px;font-size:11px;color:#b8d2df;margin:9px 0}.legend span:before{content:'';display:inline-block;width:10px;height:10px;margin-right:4px;background:var(--swatch);border:1px solid #ffffff55}
+.buttonGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}.buttonGrid button{font-size:12px;padding:8px}.wide{grid-column:1/-1}.primary{background:#2c6c71;border-color:#8fcdd1;font-weight:bold}
+#status{padding:10px;background:#0b1e29;border-left:3px solid #64d7b6;min-height:41px;font-size:12px;color:#bddeeb}
+#status.error{border-color:#ee837a;color:#ffb9b1}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.metric{padding:8px;background:#0b1b2e;border-radius:4px}.metric strong{display:block;font-size:20px;color:#a6efca}
+hr{border:0;border-top:1px solid #3b5062;margin:16px 0}
+#fileInput{display:none}
+@media(max-width:800px){main{grid-template-columns:1fr;max-width:660px}.panel{padding:12px}h1{font-size:24px}}
+@media(max-width:420px){header{padding:10px}header a{font-size:11px}.toolRow button{font-size:10px}.buttonGrid{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<header><h1>CHRONO DOMINION <span style="color:#6791a4">/ MAP FORGE</span></h1><a href="./index.html">← RETURN TO GAME</a></header>
+<main>
+<section class="panel">
+<h2>34 × 34 TACTICAL GRID</h2>
+<canvas id="editorCanvas" width="680" height="680" aria-label="Editable battlefield. Select brush, then draw with mouse or touch"></canvas>
+<div class="legend">
+<span style="--swatch:#3e785f">Land</span><span style="--swatch:#3f879a">Water</span><span style="--swatch:#d9a65e">Ore</span><span style="--swatch:#6be6ed">Coalition base</span><span style="--swatch:#f28a7c">Federation base</span>
+</div>
+<p class="hint">Paint by dragging your mouse, pen or finger. The shaded starting zones are protected so every map can be played.</p>
+</section>
+<aside class="panel">
+<h2>MAP PARAMETERS</h2>
+<label for="mapName">BATTLEFIELD NAME</label>
+<input id="mapName" maxlength="48" type="text" value="My Battlefield">
+<label for="mapTheme">TERRAIN THEME</label>
+<select id="mapTheme"><option value="verdant">Verdant Grasslands</option><option value="desert">Ashen Desert</option><option value="snow">Frozen Tundra</option></select>
+<label>PAINT TOOL</label>
+<div class="toolRow" id="tools">
+<button data-tool="water" aria-pressed="true">WATER</button>
+<button data-tool="land" aria-pressed="false">LAND</button>
+<button data-tool="ore" aria-pressed="false">ORE</button>
+<button data-tool="removeOre" aria-pressed="false">ERASE ORE</button>
+</div>
+<div class="metrics"><div class="metric">ORE DEPOSITS<strong id="oreCount">0</strong></div><div class="metric">WATER TILES<strong id="waterCount">0</strong></div></div>
+<div id="status" role="status" aria-live="polite">Create a battlefield with at least four ore deposits.</div>
+<hr>
+<h2>STARTING TEMPLATES</h2>
+<label for="template">LOAD A BASE MAP (replaces unsaved edits)</label>
+<select id="template"><option value="verdant">Verdant Front</option><option value="desert">Ashen Basin</option><option value="snow">Frostline</option><option value="blank">Blank Battlefield</option></select>
+<div class="buttonGrid"><button id="loadTemplate" class="wide">RESET FROM TEMPLATE</button></div>
+<hr>
+<h2>SAVE AND SHARE</h2>
+<div class="buttonGrid">
+<button id="saveMap" class="primary wide">SAVE MAP TO THIS BROWSER</button>
+<button id="playMap" class="primary wide">SAVE & PLAY CUSTOM SKIRMISH</button>
+<button id="exportMap">EXPORT JSON</button>
+<button id="importMap">IMPORT JSON</button>
+<button id="restoreMap" class="wide">RESTORE SAVED MAP</button>
+</div>
+<input id="fileInput" type="file" accept=".json,application/json">
+<p class="hint">One custom battlefield is stored locally in this browser. Export its JSON to back it up or share it. You can still play the three built-in maps.</p>
+</aside>
+</main>
+<script src="./maps/catalog.js" defer></script>
+<script src="./maps/map-core.js" defer></script>
+<script src="./maps/map-editor.js" defer></script>
+</body>
+</html>
