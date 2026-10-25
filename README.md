@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.1.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. The visuals are original procedurally drawn placeholders; the sprite production pipeline is still planned.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.1.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. The first three original vector tank pilot sprites are integrated; remaining artwork is largely procedurally drawn placeholders.
 
 ## Get playing
 
@@ -28,7 +28,7 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 | Psionic ability | Conditional capture of weakened enemy units |
 | Interface | Classic-inspired right sidebar, radar, HUD, selection info, zoom and pan |
 | Fog of war | Player vision and previously explored terrain |
-| Art | Original runtime-drawn primitives (temporary, not production sprites) |
+| Art | Three original tank SVG pilots plus runtime-drawn placeholder art |
 
 ## Controls
 
@@ -39,7 +39,7 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 | Shift + left-click | Add friendly unit to selection |
 | Right-click | Move selected units, attack an enemy, or cancel construction placement |
 | Sidebar | Queue units or choose a building to place |
-| WASD or arrow keys | Pan camera |
+| WASD or arrow keys | Pan camera |\n| Ctrl+1–9 | Assign selected units to control group |\n| 1–9 | Recall a control group |\n| Shift + right-click | Attack-move to selected point |\n| H | Center camera on headquarters |\n| Space | Center camera on selection |
 | Mouse wheel | Zoom |
 | Escape | Cancel placement / pause match |
 | Radar click | Jump camera |
@@ -67,7 +67,7 @@ chrono-dominion/
 
 See [Art pipeline](docs/ART-PIPELINE.md) and [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md). Target workflow: **original concept > editable 3D source > locked orthographic camera > systematic directional renders > transparent sprites and shadow masks > atlas + metadata > browser test**.
 
-The initial planned art pilot is three tanks, three infantry, three buildings, two terrain samples, two effects and a logo/sidebar. No external proprietary game sprite or sound is distributed here.
+The initial planned art pilot is three tanks, three infantry, three buildings, two terrain samples, two effects and a logo/sidebar. Three original vector tank sprites have now been integrated. No external proprietary game sprite or sound is distributed here.
 
 ## Enable GitHub Pages
 
@@ -80,14 +80,14 @@ The deploy workflow validates `game.js` and the planning asset register before p
 
 ## Roadmap
 
-- **0.1: Playable skirmish proof of concept** — underway
+- **0.1: Playable skirmish proof of concept** — delivered\n- **0.2: Original pilot art, cached A* pathfinding and RTS unit-control shortcuts** — delivered
 - **0.2: Model-and-batch-render pilot art** — next
 - **0.3: Improved collision, pathfinding, player tech and AI behaviours**
 - **0.4: Full army rosters, country variants, air/naval forces and special powers**
 - **0.5: Save games, replays, maps, skirmish options and balancing**
 - **0.6+: Campaign, multiplayer, map editor, performance/accessibility**
 
-See [Project status](docs/PROJECT-STATUS.md) for explicit limitations.
+See [v0.2 release notes](docs/RELEASE-0.2.md), [pilot tank assets](art/pilot/README.md) and [Project status](docs/PROJECT-STATUS.md) for explicit limitations.
 
 ## Rights
 
