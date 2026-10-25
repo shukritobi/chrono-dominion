@@ -54,6 +54,7 @@
       this.sprites={};this.buildingSprites={};this.infantrySprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
       if(window.ChronoVehicleArt){try{this.vehicleAtlases=window.ChronoVehicleArt.createAtlases();}catch(err){console.warn('Directional atlas fallback:',err);}}
+      this.loadRenderedAtlases();
       this.settings={playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'standard'};
       this.setupEvents();this.resize();this.updateSaveButtons();requestAnimationFrame(t=>this.frame(t));
     }
@@ -68,6 +69,35 @@
         const infantry=new Image();infantry.decoding='async';infantry.src='./art/pilot/'+faction+'-infantry.svg';
         this.infantrySprites[faction]=infantry;
       }
+    }
+    loadRenderedAtlases(){
+      // Production PNG atlases can replace the procedural pilot automatically
+      // after the original Blender render pipeline produces complete pairs.
+      if(typeof fetch!=='function'||typeof Image==='undefined')return;
+      fetch('./art/rendered/manifest.json',{cache:'no-cache'}).then(response=>{
+        if(!response.ok)throw Error('Atlas manifest unavailable');
+        return response.json();
+      }).then(manifest=>{
+        if(manifest.format!=='png-atlas-v1'||manifest.directions!==32||
+          manifest.frameSize!==128||manifest.columns!==8)return;
+        for(const [faction,pair] of Object.entries(manifest.atlases||{})){
+          if(!Object.hasOwn(COLORS,faction)||!pair?.hull||!pair?.turret)continue;
+          const hull=new Image(),turret=new Image();
+          let loaded=0,failed=false;
+          const accept=()=>{
+            if(failed||++loaded!==2)return;
+            if(hull.naturalWidth!==1024||hull.naturalHeight!==512||
+               turret.naturalWidth!==1024||turret.naturalHeight!==512)return;
+            this.vehicleAtlases??={};
+            this.vehicleAtlases[faction]={hull,turret};
+          };
+          const reject=()=>{failed=true;};
+          hull.onload=accept;turret.onload=accept;
+          hull.onerror=reject;turret.onerror=reject;
+          hull.src='./art/rendered/'+pair.hull;
+          turret.src='./art/rendered/'+pair.turret;
+        }
+      }).catch(()=>{}); // Keep procedural original-art sprites as safe fallback.
     }
     setupEvents(){
       window.addEventListener('resize',()=>this.resize());
