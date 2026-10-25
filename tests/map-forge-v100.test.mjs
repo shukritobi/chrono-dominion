@@ -61,6 +61,7 @@ assert.equal(g.settings.map,'custom');
 assert.equal(g.water(24,4),true,'custom terrain blocks movement');
 assert.equal(g.water(5,6),false);
 assert.ok(g.ores.length>=4,'custom map spawns resource fields');
+node('mapSelect').value='custom';
 g.drawMapPreview();
 assert.equal(node('mapDescription').textContent,'Player-designed Chrono Dominion battlefield');
 assert.ok(g.saveGame(),'custom map included in a skirmish snapshot');
