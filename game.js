@@ -1,4 +1,4 @@
-/* Chrono Dominion v0.8 — distinct skirmish maps and faction recon. */
+/* Chrono Dominion v0.9 — battle statistics, map files and reconnaissance patrols. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -9,7 +9,7 @@
     federation:{tank:{hp:1.18,damage:1.13,speed:.90},heavy:{hp:1.15,damage:1.12,speed:.88},recon:{hp:1.28,damage:1.1,speed:.87}},
     psionic:{tank:{speed:1.13,hp:.91,damage:.94},specialist:{range:1.14},recon:{speed:1.13,range:1.09}}
   };
-  const MAPS={
+  const MAPS=window.ChronoMapCatalog||{
     verdant:{name:'Verdant Front',description:'Twin lake basins, fertile grassland and multiple contested ore veins.',ore:[[10,12],[13,15],[18,17],[23,21],[25,24],[19,11],[12,21]],waterColor:'#2d6179'},
     desert:{name:'Ashen Basin',description:'Open desert routes, a central canyon lake and exposed mineral deposits.',ore:[[10,10],[14,14],[18,15],[22,20],[26,24],[15,24],[24,12]],waterColor:'#426c88'},
     snow:{name:'Frostline',description:'Icy lake channels and ore-rich frozen highlands with narrow approaches.',ore:[[11,13],[14,18],[17,19],[22,23],[24,25],[21,11],[10,23]],waterColor:'#618c98'}
@@ -65,7 +65,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
-      this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
@@ -167,6 +167,7 @@
       $('restart').onclick=()=>this.newMatch(this.settings);
       $('quit').onclick=()=>this.returnMenu();$('resultQuit').onclick=()=>this.returnMenu();
       $('playAgain').onclick=()=>this.newMatch(this.settings);
+      $('copyResult').onclick=()=>this.copyBattleReport();
       $('saveGame').onclick=()=>this.saveGame();
       $('loadMain').onclick=()=>this.loadGame();
       $('loadPaused').onclick=()=>this.loadGame();
@@ -189,7 +190,7 @@
         players:this.players,entities:this.entities,ores:this.ores,queues:this.queues,
         projectiles:this.projectiles,particles:this.particles,
         time:this.time,nextAI:this.nextAI,nextId:this.nextId,
-        selected:this.selected,groups:this.groups,camera:this.camera,
+        selected:this.selected,groups:this.groups,camera:this.camera,stats:this.stats,
         fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
       };
       try{
@@ -222,6 +223,7 @@
       if(!valid){this.notify('Saved game is incompatible with this version');return false;}
       this.settings={...saved.settings};
       this.players=saved.players.map(p=>({...p}));
+      this.stats=Array.isArray(saved.stats)&&saved.stats.length===2?saved.stats.map(v=>({...this.newStats(),...v})): [this.newStats(),this.newStats()];
       this.entities=saved.entities.map(e=>({...e}));
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
@@ -263,7 +265,9 @@
       const hitPoints=Math.round(def.hp*(modifier.hp||1));
       const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:hitPoints,maxHp:hitPoints,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0,abilityReadyAt:0,stunnedUntil:0};
       if(e.type==='unit'){e.stance='guard';e.guardX=x;e.guardY=y;e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
-      this.entities.push(e);return e;
+      this.entities.push(e);
+      if(this.stats[owner]){if(e.type==='unit')this.stats[owner].unitsDeployed++;else this.stats[owner].buildingsConstructed++;}
+      return e;
     }
     drawMapPreview(){
       const canvas=$('mapPreview'),ctx=canvas.getContext('2d');
@@ -293,6 +297,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
+      this.stats=[this.newStats(),this.newStats()];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -342,7 +347,7 @@
       if(!def||!this.prereq(side,key)){this.notify('Required technology or production building missing');return;}
       if(this.players[0].credits<def.cost){this.notify('Insufficient credits');return;}
       if(BUILD[key]){if(key==='hq')return;this.placing=key;this.notify('Choose a clear location near your base. Right-click to cancel.');}
-      else{if(this.queues.some(q=>q.side===0&&q.key===key)){this.notify('Already producing '+this.name({owner:0,kind:key}));return;}this.players[0].credits-=def.cost;this.queues.push({side:0,key,elapsed:0,total:Math.max(2,def.cost/250)});this.notify('Training '+this.name({owner:0,kind:key}));}
+      else{if(this.queues.some(q=>q.side===0&&q.key===key)){this.notify('Already producing '+this.name({owner:0,kind:key}));return;}this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;this.queues.push({side:0,key,elapsed:0,total:Math.max(2,def.cost/250)});this.notify('Training '+this.name({owner:0,kind:key}));}
       this.updateUI(true);
     }
     cancelProduction(key){
@@ -352,7 +357,7 @@
       const q=this.queues[index],def=BUILD[key]||UNITS[key];
       if(!def)return false;
       // No delivered unit or item: credit reservation is reversed in full.
-      this.players[0].credits+=def.cost;
+      this.players[0].credits+=def.cost;this.stats[0].creditsSpent=Math.max(0,this.stats[0].creditsSpent-def.cost);
       this.queues.splice(index,1);
       this.notify(this.name({owner:0,kind:key})+' cancelled: ¤'+def.cost+' refunded');
       this.updateUI(true);
@@ -361,7 +366,7 @@
     placeBuilding(x,y){
       const key=this.placing,def=BUILD[key];if(!key||!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
       if(this.players[0].credits<def.cost)return this.notify('Insufficient credits');
-      this.players[0].credits-=def.cost;const e=this.add(0,key,Math.round(x),Math.round(y),false);e.buildTime=3.5+def.cost/650;
+      this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;const e=this.add(0,key,Math.round(x),Math.round(y),false);e.buildTime=3.5+def.cost/650;
       this.placing=null;this.selected=[e.id];this.notify(this.name(e)+' construction started');this.updateUI(true);
     }
     buildingAction(action){
@@ -377,7 +382,7 @@
       if(action==='sell'){
         if(e.kind==='hq'){this.notify('Command Citadel cannot be sold');return false;}
         const refund=Math.floor(BUILD[e.kind].cost*.5*(e.built?1:.8));
-        this.players[0].credits+=refund;
+        this.players[0].credits+=refund;this.recordLoss(e,null,true);
         this.particles.push({x:e.x,y:e.y,life:1,color:'#abf6b2',type:'cash'});
         e.hp=0;e.repairing=false;this.selected=[];
         this.notify(this.name(e)+' sold for ¤'+refund);
@@ -521,8 +526,9 @@
         for(const u of victims){
           if(faction==='federation'){
             const amount=u.type==='building'?25:38;
-            u.hp-=amount;
-            if(u.hp<=0){e.kills++;this.selected=this.selected.filter(id=>id!==u.id);
+            const beforeHp=u.hp;u.hp-=amount;
+            if(this.stats[e.owner])this.stats[e.owner].damageDealt+=Math.min(amount,beforeHp);
+            if(u.hp<=0){this.recordLoss(u,e.owner);e.kills++;this.selected=this.selected.filter(id=>id!==u.id);
               this.particles.push({x:u.x,y:u.y,life:1,color:'#ffa95e',type:'boom'});}
           }else if(faction==='psionic'){
             u.stunnedUntil=Math.max(u.stunnedUntil||0,this.time+3.8);
@@ -743,8 +749,10 @@
           continue;
         }
         target.hp-=shot.damage;
+        if(this.stats[shot.owner])this.stats[shot.owner].damageDealt+=Math.max(0,Math.min(shot.damage,target.hp+shot.damage));
         this.particles.push({x:target.x,y:target.y,life:.38,color:shot.color,type:'hit'});
         if(target.hp<=0){
+          this.recordLoss(target,shot.owner);
           const killer=this.entityById(shot.sourceId);
           if(killer)killer.kills++;
           this.particles.push({x:target.x,y:target.y,life:1,color:'#ffa05a',type:'boom'});
@@ -770,7 +778,7 @@
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&b.kind==='refinery'&&b.built);
       if(!refinery)return;
       if(e.load>=360){if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
-        else if(e.work<=0){this.players[e.owner].credits+=e.load;e.load=0;e.work=.6;if(e.owner===0)this.particles.push({x:refinery.x,y:refinery.y,life:1,color:'#9fe29d',type:'cash'});}return;}
+        else if(e.work<=0){this.players[e.owner].credits+=e.load;if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;e.load=0;e.work=.6;if(e.owner===0)this.particles.push({x:refinery.x,y:refinery.y,life:1,color:'#9fe29d',type:'cash'});}return;}
       let closest=null,d=Infinity;for(const o of this.ores){if(o.amount<=0)continue;const r=dist(e,o);if(r<d){d=r;closest=o;}}
       if(!closest)return;
       if(d>.8)this.move(e,closest.x,closest.y,dt);
@@ -868,7 +876,7 @@
           const origin=anchor===base?base:myBuildings.reduce((p,b)=>dist(anchor,b)<dist(anchor,p)?b:p,base);
           const x=Math.round(origin.x+Math.cos(angle)*radius),y=Math.round(origin.y+Math.sin(angle)*radius);
           if(!this.canPlace(x,y,side))continue;
-          me.credits-=BUILD[choice].cost;
+          me.credits-=BUILD[choice].cost;this.stats[side].creditsSpent+=BUILD[choice].cost;
           const b=this.add(side,choice,x,y,false);b.buildTime=3.5+BUILD[choice].cost/650;
           break;
         }
@@ -882,7 +890,7 @@
           unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
         }else if(built('barracks')&&me.credits<350)unit=null;
         if(unit&&this.prereq(side,unit)&&me.credits>=UNITS[unit].cost){
-          me.credits-=UNITS[unit].cost;
+          me.credits-=UNITS[unit].cost;this.stats[side].creditsSpent+=UNITS[unit].cost;
           this.queues.push({side,key:unit,elapsed:0,total:Math.max(2,UNITS[unit].cost/250)});
         }
       }
@@ -1158,6 +1166,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.8.0',build:'skirmish-maps-and-recon'};
+  window.ChronoDominion={version:'0.9.0',build:'battle-results-and-patrols'};
   new Game();
 })();
