@@ -40,6 +40,8 @@
             <label>YOUR ARMY<select id="playerFaction"><option value="coalition">Coalition Forces</option><option value="federation">Iron Federation</option><option value="psionic">Psionic Order</option></select></label>
             <label>ENEMY ARMY<select id="enemyFaction"><option value="federation">Iron Federation</option><option value="coalition">Coalition Forces</option><option value="psionic">Psionic Order</option></select></label>
             <label>BATTLEFIELD<select id="mapSelect"><option value="verdant">Verdant Front</option><option value="desert">Ashen Basin</option><option value="snow">Frostline</option></select></label>
+            <div class="mapPreview"><canvas id="mapPreview" width="272" height="144" aria-label="Skirmish map preview"></canvas><p id="mapDescription">Twin lake basins and contested ore deposits.</p></div>
+            <label>STARTING CREDITS<select id="startingCredits"><option value="3000">3,000 · Challenging</option><option value="5000" selected>5,000 · Standard</option><option value="8000">8,000 · Quick Build</option></select></label>
             <label>DIFFICULTY<select id="difficulty"><option value="recruit">Recruit</option><option value="standard" selected>Standard</option><option value="veteran">Veteran</option></select></label>
             <button class="primary" id="start">START BATTLE</button>
             <button id="backMenu">BACK</button>
@@ -61,7 +63,7 @@
             <button class="primary" id="playAgain">PLAY AGAIN</button>
             <button id="resultQuit">MAIN MENU</button>
           </div>
-          <div class="version">PROTOTYPE 0.7 · SPECIALIST WARFARE</div>
+          <div class="version">PROTOTYPE 0.8 · SKIRMISH EXPANSION</div>
         </section>
       </div>
     </main>
