@@ -1,12 +1,12 @@
 {
   "name": "chrono-dominion",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Original-browser-RTS playable skirmish prototype",
   "scripts": {
-    "check": "node --check game.js && node --check art/vehicle-renderer.js && node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs",
-    "test": "node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs",
+    "check": "node --check game.js && node --check art/vehicle-renderer.js && node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs",
+    "test": "node tests/smoke.test.mjs && node tests/vehicle-art.test.mjs && node tests/combat-economy.test.mjs",
     "serve": "python3 -m http.server 8080"
   },
   "engines": {
