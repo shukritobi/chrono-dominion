@@ -84,5 +84,16 @@ const setup=(player='coalition',enemy='federation')=>{
   delete caster.stunnedUntil;
   assert.equal(game.useSpecialistAbility(),true,'pre-v0.7 specialists can trigger abilities');
 }
+// Computer uses the same specialist roster and can activate a pulse.
+{
+  game.newMatch({playerFaction:'coalition',enemyFaction:'federation',map:'desert',difficulty:'standard'});
+  const defender=game.add(1,'specialist',24,22);
+  const intruder=game.add(0,'soldier',25,22);
+  const targetHP=intruder.hp;
+  game.nextAI=Infinity;
+  game.runAI();
+  assert.ok(defender.abilityReadyAt>game.time,'AI activates its Arc Discharge when an enemy approaches');
+  assert.ok(intruder.hp<targetHP,'AI specialist pulse damages invading soldiers');
+}
 game.draw();
 console.log('PASS: Coalition teleport, blocked destination, three cooldowns, Arc damage, Neural stun, save compatibility and render');
