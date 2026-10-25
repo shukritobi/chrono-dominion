@@ -60,6 +60,7 @@ assert.equal(game.players[0].credits,current,'bad snapshot cannot destroy curren
 storage.set('chrono-dominion-skirmish-v1',JSON.stringify({...snapshot,version:99}));
 assert.equal(game.loadGame(),false,'incompatible version rejected');
 // Placement rejects a footprint touching the pond even when the centre is dry.
+game.settings.map='verdant';
 game.entities=[{id:1,owner:0,type:'building',kind:'hq',built:true,hp:1300,maxHp:1300,x:18,y:5}];
 assert.equal(game.water(22,5),false);
 assert.equal(game.water(23,5),true);
