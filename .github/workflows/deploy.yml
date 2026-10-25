@@ -44,6 +44,9 @@ jobs:
           test -f art/pilot/coalition-turret.svg
           test -f art/pilot/federation-turret.svg
           test -f art/pilot/psionic-turret.svg
+          test -f art/pilot/coalition-specialist.svg
+          test -f art/pilot/federation-specialist.svg
+          test -f art/pilot/psionic-specialist.svg
           test -f art/manifest.json
           test -f art/rendered/manifest.json
           test -f tools/blender/generate_tanks.py
