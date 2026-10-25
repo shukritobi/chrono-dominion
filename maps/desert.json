@@ -1,0 +1,56 @@
+{
+  "id": "desert",
+  "name": "Ashen Basin",
+  "description": "Open desert routes, a central canyon lake and exposed mineral deposits.",
+  "ore": [
+    [
+      10,
+      10
+    ],
+    [
+      14,
+      14
+    ],
+    [
+      18,
+      15
+    ],
+    [
+      22,
+      20
+    ],
+    [
+      26,
+      24
+    ],
+    [
+      15,
+      24
+    ],
+    [
+      24,
+      12
+    ]
+  ],
+  "waterColor": "#426c88",
+  "waterRects": [
+    [
+      12,
+      22,
+      10,
+      13
+    ],
+    [
+      15,
+      19,
+      13,
+      21
+    ],
+    [
+      3,
+      7,
+      23,
+      28
+    ]
+  ]
+}
