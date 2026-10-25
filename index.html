@@ -46,7 +46,7 @@
           </div>
           <div id="howMenu" class="hidden">
             <p>Deploy buildings from the right sidebar. Your refinery sends harvesters to ore, generating credits. Build a barracks for infantry, a war factory for tanks and defenses to protect your base. Click one of your buildings to repair it over time using credits, or sell a non-command building for a partial refund. Pause to save/load a match in this browser (also F6/F9).</p>
-            <p>Choose a unit, then right-click the ground to move or an enemy to attack. On tablets, tap a friendly unit and then tap the destination or enemy; drag the battlefield to pan and use +/- to zoom. Move several units together to keep a formation. Placement preview shows a 3×3 building footprint. Harvesters collect automatically. Destroy all hostile structures to win.</p>
+            <p>Choose a unit, then right-click the ground to move or an enemy to attack. On tablets, tap a friendly unit and then tap the destination or enemy; drag the battlefield to pan and use +/- to zoom. Move several units together to keep a formation. Use G guard, B hold, V aggressive, X stop, or T then right-click for attack-move. Placement preview shows a 3×3 building footprint. Harvesters collect automatically. Destroy all hostile structures to win.</p>
             <button id="backHow">BACK</button>
           </div>
           <div id="pauseMenu" class="hidden">
@@ -61,7 +61,7 @@
             <button class="primary" id="playAgain">PLAY AGAIN</button>
             <button id="resultQuit">MAIN MENU</button>
           </div>
-          <div class="version">PROTOTYPE 0.5 · SAVE & STRATEGY</div>
+          <div class="version">PROTOTYPE 0.6 · TACTICAL COMMAND</div>
         </section>
       </div>
     </main>
@@ -78,6 +78,7 @@
         <button data-tab="vehicles" title="Vehicles">▰<span>VEH</span></button>
       </nav>
       <div id="production" class="production"></div>
+      <div id="queueList" class="queueList" aria-label="Production queue"></div>
       <div id="selection" class="selection"><strong>NO SELECTION</strong><p>Click a unit or building to inspect it.</p></div>
       <div class="sidebarFooter">CHRONO DOMINION · SKIRMISH MODULE</div>
     </aside>
