@@ -153,11 +153,12 @@
       $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);
         const unit=e.target.closest?.('button[data-unit-action]');if(unit)this.unitAction(unit.dataset.unitAction);
         const special=e.target.closest?.('button[data-special]');if(special)this.useSpecialistAbility();});
-      $('openSkirmish').onclick=()=>this.showMenu('skirmishMenu');
+      $('openSkirmish').onclick=()=>{this.showMenu('skirmishMenu');this.drawMapPreview();};
+      $('mapSelect').addEventListener('change',()=>this.drawMapPreview());
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
       $('backHow').onclick=()=>this.showMenu('mainMenu');
-      $('start').onclick=()=>{const get=id=>$(id).value;this.newMatch({playerFaction:get('playerFaction'),enemyFaction:get('enemyFaction'),map:get('mapSelect'),difficulty:get('difficulty')});};
+      $('start').onclick=()=>{const get=id=>$(id).value;this.newMatch({playerFaction:get('playerFaction'),enemyFaction:get('enemyFaction'),map:get('mapSelect'),difficulty:get('difficulty'),startingCredits:Number(get('startingCredits'))});};
       $('pauseBtn').onclick=()=>this.pause();$('resume').onclick=()=>this.pause();
       $('zoomIn').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom*1.15,.65,1.8);};
       $('zoomOut').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom/1.15,.65,1.8);};
@@ -237,6 +238,8 @@
       this.keys.clear();this.nextUi=0;this.nextFog=0;
       this.state='playing';
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
+      $('startingCredits').value=String(this.settings.startingCredits||5000);
+      this.drawMapPreview();
       this.updateFog();this.updateUI(true);this.updateSaveButtons();
       $('overlay').classList.add('hidden');
       this.notify('Saved skirmish loaded');return true;
@@ -260,10 +263,34 @@
       if(e.type==='unit'){e.stance='guard';e.guardX=x;e.guardY=y;e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
       this.entities.push(e);return e;
     }
+    drawMapPreview(){
+      const canvas=$('mapPreview'),ctx=canvas.getContext('2d');
+      if(!ctx)return;
+      const map=$('mapSelect').value||'verdant',cfg=MAPS[map]||MAPS.verdant;
+      $('mapDescription').textContent=cfg.description;
+      const width=canvas.width||272,height=canvas.height||144;
+      const sx=width/WORLD_SIZE,sy=height/WORLD_SIZE;
+      ctx.clearRect(0,0,width,height);
+      const colors=terrain[map]||terrain.verdant;
+      for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){
+        const filled=this.water(x+.5,y+.5,map);
+        ctx.fillStyle=filled?cfg.waterColor:colors[Math.floor(rand(x,y)*colors.length)];
+        ctx.fillRect(x*sx,y*sy,Math.ceil(sx),Math.ceil(sy));
+      }
+      ctx.fillStyle='#d9b477';
+      for(const [x,y] of cfg.ore){
+        ctx.beginPath();ctx.arc(x*sx,y*sy,Math.max(2.3,sx*.65),0,Math.PI*2);ctx.fill();
+      }
+      for(const [x,y,color] of [[5,6,'#6fd8f0'],[28,27,'#fa8070']]){
+        ctx.fillStyle='#041823';ctx.fillRect(x*sx-5,y*sy-5,10,10);
+        ctx.fillStyle=color;ctx.fillRect(x*sx-3.5,y*sy-3.5,7,7);
+      }
+      ctx.strokeStyle='#7191a9';ctx.lineWidth=1;ctx.strokeRect(.5,.5,width-1,height-1);
+    }
     newMatch(s){
-      this.settings={...s};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
+      this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
-      this.players=[{faction:s.playerFaction,credits:5000},{faction:s.enemyFaction,credits:5000}];
+      this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -283,8 +310,8 @@
       const oreSites=(MAPS[this.settings.map]||MAPS.verdant).ore;
       for(const [x,y] of oreSites){for(let i=0;i<8;i++){const ox=x+(rand(i,x,10)-.5)*3.3,oy=y+(rand(i,y,20)-.5)*3.3;if(this.water(ox,oy))continue;this.ores.push({x:ox,y:oy,amount:900+Math.floor(rand(i,x+y)*450),max:1350});}}
     }
-    water(x,y){
-      switch(this.settings.map){
+    water(x,y,map=this.settings.map){
+      switch(map){
         case 'desert': return (x>12&&x<22&&y>10&&y<13)||(x>15&&x<19&&y>13&&y<21)||(x>3&&x<7&&y>23&&y<28);
         case 'snow': return (x>13&&x<17&&y>3&&y<14)||(x>16&&x<19&&y>14&&y<21)||(x>19&&x<23&&y>20&&y<31);
         default: return (x>22&&x<32&&y>2&&y<8)||(x>2&&x<9&&y>22&&y<28);
