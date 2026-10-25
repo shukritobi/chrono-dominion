@@ -65,7 +65,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
@@ -218,6 +218,7 @@
         time:this.time,nextAI:this.nextAI,nextId:this.nextId,
         selected:this.selected,groups:this.groups,camera:this.camera,stats:this.stats,
         customMap:this.settings.map==='custom'?MAPS.custom:null,
+        intel:this.intel,
         fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
       };
       try{
@@ -255,6 +256,12 @@
       this.settings={...saved.settings};
       this.players=saved.players.map(p=>({...p}));
       this.stats=Array.isArray(saved.stats)&&saved.stats.length===2?saved.stats.map(v=>({...this.newStats(),...v})): [this.newStats(),this.newStats()];
+      // Older saves had no intelligence memory; validate new memory before using it.
+      this.intel=Array.isArray(saved.intel)&&saved.intel.length===2?
+        saved.intel.map(entries=>Array.isArray(entries)?entries.slice(0,150).filter(v=>
+          v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
+          Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
+        ).map(v=>({...v})):[]):[[],[]];
       this.entities=saved.entities.map(e=>({...e}));
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
@@ -329,7 +336,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -873,15 +880,39 @@
       this.entities=this.entities.filter(e=>e.hp>0);
       for(let side=0;side<2;side++){if(!this.entities.some(e=>e.owner===side&&e.type==='building'&&e.hp>0)){this.finish(side===1);break;}}
     }
+    sideCanSee(side,location){
+      // Game-wide unit sight shared by teammates, without revealing enemy
+      // positions outside their sensor radius.
+      for(const observer of this.entities){
+        if(observer.owner!==side||observer.hp<=0||!observer.built)continue;
+        const radius=observer.kind==='recon'?8.1:observer.type==='building'?5.8:4.8;
+        if((observer.x-location.x)**2+(observer.y-location.y)**2<=radius*radius)return true;
+      }
+      return false;
+    }
+    updateIntel(side){
+      const list=this.intel?.[side]||(this.intel[side]=[]);
+      const incoming=this.entities.filter(e=>e.owner!==side&&e.hp>0&&this.sideCanSee(side,e));
+      const byId=new Map(list.map(item=>[item.id,item]));
+      for(const enemy of incoming){
+        byId.set(enemy.id,{id:enemy.id,x:enemy.x,y:enemy.y,time:this.time,type:enemy.type,kind:enemy.kind});
+      }
+      this.intel[side]=[...byId.values()].filter(v=>
+        this.time-v.time<=(v.type==='building'?180:28)&&
+        this.entities.some(e=>e.id===v.id&&e.hp>0&&e.owner!==side)
+      ).slice(-150);
+      return this.intel[side];
+    }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
       if(!base)return;
+      const knowledge=this.updateIntel(side);
       // The enemy now earns resources through the same refinery/harvester loop
       // as the player. Difficulty changes timing and priorities, not free income.
       const owned=kind=>this.entities.filter(e=>e.owner===side&&e.kind===kind&&e.hp>0);
       const built=kind=>owned(kind).filter(e=>e.built).length;
       const myBuildings=this.entities.filter(e=>e.owner===side&&e.type==='building'&&e.hp>0&&e.built);
-      const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester'&&myBuildings.some(b=>dist(b,e)<8));
+      const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester'&&myBuildings.some(b=>dist(b,e)<8)&&this.sideCanSee(side,e));
       const threatened=invaders.length>0;
       for(const b of myBuildings){
         if(b.hp/b.maxHp<.58&&me.credits>550)b.repairing=true;
@@ -923,7 +954,7 @@
       }
       for(const specialist of owned('specialist')){
         if((specialist.abilityReadyAt||0)>this.time)continue;
-        const threat=this.nearest(specialist,u=>u.owner===0&&u.type==='unit'&&u.hp>0,8);
+        const threat=this.nearest(specialist,u=>u.owner===0&&u.type==='unit'&&u.hp>0&&this.sideCanSee(side,u),8);
         if(!threat)continue;
         if(me.faction==='coalition'){
           if(dist(specialist,threat)<2.2||dist(specialist,threat)>7.2)continue;
@@ -941,7 +972,7 @@
       // under attack. This produces an early contest rather than a blind HQ rush.
       for(const scout of owned('recon')){
         const endangered=this.entities.filter(u=>u.owner===side&&u.kind==='harvester'&&u.hp>0)
-          .map(h=>({h,threat:this.nearest(h,e=>e.owner===0&&e.type==='unit'&&e.hp>0,5.5)}))
+          .map(h=>({h,threat:this.nearest(h,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),5.5)}))
           .find(pair=>pair.threat);
         if(endangered){
           scout.order={type:'attack',id:endangered.threat.id};
@@ -961,21 +992,30 @@
         scout.patrolIndex=(index+1)%route.length;
         scout.order={type:'attackMove',x:clamp(point[0]+.35,1,32),y:clamp(point[1]+.35,1,32)};
         // Contact information is remembered by the scout, and stored in saves.
-        const spotted=this.nearest(scout,e=>e.owner===0&&e.type==='unit'&&e.hp>0,8);
+        const spotted=this.nearest(scout,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),8);
         if(spotted)scout.lastContact={x:spotted.x,y:spotted.y,time:this.time,kind:spotted.kind};
       }
       // Local base defense always takes precedence over an offensive order.
       const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
       for(const fighter of fighters){
-        const attacker=this.nearest(fighter,e=>e.owner===0&&e.type==='unit'&&e.hp>0,6.5);
+        const attacker=this.nearest(fighter,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),6.5);
         if(attacker){fighter.order={type:'attack',id:attacker.id};continue;}
         if(fighter.kind==='recon'&&fighter.order?.type==='attackMove')continue;
         if(fighter.order?.type==='attack'&&this.entityById(fighter.order.id))continue;
         // Attack in groups; novices wait longer before committing.
         const minimum=this.settings.difficulty==='recruit'?5:this.settings.difficulty==='veteran'?2:3;
         if(fighters.length<minimum||this.time<(this.settings.difficulty==='recruit'?85:this.settings.difficulty==='veteran'?38:57))continue;
-        const target=this.nearest(fighter,e=>e.owner===0&&e.type==='building'&&e.hp>0);
+        const target=this.nearest(fighter,e=>e.owner===0&&e.type==='building'&&e.hp>0&&this.sideCanSee(side,e));
         if(target)fighter.order={type:'attack',id:target.id};
+        else {
+          // Only pursue last-seen positions, never omniscient live coordinates.
+          const reports=knowledge.filter(k=>k.type==='building'&&this.time-k.time<=180)
+            .sort((a,b)=>Math.hypot(a.x-fighter.x,a.y-fighter.y)-Math.hypot(b.x-fighter.x,b.y-fighter.y));
+          if(reports.length){
+            const report=reports[0];
+            fighter.order={type:'attackMove',x:report.x,y:report.y};
+          }
+        }
       }
     }
     updateFog(){
