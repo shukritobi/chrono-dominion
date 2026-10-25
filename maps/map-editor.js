@@ -9,7 +9,32 @@
     snow:['#93adb6','#a3b6bb','#bac8cd']
   };
   let map=core.load()||core.fromTemplate(catalog.verdant,'My Battlefield');
-  let tool='water',painting=false,previousCell='';
+  let tool='water',painting=false,previousCell='',workingSlotId=core.list().activeId,deletePendingId=null;
+  const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  function resetDelete(){
+    deletePendingId=null;
+    $('deleteMap').textContent='DELETE MAP';
+    $('deleteMap').classList.remove('confirmDelete');
+  }
+  function refreshLibrary(){
+    const lib=core.list();
+    const selector=$('mapLibrary');
+    selector.innerHTML=lib.maps.length?lib.maps.map(item=>
+      '<option value="'+item.slotId+'">'+escapeHtml(item.name)+' · '+item.theme.toUpperCase()+
+      (item.slotId===lib.activeId?' · ACTIVE':'')+'</option>').join(''):
+      '<option value="">No maps saved yet</option>';
+    const selected=lib.maps.some(item=>item.slotId===workingSlotId)?workingSlotId:lib.activeId;
+    selector.value=selected||'';
+    selector.disabled=lib.maps.length===0;
+    $('mapCount').textContent=lib.maps.length+' / '+lib.limit;
+    $('loadLibraryMap').disabled=lib.maps.length===0;
+    $('duplicateMap').disabled=lib.maps.length===0||lib.maps.length>=lib.limit;
+    $('deleteMap').disabled=lib.maps.length===0;
+    $('saveAsMap').disabled=lib.maps.length>=lib.limit;
+    $('saveMap').textContent=workingSlotId&&lib.maps.some(item=>item.slotId===workingSlotId)?
+      'SAVE CHANGES TO CURRENT MAP':'SAVE AS NEW MAP';
+    resetDelete();
+  }
   function cellFromEvent(e){
     const rect=canvas.getBoundingClientRect();
     const x=Math.floor((e.clientX-rect.left)/rect.width*SIZE);
@@ -24,9 +49,10 @@
     map.theme=$('mapTheme').value;
     map.name=$('mapName').value;
     const colors=landColors[map.theme]||landColors.verdant;
+    const waterCells=new Set(map.waterTiles.map(([x,y])=>x+','+y));
     for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
       const kind=(x*17+y*23+x*y*11)%colors.length;
-      ctx.fillStyle=core.waterAt(map,x,y)?(catalog[map.theme]?.waterColor||'#376c86'):colors[kind];
+      ctx.fillStyle=waterCells.has(x+','+y)?(catalog[map.theme]?.waterColor||'#376c86'):colors[kind];
       ctx.fillRect(x*CELL,y*CELL,CELL+.15,CELL+.15);
     }
     ctx.strokeStyle='#a3d5de1b';ctx.lineWidth=.65;
@@ -59,6 +85,7 @@
     if(core.blockedSpawn(x,y)){inform('Protected starting zone: keep both command bases clear.',true);return;}
     const water=pairIndex(map.waterTiles,x,y),ore=pairIndex(map.ore,x,y);
     if(tool==='water'){
+      if(water<0&&map.waterTiles.length>=520){inform('Maximum 520 water tiles reached.',true);return;}
       if(water<0)map.waterTiles.push([x,y]);
       if(ore>=0)map.ore.splice(ore,1);
     }else if(tool==='land'){
@@ -92,12 +119,62 @@
     const result=core.validate(map);
     inform(result.valid?'Loaded map is ready to save and play.':result.error,!result.valid);
   }
-  function save(){
+  function save(forceNew=false){
     repaint();
-    const result=core.save(map);
-    inform(result.valid?'Map saved to this browser. Open Skirmish and choose Custom Battlefield.':result.error,!result.valid);
+    // Saving the active edit never changes a different selected map by accident.
+    const slotExists=core.list().maps.some(item=>item.slotId===workingSlotId);
+    if(slotExists&&!forceNew){
+      const selected=core.select(workingSlotId);
+      if(!selected.valid){inform(selected.error,true);return false;}
+    }
+    const result=slotExists&&!forceNew?core.save(map):core.saveAs(map);
+    if(result.valid){
+      workingSlotId=result.slotId;
+      refreshLibrary();
+      inform('Saved "'+map.name+'" in your battlefield library.');
+    }else inform(result.error,true);
     return result.valid;
   }
+  $('mapLibrary').addEventListener('change',()=>resetDelete());
+  $('loadLibraryMap').addEventListener('click',()=>{
+    const slotId=$('mapLibrary').value,entry=core.loadSlot(slotId);
+    if(!entry){inform('Choose a saved map to open.',true);return;}
+    const selected=core.select(slotId);
+    if(!selected.valid){inform(selected.error,true);return;}
+    workingSlotId=slotId;useMap(entry);
+    refreshLibrary();
+    inform('Opened "'+entry.name+'". Saving changes will update this map.');
+  });
+  $('duplicateMap').addEventListener('click',()=>{
+    const slotId=$('mapLibrary').value,result=core.duplicate(slotId);
+    if(!result.valid){inform(result.error,true);return;}
+    workingSlotId=result.slotId;
+    const mapCopy=core.load();
+    if(mapCopy)useMap(mapCopy);
+    refreshLibrary();
+    inform('Map duplicated. The copy is a separate saved battlefield.');
+  });
+  $('deleteMap').addEventListener('click',()=>{
+    const slotId=$('mapLibrary').value;
+    if(!slotId){inform('Choose a map to delete.',true);return;}
+    if(deletePendingId!==slotId){
+      deletePendingId=slotId;
+      $('deleteMap').textContent='CONFIRM DELETE';
+      $('deleteMap').classList.add('confirmDelete');
+      inform('Click CONFIRM DELETE again to permanently remove the selected map.',true);
+      return;
+    }
+    const deleted=core.remove(slotId);
+    resetDelete();
+    if(!deleted.valid){inform(deleted.error,true);return;}
+    const next=core.list().activeId;
+    workingSlotId=next;
+    const nextMap=core.load();
+    useMap(nextMap||core.fromTemplate(catalog.verdant,'My Battlefield'));
+    refreshLibrary();
+    inform('Map deleted. Other saved maps were preserved.');
+  });
+  $('saveAsMap').addEventListener('click',()=>save(true));
   $('tools').addEventListener('click',e=>{
     const button=e.target.closest('button[data-tool]');if(button)chooseTool(button.dataset.tool);
   });
@@ -116,13 +193,15 @@
     const key=$('template').value;
     if(key==='blank')useMap({id:'blank',theme:'verdant',name:'My Battlefield',ore:[],waterRects:[]});
     else useMap(catalog[key]);
-    inform('Template loaded. Changes are not saved until you choose Save.');
+    workingSlotId=null;refreshLibrary();
+    inform('Template loaded. Save creates a new map without overwriting other designs.');
   });
-  $('saveMap').addEventListener('click',save);
+  $('saveMap').addEventListener('click',()=>save());
   $('playMap').addEventListener('click',()=>{if(save())window.location.href='./index.html?map=custom';});
   $('restoreMap').addEventListener('click',()=>{
     const stored=core.load();
-    if(stored)useMap(stored);else inform('No valid custom map saved in this browser.',true);
+    if(stored){workingSlotId=core.list().activeId;useMap(stored);refreshLibrary();}
+    else inform('No valid custom map saved in this browser.',true);
   });
   $('exportMap').addEventListener('click',()=>{
     repaint();
@@ -143,10 +222,11 @@
       if(data.id!=='custom')throw Error('Import a custom map exported from Map Forge.');
       const result=core.validate(data);
       if(!result.valid)throw Error(result.error);
-      useMap(data);inform('Map imported. Save to this browser when ready.');
+      useMap(data);workingSlotId=null;refreshLibrary();inform('Map imported. Save as a new map to preserve other designs.');
     }catch(err){inform('Import failed: '+err.message,true);}
     e.target.value='';
   });
   chooseTool('water');
   useMap(map);
+  refreshLibrary();
 })();
