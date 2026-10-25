@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.7.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.8.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v0.8 skirmish maps and reconnaissance
+
+- **Three distinct map layouts:** Verdant Front, Ashen Basin and Frostline each have their own lake/ice channels and ore locations, not only different terrain colours. The skirmish setup now includes a map preview.
+- **Starting credit choice:** 3,000, 5,000 or 8,000 credits, applied equally to both players and preserved in local saves.
+- **Faction recon vehicles:** Coalition Lynx Scout (fast), Federation Iron Patrol (armoured), Psionic Shade Runner (mobile and longer-ranged). All recon units reveal more map territory under fog of war.
+- **Computer reconnaissance:** the AI builds scouts, explores forward ore fields and responds to threats near its harvesters.
+- **Three new original recon SVG sprites** integrated into the battlefield and build panel. These are single-angle pilot assets.
+- [v0.8 release notes](docs/RELEASE-0.8.md) | [Skirmish regression suite](tests/skirmish-v08.test.mjs).
 
 ## v0.7 specialist warfare
 
