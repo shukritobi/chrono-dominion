@@ -1,0 +1,13 @@
+{
+  "name": "chrono-dominion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Original-browser-RTS playable skirmish prototype",
+  "scripts": {
+    "check": "node --check game.js && node tests/smoke.test.mjs",
+    "test": "node tests/smoke.test.mjs",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": {"node": ">=20"}
+}
