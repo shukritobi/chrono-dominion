@@ -24,6 +24,7 @@ jobs:
           node tests/smoke.test.mjs
           node --check art/vehicle-renderer.js
           node tests/vehicle-art.test.mjs
+          node tests/combat-economy.test.mjs
       - name: Verify required files
         run: |
           test -f index.html
