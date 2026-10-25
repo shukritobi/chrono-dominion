@@ -939,6 +939,24 @@
       }).slice(-150);
       return this.intel[side];
     }
+    chooseFlank(origin,report,side=0){
+      // Two squads circle opposite edges of the last-seen objective.
+      // This uses reported coordinates only, never live unseen positions.
+      const sign=side%2===0?1:-1;
+      const vx=report.x-origin.x,vy=report.y-origin.y;
+      const length=Math.max(.01,Math.hypot(vx,vy)),ux=vx/length,uy=vy/length;
+      const options=[
+        {x:report.x-ux*3.4-uy*sign*4,y:report.y-uy*3.4+ux*sign*4},
+        {x:report.x-ux*5+uy*sign*3,y:report.y-uy*5-ux*sign*3},
+        {x:report.x-ux*4,y:report.y-uy*4}
+      ];
+      for(const p of options){
+        const x=Math.round(clamp(p.x,1,WORLD_SIZE-2)),y=Math.round(clamp(p.y,1,WORLD_SIZE-2));
+        if(this.walkable(x,y)&&this.findPath(origin.x,origin.y,x,y).length)
+          return {x,y};
+      }
+      return null;
+    }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
       if(!base)return;
@@ -1049,7 +1067,11 @@
             .sort((a,b)=>Math.hypot(a.x-fighter.x,a.y-fighter.y)-Math.hypot(b.x-fighter.x,b.y-fighter.y));
           if(reports.length){
             const report=reports[0];
-            fighter.order={type:'attackMove',x:report.x,y:report.y};
+            // Retain the active waypoint until reached, rather than switching
+            // flanks every AI tick and oscillating in place.
+            if(fighter.order?.type==='attackMove'&&dist(fighter,fighter.order)>1.2)continue;
+            const flank=this.chooseFlank(fighter,report,fighter.id);
+            fighter.order={type:'attackMove',x:flank?.x??report.x,y:flank?.y??report.y};
           }
         }
       }
