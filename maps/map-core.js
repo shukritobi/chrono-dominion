@@ -51,21 +51,100 @@
       waterColor:typeof m.waterColor==='string'?m.waterColor:'#2d6179',
       waterTiles,waterRects:[],ore};
   }
-  function save(map,storage){
-    const result=validate(map);
-    if(!result.valid)return result;
+  // Versioned multi-map library. Each entry holds a validated editable
+  // map, while the active entry is mirrored at the v1 key for compatibility.
+  const LIBRARY_KEY='chrono-dominion-map-library-v2',MAX_MAPS=12;
+  const freshLibrary=()=>({version:2,activeId:null,nextId:1,items:[]});
+  const copy=value=>JSON.parse(JSON.stringify(value));
+  const storageOf=storage=>storage||root.localStorage;
+  function library(storage){
     try{
-      (storage||root.localStorage).setItem(STORAGE_KEY,JSON.stringify(map));
-      return {valid:true,error:null};
-    }catch(err){return {valid:false,error:'Browser storage unavailable or full'};}
+      const store=storageOf(storage);
+      const encoded=store.getItem(LIBRARY_KEY);
+      if(encoded){
+        const candidate=JSON.parse(encoded);
+        if(candidate?.version!==2||!Array.isArray(candidate.items)||candidate.items.length>MAX_MAPS)return freshLibrary();
+        const seen=new Set(),items=[];
+        for(const item of candidate.items){
+          if(!item||!/^map-[1-9][0-9]*$/.test(item.slotId)||seen.has(item.slotId)||!validate(item.map).valid)continue;
+          seen.add(item.slotId);
+          items.push({slotId:item.slotId,map:copy(item.map),updatedAt:Number.isFinite(item.updatedAt)?item.updatedAt:0});
+        }
+        const maxId=Math.max(0,...items.map(item=>Number(item.slotId.slice(4))));
+        const activeId=items.some(item=>item.slotId===candidate.activeId)?candidate.activeId:items[0]?.slotId||null;
+        return {version:2,activeId,nextId:Math.max(maxId+1,Number.isSafeInteger(candidate.nextId)?candidate.nextId:1),items};
+      }
+      // Migrates the v1 single-map slot on the first library write.
+      const legacy=store.getItem(STORAGE_KEY);
+      if(legacy){
+        const map=JSON.parse(legacy);
+        if(validate(map).valid)return {version:2,activeId:'map-1',nextId:2,items:[{slotId:'map-1',map:copy(map),updatedAt:0}]};
+      }
+    }catch(err){/* Missing or malformed storage fails closed. */}
+    return freshLibrary();
+  }
+  function commitLibrary(data,storage){
+    try{
+      const store=storageOf(storage);
+      store.setItem(LIBRARY_KEY,JSON.stringify(data));
+      const active=data.items.find(item=>item.slotId===data.activeId);
+      // Keep old clients and skirmish loader able to read the active map.
+      if(active)store.setItem(STORAGE_KEY,JSON.stringify(active.map));
+      else if(typeof store.removeItem==='function')store.removeItem(STORAGE_KEY);
+      return {valid:true,error:null,slotId:data.activeId};
+    }catch(err){return {valid:false,error:'Map library could not be saved (storage unavailable or full)'};
+    }
+  }
+  function list(storage){
+    const l=library(storage);
+    return {version:l.version,activeId:l.activeId,limit:MAX_MAPS,
+      maps:l.items.map(item=>({slotId:item.slotId,name:item.map.name,theme:item.map.theme,
+        water:item.map.waterTiles.length,ore:item.map.ore.length,updatedAt:item.updatedAt}))};
   }
   function load(storage){
-    try{
-      const raw=(storage||root.localStorage).getItem(STORAGE_KEY);
-      if(!raw)return null;
-      const map=JSON.parse(raw);
-      return validate(map).valid?map:null;
-    }catch(err){return null;}
+    const l=library(storage);
+    const entry=l.items.find(item=>item.slotId===l.activeId);
+    return entry?copy(entry.map):null;
   }
-  root.ChronoMaps={SIZE,STORAGE_KEY,BASES,blockedSpawn,validate,fromTemplate,save,load,waterAt};
+  function loadSlot(slotId,storage){
+    const entry=library(storage).items.find(item=>item.slotId===slotId);
+    return entry?copy(entry.map):null;
+  }
+  function select(slotId,storage){
+    const l=library(storage);
+    if(!l.items.some(item=>item.slotId===slotId))return {valid:false,error:'Map slot not found'};
+    l.activeId=slotId;
+    return commitLibrary(l,storage);
+  }
+  function save(map,storage){
+    const result=validate(map);if(!result.valid)return result;
+    const l=library(storage),active=l.items.find(item=>item.slotId===l.activeId);
+    if(!active)return saveAs(map,storage);
+    active.map=copy(map);active.updatedAt=Date.now();
+    return commitLibrary(l,storage);
+  }
+  function saveAs(map,storage){
+    const result=validate(map);if(!result.valid)return result;
+    const l=library(storage);
+    if(l.items.length>=MAX_MAPS)return {valid:false,error:'Map library is full (12 maps). Export or delete a map to make space.'};
+    const id='map-'+l.nextId++;
+    l.items.push({slotId:id,map:copy(map),updatedAt:Date.now()});
+    l.activeId=id;
+    return commitLibrary(l,storage);
+  }
+  function duplicate(slotId,storage){
+    const m=loadSlot(slotId,storage);
+    if(!m)return {valid:false,error:'Map slot not found'};
+    m.name=(m.name.slice(0,43)+' Copy').slice(0,48);
+    return saveAs(m,storage);
+  }
+  function remove(slotId,storage){
+    const l=library(storage),index=l.items.findIndex(item=>item.slotId===slotId);
+    if(index<0)return {valid:false,error:'Map slot not found'};
+    l.items.splice(index,1);
+    if(l.activeId===slotId)l.activeId=l.items[0]?.slotId||null;
+    return commitLibrary(l,storage);
+  }
+  root.ChronoMaps={SIZE,STORAGE_KEY,LIBRARY_KEY,MAX_MAPS,BASES,blockedSpawn,
+    validate,fromTemplate,save,saveAs,load,loadSlot,list,select,duplicate,remove,waterAt};
 })(typeof window==='object'?window:globalThis);
