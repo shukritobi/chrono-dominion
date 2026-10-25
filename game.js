@@ -510,7 +510,11 @@
       if(target){
         for(const e of chosen)e.order={type:'attack',id:target.id};
       }else{
-        const slots=this.formationSlots(p.gx,p.gy,chosen.length);
+        // Restrict group destinations to terrain reachable from the squad's
+        // current position; prevents assigning half a squad behind a lake.
+        const origin={x:chosen.reduce((sum,e)=>sum+e.x,0)/chosen.length,
+                      y:chosen.reduce((sum,e)=>sum+e.y,0)/chosen.length};
+        const slots=this.formationSlots(p.gx,p.gy,chosen.length,origin);
         const remaining=chosen.slice();
         for(const slot of slots){
           let best=0;
@@ -518,7 +522,10 @@
           const unit=remaining.splice(best,1)[0];
           if(!unit)break;
           unit.order={type:this.attackMoveArmed||event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
-          unit.path=[];unit.pathTarget=null;
+          unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.pathRecheck=0;
+        }
+        for(const unit of remaining){
+          unit.order=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;
         }
       }
       this.attackMoveArmed=false;
@@ -610,26 +617,51 @@
         '<button data-unit-action="'+act+'" class="'+((stance===act||act==='attackMove'&&this.attackMoveArmed)?'chosen':'')+'" title="'+act+'">'+label+'</button>'
       ).join('')+'</div>';
     }
-    formationSlots(cx,cy,count){
-      const slots=[],used=new Set(),want=Math.max(0,Math.min(count,120));
-      const center={x:clamp(Math.round(cx),1,WORLD_SIZE-2),y:clamp(Math.round(cy),1,WORLD_SIZE-2)};
-      const candidates=[];
-      // Search expanding perimeter rings. The centre slot remains the first choice.
-      for(let radius=0;radius<=WORLD_SIZE&&candidates.length<want*9+48;radius++){
-        for(let y=-radius;y<=radius;y++)for(let x=-radius;x<=radius;x++){
-          if(Math.max(Math.abs(x),Math.abs(y))!==radius)continue;
-          const p={x:center.x+x,y:center.y+y};
-          if(!this.walkable(p.x,p.y))continue;
-          candidates.push(p);
+    reachableTiles(origin){
+      // Four/eight-way flood-fill runs once per group order, not every frame.
+      // It enumerates only walkable cells connected to the selected army.
+      const start={x:clamp(Math.round(origin.x),1,WORLD_SIZE-2),
+                   y:clamp(Math.round(origin.y),1,WORLD_SIZE-2)};
+      const nearby=[];
+      for(let radius=0;radius<7&&!nearby.length;radius++)for(let dx=-radius;dx<=radius;dx++)for(let dy=-radius;dy<=radius;dy++){
+        const x=start.x+dx,y=start.y+dy;
+        if(Math.max(Math.abs(dx),Math.abs(dy))===radius&&this.walkable(x,y))nearby.push({x,y});
+      }
+      const cell=nearby[0];
+      if(!cell)return new Set();
+      const key=(x,y)=>x+','+y,seen=new Set([key(cell.x,cell.y)]),queue=[cell];
+      const directions=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      for(let i=0;i<queue.length;i++){
+        const at=queue[i];
+        for(const [dx,dy] of directions){
+          const x=at.x+dx,y=at.y+dy,k=key(x,y);
+          if(seen.has(k)||!this.walkable(x,y))continue;
+          if(dx&&dy&&(!this.walkable(at.x+dx,at.y)||!this.walkable(at.x,at.y+dy)))continue;
+          seen.add(k);queue.push({x,y});
         }
-        if(candidates.length>=want*3&&radius>2)break;
       }
-      for(const p of candidates){
-        const key=p.x+','+p.y;
-        if(!used.has(key)){used.add(key);slots.push(p);}
-        if(slots.length===want)break;
+      return seen;
+    }
+    formationSlots(cx,cy,count,origin=null){
+      const want=Math.max(0,Math.min(count,120)),center={
+        x:clamp(Math.round(cx),1,WORLD_SIZE-2),y:clamp(Math.round(cy),1,WORLD_SIZE-2)
+      };
+      if(!want)return [];
+      const connected=origin?this.reachableTiles(origin):null;
+      const usable=(x,y)=>this.walkable(x,y)&&(!connected||connected.has(x+','+y));
+      const candidates=[];
+      // Rings closest to the ordered destination first. Each cell is unique.
+      for(let radius=0;radius<WORLD_SIZE&&candidates.length<want*4;radius++){
+        for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+          if(Math.max(Math.abs(dx),Math.abs(dy))!==radius)continue;
+          const x=center.x+dx,y=center.y+dy;
+          if(usable(x,y))candidates.push({x,y});
+        }
+        if(candidates.length>=want*3&&radius>=2)break;
       }
-      return slots;
+      // A narrow island may contain fewer free tiles than selected troops.
+      // Distinct slots avoid repeated orders to an impossible shared point.
+      return candidates.slice(0,want);
     }
     entityById(id){return this.entities.find(e=>e.id===id&&e.hp>0);}
     nearest(source,predicate,range=Infinity){let result=null,best=range;for(const e of this.entities){if(e===source||e.hp<=0||!predicate(e))continue;const d=dist(source,e);if(d<best){best=d;result=e;}}return result;}
