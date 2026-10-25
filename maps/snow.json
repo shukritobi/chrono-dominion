@@ -1,0 +1,56 @@
+{
+  "id": "snow",
+  "name": "Frostline",
+  "description": "Icy lake channels and ore-rich frozen highlands with narrow approaches.",
+  "ore": [
+    [
+      11,
+      13
+    ],
+    [
+      14,
+      18
+    ],
+    [
+      17,
+      19
+    ],
+    [
+      22,
+      23
+    ],
+    [
+      24,
+      25
+    ],
+    [
+      21,
+      11
+    ],
+    [
+      10,
+      23
+    ]
+  ],
+  "waterColor": "#618c98",
+  "waterRects": [
+    [
+      13,
+      17,
+      3,
+      14
+    ],
+    [
+      16,
+      19,
+      14,
+      21
+    ],
+    [
+      19,
+      23,
+      20,
+      31
+    ]
+  ]
+}
