@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.1.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. The first three original vector tank pilot sprites are integrated; remaining artwork is largely procedurally drawn placeholders.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.3.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,13 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v0.3 asset system
+
+- Three faction battle tanks with **32 animated facing positions for hulls** and **32 independently aimed turret positions**. The initial atlases are generated procedurally at startup with an original mesh-based vector renderer (`art/vehicle-renderer.js`), so gameplay works without downloading external content.
+- Three faction-specific generator sprites are used in the game world, as well as build-menu artwork.
+- Source vector tank concepts and reactor sprites live in `art/pilot/` and an editable `art/manifest.json` keeps IDs consistent with the asset register.
+- Tests cover vehicle atlas generation, turret aiming, gameplay integration, fog, economy and navigation. See [release notes](docs/RELEASE-0.3.md).
 
 ## Current features
 
