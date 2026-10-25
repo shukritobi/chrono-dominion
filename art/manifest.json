@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "0.7.0",
+  "release": "0.8.0",
   "assetLicenseStatus": "original artwork; redistribution license undecided",
   "artDirection": "orthographic isometric retro-futurist",
   "runtime": {
@@ -62,6 +62,17 @@
       ],
       "directions": 1,
       "sourceType": "original hand-authored SVG"
+    },
+    "recon": {
+      "frameSize": [
+        160,
+        160
+      ],
+      "states": [
+        "idle"
+      ],
+      "directions": 1,
+      "sourceType": "original SVG recon vehicle pilot; animation planned"
     }
   },
   "assets": [
@@ -217,6 +228,42 @@
         "idle"
       ],
       "facings": 1
+    },
+    {
+      "id": "CD-COA-RECON-001",
+      "name": "Lynx Scout",
+      "faction": "coalition",
+      "role": "recon",
+      "file": "art/pilot/coalition-recon.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1,
+      "registerStatus": "new playable extension beyond the original 308-family asset baseline"
+    },
+    {
+      "id": "CD-FED-RECON-001",
+      "name": "Iron Patrol",
+      "faction": "federation",
+      "role": "recon",
+      "file": "art/pilot/federation-recon.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1,
+      "registerStatus": "new playable extension beyond the original 308-family asset baseline"
+    },
+    {
+      "id": "CD-PSI-RECON-001",
+      "name": "Shade Runner",
+      "faction": "psionic",
+      "role": "recon",
+      "file": "art/pilot/psionic-recon.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1,
+      "registerStatus": "new playable extension beyond the original 308-family asset baseline"
     }
   ],
   "qualityNotes": [
@@ -225,6 +272,7 @@
     "Final Blender-based high-detail source models and cinematic images remain concept references, not these runtime sprites.",
     "Initial infantry illustrations are single-direction pilot sprites and will be replaced with eight-direction animation sheets.",
     "Defense turret SVGs are single idle-state pilot sprites; animated swivel and damaged states not yet produced.",
-    "Faction specialist SVG pilots represent unique unit roles, but still lack 8-direction idle/walk/fire/ability/death animation."
+    "Faction specialist SVG pilots represent unique unit roles, but still lack 8-direction idle/walk/fire/ability/death animation.",
+    "Recon vehicle SVGs are single-facing pilot sprites with faction-dependent speed, damage, armor and 8.1-tile scouting vision."
   ]
 }
