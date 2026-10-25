@@ -46,6 +46,13 @@ assert.equal(game.attackMoveArmed,false,'attack-move is consumed after one comma
 assert.equal(game.unitAction('guard'),true);
 assert.equal(friendly.stance,'guard');
 assert.equal(friendly.order,null);
+friendly.guardX=0;friendly.guardY=0;
+friendly.order={type:'move',x:friendly.x,y:friendly.y};
+game.step(.04);
+assert.equal(friendly.order,null,'unit completes an already-reached move order');
+assert.ok(Math.abs(friendly.guardX-friendly.x)<.01,'guard anchor follows successful move');
+assert.ok(Math.abs(friendly.guardY-friendly.y)<.01,'guard anchor updates both axes');
+
 
 // Intentional pileups separate without crossing buildings or off-map terrain.
 const a=game.add(0,'soldier',15,15),b=game.add(0,'soldier',15,15);
