@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "project": "Chrono Dominion",
+  "stage": "v0.2 visual pilot",
+  "notice": "Original SVG pilot artwork is integrated into the live game. High-resolution image-generated concept raster masters are separately packaged and are not yet part of the repo. All sprites are static-facing prototypes, not final rotations.",
+  "camera": "fixed isometric-style 2.5D",
+  "assets": [
+    {
+      "id": "COA-VEH-LYNX-PILOT",
+      "faction": "coalition",
+      "unit": "tank",
+      "name": "Lynx Battle Tank",
+      "file": "coalition-lynx.svg",
+      "size": [
+        128,
+        128
+      ],
+      "directions": 1,
+      "animationFrames": 1,
+      "pivot": [
+        64,
+        117
+      ],
+      "status": "pilot-in-game"
+    },
+    {
+      "id": "FED-VEH-BULL-PILOT",
+      "faction": "federation",
+      "unit": "tank",
+      "name": "Bull Battle Tank",
+      "file": "federation-bull.svg",
+      "size": [
+        128,
+        128
+      ],
+      "directions": 1,
+      "animationFrames": 1,
+      "pivot": [
+        64,
+        117
+      ],
+      "status": "pilot-in-game"
+    },
+    {
+      "id": "PSI-VEH-VIPER-PILOT",
+      "faction": "psionic",
+      "unit": "tank",
+      "name": "Viper Battle Tank",
+      "file": "psionic-viper.svg",
+      "size": [
+        128,
+        128
+      ],
+      "directions": 1,
+      "animationFrames": 1,
+      "pivot": [
+        64,
+        117
+      ],
+      "status": "pilot-in-game"
+    }
+  ]
+}
