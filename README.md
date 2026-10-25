@@ -16,7 +16,7 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 ## v0.3 asset system
 
 - Three faction battle tanks with **32 animated facing positions for hulls** and **32 independently aimed turret positions**. The initial atlases are generated procedurally at startup with an original mesh-based vector renderer (`art/vehicle-renderer.js`), so gameplay works without downloading external content.
-- Three faction-specific generator sprites are used in the game world, as well as build-menu artwork.
+- Three faction-specific generator sprites and three original infantry SVG sprites are used in the game world, with corresponding build-menu artwork.
 - Source vector tank concepts and reactor sprites live in `art/pilot/` and an editable `art/manifest.json` keeps IDs consistent with the asset register.
 - Tests cover vehicle atlas generation, turret aiming, gameplay integration, fog, economy and navigation. See [release notes](docs/RELEASE-0.3.md).
 
