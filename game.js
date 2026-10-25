@@ -90,6 +90,7 @@
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
       $('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){this.tab=b.dataset.tab;this.updateUI(true);}});
       $('production').addEventListener('click',e=>{const b=e.target.closest('button[data-key]');if(b)this.chooseProduction(b.dataset.key);});
+      $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);});
       $('openSkirmish').onclick=()=>this.showMenu('skirmishMenu');
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
@@ -174,6 +175,40 @@
       if(this.players[0].credits<def.cost)return this.notify('Insufficient credits');
       this.players[0].credits-=def.cost;const e=this.add(0,key,Math.round(x),Math.round(y),false);e.buildTime=3.5+def.cost/650;
       this.placing=null;this.selected=[e.id];this.notify(this.name(e)+' construction started');this.updateUI(true);
+    }
+    buildingAction(action){
+      if(this.state!=='playing'||this.selected.length!==1)return false;
+      const e=this.entityById(this.selected[0]);
+      if(!e||e.owner!==0||e.type!=='building')return false;
+      if(action==='repair'){
+        if(!e.built||e.hp>=e.maxHp||this.players[0].credits<1){this.notify('Repair unavailable');return false;}
+        e.repairing=!e.repairing;
+        this.notify(e.repairing?'Repair crew dispatched':'Repair stopped');
+        this.updateSelection();return true;
+      }
+      if(action==='sell'){
+        if(e.kind==='hq'){this.notify('Command Citadel cannot be sold');return false;}
+        const refund=Math.floor(BUILD[e.kind].cost*.5*(e.built?1:.8));
+        this.players[0].credits+=refund;
+        this.particles.push({x:e.x,y:e.y,life:1,color:'#abf6b2',type:'cash'});
+        e.hp=0;e.repairing=false;this.selected=[];
+        this.notify(this.name(e)+' sold for ¤'+refund);
+        this.updateUI(true);return true;
+      }
+      return false;
+    }
+    repairBuildings(dt){
+      for(const e of this.entities){
+        if(!e.repairing||e.hp<=0||!e.built||e.type!=='building')continue;
+        const player=this.players[e.owner];if(!player)continue;
+        if(e.hp>=e.maxHp){e.hp=e.maxHp;e.repairing=false;continue;}
+        const unitCost=Math.max(.15,BUILD[e.kind].cost*.5/e.maxHp);
+        if(player.credits<unitCost){e.repairing=false;continue;}
+        const healing=Math.min(45*dt,e.maxHp-e.hp,player.credits/unitCost);
+        e.hp=Math.min(e.maxHp,e.hp+healing);
+        player.credits=Math.max(0,player.credits-healing*unitCost);
+        if(e.hp>=e.maxHp-.01){e.hp=e.maxHp;e.repairing=false;}
+      }
     }
     pointerPosition(e){
       const r=this.canvas.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
@@ -428,6 +463,7 @@
         e.turretHeading=turnToward(e.turretHeading,e.desiredTurretHeading??e.worldHeading,(e.kind==='tank'||e.kind==='heavy'?4.3:7)*dt);
       }
       this.updateProjectiles(dt);
+      this.repairBuildings(dt);
       for(let i=this.queues.length-1;i>=0;i--){const q=this.queues[i],slow=this.power(q.side).low?.55:1;q.elapsed+=dt*slow;if(q.elapsed>=q.total){const origin=this.nearest({x:q.side===0?6:28,y:q.side===0?6:28},b=>b.owner===q.side&&b.kind===UNITS[q.key].from&&b.built);
           if(origin){const u=this.add(q.side,q.key,clamp(origin.x+(q.side===0?2:-2),1,33),clamp(origin.y+(q.side===0?2:-2),1,33));if(q.key==='harvester')u.order={type:'harvest'};}
           this.queues.splice(i,1);}}
@@ -463,10 +499,19 @@
     }
     isVisible(x,y){const ix=clamp(Math.floor(x),0,WORLD_SIZE-1),iy=clamp(Math.floor(y),0,WORLD_SIZE-1);return !!this.fog[ix]?.[iy]?.visible;}
     updateSelection(){
-      const targets=this.selected.map(id=>this.entityById(id)).filter(Boolean);const box=$('selection');
+      const targets=this.selected.map(id=>this.entityById(id)).filter(Boolean),box=$('selection');
       if(!targets.length){box.innerHTML='<strong>NO SELECTION</strong><p>Click a unit or building to inspect it.</p>';return;}
-      if(targets.length>1){box.innerHTML='<strong>'+targets.length+' UNITS SELECTED</strong><p>Right-click the map to issue orders. Right-click an enemy to attack.</p>';return;}
-      const e=targets[0];box.innerHTML='<strong>'+this.escape(this.name(e)).toUpperCase()+'</strong><p>'+Math.max(0,Math.ceil(e.hp))+' / '+e.maxHp+' HP · '+(e.owner===0?'FRIENDLY':'HOSTILE')+(e.built?'':' · CONSTRUCTING '+Math.round(e.construction*100)+'%')+'</p>';
+      if(targets.length>1){box.innerHTML='<strong>'+targets.length+' UNITS SELECTED</strong><p>Right-click to move or attack. Shift + right-click to attack-move.</p>';return;}
+      const e=targets[0];
+      let html='<strong>'+this.escape(this.name(e)).toUpperCase()+'</strong><p>'+Math.max(0,Math.ceil(e.hp))+' / '+e.maxHp+' HP · '+(e.owner===0?'FRIENDLY':'HOSTILE')+(e.built?'':' · CONSTRUCTING '+Math.round(e.construction*100)+'%')+'</p>';
+      if(e.owner===0&&e.type==='building'){
+        const canRepair=e.built&&e.hp<e.maxHp;
+        const disabledRepair=(!canRepair||!e.repairing&&this.players[0].credits<1)?' disabled':'';
+        html+='<div class="buildActions"><button data-action="repair"'+disabledRepair+' title="Repair consumes credits over time">'+(e.repairing?'STOP REPAIR':'🔧 REPAIR')+'</button>';
+        if(e.kind!=='hq')html+='<button data-action="sell" title="Sell this structure for a partial refund">¤ SELL</button>';
+        html+='</div>';
+      }
+      box.innerHTML=html;
     }
     escape(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
     updateUI(force=false){
