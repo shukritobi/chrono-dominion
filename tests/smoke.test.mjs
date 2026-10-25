@@ -49,6 +49,10 @@ assert.equal(game.players.length, 2);
 assert.equal(game.entities.length, 16);
 assert.ok(game.ores.length >= 30, 'map has harvestable ore');
 
+const path = game.findPath(6,11,28,28);
+assert.ok(path.length > 8, 'A-star route crosses the battlefield');
+assert.ok(path.every(p => game.walkable(p.x,p.y)), 'A-star path avoids buildings and water');
+
 game.chooseProduction('factory');
 assert.equal(game.placing, 'factory');
 game.placeBuilding(11, 6);
@@ -59,6 +63,7 @@ for (let i = 0; i < 1500; i++) game.step(0.05);
 game.draw();
 assert.equal(game.count(0, 'factory'), 1, 'construction completes');
 assert.ok(game.players[0].credits > 3300, 'harvester unloads ore into credit economy');
+assert.deepEqual(Object.keys(game.sprites), [], 'Node test has no image loader; fallback is safe');
 assert.ok(game.entities.some(e => e.owner === 1 && e.type === 'unit'), 'AI has units');
 
 game.chooseProduction('tank');
