@@ -438,6 +438,61 @@
       this.attackMoveArmed=false;
       this.particles.push({x:p.gx,y:p.gy,life:.65,color:target?'#ff7c7c':'#80dbee',type:'marker'});
     }
+    specialistAbilityInfo(e){
+      return e?.kind==='specialist'?ABILITIES[this.players[e.owner]?.faction]:null;
+    }
+    useSpecialistAbility(){
+      if(this.state!=='playing')return false;
+      const e=this.selected.map(id=>this.entityById(id)).find(unit=>unit?.owner===0&&unit.kind==='specialist');
+      if(!e){this.notify('Select a faction specialist first');return false;}
+      const ability=this.specialistAbilityInfo(e);
+      const remaining=Math.max(0,(e.abilityReadyAt||0)-this.time);
+      if(remaining>0){this.notify(ability.name+' ready in '+Math.ceil(remaining)+'s');return false;}
+      if(this.players[e.owner].faction==='coalition'){
+        this.abilityArmedId=e.id;this.attackMoveArmed=false;this.placing=null;
+        this.notify('Chrono Jump: right-click clear terrain within 6 tiles');
+        this.updateSelection();return true;
+      }
+      return this.activateAbility(e);
+    }
+    activateAbility(e,target=null){
+      if(this.state!=='playing'||!e||e.hp<=0||e.kind!=='specialist')return false;
+      const ability=this.specialistAbilityInfo(e),faction=this.players[e.owner].faction;
+      if(!ability||(e.abilityReadyAt||0)>this.time)return false;
+      if(faction==='coalition'){
+        if(!target)return false;
+        const next={x:clamp(target.x,1,WORLD_SIZE-2),y:clamp(target.y,1,WORLD_SIZE-2)};
+        if(dist(e,next)>ability.range||!this.canOccupyUnit(e,next.x,next.y)){
+          if(e.owner===0)this.notify('Jump unavailable: target must be clear and in range');
+          return false;
+        }
+        this.particles.push({x:e.x,y:e.y,life:.85,color:ability.color,type:'abilityPulse',radius:35});
+        e.x=next.x;e.y=next.y;e.guardX=e.x;e.guardY=e.y;
+        e.order=null;e.path=[];e.pathTarget=null;e.pathRecheck=0;
+        this.particles.push({x:e.x,y:e.y,life:.85,color:ability.color,type:'abilityPulse',radius:48});
+      }else{
+        // Only hostile entities are affected. Power generators and other
+        // infrastructure remain invulnerable to these specialist pulses.
+        const victims=this.entities.filter(u=>u.hp>0&&u.owner!==e.owner&&dist(u,e)<=ability.range&&
+          (u.type==='unit'||u.kind==='turret'||u.kind==='beam'));
+        for(const u of victims){
+          if(faction==='federation'){
+            const amount=u.type==='building'?25:38;
+            u.hp-=amount;
+            if(u.hp<=0){e.kills++;this.selected=this.selected.filter(id=>id!==u.id);
+              this.particles.push({x:u.x,y:u.y,life:1,color:'#ffa95e',type:'boom'});}
+          }else if(faction==='psionic'){
+            u.stunnedUntil=Math.max(u.stunnedUntil||0,this.time+3.8);
+          }
+          this.particles.push({x:u.x,y:u.y,life:.4,color:ability.color,type:'hit'});
+        }
+        this.particles.push({x:e.x,y:e.y,life:.85,color:ability.color,type:'abilityPulse',radius:ability.range*26});
+      }
+      e.abilityReadyAt=this.time+ability.cooldown;
+      if(e.owner===0)this.notify(ability.name+' activated: '+ability.cooldown+'s cooldown');
+      this.updateSelection();
+      return true;
+    }
     unitAction(action){
       if(this.state!=='playing')return false;
       const units=this.entities.filter(e=>e.hp>0&&e.owner===0&&e.type==='unit'&&e.kind!=='harvester'&&this.selected.includes(e.id));
@@ -690,6 +745,7 @@
         if(e.hp<=0)continue;
         if(!e.built){e.construction+=dt/e.buildTime;if(e.construction>=1){e.construction=1;e.built=true;if(e.kind==='refinery'){const h=this.add(e.owner,'harvester',e.x+2,e.y+1);h.order={type:'harvest'};}}continue;}
         e.ready=Math.max(0,e.ready-dt);
+        if((e.stunnedUntil||0)>this.time)continue;
         if(e.type==='unit'){
           if(e.kind==='harvester'){this.processHarvester(e,dt);continue;}
           const command=e.order,range=this.stat(e,'range'),stance=e.stance||'guard';
@@ -811,7 +867,8 @@
       const targets=this.selected.map(id=>this.entityById(id)).filter(Boolean),box=$('selection');
       if(!targets.length){box.innerHTML='<strong>NO SELECTION</strong><p>Click a unit or building to inspect it.</p>';return;}
       if(targets.length>1){
-        box.innerHTML='<strong>'+targets.length+' UNITS SELECTED</strong><p>Move in formation, hold, guard or attack-move.</p>'+this.unitActionPanel(targets);
+        box.innerHTML='<strong>'+targets.length+' UNITS SELECTED</strong><p>Move in formation, hold, guard or attack-move.</p>'+this.unitActionPanel(targets)+
+          (targets.some(e=>e.owner===0&&e.kind==='specialist')?'<button class="specialAction" data-special="use">F SPECIALIST ABILITY</button>':'');
         return;
       }
       const e=targets[0];
@@ -823,7 +880,15 @@
         if(e.kind!=='hq')html+='<button data-action="sell" title="Sell this structure for a partial refund">¤ SELL</button>';
         html+='</div>';
       }
-      else if(e.owner===0&&e.type==='unit')html+=this.unitActionPanel(targets);
+      else if(e.owner===0&&e.type==='unit'){
+        html+=this.unitActionPanel(targets);
+        if(e.kind==='specialist'){
+          const a=this.specialistAbilityInfo(e),remaining=Math.max(0,Math.ceil((e.abilityReadyAt||0)-this.time));
+          html+='<button class="specialAction" data-special="use" '+(remaining?'disabled':'')+
+            ' title="Unique faction ability, keyboard F">'+(this.abilityArmedId===e.id?'CHOOSE JUMP TARGET':
+            'F '+this.escape(a.name.toUpperCase())+(remaining?' · '+remaining+'S':''))+'</button>';
+        }
+      }
       box.innerHTML=html;
     }
     escape(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -954,6 +1019,13 @@
       for(const p of this.particles){const a=iso(p.x,p.y);c.save();c.translate(a.x,a.y);c.globalAlpha=clamp(p.life,0,1);
         if(p.type==='marker'){this.drawRing(0,0,20*(1.5-p.life),p.color);}
         else if(p.type==='boom'){c.fillStyle=p.color;c.beginPath();c.arc(0,-13,22*(1.1-p.life),0,7);c.fill();}
+        else if(p.type==='abilityPulse'){
+          const fraction=1-p.life/.85;
+          const size=(p.radius||90)*fraction;
+          c.strokeStyle=p.color;c.lineWidth=3.5;c.globalAlpha=clamp(p.life/.85,0,1);
+          c.beginPath();c.ellipse(0,0,Math.max(2,size),Math.max(1,size*.47),0,0,Math.PI*2);c.stroke();
+          c.beginPath();c.ellipse(0,-11,Math.max(1,size*.36),Math.max(1,size*.18),0,0,Math.PI*2);c.stroke();
+        }
         else if(p.type==='muzzle'){c.fillStyle=p.color;c.beginPath();c.arc(0,-21,9*p.life/.2,0,Math.PI*2);c.fill();}
         else if(p.type==='cash'){c.fillStyle=p.color;c.font='bold 17px Consolas';c.fillText('+CREDITS',-34,-28-(1-p.life)*20);}
         else{c.strokeStyle=p.color;c.lineWidth=3;c.beginPath();c.arc(0,-9,15*(1-p.life)+4,0,7);c.stroke();}
