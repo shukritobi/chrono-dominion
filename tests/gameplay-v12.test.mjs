@@ -79,6 +79,23 @@ assert.ok(saved.intel[1].some(x=>x.id===playerHQ.id),'intel persisted in skirmis
 g.intel=[[],[]];assert.equal(g.loadGame(),true);
 assert.ok(g.intel[1].some(x=>x.id===playerHQ.id),'intel restored from save');
 
+// AI must not learn of enemy destruction while all its eyes are elsewhere.
+reset();
+const enemyObserver=g.add(1,'recon',6,7),unseenHQ=g.entities.find(e=>e.owner===0&&e.kind==='hq');
+g.time=31;g.updateIntel(1);
+assert.ok(g.intel[1].some(x=>x.id===unseenHQ.id),'scout recorded enemy building');
+enemyObserver.hp=0;
+unseenHQ.hp=0;
+g.time+=.5;g.updateIntel(1);
+assert.ok(g.intel[1].some(x=>x.id===unseenHQ.id),
+  'destroyed buildings remain last-known contacts until sight confirms absence');
+// An enemy witness returning should reveal that the building no longer exists.
+const witness=g.add(1,'recon',7,7);
+g.updateIntel(1);
+assert.ok(!g.intel[1].some(x=>x.id===unseenHQ.id),
+  'old contact is cleared when scouts inspect its empty last-known location');
+witness.hp=0;
+
 // Damaged structures render smoke/cracks; repair sparks and destruction rubble.
 reset();
 const building=g.entities.find(e=>e.owner===0&&e.kind==='generator');
