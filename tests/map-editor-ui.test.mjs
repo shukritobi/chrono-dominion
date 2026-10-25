@@ -10,7 +10,7 @@ const elements=new Map();
 function el(id){
   if(!elements.has(id))elements.set(id,{
     id,value:'',textContent:'',dataset:{},style:{},width:680,height:680,
-    classList:{toggle(){}},setAttribute(name,value){this[name]=value;},
+    classList:{toggle(){},add(){},remove(){}},setAttribute(name,value){this[name]=value;},
     getContext(){return gfx;},
     getBoundingClientRect(){return {left:0,top:0,width:680,height:680};},
     setPointerCapture(){},
