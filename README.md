@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.1.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.2.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.2 Combat, Navigation & Intelligence
+
+- **Safer unit navigation:** A* now routes toward the nearest reachable land when a clicked destination is separated by blocked terrain, and does not claim an unreachable position has been reached.
+- **Fog-aware enemy commander:** the AI can only attack enemy positions spotted by its own army, including scouts. Last-seen positions expire after a limited time and are preserved in local saves.
+- **Visible construction and damage:** scaffolding, repair sparks, cracks, smoke, fire and rubble/destruction effects make structures communicate their condition during battle.
+- **Less information leakage:** effects behind unexplored fog are concealed, and hidden enemy deaths are not prematurely revealed to the AI.
+- [v1.2 release notes](docs/RELEASE-1.2.md) and [gameplay regression tests](tests/gameplay-v12.test.mjs).
 
 ## v1.1 Battlefield Library
 
