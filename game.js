@@ -450,7 +450,7 @@
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){if(dist(e,target)>range)this.move(e,target.x,target.y,dt);else if(e.ready<=0)this.shoot(e,target);}
           else if(command?.type==='move'||command?.type==='attackMove'){if(this.move(e,command.x,command.y,dt))e.order=null;}
-          else if(e.owner===1){const home=this.nearest(e,b=>b.owner===0&&b.type==='building');if(home)this.move(e,home.x,home.y,dt);}
+          // Enemy units hold their assigned position until strategic AI orders them.
         }else if(BUILD[e.kind].damage&&!this.power(e.owner).low){
           const def=BUILD[e.kind];const target=this.nearest(e,b=>b.owner!==e.owner&&b.type==='unit'&&b.built,def.range);
           if(target&&e.ready<=0)this.shoot(e,target);
@@ -527,7 +527,7 @@
         if(fighter.order?.type==='attack'&&this.entityById(fighter.order.id))continue;
         // Attack in groups; novices wait longer before committing.
         const minimum=this.settings.difficulty==='recruit'?5:this.settings.difficulty==='veteran'?2:3;
-        if(fighters.length<minimum)continue;
+        if(fighters.length<minimum||this.time<(this.settings.difficulty==='recruit'?85:this.settings.difficulty==='veteran'?38:57))continue;
         const target=this.nearest(fighter,e=>e.owner===0&&e.type==='building'&&e.hp>0);
         if(target)fighter.order={type:'attack',id:target.id};
       }
