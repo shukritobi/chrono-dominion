@@ -226,7 +226,8 @@
     water(x,y){return (x>22&&x<32&&y>2&&y<8)||(x>2&&x<9&&y>22&&y<28);}
     buildingAt(x,y){return this.entities.find(e=>e.type==='building'&&e.hp>0&&Math.abs(e.x-x)<1.7&&Math.abs(e.y-y)<1.7);}
     canPlace(x,y,side){
-      if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3||this.water(x,y))return false;
+      if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)return false;
+      for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)if(this.water(x+dx,y+dy))return false;
       for(const e of this.entities){if(e.type==='building'&&Math.abs(e.x-x)<2.7&&Math.abs(e.y-y)<2.7)return false;}
       return this.entities.some(e=>e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
     }
@@ -349,10 +350,44 @@
     command(p,event){
       const chosen=this.entities.filter(e=>this.selected.includes(e.id)&&e.owner===0&&e.type==='unit'&&e.hp>0);if(!chosen.length)return;
       const enemy=this.pick(p.gx,p.gy);const target=enemy&&enemy.owner===1?enemy:null;
-      for(let i=0;i<chosen.length;i++){const e=chosen[i],offset=(i-(chosen.length-1)/2)*.65;
-        e.order=target?{type:'attack',id:target.id}:{type:event?.shiftKey?'attackMove':'move',x:clamp(p.gx+offset,1,32),y:clamp(p.gy+offset*.55,1,32)};
+      // Grid formation: unique walkable slots around the clicked point, assigned
+      // to the nearest unit first to reduce crossing and unit congestion.
+      if(target){
+        for(const e of chosen)e.order={type:'attack',id:target.id};
+      }else{
+        const slots=this.formationSlots(p.gx,p.gy,chosen.length);
+        const remaining=chosen.slice();
+        for(const slot of slots){
+          let best=0;
+          for(let i=1;i<remaining.length;i++)if(dist(remaining[i],slot)<dist(remaining[best],slot))best=i;
+          const unit=remaining.splice(best,1)[0];
+          if(!unit)break;
+          unit.order={type:event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
+          unit.path=[];unit.pathTarget=null;
+        }
       }
       this.particles.push({x:p.gx,y:p.gy,life:.65,color:target?'#ff7c7c':'#80dbee',type:'marker'});
+    }
+    formationSlots(cx,cy,count){
+      const slots=[],used=new Set(),want=Math.max(0,Math.min(count,120));
+      const center={x:clamp(Math.round(cx),1,WORLD_SIZE-2),y:clamp(Math.round(cy),1,WORLD_SIZE-2)};
+      const candidates=[];
+      // Search expanding perimeter rings. The centre slot remains the first choice.
+      for(let radius=0;radius<=WORLD_SIZE&&candidates.length<want*9+48;radius++){
+        for(let y=-radius;y<=radius;y++)for(let x=-radius;x<=radius;x++){
+          if(Math.max(Math.abs(x),Math.abs(y))!==radius)continue;
+          const p={x:center.x+x,y:center.y+y};
+          if(!this.walkable(p.x,p.y))continue;
+          candidates.push(p);
+        }
+        if(candidates.length>=want*3&&radius>2)break;
+      }
+      for(const p of candidates){
+        const key=p.x+','+p.y;
+        if(!used.has(key)){used.add(key);slots.push(p);}
+        if(slots.length===want)break;
+      }
+      return slots;
     }
     entityById(id){return this.entities.find(e=>e.id===id&&e.hp>0);}
     nearest(source,predicate,range=Infinity){let result=null,best=range;for(const e of this.entities){if(e===source||e.hp<=0||!predicate(e))continue;const d=dist(source,e);if(d<best){best=d;result=e;}}return result;}
@@ -782,7 +817,20 @@
       const entities=this.entities.filter(e=>e.hp>0&&(e.owner===0||this.isVisible(e.x,e.y))).sort((a,b)=>(a.x+a.y)-(b.x+b.y));
       for(const e of entities)e.type==='building'?this.drawBuilding(e):this.drawUnit(e);
       this.drawProjectiles();this.drawEffects();this.drawFog();
-      if(this.placing&&this.state==='playing'){const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),ok=this.canPlace(x,y,0);const p=iso(x,y);c.fillStyle=ok?'#71e5a55c':'#f370765c';c.beginPath();c.ellipse(p.x,p.y,50,25,0,0,7);c.fill();c.strokeStyle=ok?'#9afed0':'#ff9696';c.lineWidth=3;c.stroke();}
+      if(this.placing&&this.state==='playing'){
+        const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),ok=this.canPlace(x,y,0);
+        const color=ok?'#62e2a7':'#fa797f';
+        for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+          const p=iso(x+dx,y+dy);
+          c.save();c.globalAlpha=.42;
+          this.drawDiamond(x+dx,y+dy,ok?'#42d39d':'#ff606a',color);
+          c.restore();
+        }
+        c.save();c.strokeStyle=color;c.lineWidth=2;c.setLineDash([6,4]);
+        const corner=[iso(x-1.5,y-1.5),iso(x+1.5,y-1.5),iso(x+1.5,y+1.5),iso(x-1.5,y+1.5)];
+        c.beginPath();c.moveTo(corner[0].x,corner[0].y);
+        corner.slice(1).forEach(p=>c.lineTo(p.x,p.y));c.closePath();c.stroke();c.restore();
+      }
       if(this.dragStart&&this.dragEnd&&Math.hypot(this.dragStart.x-this.dragEnd.x,this.dragStart.y-this.dragEnd.y)>12){
         c.setTransform(d,0,0,d,0,0);const a=this.dragStart,b=this.dragEnd;c.fillStyle='#8bceef29';c.strokeStyle='#98d9f2';c.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);}
       this.drawRadar();
