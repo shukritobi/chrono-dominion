@@ -1,9 +1,14 @@
-/* Chrono Dominion v0.4 — original browser RTS vertical slice. No third-party game assets. */
+/* Chrono Dominion v0.6 — original browser RTS vertical slice. No third-party game assets. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const WORLD_SIZE = 34, TW = 64, TH = 32;
   const SAVE_KEY='chrono-dominion-skirmish-v1';
+  const FACTION_BALANCE={
+    coalition:{tank:{speed:1.12},heavy:{speed:1.10}},
+    federation:{tank:{hp:1.18,damage:1.13,speed:.90},heavy:{hp:1.15,damage:1.12,speed:.88}},
+    psionic:{tank:{speed:1.13,hp:.91,damage:.94},specialist:{range:1.14}}
+  };
   const COLORS = {
     coalition: {name:'COALITION FORCES',color:'#55c8e8',top:'#66879b',side:'#263e54',trim:'#8ce5ef',badge:'◈'},
     federation: {name:'IRON FEDERATION',color:'#e37665',top:'#8c7770',side:'#493b40',trim:'#f3a06d',badge:'★'},
@@ -48,7 +53,7 @@
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
-      this.selected=[];this.groups={};this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
+      this.selected=[];this.groups={};this.attackMoveArmed=false;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
       this.sprites={};this.buildingSprites={};this.infantrySprites={};this.loadPilotSprites();
@@ -226,13 +231,15 @@
     }
     resize(){const b=this.canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);this.w=b.width;this.h=b.height;this.dpr=d;this.canvas.width=Math.round(this.w*d);this.canvas.height=Math.round(this.h*d);}
     add(owner,kind,x,y,built=true){
-      const def=BUILD[kind]||UNITS[kind];const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:def.hp,maxHp:def.hp,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0};
-      if(e.type==='unit'){e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
+      const def=BUILD[kind]||UNITS[kind],modifier=FACTION_BALANCE[this.players[owner]?.faction]?.[kind]||{};
+      const hitPoints=Math.round(def.hp*(modifier.hp||1));
+      const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:hitPoints,maxHp:hitPoints,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0};
+      if(e.type==='unit'){e.stance='guard';e.guardX=x;e.guardY=y;e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
       this.entities.push(e);return e;
     }
     newMatch(s){
       this.settings={...s};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:5000},{faction:s.enemyFaction,credits:5000}];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
@@ -262,6 +269,8 @@
       return this.entities.some(e=>e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
     }
     getDef(e){return BUILD[e.kind]||UNITS[e.kind];}
+    stat(e,key){const base=this.getDef(e)[key]||0,mods=FACTION_BALANCE[this.players[e.owner]?.faction]?.[e.kind];return base*(mods?.[key]??1);}
+    unitRadius(e){return e.kind==='soldier'||e.kind==='specialist'?.23:e.kind==='heavy'?.56:e.kind==='harvester'?.47:.39;}
     name(e){return NAMES[this.players[e.owner].faction][e.kind]||this.getDef(e).name;}
     count(side,kind){return this.entities.filter(e=>e.owner===side&&e.kind===kind&&e.hp>0&&e.built).length;}
     prereq(side,key){const def=BUILD[key]||UNITS[key];if(!def)return false;
@@ -489,7 +498,7 @@
       }
       const dx=point.x-e.x,dy=point.y-e.y,len=Math.hypot(dx,dy);
       if(len<.001)return false;
-      const move=Math.min(UNITS[e.kind].speed*dt,len),vx=dx/len*move,vy=dy/len*move;
+      const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
       const clear=(x,y)=>x>.7&&y>.7&&x<WORLD_SIZE-.7&&y<WORLD_SIZE-.7&&!this.water(x,y)&&!this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.28&&Math.abs(b.y-y)<1.28);
       if(clear(e.x+vx,e.y+vy)){e.x+=vx;e.y+=vy;e.stuck=0;}
       else if(clear(e.x+vx,e.y)){e.x+=vx;e.stuck=0;}
@@ -502,7 +511,7 @@
       return d<.24;
     }
     shoot(source,target){
-      const def=this.getDef(source),damage=def.damage||0;
+      const def=this.getDef(source),damage=this.stat(source,'damage');
       if(!damage||!target||source.hp<=0||target.hp<=0||source.owner===target.owner)return;
       source.ready=def.rate||1.2;
       const faction=this.players[source.owner].faction;
@@ -587,7 +596,7 @@
           const command=e.order;
           let target=command?.type==='attack'?this.entityById(command.id):null;
           if(!target)target=this.nearest(e,b=>b.owner!==e.owner&&b.built,UNITS[e.kind].range+2.0);
-          const range=UNITS[e.kind].range;
+          const range=this.stat(e,'range');
           e.engaging=!!target;
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){if(dist(e,target)>range)this.move(e,target.x,target.y,dt);else if(e.ready<=0)this.shoot(e,target);}
@@ -867,6 +876,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.5.0',build:'save-and-strategy'};
+  window.ChronoDominion={version:'0.6.0',build:'tactical-movement'};
   new Game();
 })();
