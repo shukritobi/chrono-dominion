@@ -936,7 +936,7 @@
     updateFog(){
       if(!this.fog.length)this.fog=Array.from({length:WORLD_SIZE},()=>Array.from({length:WORLD_SIZE},()=>({seen:false,visible:false})));
       for(const row of this.fog)for(const c of row)c.visible=false;
-      for(const e of this.entities){if(e.owner!==0||e.hp<=0)continue;const radius=e.type==='building'?5.8:4.8;
+      for(const e of this.entities){if(e.owner!==0||e.hp<=0)continue;const radius=e.kind==='recon'?8.1:e.type==='building'?5.8:4.8;
         const minX=clamp(Math.floor(e.x-radius),0,WORLD_SIZE-1),maxX=clamp(Math.ceil(e.x+radius),0,WORLD_SIZE-1);
         const minY=clamp(Math.floor(e.y-radius),0,WORLD_SIZE-1),maxY=clamp(Math.ceil(e.y+radius),0,WORLD_SIZE-1);
         for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)if(Math.hypot(x-e.x,y-e.y)<=radius){this.fog[x][y].seen=true;this.fog[x][y].visible=true;}
@@ -953,6 +953,7 @@
       }
       const e=targets[0];
       let html='<strong>'+this.escape(this.name(e)).toUpperCase()+'</strong><p>'+Math.max(0,Math.ceil(e.hp))+' / '+e.maxHp+' HP · '+(e.owner===0?'FRIENDLY':'HOSTILE')+(e.built?'':' · CONSTRUCTING '+Math.round(e.construction*100)+'%')+'</p>';
+      if(e.kind==='recon')html+='<p class="scoutInfo">RECON · extended vision · fast scouting</p>';
       if(e.owner===0&&e.type==='building'){
         const canRepair=e.built&&e.hp<e.maxHp;
         const disabledRepair=(!canRepair||!e.repairing&&this.players[0].credits<1)?' disabled':'';
