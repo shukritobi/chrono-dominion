@@ -475,18 +475,62 @@
       for(let side=0;side<2;side++){if(!this.entities.some(e=>e.owner===side&&e.type==='building'&&e.hp>0)){this.finish(side===1);break;}}
     }
     runAI(){
-      const side=1;const me=this.players[side];const difficulty=this.settings.difficulty;
-      me.credits+=difficulty==='veteran'?380:difficulty==='recruit'?80:190;
-      const base=this.entities.find(e=>e.owner===side&&e.kind==='hq');
+      const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
       if(!base)return;
-      const priorities=['factory','turret','generator','radar','tech','beam'];
-      for(const key of priorities){if(!this.count(side,key)&&this.prereq(side,key)&&me.credits>=BUILD[key].cost){for(let j=0;j<24;j++){const angle=j*.9,radius=4+Math.floor(j/5)*2;const x=Math.round(base.x+Math.cos(angle)*radius),y=Math.round(base.y+Math.sin(angle)*radius);if(this.canPlace(x,y,side)){me.credits-=BUILD[key].cost;const e=this.add(side,key,x,y,false);e.buildTime=4+BUILD[key].cost/700;break;}}break;}}
-      let key=this.count(side,'factory')?'tank':'soldier';
-      if(this.count(side,'tech')&&rand(Math.floor(this.time),12)>.66)key='heavy';
+      // The enemy now earns resources through the same refinery/harvester loop
+      // as the player. Difficulty changes timing and priorities, not free income.
+      const owned=kind=>this.entities.filter(e=>e.owner===side&&e.kind===kind&&e.hp>0);
+      const built=kind=>owned(kind).filter(e=>e.built).length;
+      const myBuildings=this.entities.filter(e=>e.owner===side&&e.type==='building'&&e.hp>0&&e.built);
+      const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester'&&myBuildings.some(b=>dist(b,e)<8));
+      const threatened=invaders.length>0;
+      for(const b of myBuildings){
+        if(b.hp/b.maxHp<.58&&me.credits>550)b.repairing=true;
+      }
+      const shortage=this.power(side).low;
+      let choice=null;
+      if(!owned('generator').length||shortage)choice='generator';
+      else if(!owned('refinery').length)choice='refinery';
+      else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
+      else if(!owned('factory').length)choice='factory';
+      else if(!owned('radar').length&&me.credits>2600)choice='radar';
+      else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
+      else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&me.credits>2200)choice='turret';
+      if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
+        for(let j=0;j<48;j++){
+          const angle=j*2.39996,radius=4.2+Math.floor(j/8)*.85;
+          const anchor=choice==='turret'&&threatened?(this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester')||base):base;
+          // Keep all AI construction in supply radius of its living buildings.
+          const origin=anchor===base?base:myBuildings.reduce((p,b)=>dist(anchor,b)<dist(anchor,p)?b:p,base);
+          const x=Math.round(origin.x+Math.cos(angle)*radius),y=Math.round(origin.y+Math.sin(angle)*radius);
+          if(!this.canPlace(x,y,side))continue;
+          me.credits-=BUILD[choice].cost;
+          const b=this.add(side,choice,x,y,false);b.buildTime=3.5+BUILD[choice].cost/650;
+          break;
+        }
+      }
       if(this.queues.some(q=>q.side===side))return;
-      const cost=UNITS[key].cost;if(this.prereq(side,key)&&me.credits>=cost){me.credits-=cost;this.queues.push({side,key,elapsed:0,total:Math.max(2,cost/250)});}
-      const enemy=this.entities.find(e=>e.owner===0&&e.kind==='hq');
-      if(enemy){for(const u of this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.kind!=='harvester')){if(!u.order||u.order.type==='move')u.order={type:'attack',id:enemy.id};}}
+      let unit='soldier';
+      if(!owned('harvester').length&&built('refinery'))unit='harvester';
+      else if(built('factory')&&me.credits>1100){
+        unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
+      }else if(built('barracks')&&me.credits<350)unit=null;
+      if(unit&&this.prereq(side,unit)&&me.credits>=UNITS[unit].cost){
+        me.credits-=UNITS[unit].cost;
+        this.queues.push({side,key:unit,elapsed:0,total:Math.max(2,UNITS[unit].cost/250)});
+      }
+      // Local base defense always takes precedence over an offensive order.
+      const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
+      for(const fighter of fighters){
+        const attacker=this.nearest(fighter,e=>e.owner===0&&e.type==='unit'&&e.hp>0,6.5);
+        if(attacker){fighter.order={type:'attack',id:attacker.id};continue;}
+        if(fighter.order?.type==='attack'&&this.entityById(fighter.order.id))continue;
+        // Attack in groups; novices wait longer before committing.
+        const minimum=this.settings.difficulty==='recruit'?5:this.settings.difficulty==='veteran'?2:3;
+        if(fighters.length<minimum)continue;
+        const target=this.nearest(fighter,e=>e.owner===0&&e.type==='building'&&e.hp>0);
+        if(target)fighter.order={type:'attack',id:target.id};
+      }
     }
     updateFog(){
       if(!this.fog.length)this.fog=Array.from({length:WORLD_SIZE},()=>Array.from({length:WORLD_SIZE},()=>({seen:false,visible:false})));
