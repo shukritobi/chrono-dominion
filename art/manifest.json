@@ -33,7 +33,7 @@
   },
   "assets": [
     {
-      "id": "COA-VEH-001",
+      "id": "COA-VEH-002",
       "name": "Lynx Tank",
       "faction": "coalition",
       "role": "tank",
@@ -41,7 +41,7 @@
       "runtime": "generated:coalition.hull+turret"
     },
     {
-      "id": "FED-VEH-001",
+      "id": "FED-VEH-002",
       "name": "Bull Tank",
       "faction": "federation",
       "role": "tank",
@@ -49,7 +49,7 @@
       "runtime": "generated:federation.hull+turret"
     },
     {
-      "id": "PSI-VEH-001",
+      "id": "PSI-VEH-002",
       "name": "Viper Tank",
       "faction": "psionic",
       "role": "tank",
@@ -57,25 +57,28 @@
       "runtime": "generated:psionic.hull+turret"
     },
     {
-      "id": "CD-COA-POWER",
+      "id": "COA-BLD-002",
       "name": "Fusion Array",
       "faction": "coalition",
       "role": "generator",
-      "file": "art/pilot/coalition-power.svg"
+      "file": "art/pilot/coalition-power.svg",
+      "assetRegisterName": "Grid Reactor"
     },
     {
-      "id": "CD-FED-POWER",
+      "id": "FED-BLD-002",
       "name": "Thermal Reactor",
       "faction": "federation",
       "role": "generator",
-      "file": "art/pilot/federation-power.svg"
+      "file": "art/pilot/federation-power.svg",
+      "assetRegisterName": "Arc Power Works"
     },
     {
-      "id": "CD-PSI-POWER",
+      "id": "PSI-BLD-002",
       "name": "Bio Reactor",
       "faction": "psionic",
       "role": "generator",
-      "file": "art/pilot/psionic-power.svg"
+      "file": "art/pilot/psionic-power.svg",
+      "assetRegisterName": "Biomorphic Energy Chamber"
     }
   ],
   "qualityNotes": [
