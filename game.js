@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.0 — editable battlefields, map validation and skirmish tools. */
+/* Chrono Dominion v1.1 — multi-map library, map editor and resilient skirmish storage. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -156,7 +156,7 @@
       $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);
         const unit=e.target.closest?.('button[data-unit-action]');if(unit)this.unitAction(unit.dataset.unitAction);
         const special=e.target.closest?.('button[data-special]');if(special)this.useSpecialistAbility();});
-      $('openSkirmish').onclick=()=>{this.showMenu('skirmishMenu');this.drawMapPreview();};
+      $('openSkirmish').onclick=()=>{this.refreshCustomMap();this.showMenu('skirmishMenu');this.drawMapPreview();};
       $('mapSelect').addEventListener('change',()=>this.drawMapPreview());
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
@@ -186,6 +186,12 @@
       if(!window.ChronoMaps)return false;
       const custom=window.ChronoMaps.load();
       const installed=custom&&this.installCustomMap(custom);
+      if(!installed){
+        delete MAPS.custom;
+        const option=$('mapSelect').querySelector('option[value="custom"]');
+        if(option){option.disabled=true;option.textContent='Custom Battlefield · Create in Map Forge';}
+        if($('mapSelect').value==='custom')$('mapSelect').value='verdant';
+      }
       if(installed&&typeof location!=='undefined'){
         try{if(new URLSearchParams(location.search).get('map')==='custom')$('mapSelect').value='custom';}
         catch(err){/* Browser URL unavailable in embedded tests. */}
@@ -1271,6 +1277,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'1.0.0',build:'map-forge'};
+  window.ChronoDominion={version:'1.1.0',build:'map-library'};
   new Game();
 })();
