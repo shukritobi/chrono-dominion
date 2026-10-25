@@ -897,10 +897,14 @@
       for(const enemy of incoming){
         byId.set(enemy.id,{id:enemy.id,x:enemy.x,y:enemy.y,time:this.time,type:enemy.type,kind:enemy.kind});
       }
-      this.intel[side]=[...byId.values()].filter(v=>
-        this.time-v.time<=(v.type==='building'?180:28)&&
-        this.entities.some(e=>e.id===v.id&&e.hp>0&&e.owner!==side)
-      ).slice(-150);
+      this.intel[side]=[...byId.values()].filter(v=>{
+        if(this.time-v.time>(v.type==='building'?180:28))return false;
+        // An absent enemy can only be confirmed missing by looking at its
+        // last-known position, never by consulting the hidden live entity list.
+        if(!this.sideCanSee(side,v))return true;
+        return this.entities.some(e=>e.id===v.id&&e.hp>0&&e.owner!==side&&
+          Math.hypot(e.x-v.x,e.y-v.y)<1.5);
+      }).slice(-150);
       return this.intel[side];
     }
     runAI(){
@@ -1312,7 +1316,9 @@
     }
     drawEffects(){
       const c=this.ctx;
-      for(const p of this.particles){const a=iso(p.x,p.y);c.save();c.translate(a.x,a.y);c.globalAlpha=clamp(p.life,0,1);
+      for(const p of this.particles){
+        if(this.fog.length&&!this.isVisible(p.x,p.y))continue;
+        const a=iso(p.x,p.y);c.save();c.translate(a.x,a.y);c.globalAlpha=clamp(p.life,0,1);
         if(p.type==='marker'){this.drawRing(0,0,20*(1.5-p.life),p.color);}
         else if(p.type==='boom'){c.fillStyle=p.color;c.beginPath();c.arc(0,-13,22*(1.1-p.life),0,7);c.fill();}
         else if(p.type==='abilityPulse'){
