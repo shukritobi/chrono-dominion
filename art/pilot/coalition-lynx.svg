@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Original Chrono Dominion coalition-lynx tank sprite">
+<defs>
+<linearGradient id="metal" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#95c9e6"/><stop offset=".35" stop-color="#557f9e"/><stop offset="1" stop-color="#213950"/></linearGradient>
+<linearGradient id="turret" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#95c9e6"/><stop offset=".4" stop-color="#557f9e"/><stop offset="1" stop-color="#35536a"/></linearGradient>
+<radialGradient id="shadow"><stop stop-color="#061119" stop-opacity=".45"/><stop offset="1" stop-color="#061119" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse cx="64" cy="100" rx="54" ry="19" fill="url(#shadow)"/>
+<path d="M8 72 35 49 82 50 120 74 109 98 82 105 36 101 12 87Z" fill="#213950" opacity=".5"/>
+<path d="M16 65 42 46 85 48 113 70 92 87 48 90 12 75Z" fill="url(#metal)" stroke="#213950" stroke-width="3"/>
+    <path d="M15 70 43 76 45 96 17 88 8 77Z" fill="#2b3030" stroke="#0c1821" stroke-width="3"/>
+    <path d="M81 78 113 70 120 79 106 94 83 95Z" fill="#242e32" stroke="#0c1821" stroke-width="3"/>
+    <path d="M21 80 39 83M23 86 38 89M88 83 110 77M89 91 107 85" stroke="#778383" stroke-width="3"/>
+<path d="M39 79 53 86 77 81 89 76" fill="none" stroke="#95c9e6" stroke-width="2" opacity=".5"/>
+<path d="M34 54 61 43 87 55 61 65Z" fill="#95c9e6" opacity=".7"/><path d="M34 55 48 49 58 53 44 59Z" fill="#1c3a4d"/><path d="M72 59 82 55" stroke="#60e3f2" stroke-width="3"/><path d="M22 66 38 60" stroke="#60e3f2" stroke-width="2"/><path d="M42 54 58 41 79 48 83 63 63 73 39 64Z" fill="url(#turret)" stroke="#213950" stroke-width="3"/>
+   <path d="M72 56 119 80 114 86 68 64Z" fill="#35536a" stroke="#213950" stroke-width="3"/>
+   <path d="M76 58 117 81" stroke="#95c9e6" stroke-width="2"/>
+   <path d="M48 52 61 47 69 51 55 59Z" fill="#35536a" stroke="#213950" stroke-width="2"/>
+<path d="M46 67 57 75 78 71" fill="none" stroke="#60e3f2" stroke-width="2.5"/>
+<path d="M34 96 48 101 82 98 103 94" fill="none" stroke="#60e3f2" stroke-width="1.8" opacity=".75"/>
+</svg>
