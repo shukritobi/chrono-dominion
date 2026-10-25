@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "0.3.0",
+  "release": "0.6.0",
   "assetLicenseStatus": "original artwork; redistribution license undecided",
   "artDirection": "orthographic isometric retro-futurist",
   "runtime": {
@@ -34,6 +34,17 @@
       "frameSize": [
         96,
         96
+      ],
+      "states": [
+        "idle"
+      ],
+      "directions": 1,
+      "sourceType": "hand-authored SVG"
+    },
+    "defense": {
+      "frameSize": [
+        160,
+        160
       ],
       "states": [
         "idle"
@@ -124,12 +135,49 @@
         "idle"
       ],
       "facings": 1
+    },
+    {
+      "id": "COA-BLD-015",
+      "name": "Auto Cannon",
+      "assetRegisterName": "Bastion Emplacement",
+      "faction": "coalition",
+      "role": "turret",
+      "file": "art/pilot/coalition-turret.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
+    },
+    {
+      "id": "FED-BLD-014",
+      "name": "Gun Nest",
+      "assetRegisterName": "Rotary Sentry Turret",
+      "faction": "federation",
+      "role": "turret",
+      "file": "art/pilot/federation-turret.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
+    },
+    {
+      "id": "PSI-BLD-012",
+      "name": "Neural Sentinel",
+      "assetRegisterName": "Rotary Pulse Sentry",
+      "faction": "psionic",
+      "role": "turret",
+      "file": "art/pilot/psionic-turret.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
     }
   ],
   "qualityNotes": [
     "Directional tank atlas has correct 32 facing frames and an independently aimable turret.",
     "Generator SVGs are single-state placeholders; animated damage/idle states remain planned.",
     "Final Blender-based high-detail source models and cinematic images remain concept references, not these runtime sprites.",
-    "Initial infantry illustrations are single-direction pilot sprites and will be replaced with eight-direction animation sheets."
+    "Initial infantry illustrations are single-direction pilot sprites and will be replaced with eight-direction animation sheets.",
+    "Defense turret SVGs are single idle-state pilot sprites; animated swivel and damaged states not yet produced."
   ]
 }
