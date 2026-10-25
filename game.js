@@ -1,13 +1,18 @@
-/* Chrono Dominion v0.7 — original browser RTS vertical slice. No third-party game assets. */
+/* Chrono Dominion v0.8 — distinct skirmish maps and faction recon. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const WORLD_SIZE = 34, TW = 64, TH = 32;
   const SAVE_KEY='chrono-dominion-skirmish-v1';
   const FACTION_BALANCE={
-    coalition:{tank:{speed:1.12},heavy:{speed:1.10}},
-    federation:{tank:{hp:1.18,damage:1.13,speed:.90},heavy:{hp:1.15,damage:1.12,speed:.88}},
-    psionic:{tank:{speed:1.13,hp:.91,damage:.94},specialist:{range:1.14}}
+    coalition:{tank:{speed:1.12},heavy:{speed:1.10},recon:{speed:1.18,hp:.9}},
+    federation:{tank:{hp:1.18,damage:1.13,speed:.90},heavy:{hp:1.15,damage:1.12,speed:.88},recon:{hp:1.28,damage:1.1,speed:.87}},
+    psionic:{tank:{speed:1.13,hp:.91,damage:.94},specialist:{range:1.14},recon:{speed:1.13,range:1.09}}
+  };
+  const MAPS={
+    verdant:{name:'Verdant Front',description:'Twin lake basins, fertile grassland and multiple contested ore veins.',ore:[[10,12],[13,15],[18,17],[23,21],[25,24],[19,11],[12,21]],waterColor:'#2d6179'},
+    desert:{name:'Ashen Basin',description:'Open desert routes, a central canyon lake and exposed mineral deposits.',ore:[[10,10],[14,14],[18,15],[22,20],[26,24],[15,24],[24,12]],waterColor:'#426c88'},
+    snow:{name:'Frostline',description:'Icy lake channels and ore-rich frozen highlands with narrow approaches.',ore:[[11,13],[14,18],[17,19],[22,23],[24,25],[21,11],[10,23]],waterColor:'#618c98'}
   };
   const ABILITIES={
     coalition:{name:'Chrono Jump',cooldown:20,range:6.2,color:'#8bdbf9'},
@@ -35,12 +40,13 @@
     specialist:{name:'Special Operative',icon:'✦',cost:700,hp:80,speed:2.0,range:3.2,damage:14,rate:1.4,from:'barracks',requires:['radar']},
     tank:{name:'Battle Tank',icon:'▰',cost:850,hp:270,speed:1.55,range:4.0,damage:32,rate:1.45,from:'factory'},
     heavy:{name:'Siege Tank',icon:'▱',cost:1450,hp:420,speed:1.02,range:5.0,damage:53,rate:2.0,from:'factory',requires:['tech']},
-    harvester:{name:'Ore Harvester',icon:'◈',cost:900,hp:310,speed:1.23,range:0,damage:0,from:'refinery'}
+    harvester:{name:'Ore Harvester',icon:'◈',cost:900,hp:310,speed:1.23,range:0,damage:0,from:'refinery'},
+    recon:{name:'Recon Vehicle',icon:'⌁',cost:550,hp:145,speed:2.55,range:3.2,damage:13,rate:.9,from:'factory'}
   };
   const NAMES = {
-    coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester'},
-    federation:{hq:'Iron Command',generator:'Thermal Reactor',refinery:'Industrial Refinery',barracks:'Garrison',factory:'Armour Foundry',radar:'Signal Tower',tech:'Weapons Institute',turret:'Gun Nest',beam:'Arc Coil',soldier:'Rifleman',specialist:'Arc Trooper',tank:'Bull Tank',heavy:'Mammoth Tank',harvester:'Ore Carrier'},
-    psionic:{hq:'Neural Nexus',generator:'Bio Reactor',refinery:'Neural Refinery',barracks:'Initiation Chamber',factory:'Mind Forge',radar:'Psi Scanner',tech:'Ascension Spire',turret:'Neural Sentinel',beam:'Psychic Spire',soldier:'Acolyte',specialist:'Neural Disciple',tank:'Viper Tank',heavy:'Mindbreaker',harvester:'Psi Collector'}
+    coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester',recon:'Lynx Scout'},
+    federation:{hq:'Iron Command',generator:'Thermal Reactor',refinery:'Industrial Refinery',barracks:'Garrison',factory:'Armour Foundry',radar:'Signal Tower',tech:'Weapons Institute',turret:'Gun Nest',beam:'Arc Coil',soldier:'Rifleman',specialist:'Arc Trooper',tank:'Bull Tank',heavy:'Mammoth Tank',harvester:'Ore Carrier',recon:'Iron Patrol'},
+    psionic:{hq:'Neural Nexus',generator:'Bio Reactor',refinery:'Neural Refinery',barracks:'Initiation Chamber',factory:'Mind Forge',radar:'Psi Scanner',tech:'Ascension Spire',turret:'Neural Sentinel',beam:'Psychic Spire',soldier:'Acolyte',specialist:'Neural Disciple',tank:'Viper Tank',heavy:'Mindbreaker',harvester:'Psi Collector',recon:'Shade Runner'}
   };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -274,10 +280,16 @@
       this.updateFog();$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
     }
     initMap(){
-      const oreSites=[[10,12],[13,15],[18,17],[23,21],[25,24],[19,11],[12,21]];
+      const oreSites=(MAPS[this.settings.map]||MAPS.verdant).ore;
       for(const [x,y] of oreSites){for(let i=0;i<8;i++){const ox=x+(rand(i,x,10)-.5)*3.3,oy=y+(rand(i,y,20)-.5)*3.3;if(this.water(ox,oy))continue;this.ores.push({x:ox,y:oy,amount:900+Math.floor(rand(i,x+y)*450),max:1350});}}
     }
-    water(x,y){return (x>22&&x<32&&y>2&&y<8)||(x>2&&x<9&&y>22&&y<28);}
+    water(x,y){
+      switch(this.settings.map){
+        case 'desert': return (x>12&&x<22&&y>10&&y<13)||(x>15&&x<19&&y>13&&y<21)||(x>3&&x<7&&y>23&&y<28);
+        case 'snow': return (x>13&&x<17&&y>3&&y<14)||(x>16&&x<19&&y>14&&y<21)||(x>19&&x<23&&y>20&&y<31);
+        default: return (x>22&&x<32&&y>2&&y<8)||(x>2&&x<9&&y>22&&y<28);
+      }
+    }
     buildingAt(x,y){return this.entities.find(e=>e.type==='building'&&e.hp>0&&Math.abs(e.x-x)<1.7&&Math.abs(e.y-y)<1.7);}
     canPlace(x,y,side){
       if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)return false;
@@ -287,7 +299,7 @@
     }
     getDef(e){return BUILD[e.kind]||UNITS[e.kind];}
     stat(e,key){const base=this.getDef(e)[key]||0,mods=FACTION_BALANCE[this.players[e.owner]?.faction]?.[e.kind];return base*(mods?.[key]??1);}
-    unitRadius(e){return e.kind==='soldier'||e.kind==='specialist'?.23:e.kind==='heavy'?.56:e.kind==='harvester'?.47:.39;}
+    unitRadius(e){return e.kind==='soldier'||e.kind==='specialist'?.23:e.kind==='heavy'?.56:e.kind==='harvester'?.47:e.kind==='recon'?.33:.39;}
     name(e){return NAMES[this.players[e.owner].faction][e.kind]||this.getDef(e).name;}
     count(side,kind){return this.entities.filter(e=>e.owner===side&&e.kind===kind&&e.hp>0&&e.built).length;}
     prereq(side,key){const def=BUILD[key]||UNITS[key];if(!def)return false;
@@ -925,7 +937,7 @@
       $('factionBadge').style.color=COLORS[me.faction].color;
       $('factionInfo').textContent=power.low?'LOW POWER':'COMMAND SYSTEMS ONLINE';
       for(const b of $('tabs').querySelectorAll('button'))b.classList.toggle('active',b.dataset.tab===this.tab);
-      let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','harvester'];
+      let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
         const label=NAMES[me.faction][key]||d.name;const available=ready&&rich&&!q;let reason=!ready?'Requires tech':!rich?'Not enough credits':q?'In production':'';
         const preview=(key==='generator'||key==='turret')?'./art/pilot/'+me.faction+'-'+(key==='generator'?'power':'turret')+'.svg':(key==='soldier'||key==='specialist')?'./art/pilot/'+me.faction+'-'+(key==='soldier'?'infantry':'specialist')+'.svg':key==='tank'?'./art/pilot/'+({coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'}[me.faction])+'.svg':null;
@@ -947,7 +959,7 @@
       const c=this.ctx,palette=terrain[this.settings.map]||terrain.verdant;
       for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){
         const r=rand(x,y),water=this.water(x+.5,y+.5);
-        this.drawDiamond(x+.5,y+.5,water?(this.settings.map==='snow'?'#618c98':'#2d6179'):palette[Math.floor(r*palette.length)],'#091e243b');
+        this.drawDiamond(x+.5,y+.5,water?(MAPS[this.settings.map]||MAPS.verdant).waterColor:palette[Math.floor(r*palette.length)],'#091e243b');
         if(water&&r>.7){const p=iso(x+.5,y+.5);c.strokeStyle='#77b9c580';c.beginPath();c.moveTo(p.x-9,p.y);c.lineTo(p.x+6,p.y-3);c.stroke();}
         else if(!water&&r>.965){const p=iso(x+.5,y+.5);c.fillStyle='#223c34';c.beginPath();c.ellipse(p.x,p.y-3,4,2,0,0,Math.PI*2);c.fill();c.fillStyle=this.settings.map==='snow'?'#d7dfe0':'#294f3e';c.beginPath();c.moveTo(p.x-5,p.y-4);c.lineTo(p.x,p.y-16);c.lineTo(p.x+6,p.y-4);c.fill();}
       }
@@ -1022,14 +1034,15 @@
         this.health(e,0,-33,27);
       }else{
         c.save();c.rotate(e.heading);
-        const big=e.kind==='heavy',harvest=e.kind==='harvester';
-        const sz=big?1.27:1;c.scale(sz,sz);
+        const big=e.kind==='heavy',harvest=e.kind==='harvester',scout=e.kind==='recon';
+        const sz=big?1.27:scout?.75:1;c.scale(sz,sz);
         c.fillStyle='#111b25';c.fillRect(-18,-12,36,7);c.fillRect(-18,5,36,7);
         c.fillStyle=pal.side;c.fillRect(-17,-9,34,18);
         c.fillStyle=pal.top;c.beginPath();c.moveTo(-17,-8);c.lineTo(11,-8);c.lineTo(18,-1);c.lineTo(11,8);c.lineTo(-17,8);c.closePath();c.fill();
         c.strokeStyle=pal.trim;c.lineWidth=2;c.beginPath();c.moveTo(-13,-7);c.lineTo(-13,7);c.stroke();
         c.fillStyle=pal.color;c.fillRect(-13,-7,7,4);
-        if(harvest){c.fillStyle='#d5ad68';c.fillRect(5,-6,11,12);c.fillStyle=e.load?'#b1e4cb':'#253b39';c.fillRect(-5,-5,9,10);}
+        if(scout){c.fillStyle=pal.trim;c.beginPath();c.moveTo(11,-6);c.lineTo(25,0);c.lineTo(11,6);c.closePath();c.fill();c.fillStyle='#182a37';c.fillRect(-8,-4,12,8);}
+        else if(harvest){c.fillStyle='#d5ad68';c.fillRect(5,-6,11,12);c.fillStyle=e.load?'#b1e4cb':'#253b39';c.fillRect(-5,-5,9,10);}
         else{c.fillStyle='#293849';c.beginPath();c.arc(1,0,8,0,7);c.fill();c.strokeStyle=pal.trim;c.lineWidth=big?6:4;c.beginPath();c.moveTo(5,0);c.lineTo(big?29:25,0);c.stroke();c.fillStyle=pal.color;c.fillRect(-2,-3,7,6);}
         c.restore();this.health(e,0,-27,big?43:35);
       }
@@ -1091,6 +1104,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.7.0',build:'specialist-abilities'};
+  window.ChronoDominion={version:'0.8.0',build:'skirmish-maps-and-recon'};
   new Game();
 })();
