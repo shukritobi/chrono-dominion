@@ -34,6 +34,8 @@ jobs:
           node tests/map-editor-ui.test.mjs
           node tests/map-library-v11.test.mjs
           node tests/gameplay-v12.test.mjs
+          node tests/tactics-v13.test.mjs
+          node --check audio/sfx.js
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
@@ -68,6 +70,7 @@ jobs:
           test -f maps/map-core.js
           test -f maps/map-editor.js
           test -f map-editor.html
+          test -f audio/sfx.js
           test -f tools/maps/build.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
