@@ -32,6 +32,7 @@ jobs:
           node tests/battle-report-v09.test.mjs
           node tests/map-forge-v100.test.mjs
           node tests/map-editor-ui.test.mjs
+          node tests/map-library-v11.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
