@@ -427,7 +427,9 @@
       let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','harvester'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
         const label=NAMES[me.faction][key]||d.name;const available=ready&&rich&&!q;let reason=!ready?'Requires tech':!rich?'Not enough credits':q?'In production':'';
-        return '<button class="buildItem '+(!available?'locked ':'')+(this.placing===key?'selectedBuild':'')+'" data-key="'+key+'" '+(!available?'disabled':'')+' title="'+this.escape(label)+' '+this.escape(reason)+'"><span class="itemIcon">'+d.icon+'</span><span class="itemTitle">'+this.escape(label)+'</span><span class="itemCost">¤ '+d.cost+'</span>'+(q?'<span class="progress" style="width:'+(q.elapsed/q.total*100)+'%"></span>':'')+'</button>';
+        const preview=key==='generator'?'./art/pilot/'+me.faction+'-power.svg':key==='tank'?'./art/pilot/'+({coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'}[me.faction])+'.svg':null;
+        const artwork=preview?'<img class="itemAsset" loading="lazy" alt="" src="'+preview+'">':'<span class="itemIcon">'+d.icon+'</span>';
+        return '<button class="buildItem '+(!available?'locked ':'')+(this.placing===key?'selectedBuild':'')+'" data-key="'+key+'" '+(!available?'disabled':'')+' title="'+this.escape(label)+' '+this.escape(reason)+'">'+artwork+'<span class="itemTitle">'+this.escape(label)+'</span><span class="itemCost">¤ '+d.cost+'</span>'+(q?'<span class="progress" style="width:'+(q.elapsed/q.total*100)+'%"></span>':'')+'</button>';
       }).join('');
       this.updateSelection();
     }
@@ -487,10 +489,10 @@
       if(atlas?.hull&&atlas?.turret){
         const art=window.ChronoVehicleArt,srcSize=art.frameSize,cols=art.columns;
         const hullFrame=art.frameIndex(e.worldHeading),turretFrame=art.frameIndex(e.turretHeading??e.worldHeading);
-        const drawLayer=(sheet,frame)=>c.drawImage(sheet,(frame%cols)*srcSize,Math.floor(frame/cols)*srcSize,srcSize,srcSize,-49,-80,98,98);
+        const drawLayer=(sheet,frame)=>c.drawImage(sheet,(frame%cols)*srcSize,Math.floor(frame/cols)*srcSize,srcSize,srcSize,-49,-63,98,98);
         if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
         drawLayer(atlas.hull,hullFrame);drawLayer(atlas.turret,turretFrame);
-        this.health(e,0,-75,43);c.restore();return;
+        this.health(e,0,-59,43);c.restore();return;
       }
       const pilot=e.kind==='tank'?this.sprites[this.players[e.owner].faction]:null;
       if(pilot&&pilot.complete&&pilot.naturalWidth>0){
