@@ -53,6 +53,21 @@ const path = game.findPath(6,11,28,28);
 assert.ok(path.length > 8, 'A-star route crosses the battlefield');
 assert.ok(path.every(p => game.walkable(p.x,p.y)), 'A-star path avoids buildings and water');
 
+const firstTank = game.entities.find(e => e.owner === 0 && e.kind === 'tank');
+const selectPoint = game.screen(firstTank.x, firstTank.y);
+const tap = (x, y, pointerId) => ({
+  pointerType: 'touch', pointerId, button: 0, clientX: x, clientY: y, preventDefault() {}
+});
+const selectTap = tap(selectPoint.x, selectPoint.y, 100);
+game.pointerDown(selectTap);
+game.pointerUp(selectTap);
+assert.ok(game.selected.includes(firstTank.id), 'touch tap selects friendly unit');
+const movePoint = game.screen(13, 14);
+const moveTap = tap(movePoint.x, movePoint.y, 101);
+game.pointerDown(moveTap);
+game.pointerUp(moveTap);
+assert.equal(firstTank.order?.type, 'move', 'second touch tap issues move command');
+
 game.chooseProduction('factory');
 assert.equal(game.placing, 'factory');
 game.placeBuilding(11, 6);
