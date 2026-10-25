@@ -97,7 +97,7 @@
         this.add(side,'soldier',a.x+1*sign,a.y+5*sign);
         this.add(side,'soldier',a.x+2*sign,a.y+5*sign);
         this.add(side,'tank',a.x+4*sign,a.y+5*sign);
-        const h=this.add(side,'harvester',a.x+1*sign,a.y+4*sign);h.order={type:'harvest'};
+        const h=this.add(side,'harvester',a.x+2*sign,a.y+5*sign);h.order={type:'harvest'};
       }
       this.updateFog();$('overlay').classList.add('hidden');this.updateUI(true);this.notify('Command established. Construct a War Factory to build tanks.');
     }
