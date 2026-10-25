@@ -33,6 +33,10 @@ jobs:
           test -f art/pilot/coalition-power.svg
           test -f art/pilot/federation-power.svg
           test -f art/pilot/psionic-power.svg
+          test -f art/pilot/coalition-infantry.svg
+          test -f art/pilot/federation-infantry.svg
+          test -f art/pilot/psionic-infantry.svg
+          test -f art/manifest.json
           test -f docs/game-design/FULL-BLUEPRINT.md
           test -f docs/asset-production/ASSET-PRODUCTION-PLAN.md
           test -f planning/AssetRegister.csv
