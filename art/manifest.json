@@ -29,6 +29,17 @@
         "idle"
       ],
       "sourceType": "hand-authored SVG"
+    },
+    "infantry": {
+      "frameSize": [
+        96,
+        96
+      ],
+      "states": [
+        "idle"
+      ],
+      "directions": 1,
+      "sourceType": "hand-authored SVG"
     }
   },
   "assets": [
@@ -79,11 +90,46 @@
       "role": "generator",
       "file": "art/pilot/psionic-power.svg",
       "assetRegisterName": "Biomorphic Energy Chamber"
+    },
+    {
+      "id": "COA-INF-001",
+      "name": "Coalition Ranger",
+      "faction": "coalition",
+      "role": "soldier",
+      "file": "art/pilot/coalition-infantry.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
+    },
+    {
+      "id": "FED-INF-001",
+      "name": "Federation Rifleman",
+      "faction": "federation",
+      "role": "soldier",
+      "file": "art/pilot/federation-infantry.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
+    },
+    {
+      "id": "PSI-INF-001",
+      "name": "Psionic Acolyte",
+      "assetRegisterName": "Neural Disciple",
+      "faction": "psionic",
+      "role": "soldier",
+      "file": "art/pilot/psionic-infantry.svg",
+      "states": [
+        "idle"
+      ],
+      "facings": 1
     }
   ],
   "qualityNotes": [
     "Directional tank atlas has correct 32 facing frames and an independently aimable turret.",
     "Generator SVGs are single-state placeholders; animated damage/idle states remain planned.",
-    "Final Blender-based high-detail source models and cinematic images remain concept references, not these runtime sprites."
+    "Final Blender-based high-detail source models and cinematic images remain concept references, not these runtime sprites.",
+    "Initial infantry illustrations are single-direction pilot sprites and will be replaced with eight-direction animation sheets."
   ]
 }
