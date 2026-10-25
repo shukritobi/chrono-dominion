@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.3.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v0.4.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v0.4 combat and economy
+
+- **Projectiles travel** visibly and only deal damage when they hit a target; muzzle flashes and impacts enhance battlefield feedback.
+- **Vehicle rotation is speed-limited**, with independently aimed tank turrets using the existing 32-direction atlas system.
+- **Building controls:** select a damaged friendly building to start/stop repairs (consumes credits), or sell a non-command building for a partial refund.
+- **AI uses earned credits** from ore harvesters instead of a periodic money cheat, can replace lost harvesters and repair buildings, and stages attacks after a base-building interval.
+- Added [v0.4 release notes](docs/RELEASE-0.4.md) and `tests/combat-economy.test.mjs`, both included in the GitHub Pages verification pipeline.
 
 ## v0.3 asset system
 
