@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.2.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.3.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.3 Connected Squads, AI Flanking & Optional Sound
+
+- **Squad movement:** right-click group orders now allocate distinct destination cells connected to the selected squad's side of a lake or blocked passage, reducing unreachable formation orders.
+- **Tactical AI flanks:** enemy squads approach remembered enemy positions from reachable side routes, never consulting hidden enemy locations. They keep their assigned flank rather than changing it every strategy update.
+- **Opt-in original sound effects:** use **♪ OFF / ♪ ON** in the HUD to enable locally synthesized weapon fire, impacts, construction, specialist abilities and victory/defeat tones. Sound is disabled by default and can be muted instantly.
+- No audio files or copyrighted sound assets are required. Browsers without Web Audio continue silently.
+- [v1.3 release notes](docs/RELEASE-1.3.md) | [Tactical/audio tests](tests/tactics-v13.test.mjs).
 
 ## v1.2 Combat, Navigation & Intelligence
 
