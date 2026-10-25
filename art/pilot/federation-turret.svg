@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Original Gun Nest defense tower artwork">
+<defs><linearGradient id="metal" x1=".15" y1="0" x2=".8" y2="1"><stop stop-color="#cc9475"/><stop offset=".45" stop-color="#8e5142"/><stop offset="1" stop-color="#422b2a"/></linearGradient>
+<radialGradient id="energy"><stop stop-color="#e5fff7"/><stop offset=".5" stop-color="#ffaa64"/><stop offset="1" stop-color="#8e5142"/></radialGradient>
+<radialGradient id="shadow"><stop stop-color="#030918" stop-opacity=".55"/><stop offset="1" stop-color="#030918" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="83" cy="118" rx="65" ry="23" fill="url(#shadow)"/>
+<path d="M21 106L71 78 136 103 87 135Z" fill="#182637" stroke="#422b2a" stroke-width="3"/>
+<path d="M21 106L87 135 87 149 21 119Z" fill="#422b2a"/>
+<path d="M87 135L136 103 136 117 87 149Z" fill="#182438"/>
+<path d="M38 102L65 85 106 86 127 105 98 126 61 121Z" fill="url(#metal)" stroke="#422b2a" stroke-width="4"/>
+<path d="M47 110L89 126 121 107" fill="none" stroke="#ffaa64" stroke-width="3"/>
+<path d="M42 81L49 52 83 47 109 66 103 88 69 99Z" fill="url(#metal)" stroke="#422f30" stroke-width="4"/>
+<path d="M45 74L36 63 43 44 54 46 59 61Z" fill="#342c2d" stroke="#d9855c" stroke-width="3"/>
+<path d="M72 51L70 35 83 33 91 52Z" fill="#815241" stroke="#442a2b" stroke-width="3"/>
+<path d="M91 64L137 42 142 48 96 79Z" fill="#747373" stroke="#3b3031" stroke-width="5"/>
+<path d="M130 44L146 40 148 50 136 52Z" fill="#3b3738" stroke="#eb9d62" stroke-width="3"/>
+<path d="M52 85L60 60 80 63 74 94" fill="none" stroke="#e6a076" stroke-width="4"/>
+<circle cx="73" cy="75" r="9" fill="#2b3032" stroke="#b27852" stroke-width="3"/>
+<path d="M58 45L58 34 M96 64L105 42" stroke="#f4ac60" stroke-width="3"/>
+<path d="M32 110L45 114 M113 116L127 106" stroke="#ffaa64" stroke-width="3"/>
+</svg>
