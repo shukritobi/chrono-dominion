@@ -101,3 +101,9 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .resultActions button{height:32px!important;margin:6px auto!important}
 #resultMenu p{margin:8px 0 12px}
 @media(max-width:550px){.resultGrid{gap:5px}.resultStats{padding:5px}.resultSide{padding:5px}.resultMetric{font-size:8px}.resultScore{font-size:19px}.resultTitle{font-size:23px}}
+
+/* v1.0 map-authoring navigation link */
+.menuToolLink{display:block;max-width:320px;margin:6px auto;padding:11px 16px;text-align:center;
+  background:#21425a;border:1px solid #70aab6;border-radius:4px;
+  color:#b7f4ef;text-decoration:none;font-size:12px;font-weight:800;letter-spacing:.8px}
+.menuToolLink:hover,.menuToolLink:focus-visible{background:#346476;color:#f4ffff;border-color:#9bf5e0}
