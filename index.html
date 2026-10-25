@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#101927" />
+  <meta name="description" content="Chrono Dominion: original browser RTS prototype" />
+  <title>Chrono Dominion | RTS</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <main id="battlefield" aria-label="Game battlefield">
+      <canvas id="world"></canvas>
+      <div id="topbar">
+        <strong class="brand">◈ CHRONO <em>DOMINION</em></strong>
+        <div class="resources">
+          <span id="money">¤ 0</span>
+          <span id="power">⚡ 0 / 0</span>
+          <span id="army">♜ 0</span>
+        </div>
+        <button id="pauseBtn" title="Pause / resume (Escape)">Ⅱ</button>
+      </div>
+      <div id="hint">Left-click: select · Drag: box select · Right-click: command · WASD: move camera · Scroll: zoom · Esc: pause</div>
+      <div id="toast" role="status"></div>
+      <div id="overlay" class="overlay">
+        <section class="menu">
+          <div class="kicker">REAL-TIME STRATEGY · PRE-ALPHA</div>
+          <h1>CHRONO<br /><span>DOMINION</span></h1>
+          <p>Command the Coalition, Iron Federation or Psionic Order. Build a base, harvest ore and crush the enemy.</p>
+          <div id="mainMenu">
+            <button class="primary" id="openSkirmish">SINGLE PLAYER · SKIRMISH</button>
+            <button disabled title="Planned for later release">CAMPAIGN <small>COMING LATER</small></button>
+            <button disabled title="Planned for later release">MULTIPLAYER <small>COMING LATER</small></button>
+            <button id="openHow">HOW TO PLAY</button>
+          </div>
+          <div id="skirmishMenu" class="hidden">
+            <label>YOUR ARMY<select id="playerFaction"><option value="coalition">Coalition Forces</option><option value="federation">Iron Federation</option><option value="psionic">Psionic Order</option></select></label>
+            <label>ENEMY ARMY<select id="enemyFaction"><option value="federation">Iron Federation</option><option value="coalition">Coalition Forces</option><option value="psionic">Psionic Order</option></select></label>
+            <label>BATTLEFIELD<select id="mapSelect"><option value="verdant">Verdant Front</option><option value="desert">Ashen Basin</option><option value="snow">Frostline</option></select></label>
+            <label>DIFFICULTY<select id="difficulty"><option value="recruit">Recruit</option><option value="standard" selected>Standard</option><option value="veteran">Veteran</option></select></label>
+            <button class="primary" id="start">START BATTLE</button>
+            <button id="backMenu">BACK</button>
+          </div>
+          <div id="howMenu" class="hidden">
+            <p>Deploy buildings from the right sidebar. Your refinery sends harvesters to ore, generating credits. Build a barracks for infantry, a war factory for tanks and defenses to protect your base.</p>
+            <p>Choose a unit, then right-click the ground to move or an enemy to attack. Harvesters collect automatically. Destroy all hostile structures to win.</p>
+            <button id="backHow">BACK</button>
+          </div>
+          <div id="pauseMenu" class="hidden">
+            <button class="primary" id="resume">RESUME BATTLE</button>
+            <button id="restart">RESTART SKIRMISH</button>
+            <button id="quit">MAIN MENU</button>
+          </div>
+          <div id="resultMenu" class="hidden">
+            <p id="resultText"></p>
+            <button class="primary" id="playAgain">PLAY AGAIN</button>
+            <button id="resultQuit">MAIN MENU</button>
+          </div>
+          <div class="version">PROTOTYPE 0.1 · ORIGINAL PLACEHOLDER ART</div>
+        </section>
+      </div>
+    </main>
+    <aside id="sidebar">
+      <div class="radarFrame">
+        <canvas id="radar" width="256" height="190"></canvas>
+        <div class="radarLabel">TACTICAL RADAR <span id="battleClock">00:00</span></div>
+      </div>
+      <div class="factionBox"><div id="factionBadge">◈</div><div><span id="factionName">COALITION FORCES</span><small id="factionInfo">READY FOR DEPLOYMENT</small></div></div>
+      <nav class="tabs" id="tabs">
+        <button class="active" data-tab="structures" title="Structures">▥<span>BASE</span></button>
+        <button data-tab="defenses" title="Defenses">▤<span>DEF</span></button>
+        <button data-tab="infantry" title="Infantry">♟<span>INF</span></button>
+        <button data-tab="vehicles" title="Vehicles">▰<span>VEH</span></button>
+      </nav>
+      <div id="production" class="production"></div>
+      <div id="selection" class="selection"><strong>NO SELECTION</strong><p>Click a unit or building to inspect it.</p></div>
+      <div class="sidebarFooter">CHRONO DOMINION · SKIRMISH MODULE</div>
+    </aside>
+  </div>
+  <script src="./game.js" defer></script>
+</body>
+</html>
