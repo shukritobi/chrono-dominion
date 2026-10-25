@@ -481,6 +481,35 @@
       }
       return [];
     }
+    canOccupyUnit(e,x,y,ignoreUnits=false){
+      const r=this.unitRadius(e);
+      if(x<.8||y<.8||x>WORLD_SIZE-.8||y>WORLD_SIZE-.8||this.water(x,y))return false;
+      for(const b of this.entities){
+        if(b.hp<=0||b.id===e.id)continue;
+        if(b.type==='building'&&Math.abs(b.x-x)<1.27+r*.14&&Math.abs(b.y-y)<1.27+r*.14)return false;
+        if(!ignoreUnits&&b.type==='unit'){
+          const margin=r+this.unitRadius(b);
+          if((b.x-x)**2+(b.y-y)**2<margin*margin*.84)return false;
+        }
+      }
+      return true;
+    }
+    separateUnits(){
+      // Resolve leftover overlaps after spawns and group movement. Preserve
+      // occupancy rules; use stable id ordering for reproducible results.
+      const units=this.entities.filter(e=>e.type==='unit'&&e.hp>0).sort((a,b)=>a.id-b.id);
+      for(let pass=0;pass<2;pass++)for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
+        const a=units[i],b=units[j],minimum=(this.unitRadius(a)+this.unitRadius(b))*.95;
+        let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+        if(d>=minimum)continue;
+        if(d<.001){const angle=(a.id*13+b.id*7)%360*Math.PI/180;dx=Math.cos(angle);dy=Math.sin(angle);d=1;}
+        const push=Math.min(.36,(minimum-d)*.5),ux=dx/d,uy=dy/d;
+        const aNext={x:a.x-ux*push,y:a.y-uy*push},bNext={x:b.x+ux*push,y:b.y+uy*push};
+        const okA=this.canOccupyUnit(a,aNext.x,aNext.y,true),okB=this.canOccupyUnit(b,bNext.x,bNext.y,true);
+        if(okA){a.x=aNext.x;a.y=aNext.y;}
+        if(okB){b.x=bNext.x;b.y=bNext.y;}
+      }
+    }
     move(e,tx,ty,dt){
       let d=Math.hypot(tx-e.x,ty-e.y);
       if(d<.24){e.path=[];return true;}
@@ -499,11 +528,20 @@
       const dx=point.x-e.x,dy=point.y-e.y,len=Math.hypot(dx,dy);
       if(len<.001)return false;
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
-      const clear=(x,y)=>x>.7&&y>.7&&x<WORLD_SIZE-.7&&y<WORLD_SIZE-.7&&!this.water(x,y)&&!this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.28&&Math.abs(b.y-y)<1.28);
+      const clear=(x,y)=>this.canOccupyUnit(e,x,y);
       if(clear(e.x+vx,e.y+vy)){e.x+=vx;e.y+=vy;e.stuck=0;}
       else if(clear(e.x+vx,e.y)){e.x+=vx;e.stuck=0;}
       else if(clear(e.x,e.y+vy)){e.y+=vy;e.stuck=0;}
-      else {e.stuck=(e.stuck||0)+dt;if(e.stuck>.45){e.pathRecheck=0;e.stuck=0;}}
+      else {
+        // Symmetric short sidesteps avoid simple head-on jams. No teleporting.
+        const sign=e.id%2===0?1:-1;
+        const sidestep=[[-vy*sign,vx*sign],[vy*sign,-vx*sign]];
+        let moved=false;
+        for(const [sx,sy] of sidestep)if(clear(e.x+sx,e.y+sy)){
+          e.x+=sx;e.y+=sy;e.stuck=0;moved=true;break;
+        }
+        if(!moved){e.stuck=(e.stuck||0)+dt;if(e.stuck>.7){e.pathRecheck=0;e.stuck=0;}}
+      }
       e.heading=Math.atan2(dy*TH,dx*TW);
       e.desiredHeading=Math.atan2(dy,dx);
       if(e.type==='unit'&&!e.engaging)e.desiredTurretHeading=e.desiredHeading;
@@ -613,6 +651,7 @@
         e.worldHeading=turnToward(e.worldHeading,e.desiredHeading??e.worldHeading,speed*dt);
         e.turretHeading=turnToward(e.turretHeading,e.desiredTurretHeading??e.worldHeading,(e.kind==='tank'||e.kind==='heavy'?4.3:7)*dt);
       }
+      this.separateUnits();
       this.updateProjectiles(dt);
       this.repairBuildings(dt);
       for(let i=this.queues.length-1;i>=0;i--){const q=this.queues[i],slow=this.power(q.side).low?.55:1;q.elapsed+=dt*slow;if(q.elapsed>=q.total){const origin=this.nearest({x:q.side===0?6:28,y:q.side===0?6:28},b=>b.owner===q.side&&b.kind===UNITS[q.key].from&&b.built);
