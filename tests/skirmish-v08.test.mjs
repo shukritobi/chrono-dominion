@@ -53,6 +53,8 @@ assert.ok(scout2.hp>scout1.hp,'Federation patrol has more armor');
 assert.ok(g.stat(scout2,'damage')>g.stat(scout1,'damage'),'Federation scout is stronger');
 assert.ok(g.stat(scout1,'speed')>g.stat(g.entities.find(e=>e.owner===0&&e.kind==='tank'),'speed'),'scouting vehicle beats main tank on speed');
 assert.ok(g.name(scout1).includes('Scout'));
+g.updateFog();
+assert.equal(g.isVisible(20,13),true,'recon provides extended forward vision');
 const credits=g.players[0].credits;
 g.add(0,'factory',12,6);
 g.chooseProduction('recon');
