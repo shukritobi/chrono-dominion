@@ -830,15 +830,33 @@
           break;
         }
       }
-      if(this.queues.some(q=>q.side===side))return;
-      let unit='soldier';
-      if(!owned('harvester').length&&built('refinery'))unit='harvester';
-      else if(built('factory')&&me.credits>1100){
-        unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
-      }else if(built('barracks')&&me.credits<350)unit=null;
-      if(unit&&this.prereq(side,unit)&&me.credits>=UNITS[unit].cost){
-        me.credits-=UNITS[unit].cost;
-        this.queues.push({side,key:unit,elapsed:0,total:Math.max(2,UNITS[unit].cost/250)});
+      if(!this.queues.some(q=>q.side===side)){
+        let unit='soldier';
+        if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        else if(built('radar')&&built('barracks')&&!owned('specialist').length&&me.credits>=1400)unit='specialist';
+        else if(built('factory')&&me.credits>1100){
+          unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
+        }else if(built('barracks')&&me.credits<350)unit=null;
+        if(unit&&this.prereq(side,unit)&&me.credits>=UNITS[unit].cost){
+          me.credits-=UNITS[unit].cost;
+          this.queues.push({side,key:unit,elapsed:0,total:Math.max(2,UNITS[unit].cost/250)});
+        }
+      }
+      for(const specialist of owned('specialist')){
+        if((specialist.abilityReadyAt||0)>this.time)continue;
+        const threat=this.nearest(specialist,u=>u.owner===0&&u.type==='unit'&&u.hp>0,8);
+        if(!threat)continue;
+        if(me.faction==='coalition'){
+          if(dist(specialist,threat)<2.2||dist(specialist,threat)>7.2)continue;
+          for(const [dx,dy] of [[1,1],[-1,-1],[1,-1],[-1,1],[2,0],[-2,0],[0,2],[0,-2]]){
+            const spot={x:threat.x+dx,y:threat.y+dy};
+            if(this.canOccupyUnit(specialist,spot.x,spot.y)){
+              this.activateAbility(specialist,spot);break;
+            }
+          }
+        }else if(dist(specialist,threat)<=ABILITIES[me.faction].range){
+          this.activateAbility(specialist);
+        }
       }
       // Local base defense always takes precedence over an offensive order.
       const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
