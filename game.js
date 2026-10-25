@@ -191,7 +191,7 @@
       e.work-=dt;
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&b.kind==='refinery'&&b.built);
       if(!refinery)return;
-      if(e.load>=360){if(dist(e,refinery)>2.1)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
+      if(e.load>=360){if(dist(e,refinery)>2.9)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
         else if(e.work<=0){this.players[e.owner].credits+=e.load;e.load=0;e.work=.6;if(e.owner===0)this.particles.push({x:refinery.x,y:refinery.y,life:1,color:'#9fe29d',type:'cash'});}return;}
       let closest=null,d=Infinity;for(const o of this.ores){if(o.amount<=0)continue;const r=dist(e,o);if(r<d){d=r;closest=o;}}
       if(!closest)return;
