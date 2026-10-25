@@ -116,6 +116,10 @@
           else {this.selected=(this.groups[k]||[]).filter(id=>{const unit=this.entityById(id);return unit&&unit.owner===0;});this.updateSelection();if(e.shiftKey)this.centerSelection();}
           return;
         }
+        if(this.state==='playing'&&['x','g','b','v','t'].includes(k)&&this.selected.length){
+          const actions={x:'stop',g:'guard',b:'hold',v:'aggressive',t:'attackMove'};
+          e.preventDefault();this.unitAction(actions[k]);return;
+        }
         if(this.state==='playing'&&k==='h'){this.centerHQ();return;}
         if(this.state==='playing'&&k===' '){e.preventDefault();this.centerSelection();return;}
         this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(this.placing){this.placing=null;this.updateUI(true);}else if(this.state==='playing'||this.state==='paused')this.pause();}});
@@ -129,7 +133,8 @@
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
       $('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){this.tab=b.dataset.tab;this.updateUI(true);}});
       $('production').addEventListener('click',e=>{const b=e.target.closest('button[data-key]');if(b)this.chooseProduction(b.dataset.key);});
-      $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);});
+      $('selection').addEventListener('click',e=>{const b=e.target.closest?.('button[data-action]');if(b)this.buildingAction(b.dataset.action);
+        const unit=e.target.closest?.('button[data-unit-action]');if(unit)this.unitAction(unit.dataset.unitAction);});
       $('openSkirmish').onclick=()=>this.showMenu('skirmishMenu');
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
@@ -210,7 +215,7 @@
         x:clamp(saved.camera.x,-1020,1020),y:clamp(saved.camera.y,50,1080),zoom:clamp(saved.camera.zoom,.65,1.8)
       }:{x:0,y:370,zoom:1};
       this.fog=saved.fog.map(row=>row.map(seen=>({seen:!!seen,visible:false})));
-      this.placing=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;
+      this.placing=null;this.attackMoveArmed=false;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;
       this.keys.clear();this.nextUi=0;this.nextFog=0;
       this.state='playing';
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
@@ -401,11 +406,42 @@
           for(let i=1;i<remaining.length;i++)if(dist(remaining[i],slot)<dist(remaining[best],slot))best=i;
           const unit=remaining.splice(best,1)[0];
           if(!unit)break;
-          unit.order={type:event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
+          unit.order={type:this.attackMoveArmed||event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
           unit.path=[];unit.pathTarget=null;
         }
       }
+      this.attackMoveArmed=false;
       this.particles.push({x:p.gx,y:p.gy,life:.65,color:target?'#ff7c7c':'#80dbee',type:'marker'});
+    }
+    unitAction(action){
+      if(this.state!=='playing')return false;
+      const units=this.entities.filter(e=>e.hp>0&&e.owner===0&&e.type==='unit'&&e.kind!=='harvester'&&this.selected.includes(e.id));
+      if(!units.length)return false;
+      if(action==='attackMove'){
+        this.attackMoveArmed=true;
+        this.notify('Attack-move armed: right-click a destination');
+        this.updateSelection();return true;
+      }
+      if(!['stop','guard','hold','aggressive'].includes(action))return false;
+      this.attackMoveArmed=false;
+      for(const e of units){
+        if(action==='stop'){
+          e.order=null;e.path=[];e.pathTarget=null;e.stance='guard';e.guardX=e.x;e.guardY=e.y;
+        }else{
+          e.stance=action;e.guardX=e.x;e.guardY=e.y;
+          if(action==='hold'||action==='guard'){e.order=null;e.path=[];e.pathTarget=null;}
+        }
+      }
+      this.notify(({stop:'Units stopped',guard:'Guard nearby area',hold:'Hold position',aggressive:'Aggressive pursuit'})[action]);
+      this.updateSelection();return true;
+    }
+    unitActionPanel(units){
+      if(!units.some(e=>e.owner===0&&e.type==='unit'&&e.kind!=='harvester'))return '';
+      const stance=units.length===1?units[0].stance||'guard':'mixed';
+      const opts=[['stop','X STOP'],['guard','G GUARD'],['hold','B HOLD'],['aggressive','V ATTACK'],['attackMove','T A-MOVE']];
+      return '<div class="unitActions">'+opts.map(([act,label])=>
+        '<button data-unit-action="'+act+'" class="'+((stance===act||act==='attackMove'&&this.attackMoveArmed)?'chosen':'')+'" title="'+act+'">'+label+'</button>'
+      ).join('')+'</div>';
     }
     formationSlots(cx,cy,count){
       const slots=[],used=new Set(),want=Math.max(0,Math.min(count,120));
@@ -631,14 +667,25 @@
         e.ready=Math.max(0,e.ready-dt);
         if(e.type==='unit'){
           if(e.kind==='harvester'){this.processHarvester(e,dt);continue;}
-          const command=e.order;
+          const command=e.order,range=this.stat(e,'range'),stance=e.stance||'guard';
           let target=command?.type==='attack'?this.entityById(command.id):null;
-          if(!target)target=this.nearest(e,b=>b.owner!==e.owner&&b.built,UNITS[e.kind].range+2.0);
-          const range=this.stat(e,'range');
+          if(!target&&command?.type!=='move'){
+            const detection=stance==='aggressive'?range+4.0:stance==='hold'?range:range+1.5;
+            target=this.nearest(e,b=>b.owner!==e.owner&&b.built,detection);
+          }
           e.engaging=!!target;
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
-          if(target){if(dist(e,target)>range)this.move(e,target.x,target.y,dt);else if(e.ready<=0)this.shoot(e,target);}
-          else if(command?.type==='move'||command?.type==='attackMove'){if(this.move(e,command.x,command.y,dt))e.order=null;}
+          if(target){
+            const hold=stance==='hold'&&command?.type!=='attack';
+            const leash=stance==='guard'&&command?.type!=='attack'&&command?.type!=='attackMove'
+                &&Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>5;
+            if(!hold&&!leash&&dist(e,target)>range)this.move(e,target.x,target.y,dt);
+            else if(dist(e,target)<=range&&e.ready<=0)this.shoot(e,target);
+          }
+          else if(command?.type==='move'||command?.type==='attackMove'){
+            if(this.move(e,command.x,command.y,dt))e.order=null;
+          }else if(stance==='guard'&&Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>1.4)
+            this.move(e,e.guardX,e.guardY,dt);
           // Enemy units hold their assigned position until strategic AI orders them.
         }else if(BUILD[e.kind].damage&&!this.power(e.owner).low){
           const def=BUILD[e.kind];const target=this.nearest(e,b=>b.owner!==e.owner&&b.type==='unit'&&b.built,def.range);
@@ -735,7 +782,10 @@
     updateSelection(){
       const targets=this.selected.map(id=>this.entityById(id)).filter(Boolean),box=$('selection');
       if(!targets.length){box.innerHTML='<strong>NO SELECTION</strong><p>Click a unit or building to inspect it.</p>';return;}
-      if(targets.length>1){box.innerHTML='<strong>'+targets.length+' UNITS SELECTED</strong><p>Right-click to move or attack. Shift + right-click to attack-move.</p>';return;}
+      if(targets.length>1){
+        box.innerHTML='<strong>'+targets.length+' UNITS SELECTED</strong><p>Move in formation, hold, guard or attack-move.</p>'+this.unitActionPanel(targets);
+        return;
+      }
       const e=targets[0];
       let html='<strong>'+this.escape(this.name(e)).toUpperCase()+'</strong><p>'+Math.max(0,Math.ceil(e.hp))+' / '+e.maxHp+' HP · '+(e.owner===0?'FRIENDLY':'HOSTILE')+(e.built?'':' · CONSTRUCTING '+Math.round(e.construction*100)+'%')+'</p>';
       if(e.owner===0&&e.type==='building'){
@@ -745,6 +795,7 @@
         if(e.kind!=='hq')html+='<button data-action="sell" title="Sell this structure for a partial refund">¤ SELL</button>';
         html+='</div>';
       }
+      else if(e.owner===0&&e.type==='unit')html+=this.unitActionPanel(targets);
       box.innerHTML=html;
     }
     escape(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
