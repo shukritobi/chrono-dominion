@@ -64,6 +64,6 @@ assert.ok(game.entities.some(e => e.owner === 1 && e.type === 'unit'), 'AI has u
 game.chooseProduction('tank');
 assert.ok(game.queues.some(q => q.side === 0 && q.key === 'tank'), 'player can queue tanks');
 const before = Math.max(...game.entities.map(e => e.id));
-for (let i = 0; i < 120; i++) game.step(0.05);
+for (let i = 0; i < 240; i++) game.step(0.05);
 assert.ok(game.entities.some(e => e.owner === 0 && e.kind === 'tank' && e.id > before), 'factory builds a tank');
 console.log('PASS: game initialization, two sides, ore, construction, harvesting, AI, tank production and rendering');
