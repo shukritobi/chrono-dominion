@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Original Auto Cannon defense tower artwork">
+<defs><linearGradient id="metal" x1=".15" y1="0" x2=".8" y2="1"><stop stop-color="#a8ccd9"/><stop offset=".45" stop-color="#537e9a"/><stop offset="1" stop-color="#1d3856"/></linearGradient>
+<radialGradient id="energy"><stop stop-color="#e5fff7"/><stop offset=".5" stop-color="#65e9f2"/><stop offset="1" stop-color="#537e9a"/></radialGradient>
+<radialGradient id="shadow"><stop stop-color="#030918" stop-opacity=".55"/><stop offset="1" stop-color="#030918" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="83" cy="118" rx="65" ry="23" fill="url(#shadow)"/>
+<path d="M21 106L71 78 136 103 87 135Z" fill="#182637" stroke="#1d3856" stroke-width="3"/>
+<path d="M21 106L87 135 87 149 21 119Z" fill="#1d3856"/>
+<path d="M87 135L136 103 136 117 87 149Z" fill="#182438"/>
+<path d="M38 102L65 85 106 86 127 105 98 126 61 121Z" fill="url(#metal)" stroke="#1d3856" stroke-width="4"/>
+<path d="M47 110L89 126 121 107" fill="none" stroke="#65e9f2" stroke-width="3"/>
+<path d="M49 82L54 55 77 45 99 55 99 83 74 98Z" fill="url(#metal)" stroke="#203951" stroke-width="4"/>
+<path d="M67 62L72 43 85 41 92 58Z" fill="#8db0c0" stroke="#203951" stroke-width="3"/>
+<path d="M85 63L128 45 134 51 90 77Z" fill="#8faebe" stroke="#22364a" stroke-width="4"/>
+<path d="M130 45L139 45 143 52 134 54Z" fill="#2e536f" stroke="#65e9f2" stroke-width="2"/>
+<path d="M97 61L132 48 M58 72L68 64" stroke="#65e9f2" stroke-width="3"/>
+<ellipse cx="73" cy="75" rx="12" ry="7" fill="#19384c" stroke="#65e9f2" stroke-width="2"/><path d="M61 77L75 70 81 74 68 82Z" fill="#b1e6ed"/>
+<path d="M32 110L45 114 M113 116L127 106" stroke="#65e9f2" stroke-width="3"/>
+</svg>
