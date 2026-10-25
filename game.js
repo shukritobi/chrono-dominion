@@ -690,14 +690,17 @@
           e.engaging=!!target;
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){
-            const hold=stance==='hold'&&command?.type!=='attack';
+            const hold=stance==='hold'&&command?.type!=='attack'&&command?.type!=='attackMove';
             const leash=stance==='guard'&&command?.type!=='attack'&&command?.type!=='attackMove'
                 &&Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>5;
             if(!hold&&!leash&&dist(e,target)>range)this.move(e,target.x,target.y,dt);
             else if(dist(e,target)<=range&&e.ready<=0)this.shoot(e,target);
           }
           else if(command?.type==='move'||command?.type==='attackMove'){
-            if(this.move(e,command.x,command.y,dt))e.order=null;
+            if(this.move(e,command.x,command.y,dt)){
+              if(stance==='guard'){e.guardX=e.x;e.guardY=e.y;}
+              e.order=null;
+            }
           }else if(stance==='guard'&&Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>1.4)
             this.move(e,e.guardX,e.guardY,dt);
           // Enemy units hold their assigned position until strategic AI orders them.
