@@ -1060,7 +1060,7 @@
         'Enemy units destroyed: '+b.player.enemyUnitsDestroyed,
         'Enemy buildings destroyed: '+b.player.enemyBuildingsDestroyed,
         'Friendly units lost: '+b.player.unitsLost
-      ].join('\\n');
+      ].join('\n');
       if(typeof navigator==='undefined'||!navigator.clipboard?.writeText){
         this.notify('Clipboard not available in this browser');return false;
       }
