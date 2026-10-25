@@ -67,7 +67,7 @@
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
-      this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.loadPilotSprites();
+      this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
       if(window.ChronoVehicleArt){try{this.vehicleAtlases=window.ChronoVehicleArt.createAtlases();}catch(err){console.warn('Directional atlas fallback:',err);}}
       this.loadRenderedAtlases();
@@ -88,6 +88,8 @@
         this.infantrySprites[faction]=infantry;
         const specialist=new Image();specialist.decoding='async';specialist.src='./art/pilot/'+faction+'-specialist.svg';
         this.specialistSprites[faction]=specialist;
+        const recon=new Image();recon.decoding='async';recon.src='./art/pilot/'+faction+'-recon.svg';
+        this.reconSprites[faction]=recon;
       }
     }
     loadRenderedAtlases(){
@@ -986,7 +988,7 @@
       let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
         const label=NAMES[me.faction][key]||d.name;const available=ready&&rich&&!q;let reason=!ready?'Requires tech':!rich?'Not enough credits':q?'In production':'';
-        const preview=(key==='generator'||key==='turret')?'./art/pilot/'+me.faction+'-'+(key==='generator'?'power':'turret')+'.svg':(key==='soldier'||key==='specialist')?'./art/pilot/'+me.faction+'-'+(key==='soldier'?'infantry':'specialist')+'.svg':key==='tank'?'./art/pilot/'+({coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'}[me.faction])+'.svg':null;
+        const preview=(key==='generator'||key==='turret')?'./art/pilot/'+me.faction+'-'+(key==='generator'?'power':'turret')+'.svg':(key==='soldier'||key==='specialist')?'./art/pilot/'+me.faction+'-'+(key==='soldier'?'infantry':'specialist')+'.svg':key==='tank'?'./art/pilot/'+({coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'}[me.faction])+'.svg':key==='recon'?'./art/pilot/'+me.faction+'-recon.svg':null;
         const artwork=preview?'<img class="itemAsset" loading="lazy" alt="" src="'+preview+'">':'<span class="itemIcon">'+d.icon+'</span>';
         return '<button class="buildItem '+(!available?'locked ':'')+(this.placing===key?'selectedBuild':'')+'" data-key="'+key+'" '+(!available?'disabled':'')+' title="'+this.escape(label)+' '+this.escape(reason)+'">'+artwork+'<span class="itemTitle">'+this.escape(label)+'</span><span class="itemCost">¤ '+d.cost+'</span>'+(q?'<span class="progress" style="width:'+(q.elapsed/q.total*100)+'%"></span>':'')+'</button>';
       }).join('');
@@ -1062,6 +1064,11 @@
       if(inf&&inf.complete&&inf.naturalWidth>0){
         if(this.selected.includes(e.id))this.drawRing(0,1,22,pal.color);
         c.drawImage(inf,-24,-48,48,48);this.health(e,0,-51,27);c.restore();return;
+      }
+      const recon=e.kind==='recon'?this.reconSprites[this.players[e.owner].faction]:null;
+      if(recon&&recon.complete&&recon.naturalWidth>0){
+        if(this.selected.includes(e.id))this.drawRing(0,0,24,pal.color);
+        c.drawImage(recon,-42,-73,84,84);this.health(e,0,-66,38);c.restore();return;
       }
       const pilot=e.kind==='tank'?this.sprites[this.players[e.owner].faction]:null;
       if(pilot&&pilot.complete&&pilot.naturalWidth>0){
