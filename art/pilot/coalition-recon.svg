@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Original Lynx Scout isometric recon vehicle">
+<defs><linearGradient id="armor" x1=".1" y1="0" x2=".85" y2="1"><stop stop-color="#83b1c9"/><stop offset=".55" stop-color="#456b8d"/><stop offset="1" stop-color="#1c344d"/></linearGradient>
+<radialGradient id="shadow"><stop stop-color="#041020" stop-opacity=".63"/><stop offset="1" stop-color="#041020" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="80" cy="126" rx="66" ry="20" fill="url(#shadow)"/>
+<path d="M25 98L63 72 131 93 91 128Z" fill="#1c344d" stroke="#152838" stroke-width="4"/>
+<path d="M25 98L91 128 91 141 24 110Z M91 128L131 93 130 110 91 141Z" fill="#1c344d" stroke="#152334" stroke-width="3"/>
+<path d="M27 104L44 112 44 124 27 117Z M111 110L132 99 132 113 111 126Z" fill="#202b34"/>
+<path d="M34 95L67 72 123 92 91 120Z" fill="url(#armor)" stroke="#1c344d" stroke-width="3"/>
+<path d="M44 93L69 78 104 90 81 106Z" fill="#83b1c9" stroke="#1c344d" stroke-width="2"/>
+<path d="M50 106L82 120 115 100" fill="none" stroke="#79e9ef" stroke-width="3"/>
+<path d="M39 97L43 91 52 95 47 103Z M113 98L122 94 126 98 119 103Z" fill="#79e9ef"/>
+<path d="M54 76L71 65 92 71 101 84 81 96 58 90Z" fill="url(#armor)" stroke="#1c344d" stroke-width="3"/>
+<path d="M61 80L73 70 92 76 85 87Z" fill="#223e53" stroke="#79e9ef" stroke-width="2"/>
+<path d="M49 55L63 30 72 28 77 56Z" fill="#7ba7c0" stroke="#253e55" stroke-width="3"/><path d="M63 34L69 16 74 34Z" fill="#3d5a7b" stroke="#7beef5" stroke-width="2"/><path d="M69 17L82 13" stroke="#8eedf6" stroke-width="2"/><path d="M99 66L135 50 139 55 101 75Z" fill="#416383" stroke="#9fd6e5" stroke-width="2"/><path d="M125 51L133 45" stroke="#72f4f0" stroke-width="3"/>
+<path d="M31 109L91 136 126 109" fill="none" stroke="#79e9ef" opacity=".65" stroke-width="2"/>
+</svg>
