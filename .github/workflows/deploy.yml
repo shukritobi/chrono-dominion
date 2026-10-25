@@ -29,6 +29,8 @@ jobs:
           node tests/tactics.test.mjs
           node tests/abilities.test.mjs
           node tests/skirmish-v08.test.mjs
+          node tests/battle-report-v09.test.mjs
+          node tools/maps/build.mjs --check
           python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py
       - name: Verify required files
         run: |
@@ -53,6 +55,11 @@ jobs:
           test -f art/pilot/psionic-recon.svg
           test -f art/manifest.json
           test -f art/rendered/manifest.json
+          test -f maps/verdant.json
+          test -f maps/desert.json
+          test -f maps/snow.json
+          test -f maps/catalog.js
+          test -f tools/maps/build.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
