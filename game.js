@@ -1,4 +1,4 @@
-/* Chrono Dominion v0.1 — original browser RTS vertical slice. No third-party game assets. */
+/* Chrono Dominion v0.4 — original browser RTS vertical slice. No third-party game assets. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -33,6 +33,7 @@
   };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const turnToward=(current,wanted,maxDelta)=>{const delta=Math.atan2(Math.sin(wanted-current),Math.cos(wanted-current));return current+clamp(delta,-maxDelta,maxDelta);};
   const iso=(x,y)=>({x:(x-y)*TW/2,y:(x+y)*TH/2});
   const rand=(x,y,s=0)=>{let v=Math.sin(x*123.17+y*78.233+s*103.13)*43758.5453;return v-Math.floor(v);};
   const terrain = {
@@ -45,7 +46,7 @@
       this.canvas=$('world');this.ctx=this.canvas.getContext('2d');
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
-      this.entities=[];this.ores=[];this.particles=[];this.orders=[];this.queues=[];this.nextId=1;
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
       this.selected=[];this.groups={};this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;
@@ -118,12 +119,12 @@
     resize(){const b=this.canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);this.w=b.width;this.h=b.height;this.dpr=d;this.canvas.width=Math.round(this.w*d);this.canvas.height=Math.round(this.h*d);}
     add(owner,kind,x,y,built=true){
       const def=BUILD[kind]||UNITS[kind];const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:def.hp,maxHp:def.hp,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0};
-      if(e.type==='unit'){e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;}
+      if(e.type==='unit'){e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
       this.entities.push(e);return e;
     }
     newMatch(s){
       this.settings={...s};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.queues=[];this.selected=[];this.groups={};this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:5000},{faction:s.enemyFaction,credits:5000}];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
@@ -318,20 +319,68 @@
       else if(clear(e.x,e.y+vy)){e.y+=vy;e.stuck=0;}
       else {e.stuck=(e.stuck||0)+dt;if(e.stuck>.45){e.pathRecheck=0;e.stuck=0;}}
       e.heading=Math.atan2(dy*TH,dx*TW);
-      e.worldHeading=Math.atan2(dy,dx);
-      if(e.type==='unit'&&e.kind!=='harvester'&&!e.engaging)e.turretHeading=e.worldHeading;
+      e.desiredHeading=Math.atan2(dy,dx);
+      if(e.type==='unit'&&!e.engaging)e.desiredTurretHeading=e.desiredHeading;
       d=Math.hypot(tx-e.x,ty-e.y);
       return d<.24;
     }
     shoot(source,target){
-      const def=this.getDef(source),damage=def.damage||0;if(!damage||!target)return;
-      source.ready=def.rate||1.2;let amount=damage;
-      if(source.kind==='specialist'&&this.players[source.owner].faction==='federation')amount*=1.3;
-      if(source.kind==='specialist'&&this.players[source.owner].faction==='psionic'&&target.type==='unit'&&target.kind!=='harvester'&&target.owner!==source.owner&&target.hp<target.maxHp*.6){
-        target.owner=source.owner;target.order={type:'move',x:source.x+1,y:source.y+1};this.particles.push({x:target.x,y:target.y,life:.9,color:'#cd84fa',type:'control'});if(source.owner===0)this.notify('Enemy unit converted to Psionic Order');return;
+      const def=this.getDef(source),damage=def.damage||0;
+      if(!damage||!target||source.hp<=0||target.hp<=0||source.owner===target.owner)return;
+      source.ready=def.rate||1.2;
+      const faction=this.players[source.owner].faction;
+      const bonus=source.kind==='specialist'&&faction==='federation'?1.3:1;
+      const psychic=source.kind==='specialist'&&faction==='psionic';
+      // A shot is now a moving projectile. Damage is resolved on impact, not firing.
+      this.projectiles.push({
+        x:source.x,y:source.y,targetId:target.id,owner:source.owner,sourceId:source.id,
+        sourceKind:source.kind,damage:damage*bonus,psychic,age:0,
+        speed:source.kind==='soldier'?8.5:source.kind==='tank'?6.8:source.kind==='heavy'?5:psychic?7:10,
+        color:psychic?'#bb78ff':faction==='psionic'?'#a3f5c8':source.type==='building'?'#77d9ff':'#f4b36c'
+      });
+      this.particles.push({x:source.x,y:source.y,life:.2,type:'muzzle',color:faction==='psionic'?'#ba84ee':'#ffd698'});
+    }
+    updateProjectiles(dt){
+      for(const shot of this.projectiles){
+        shot.age+=dt;
+        const target=this.entityById(shot.targetId);
+        if(!target||target.owner===shot.owner||shot.age>8){shot.expired=true;continue;}
+        const distance=dist(shot,target);
+        if(distance>shot.speed*dt+.25){
+          const scale=shot.speed*dt/distance;
+          shot.x+=(target.x-shot.x)*scale;shot.y+=(target.y-shot.y)*scale;
+          continue;
+        }
+        shot.x=target.x;shot.y=target.y;shot.expired=true;
+        if(shot.psychic&&target.type==='unit'&&target.kind!=='harvester'&&target.hp<target.maxHp*.6){
+          target.owner=shot.owner;target.order={type:'move',x:clamp(target.x+(shot.owner===0?1:-1),1,32),y:target.y+1};
+          target.path=[];target.engaging=false;
+          this.particles.push({x:target.x,y:target.y,life:.85,color:'#cd84fa',type:'control'});
+          if(shot.owner===0)this.notify('Enemy unit captured');
+          continue;
+        }
+        target.hp-=shot.damage;
+        this.particles.push({x:target.x,y:target.y,life:.38,color:shot.color,type:'hit'});
+        if(target.hp<=0){
+          const killer=this.entityById(shot.sourceId);
+          if(killer)killer.kills++;
+          this.particles.push({x:target.x,y:target.y,life:1,color:'#ffa05a',type:'boom'});
+          this.selected=this.selected.filter(id=>id!==target.id);
+        }
       }
-      target.hp-=amount;this.particles.push({x:target.x,y:target.y,life:.32,color:this.players[source.owner].faction==='psionic'?'#d594fa':'#ffbb63',type:'hit'});
-      if(target.hp<=0){source.kills++;this.particles.push({x:target.x,y:target.y,life:1.1,color:'#ff9f55',type:'boom'});this.selected=this.selected.filter(id=>id!==target.id);}
+      this.projectiles=this.projectiles.filter(p=>!p.expired);
+    }
+    drawProjectiles(){
+      const c=this.ctx;
+      for(const shot of this.projectiles){
+        if(!this.isVisible(shot.x,shot.y))continue;
+        const p=iso(shot.x,shot.y);
+        c.save();
+        c.strokeStyle=shot.color;c.fillStyle=shot.color;c.lineWidth=2.8;
+        c.shadowColor=shot.color;c.shadowBlur=9;
+        c.beginPath();c.moveTo(p.x-6,p.y-10);c.lineTo(p.x,p.y-12);c.stroke();
+        c.beginPath();c.arc(p.x,p.y-12,3.3,0,Math.PI*2);c.fill();c.restore();
+      }
     }
     processHarvester(e,dt){
       e.work-=dt;
@@ -363,7 +412,7 @@
           if(!target)target=this.nearest(e,b=>b.owner!==e.owner&&b.built,UNITS[e.kind].range+2.0);
           const range=UNITS[e.kind].range;
           e.engaging=!!target;
-          if(target)e.turretHeading=Math.atan2(target.y-e.y,target.x-e.x);
+          if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){if(dist(e,target)>range)this.move(e,target.x,target.y,dt);else if(e.ready<=0)this.shoot(e,target);}
           else if(command?.type==='move'||command?.type==='attackMove'){if(this.move(e,command.x,command.y,dt))e.order=null;}
           else if(e.owner===1){const home=this.nearest(e,b=>b.owner===0&&b.type==='building');if(home)this.move(e,home.x,home.y,dt);}
@@ -372,6 +421,13 @@
           if(target&&e.ready<=0)this.shoot(e,target);
         }
       }
+      for(const e of this.entities){
+        if(e.hp<=0||e.type!=='unit')continue;
+        const speed=e.kind==='soldier'||e.kind==='specialist'?6.5:2.65;
+        e.worldHeading=turnToward(e.worldHeading,e.desiredHeading??e.worldHeading,speed*dt);
+        e.turretHeading=turnToward(e.turretHeading,e.desiredTurretHeading??e.worldHeading,(e.kind==='tank'||e.kind==='heavy'?4.3:7)*dt);
+      }
+      this.updateProjectiles(dt);
       for(let i=this.queues.length-1;i>=0;i--){const q=this.queues[i],slow=this.power(q.side).low?.55:1;q.elapsed+=dt*slow;if(q.elapsed>=q.total){const origin=this.nearest({x:q.side===0?6:28,y:q.side===0?6:28},b=>b.owner===q.side&&b.kind===UNITS[q.key].from&&b.built);
           if(origin){const u=this.add(q.side,q.key,clamp(origin.x+(q.side===0?2:-2),1,33),clamp(origin.y+(q.side===0?2:-2),1,33));if(q.key==='harvester')u.order={type:'harvest'};}
           this.queues.splice(i,1);}}
@@ -536,6 +592,7 @@
       for(const p of this.particles){const a=iso(p.x,p.y);c.save();c.translate(a.x,a.y);c.globalAlpha=clamp(p.life,0,1);
         if(p.type==='marker'){this.drawRing(0,0,20*(1.5-p.life),p.color);}
         else if(p.type==='boom'){c.fillStyle=p.color;c.beginPath();c.arc(0,-13,22*(1.1-p.life),0,7);c.fill();}
+        else if(p.type==='muzzle'){c.fillStyle=p.color;c.beginPath();c.arc(0,-21,9*p.life/.2,0,Math.PI*2);c.fill();}
         else if(p.type==='cash'){c.fillStyle=p.color;c.font='bold 17px Consolas';c.fillText('+CREDITS',-34,-28-(1-p.life)*20);}
         else{c.strokeStyle=p.color;c.lineWidth=3;c.beginPath();c.arc(0,-9,15*(1-p.life)+4,0,7);c.stroke();}
         c.restore();}
@@ -558,7 +615,7 @@
       this.drawTerrain();
       const entities=this.entities.filter(e=>e.hp>0&&(e.owner===0||this.isVisible(e.x,e.y))).sort((a,b)=>(a.x+a.y)-(b.x+b.y));
       for(const e of entities)e.type==='building'?this.drawBuilding(e):this.drawUnit(e);
-      this.drawEffects();this.drawFog();
+      this.drawProjectiles();this.drawEffects();this.drawFog();
       if(this.placing&&this.state==='playing'){const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),ok=this.canPlace(x,y,0);const p=iso(x,y);c.fillStyle=ok?'#71e5a55c':'#f370765c';c.beginPath();c.ellipse(p.x,p.y,50,25,0,0,7);c.fill();c.strokeStyle=ok?'#9afed0':'#ff9696';c.lineWidth=3;c.stroke();}
       if(this.dragStart&&this.dragEnd&&Math.hypot(this.dragStart.x-this.dragEnd.x,this.dragStart.y-this.dragEnd.y)>12){
         c.setTransform(d,0,0,d,0,0);const a=this.dragStart,b=this.dragEnd;c.fillStyle='#8bceef29';c.strokeStyle='#98d9f2';c.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);}
@@ -566,6 +623,6 @@
     }
     frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
   }
-  window.ChronoDominion={version:'0.3.0',build:'directional-atlas-pilot'};
+  window.ChronoDominion={version:'0.4.0',build:'combat-and-economy'};
   new Game();
 })();
