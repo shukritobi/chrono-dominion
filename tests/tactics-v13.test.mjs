@@ -83,5 +83,9 @@ const left=g.chooseFlank(origin,enemyReport,0),right=g.chooseFlank(origin,enemyR
 assert.ok(left&&right,'AI chooses two reachable flanks');
 assert.notEqual(left.x+','+left.y,right.x+','+right.y,'different squads use different sides');
 assert.ok(g.walkable(left.x,left.y)&&g.walkable(right.x,right.y));
+g.water=(x,y)=>x>=16&&x<=18;
+assert.equal(g.chooseFlank(origin,enemyReport,0),null,
+  'AI rejects flanking points separated by a lake even when those points are walkable');
+g.water=()=>false;
 g.draw();
 console.log('PASS: opt-in sound, mute, event throttle, reachable squad slots, collision and AI flanking');
