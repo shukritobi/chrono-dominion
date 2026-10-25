@@ -918,11 +918,21 @@
           continue;
         }
         if(scout.order?.type==='attack'&&this.entityById(scout.order.id))continue;
-        if(scout.order?.type==='move'||scout.order?.type==='attackMove')continue;
+        // Recon patrols travel between map-file ore sites and do not repeat
+        // the same waypoint once it has been reached.
+        if(scout.order?.type==='move'||scout.order?.type==='attackMove'){
+          if(dist(scout,scout.order)>1.5)continue;
+        }
         const ore=(MAPS[this.settings.map]||MAPS.verdant).ore;
-        // Two forward scouting objectives: the centre and the enemy's side.
-        const point=ore.find(pt=>pt[0]<20&&pt[1]<20)||[15,17];
-        scout.order={type:'attackMove',x:clamp(point[0]+1,1,32),y:clamp(point[1]+1,1,32)};
+        const route=ore.filter(pt=>!this.water(pt[0],pt[1])).slice(0,6);
+        if(!route.length)continue;
+        const index=((scout.patrolIndex||0)%route.length+route.length)%route.length;
+        const point=route[index];
+        scout.patrolIndex=(index+1)%route.length;
+        scout.order={type:'attackMove',x:clamp(point[0]+.35,1,32),y:clamp(point[1]+.35,1,32)};
+        // Contact information is remembered by the scout, and stored in saves.
+        const spotted=this.nearest(scout,e=>e.owner===0&&e.type==='unit'&&e.hp>0,8);
+        if(spotted)scout.lastContact={x:spotted.x,y:spotted.y,time:this.time,kind:spotted.kind};
       }
       // Local base defense always takes precedence over an offensive order.
       const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
