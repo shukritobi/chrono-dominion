@@ -55,7 +55,7 @@ on:
     paths:
       - ".github/workflows/blender-asset-studio.yml"
       - "tools/blender/asset_studio.py"
-      - "tests/blender-asset-studio.test.py"
+      - "tests/test_blender_asset_studio.py"
 
 permissions:
   contents: write
@@ -104,7 +104,7 @@ jobs:
           blender --version | head -2
 
       - name: Test single-asset stage, validation and approval protections
-        run: python3 -m unittest discover -s tests -p 'blender-asset-studio.test.py' -v
+        run: python3 -m unittest discover -s tests -p 'test_blender_asset_studio.py' -v
 
       - name: Build ONE editable model and real Blender animation frames
         shell: bash
