@@ -67,7 +67,7 @@ assert.equal(g.players[0].credits,credits,'recon refund works');
 
 // AI explores reachable sectors when a recon vehicle is available.
 newGame('desert',5000,'coalition','federation');
-const aiScout=g.add(1,'recon',25,24);
+const aiScout=g.add(1,'recon',30,20); // clear tile, not inside the starting barracks
 g.runAI();
 assert.ok(aiScout.order?.type==='move'||aiScout.order?.type==='attack','recon AI starts a scouting or defensive order');
 // Threats near the AI harvester override scouting with protection.
