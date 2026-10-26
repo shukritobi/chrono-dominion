@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/psionic-hollow-factory-review.yml"
+      - "tools/blender/verify_psionic_factory_bay.py"
+      - "tools/blender/qa_psionic_factory_bay.py"
 
 permissions:
   contents: read
