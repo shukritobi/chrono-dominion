@@ -13,3 +13,6 @@ art/renders/tmp/
 audio/private/
 audio/classic/
 audio/local/
+
+# Generated for GitHub Pages by tools/audio/build_builtin.py
+audio/builtin/
