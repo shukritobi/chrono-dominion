@@ -39,17 +39,21 @@ g.intel[1]=[turretReport];
 assert.ok(g.scoutThreatPenalty({x:21,y:21})>=200);
 assert.equal(g.scoutThreatPenalty({x:5,y:5}),0);
 const originalWaypoints=g.scoutWaypoints.bind(g),originalFrontiers=g.scoutFrontiers.bind(g);
-g.scoutWaypoints=()=>[{x:21,y:21},{x:8,y:26}];
+const safe=originalWaypoints().find(p=>g.walkable(p.x,p.y)&&
+  Math.hypot(p.x-scout.x,p.y-scout.y)>2&&g.scoutThreatPenalty(p)===0&&
+  g.findPath(scout.x,scout.y,p.x,p.y).length>0);
+assert.ok(safe,'map must offer at least one reachable safe landmark');
+g.scoutWaypoints=()=>[{x:21,y:21},safe];
 g.scoutFrontiers=()=>[];
 assert.equal(g.assignScoutPatrol(scout),true,'scout finds safe alternative');
-assert.equal(scout.order.x,8,'observed turret blocks dangerous sector destination');
-assert.equal(scout.order.y,26);
+assert.equal(scout.order.x,safe.x,'observed turret blocks dangerous sector destination');
+assert.equal(scout.order.y,safe.y);
 assert.equal(g.scoutThreatPenalty(scout.order),0);
 // Recent enemy combat units are also dangerous, but reports expire quickly.
-g.intel[1]=[{id:9982,x:8,y:26,time:g.time,type:'unit',kind:'tank'}];
-assert.ok(g.scoutThreatPenalty({x:8,y:26})>=200);
+g.intel[1]=[{id:9982,x:safe.x,y:safe.y,time:g.time,type:'unit',kind:'tank'}];
+assert.ok(g.scoutThreatPenalty(safe)>=200);
 g.time+=13;
-assert.equal(g.scoutThreatPenalty({x:8,y:26}),0,'stale mobile threats expire');
+assert.equal(g.scoutThreatPenalty(safe),0,'stale mobile threats expire');
 g.intel[1]=[turretReport];
 g.time=20;
 assert.ok(g.scoutThreatPenalty({x:21,y:21})>=200,
