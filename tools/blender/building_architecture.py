@@ -627,9 +627,9 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             box("Open ballistic testing track",(.84,-.52,2.28),(.94,.72,.22),"light",.027)
             for i in range(4):
                 box("Ballistic rail bolt",(.57+i*.23,-.52,2.45),(.09,.42,.08),"bronze",.007)
-            cyl("Industrial experimental furnace",(-.83,.46,2.95),.49,1.48,"dark",vertices=12)
-            cyl("Furnace hazard rim",(-.83,.46,3.72),.44,.12,"bronze",vertices=12)
-            sphere("Furnace plasma aperture",(-.83,.46,3.80),(.27,.27,.10),"glow")
+            cyl("Industrial experimental furnace",(-.78,-.88,3.23),.49,2.04,"dark",vertices=12)
+            cyl("Furnace hazard rim",(-.78,-.88,4.27),.44,.12,"bronze",vertices=12)
+            sphere("Furnace plasma aperture",(-.78,-.88,4.35),(.27,.27,.10),"glow")
             for side in (-1,1):
                 cyl("Siege battery capacitor",(.29,side*.93,2.49),.33,.65,"light",vertices=12)
                 box("Heat regulator fins",(.29,side*.93,2.91),(.69,.16,.15),"bronze",.012)
