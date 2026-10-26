@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.3 — squad movement, tactical AI and sound controls. */
+/* Chrono Dominion v1.4 — spatial collision indexing and late-game stress handling. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -100,6 +100,7 @@
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
@@ -1504,8 +1505,22 @@
         c.setTransform(d,0,0,d,0,0);const a=this.dragStart,b=this.dragEnd;c.fillStyle='#8bceef29';c.strokeStyle='#98d9f2';c.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);}
       this.drawRadar();
     }
-    frame(now){const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;if(this.state==='playing')this.step(dt);this.draw();requestAnimationFrame(t=>this.frame(t));}
+    frame(now){
+      const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;
+      if(this.state==='playing')this.step(dt);
+      this.draw();
+      if(this.lastPerfAt===null)this.lastPerfAt=now;
+      this.perfFrames++;
+      if(now-this.lastPerfAt>=1100){
+        const fps=Math.round(this.perfFrames*1000/Math.max(1,now-this.lastPerfAt));
+        const units=this.entities.filter(e=>e.hp>0&&e.type==='unit').length;
+        $('perfStatus').textContent=fps+' FPS · '+units+' UNITS';
+        $('perfStatus').title='Approximate rendered frames per second and living units on both teams';
+        this.lastPerfAt=now;this.perfFrames=0;
+      }
+      requestAnimationFrame(t=>this.frame(t));
+    }
   }
-  window.ChronoDominion={version:'1.3.0',build:'tactical-audio'};
+  window.ChronoDominion={version:'1.4.0',build:'spatial-traffic'};
   new Game();
 })();
