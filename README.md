@@ -10,7 +10,7 @@
 ### AI Air Wing (v2.25)
 
 - AI commanders now construct Air Command after reaching the required factory/radar tech and earning enough credits, and purchase up to two Strike Aircraft using the existing paid production queue.
-- Aircraft independently defend visible base threats, pursue only sensor-reported building positions, and patrol unexplored terrain when no target has been observed. Hidden enemy coordinates are never used to issue attacks.
+- Aircraft independently defend visible base threats, pursue only sensor-reported building positions, and patrol unexplored terrain when no target has been observed. Hidden enemy coordinates are never used to issue attacks. The balance lab now tracks AI airfields, aircraft deployed and aircraft lost.
 - Ground platoon staging excludes aircraft, while the player retains existing mixed-unit flight formations. [Release notes](docs/RELEASE-2.25.md) · [AI aviation regression tests](tests/ai-air-wing-v225.test.mjs).
 
 ### Flight-layer formation commands (v2.23)
