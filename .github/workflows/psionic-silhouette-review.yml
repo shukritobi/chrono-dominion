@@ -52,7 +52,7 @@ jobs:
           python3 -c 'from PIL import Image; print("Pillow ready")'
       - name: Test production isolation and sprite validation
         run: python3 -m unittest discover -s tests -p 'test_blender_asset_studio.py' -v
-      - name: Render and validate 6 independent editable Blender models
+      - name: Render and validate 2 independent editable Blender models
         shell: bash
         run: |
           set -euo pipefail
@@ -71,6 +71,12 @@ jobs:
               python3 tools/blender/asset_studio.py preview \
                 --stage "$stage" --faction "$faction" --kind "$kind"
               test -s "$stage/sources/$faction-$kind.blend"
+              # Reopen the actual compressed .blend source in Blender and
+              # verify geometry survives serialization, not merely file size.
+              blender --background --threads 2 \
+                "$stage/sources/$faction-$kind.blend" \
+                --python-exit-code 1 --python-expr \
+                'import bpy; assert len([o for o in bpy.data.objects if o.type=="MESH"]) >= 10, "Missing editable source meshes"'
               test -s "$stage/packed/$faction-$kind.png"
               test -s "$stage/preview.png"
               echo "::endgroup::"
@@ -126,6 +132,25 @@ jobs:
               item["barracks_factory_silhouette_iou"]=similarity
           print("Barracks/factory silhouette intersection-over-union:",similarity)
           assert union>1000, "Rendered silhouettes unexpectedly empty"
+          # Distinct construction and damaged states must now change real
+          # alpha silhouettes, not just glow strength or object tint.
+          for kind in kinds:
+              with Image.open(root/"psionic"/kind/"packed"/("psionic-"+kind+".png")) as im:
+                  alpha=im.convert("RGBA").getchannel("A")
+                  masks=[alpha.crop((0,row*160,160,(row+1)*160))
+                         for row in range(5)]
+                  base=list(masks[0].getdata())
+                  first_build=list(masks[2].getdata())
+                  damaged=list(masks[4].getdata())
+                  construction_diff=sum((a>=32)!=(b>=32) for a,b in zip(base,first_build))
+                  damaged_diff=sum((a>=32)!=(b>=32) for a,b in zip(base,damaged))
+                  entry=next(x for x in summary if x["kind"]==kind)
+                  entry["construction_alpha_mask_changed_pixels"]=construction_diff
+                  entry["damaged_alpha_mask_changed_pixels"]=damaged_diff
+                  print(kind,"construction mask pixels:",construction_diff,
+                        "damage mask pixels:",damaged_diff)
+                  assert construction_diff >= 400, "Construction must change actual geometry"
+                  assert damaged_diff >= 100, "Damage must change actual geometry"
           target=root/"psionic-two-building-review.png"
           out.save(target,optimize=True)
           (root/"review-manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
