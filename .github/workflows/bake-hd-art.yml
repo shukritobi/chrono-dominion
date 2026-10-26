@@ -31,7 +31,7 @@ jobs:
         run: |
           blender --background --threads 4 --python tools/blender/animated_assets.py -- \
             --output generated/chrono-hd \
-            --kinds soldier,specialist,heavy,aircraft,generator,factory,radar \
+            --kinds all \
             --factions coalition,federation,psionic --size 160
       - name: Assemble production transparency atlases
         run: |
@@ -41,12 +41,13 @@ jobs:
           import json
           from pathlib import Path
           manifest=json.loads(Path("art/baked-v1/manifest.json").read_text())
-          expected={"soldier","specialist","heavy","aircraft","generator","factory","radar"}
+          expected={"soldier","specialist","tank","heavy","recon","harvester","aircraft",
+                    "hq","generator","refinery","barracks","factory","radar","tech","turret","beam","airfield"}
           for faction in ("coalition","federation","psionic"):
               assert set(manifest["entries"][faction])==expected
-          assert len(list(Path("generated/chrono-hd/sources").glob("*.blend")))==21
-          assert len(list(Path("art/baked-v1").glob("*.png")))==21
-          print("Verified all 21 rendered model atlases and editable Blender sources")
+          assert len(list(Path("generated/chrono-hd/sources").glob("*.blend")))==51
+          assert len(list(Path("art/baked-v1").glob("*.png")))==51
+          print("Verified all 51 rendered model atlases and editable Blender sources")
           PY
       - name: Preserve editable Blender models
         run: |
