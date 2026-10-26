@@ -7,6 +7,10 @@
 > **Project status (2026-10-26):** Playable browser skirmish prototype `v2.26.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
 
+### Blender Asset Studio (preview first, publish only after approval)
+
+The [Blender Asset Studio workflow](https://github.com/shukritobi/chrono-dominion/actions/workflows/blender-asset-studio.yml) builds one original faction model at a time in headless Blender. Run a safe **Preview** to download a contact sheet, RGBA sprite atlas and editable .blend model; use **Publish** and the explicit PUBLISH confirmation only after approving the model. Preview runs never modify production sprites. [Studio instructions](docs/BLENDER-ASSET-STUDIO.md).
+
 ### Aircraft Ordnance and Rearming (v2.26)
 
 - Strike Aircraft now carry four shots, automatically return to a surviving friendly Air Command when empty, and reload one shot every 2.5 seconds if the base has sufficient power.
