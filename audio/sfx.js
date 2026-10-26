@@ -168,7 +168,7 @@
             if(safe.length){builtin.set(event.toLowerCase(),safe);count+=safe.length;}
           }
           if(enabled&&musicEnabled&&context?.state==='running'&&
-              (scene==='menu'||scene==='battle'))resumeMusic();
+              (scene==='menu'||scene==='battle'||scene==='victory'))resumeMusic();
           return count;
         })
         .catch(()=>0); // Game remains playable when assets are absent or offline.
@@ -230,7 +230,7 @@
       const name=['menu','battle','victory','defeat','pause'].includes(next)?next:'menu';
       if(name===scene)return scene;
       scene=name;
-      if(name==='pause'||name==='victory'||name==='defeat'){stopMusic();root.ChronoVoices?.stop?.();}
+      if(name==='pause'||name==='defeat'){stopMusic();root.ChronoVoices?.stop?.();}
       else if(enabled&&context?.state==='running')resumeMusic();
       return scene;
     },
@@ -239,13 +239,13 @@
       const base=String(name).split('.')[0],spec=tones[base]||tones.ui;
       // Prevent repeated barks, especially when commanding big formations.
       const now=typeof root.performance?.now==='function'?root.performance.now()/1000:Date.now()/1000;
-      const gap=(base==='select'||base==='move'||base==='attack')?.35:spec.gap;
+      const gap=(base==='select'||base==='move'||base==='attack')?.35:base==='underFire'?1:spec.gap;
       if(now-(last.get(base)??-Infinity)<gap)return false;
       last.set(base,now);
-      const isVoice=['select','move','attack','ready'].includes(base);
+      const isVoice=['select','move','attack','ready','underFire'].includes(base);
       const f=find(String(name),!voiceEnabled&&isVoice?{}:meta);
       if(f&&startClip(f,sfxVolume*.88))return true;
-      if(voiceEnabled&&['select','move','attack','ready'].includes(base)&&
+      if(voiceEnabled&&['select','move','attack','ready','underFire'].includes(base)&&
          root.ChronoVoices?.speak?.(base,meta,sfxVolume))return true;
       if(!context||context.state!=='running'||sfxVolume<=0)return false;
       try{return osc(spec.frequency,spec.end,spec.duration,spec.type,spec.gain*sfxVolume,context.currentTime);}
