@@ -4,9 +4,9 @@ import {runInNewContext} from 'node:vm';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const html=read('index.html'),css=read('style.css');
 assert.match(html,/id="cancelMode"[^>]*aria-label="Cancel current placement or targeted order"/);
-assert.match(html,/PROTOTYPE 2\\.9 · MOBILE COMMANDS/);
-assert.match(css,/\\.cancelMode:focus-visible/);
-assert.match(css,/@media \\(pointer:coarse\\)\\{\\.cancelMode\\{min-height:44px/);
+assert.ok(html.includes('PROTOTYPE 2.9 · MOBILE COMMANDS'));
+assert.ok(css.includes('.cancelMode:focus-visible'));
+assert.ok(css.includes('@media (pointer:coarse){.cancelMode{min-height:44px'));
 const nodes=new Map(),events=new Map(),storage=new Map();
 const canvas=new Proxy({},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>{o[k]=v;return true;}});
 const document={getElementById(id){
