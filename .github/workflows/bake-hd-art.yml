@@ -36,6 +36,8 @@ jobs:
             --output generated/chrono-hd \
             --kinds hq,generator,refinery,barracks,factory,radar,tech,turret,beam,airfield \
             --factions coalition,federation,psionic --size 160
+          test -s generated/chrono-hd/frames/coalition/hq/idle/00_00.png
+          test -s generated/chrono-hd/frames/psionic/airfield/damaged/00_00.png
       - name: Assemble and merge production art without losing deployed units
         run: |
           mkdir -p generated
