@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.32 — dedicated air-only Skyguard defenses. */
+/* Chrono Dominion v2.33 — threat-aware multi-airfield recovery. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -3169,6 +3169,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.32.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.33.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
