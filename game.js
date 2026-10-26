@@ -3030,6 +3030,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.26.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.27.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
