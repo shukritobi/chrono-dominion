@@ -19,6 +19,7 @@
 - Both landmark and dynamic-frontier selection use a bounded, survey-dependent progression bonus. Existing threat-aware A*, protected detours and patrol reservations remain enforced.
 - The bonus never uses hidden enemy coordinates or the human player's fog, and expires when the AI has a recent building sighting.
 - See [v2.14 notes](docs/RELEASE-2.14.md).
+- The [verified v2.14 balance check](https://github.com/shukritobi/chrono-dominion/actions/runs/40295190424) found enemy buildings in 6/9 simulated cases, formed platoons in 4/9 and lost 11 scouts; actual player testing remains necessary.
 
 ### Recon evasive routing (v2.12)
 

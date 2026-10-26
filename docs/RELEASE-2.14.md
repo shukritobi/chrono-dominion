@@ -12,7 +12,16 @@
 
 ## Verification
 
-Benchmark against the exact nine-scenario v2.13 release on matched settings. v2.12 reference was 14 scout losses, 2/9 enemy-building discoveries, 1/9 assault platoon and 68.9% mean surveyed terrain. A code change is not evidence of improved outcomes.
+The [v2.14 GitHub Actions check](https://github.com/shukritobi/chrono-dominion/actions/runs/40295190424) passed all regression and integrity checks, including nine 240-second scripted skirmishes.
+
+| Metric | v2.12 baseline | v2.14 |
+|---|---:|---:|
+| Enemy-building discovery cases | 2/9 | 6/9 |
+| AI platoon staging cases | 1/9 | 4/9 |
+| Recon units lost | 14 | 11 |
+| Average terrain surveyed | 68.9% | 73.7% |
+
+These are deterministic simulated outcomes, not human win rates. v2.13 and v2.14 changes both contribute to the comparison; there is no completed standalone v2.13 balance baseline.
 
 ## Limitations
 

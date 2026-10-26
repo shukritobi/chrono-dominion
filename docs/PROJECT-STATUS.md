@@ -5,7 +5,11 @@
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
-v2.13 aligns scout movement with safe A* detours, adding a fallback search for longer routes around known defended tiles. Automated route and save tests were added, but CI and full-balance improvements must be independently verified.\n\nv2.12 adds bounded sensor-only emergency scout evasion when remembered defenses intercept a scout; escape is not guaranteed. v2.11 adds sensor-only whole-route danger weights for AI scouts, rejects known defended chokepoints, and adds movement/path regression tests. The V8 headless 240-second matrix completed, but CI and real-device verification must be checked independently.
+v2.14's forward-frontier scoring has passed the full GitHub Actions gate, recording 6/9 actual enemy-building discoveries, 4/9 platoon staging cases, 11 scout losses and 73.7% mean AI survey coverage in nine deterministic 240-second scenarios. These results improve on the v2.12 scripted baseline but are not representative human win rates.
+
+v2.13 aligns scout movement with safe A* detours, adding a fallback search for longer routes around known defended tiles. Automated route and save tests were added, but CI and full-balance improvements must be independently verified.
+
+v2.12 adds bounded sensor-only emergency scout evasion when remembered defenses intercept a scout; escape is not guaranteed. v2.11 adds sensor-only whole-route danger weights for AI scouts, rejects known defended chokepoints, and adds movement/path regression tests. The V8 headless 240-second matrix completed, but CI and real-device verification must be checked independently.
 
 v2.10 adds sensor-report-based scout threat avoidance, mid-patrol replanning, retreat-cooldown protection, and reconnaissance telemetry in the nine-scenario balance lab. Its regression test is included in CI; v2.11 extends route safety using remembered threats.
 
