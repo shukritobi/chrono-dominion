@@ -525,52 +525,100 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Material guide fin",(.61,side*.80,1.47),(.95,.18,.20),"armor",.025)
                 box("Green guide nerve",(.63,side*.78,1.63),(.69,.065,.09),"glow",.015)
         elif kind=="barracks":
-            # AETHER SYNOD MK-II INITIATION SANCTUARY.
-            # Five low ritual petals around a domed neural training chamber.
-            prism("Sanctuary sixfold graded stage",0,0,.87,1.44,.89,"armor",6)
-            prism("Raised glass initiation vault",0,0,1.73,1.10,.35,"glass",6)
-            sphere("Central neural memory dome",(0,0,2.00),(1.04,1.04,.47),"dark")
-            sphere("Floating initiate core",(0,0,2.60),(.38,.38,.42),"glass")
-            sphere("Luminous mindspring nucleus",(0,0,2.61),(.17,.17,.18),"glow")
-            for i in range(5):
-                a=i*math.tau/5
-                x,y=math.cos(a)*1.22,math.sin(a)*1.22
-                prism("Ritual training foot",x,y,.78,.36,.48,"dark",3)
-                spire("Curved initiation crystal blade",x,y,1.17,.34,1.44,"light",3)
-                spire("Inner guided crystal antenna",x*.96,y*.96,1.35,
-                      .14,1.08,"glass",3)
-                sphere("Student neural register",(x,y,2.69),(.13,.13,.15),"glow")
-            torus("Sanctuary lower meditation ring",(0,0,2.10),.96,.09,"glow")
-            parts["radar"]=torus("Floating psychic training gyre",(0,0,2.53),
-                                .78,.085,"light",True)
+            # AETHER SYNOD MK-III / HORIZONTAL INITIATION SANCTUARY.
+            # Deliberately LOW and WIDE. No central vertical ring or tall
+            # floating core: the high obelisk/hoop belongs to tech and factory.
+            # Twin crescent wings surround an open ritual training court.
+            prism("Low six-sided induction courtyard",0,0,.84,1.40,.38,"dark",6)
+            prism("Sunken initiation basin",.05,0,1.17,.92,.16,"glass",6)
             for side in (-1,1):
-                box("Gateway to sanctuary",(1.15,side*.36,1.03),(.33,.22,.49),"dark",.025)
-                box("Entry neuro-luminescent vein",(1.32,side*.36,1.06),
-                    (.04,.075,.35),"glow",.009)
+                y=side*.99
+                prism("Outward cantilevered student dorm wing",-.30,y,.90,.80,.76,
+                      "armor",6)
+                box("Low faceted sanctuary wing roof",(-.36,y,1.73),
+                    (1.70,.78,.16),"light",.046)
+                box("Wing roof open-sky skylight",(-.29,y,1.84),
+                    (1.02,.29,.06),"glass",.015)
+                box("Mint transverse initiation inlay",(.31,y,1.61),
+                    (.10,.51,.08),"glow",.008)
+                # Two stepped, horizontally projecting petals are
+                # intentionally much broader than they are tall.
+                mesh("Outspread neural petal",[
+                    (-1.43,y-side*.10,.82),(-.74,y-side*.43,.85),
+                    (.02,y-side*.51,.89),(.20,y-side*.16,1.33),
+                    (-.78,y-side*.16,1.46),(-1.38,y-side*.12,1.25)
+                ],[(0,1,2,3,4,5)],"light")
+                sphere("Lateral student telemetry orb",(-1.20,y,1.66),
+                       (.13,.13,.15),"glow")
+            # Three low rear fins distinguish a communal training hall
+            # from the factory's high, opposing portal horns.
+            for y in (-.70,0,.70):
+                spire("Short rear thought-collecting fin",-1.12,y,1.47,
+                      .23,.66,"armor",3)
+            sphere("Ground-level memory crystal",(.05,0,1.46),
+                   (.36,.37,.23),"glass")
+            sphere("Training consciousness spark",(.05,0,1.50),
+                   (.17,.17,.13),"glow")
+            torus("Horizontal courtyard induction track",(.05,0,1.32),
+                  .62,.055,"glow")
+            box("Wide front trainee embarkation terrace",(1.25,0,.84),
+                (.79,1.74,.15),"dark",.025)
+            for y in (-.56,-.28,0,.28,.56):
+                box("Five visible training floor lanes",(1.33,y,.96),
+                    (.55,.065,.04),"glow",.008)
+            box("Short broad recruitment portal",(1.53,0,1.26),
+                (.12,1.08,.46),"armor",.015)
+            box("Recessed ritual entry",(1.60,0,1.17),
+                (.06,.79,.28),"dark",.005)
         elif kind=="factory":
-            # AETHER SYNOD MK-II MATTER FABRICATOR.
-            # Broad square fabrication dock surrounded by four vertical fins,
-            # hovering induction rings and a suspended production seed.
-            prism("Matter conversion hexagonal foundation",0,0,.86,1.43,1.17,"armor",6)
-            prism("Dark manufacturing pit",0,0,1.88,1.08,.28,"dark",6)
-            for i in range(4):
-                a=i*math.tau/4+math.pi/4
-                x,y=math.cos(a)*1.34,math.sin(a)*1.34
-                prism("Fabricator stabilizer anchor",x,y,.86,.35,.41,"dark",4)
-                spire("Angled materialization antenna",x,y,1.20,.31,2.05,"armor",3)
-                spire("Violet internal waveguide",x*.97,y*.97,1.63,
-                      .15,1.43,"glass",3)
-                sphere("Production guide point",(x,y,3.31),(.15,.15,.16),"glow")
-                box("Green material conduit",(x*.63,y*.63,1.27),(.27,.12,.09),"glow",.014)
-            box("Platform with hovering vehicle feed",(.98,0,1.04),(.88,1.28,.25),"dark",.034)
-            for y in (-.50,0,.50):
-                box("Vehicle levitation led strip",(1.02,y,1.20),(.48,.07,.06),"glow",.011)
-            sphere("Levitated matter nucleus",(-.10,0,2.51),(.52,.52,.53),"glass")
-            sphere("Luminous assembled matter",(-.10,0,2.51),(.21,.20,.23),"glow")
-            torus("Lower matter synthesis field",(-.10,0,2.22),.71,.10,"glow")
-            parts["radar"]=torus("Orbiting fabrication arc",(-.10,0,2.75),
-                                .92,.12,"light",True)
-            spire("Overhead alignment spike",-.10,0,2.91,.19,.57,"light",3)
+            # AETHER SYNOD MK-III / TWIN-HORN MATTER SHIPYARD.
+            # Intentionally TALL, FRONT-OPEN and RECTILINEAR in silhouette.
+            # Twin elevated forks flank a luminous fabrication portal,
+            # unlike the low twin-wing Barracks or the HQ central obelisk.
+            prism("Wide matter foundry foundation",-.28,0,.84,1.34,.72,
+                  "armor",6)
+            box("Long dark vehicle synthesis slipway",(.60,0,.94),
+                (2.30,1.77,.23),"dark",.035)
+            for side in (-1,1):
+                y=side*.88
+                box("Projecting portal buttress",(.43,y,1.39),
+                    (1.76,.36,.78),"armor",.055)
+                box("Long mint guided fabrication rail",(.58,y,1.86),
+                    (1.62,.11,.085),"glow",.011)
+                box("Tall vertical fabrication fork",(-.43,side*1.17,2.13),
+                    (.58,.55,2.36),"light",.065)
+                spire("Asymmetric fork spearhead",-.43,side*1.17,3.27,
+                      .35,.58,"armor",3)
+                box("Fork internal reactor slit",(-.09,side*1.17,2.48),
+                    (.055,.13,.97),"glow",.009)
+                sphere("Matter-stabilizer light",(-.43,side*1.17,3.82),
+                       (.13,.14,.16),"glow")
+                for x in (-.42,.06,.54,1.02):
+                    box("Suspended transport channel",(x,side*.56,1.11),
+                        (.22,.055,.06),"glass",.009)
+            # The visible production bay faces the +X game camera.
+            box("Dark recessed synthesis opening",(1.23,0,1.60),
+                (.10,1.47,1.13),"dark",.006)
+            box("Bright matter transfer portal",(1.31,0,1.57),
+                (.045,1.19,.84),"glass",.005)
+            for y in (-.50,-.25,0,.25,.50):
+                box("Five aperture energy ribs",(1.35,y,1.62),
+                    (.045,.07,.67),"glow",.005)
+            box("Overhead open portal lintel",(1.24,0,2.31),
+                (.31,1.94,.26),"armor",.025)
+            box("Forecourt hover-vehicle ramp",(1.57,0,.74),
+                (.58,1.83,.17),"dark",.023)
+            for y in (-.60,-.30,0,.30,.60):
+                box("Glowing outward launch guidance",(1.61,y,.85),
+                    (.43,.075,.04),"glow",.007)
+            # A real separately movable object, animated by the common
+            # building 'radar' pivot during idle poses.
+            parts["radar"]=box("Oscillating levitation gripper",(.50,0,2.35),
+                                (.43,.65,.19),"light",.02)
+            sphere("Held assembly nucleus",(.49,0,2.14),
+                   (.32,.32,.28),"glass")
+            sphere("Matter synthesis flash",(.49,0,2.15),
+                   (.12,.13,.14),"glow")
         elif kind=="radar":
             prism("Neural radar plinth",0,0,.92,1.03,1.13,"armor",6)
             for side in (-1,1):
