@@ -1372,8 +1372,17 @@
         this.move(e,pad.x,pad.y,dt);
         return true;
       }
-      // A powerless airfield can shelter aircraft but cannot reload them.
+      // A powerless airfield can shelter aircraft but cannot reload or repair them.
       if(!this.power(e.owner).low){
+        // Paid hull servicing happens only during the existing rearm visit.
+        // This adds no save fields and never forces a full-ammo plane to return.
+        const owner=this.players[e.owner];
+        if(e.hp<e.maxHp&&owner?.credits>0){
+          const repairCost=.75;
+          const healed=Math.min(12*dt,e.maxHp-e.hp,owner.credits/repairCost);
+          e.hp=Math.min(e.maxHp,e.hp+healed);
+          owner.credits=Math.max(0,owner.credits-healed*repairCost);
+        }
         e.rearmProgress=(Number.isFinite(e.rearmProgress)?e.rearmProgress:0)+dt;
         while(e.rearmProgress>=2.5&&e.ammo<capacity){
           e.ammo++;
@@ -2675,7 +2684,7 @@
           ' KILLS'+(this.veterancyRank(e)?' · COMBAT BONUSES ACTIVE':'')+'</p>';
       if(e.kind==='recon')html+='<p class="scoutInfo">RECON · extended vision · fast scouting</p>';
       if(e.kind==='aircraft')html+='<p class="scoutInfo">ORDNANCE '+(e.ammo??UNITS.aircraft.ammo)+' / '+UNITS.aircraft.ammo+
-        (e.rearming?' · RETURNING / REARMING':'')+'</p>';
+        (e.rearming?' · RETURNING / REARMING'+(e.hp<e.maxHp?' · HULL SERVICE AT AIRFIELD':''):'')+'</p>';
       if(e.owner===0&&e.type==='building'){
         const canRepair=e.built&&e.hp<e.maxHp;
         const disabledRepair=(!canRepair||!e.repairing&&this.players[0].credits<1)?' disabled':'';
@@ -3086,6 +3095,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.28.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.29.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
