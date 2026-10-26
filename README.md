@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v1.8.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v1.9.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.9 Coordinated AI Platoons
+
+- **Rally before assaulting:** the opposing army now assembles up to five combat units into a persistent squad with unique walkable rally positions, launching together once enough units arrive.
+- **Fog-limited objectives:** offensive groups only target previously scouted hostile structures, using last-observed locations rather than invisible live enemy positions.
+- **Defensive response:** visible raiders approaching AI structures interrupt staging and draw nearby defenders.
+- **Compatible saves:** squad phase, target reports and rally slots are stored in local skirmish saves, with malformed and historical optional data handled safely.
+- [v1.9 release notes](docs/RELEASE-1.9.md) | [AI platoon regression tests](tests/platoons-v19.test.mjs).
 
 ## v1.8 Fair Chokepoint Traffic
 
