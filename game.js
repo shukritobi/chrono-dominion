@@ -1830,6 +1830,17 @@
       scout.retreatCooldownAt=Math.max(scout.retreatCooldownAt||0,this.time+14);
       return true;
     }
+    scoutAdvanceScore(point,unseen){
+      // Search beyond friendly territory before the first enemy building
+      // is actually seen. Only our own HQ and survey memory influence it.
+      if(unseen<5||(this.intel?.[1]||[]).some(r=>
+        r.type==='building'&&Number.isFinite(r.time)&&
+        this.time>=r.time&&this.time-r.time<=180))return 0;
+      const home=this.entities.find(e=>e.owner===1&&e.kind==='hq'&&e.hp>0);
+      if(!home)return 0;
+      return Math.min(65,Math.max(0,dist(home,point)-8)*2.8)*
+        Math.min(1,unseen/20);
+    }
     scoutFrontiers(scout,reservations=[]){
       // Generate potential survey positions from this AI's own explored cells,
       // not static mission waypoints or hidden player entity coordinates.
@@ -1844,7 +1855,7 @@
         if(risk>=200)continue;
         const unseen=this.scoutSurveyValue(p);
         if(unseen<5)continue;
-        candidates.push({point:p,unseen,estimate:unseen*1.7-dist(scout,p)*.85-risk});
+        candidates.push({point:p,unseen,estimate:unseen*1.7+this.scoutAdvanceScore(p,unseen)-dist(scout,p)*.85-risk});
       }
       // Bounded A* cost: pathcheck only the 14 best sightline opportunities.
       return candidates.sort((a,b)=>b.estimate-a.estimate||
@@ -1867,14 +1878,16 @@
         const route=this.scoutPath(scout,point,riskCache);
         if(!route)continue;
         const unseen=this.scoutSurveyValue(point);
-        const score=unseen*1.5-route.path.length*.95-offset*.08-risk-route.exposure;
+        const score=unseen*1.5+this.scoutAdvanceScore(point,unseen)-
+          route.path.length*.95-offset*.08-risk-route.exposure;
         options.push({index,point,score,unseen});
       }
       for(const frontier of this.scoutFrontiers(scout,reservations)){
         const route=this.scoutPath(scout,frontier.point,riskCache);
         if(!route)continue;
         options.push({index:null,point:frontier.point,unseen:frontier.unseen,
-          score:frontier.unseen*1.7-route.path.length*.9+1-
+          score:frontier.unseen*1.7+this.scoutAdvanceScore(frontier.point,frontier.unseen)-
+            route.path.length*.9+1-
             this.scoutThreatPenalty(frontier.point)-route.exposure});
       }
       if(!options.length){scout.order=null;return false;}
@@ -2500,6 +2513,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.13.0',build:'safe-scout-detours'};
+  window.ChronoDominion={version:'2.14.0',build:'forward-recon-scoring'};
   new Game();
 })();

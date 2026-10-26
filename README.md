@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.13.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.14.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
 
 ### Safe scout detours (v2.13)
@@ -12,6 +12,13 @@
 - Recon route planning retries a longer safe detour when the initial low-cost A* path crosses a **known** defended tile. Actual movement uses the same validated route, including during scout retreat.
 - Defended one-tile chokepoints remain rejected; other unit navigation and the original local save schema are unchanged.
 - [v2.13 release notes](docs/RELEASE-2.13.md) · [route/movement regression](tests/scout-detours-v213.test.mjs). Browser deployment and balance improvements require separate verification.
+
+### Forward frontier reconnaissance (v2.14)
+
+- Until the AI actually identifies an enemy building, scouts prioritize unexplored sectors farther from the AI's own command base.
+- Both landmark and dynamic-frontier selection use a bounded, survey-dependent progression bonus. Existing threat-aware A*, protected detours and patrol reservations remain enforced.
+- The bonus never uses hidden enemy coordinates or the human player's fog, and expires when the AI has a recent building sighting.
+- See [v2.14 notes](docs/RELEASE-2.14.md).
 
 ### Recon evasive routing (v2.12)
 
