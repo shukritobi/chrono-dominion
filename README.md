@@ -4,15 +4,22 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.10.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.11.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
+
+### Threat-aware scout routes (v2.11)
+
+- Recon patrols now price every tile on a route using the AI's own remembered enemy turret and combat contacts. They detour around known danger and reject exposed defended chokepoints when no safe route exists.
+- Actual scout movement uses the same weighted A* planner as patrol selection. Previously issued routes are reconsidered when intelligence changes; ordinary unit paths and existing browser saves are unchanged.
+- Nine 240-second V8 headless scenarios passed integrity checks: 3/9 discovered a building, 2/9 formed platoons and 16 scouts were lost. These remain unsatisfactory AI outcomes, not verified balance improvements.
+- See [v2.11 release notes](docs/RELEASE-2.11.md) and [route regression tests](tests/scout-routes-v211.test.mjs). Physical browser and GitHub Actions verification are separate.
 
 ### Scout safety and reconnaissance benchmarks (v2.10)
 
 - AI scouts avoid destinations near **previously observed** hostile turrets and recent combat contacts. Their route choice never consults hidden enemy coordinates.
 - Newly discovered dangers can cancel a scout's existing patrol destination, and wounded scouts retain their recovery cooldown rather than immediately receiving new scouting orders.
 - The nine-scenario balance lab now records first enemy-building discovery, scout losses/survivors, surveyed terrain and first platoon staging, allowing measurable comparison across maps and difficulties.
-- See [v2.10 release notes](docs/RELEASE-2.10.md) and [scout safety tests](tests/scout-safety-v210.test.mjs). Threat awareness is destination-based, not full route safety.
+- See [v2.10 release notes](docs/RELEASE-2.10.md) and [scout safety tests](tests/scout-safety-v210.test.mjs). v2.11 subsequently extends this to whole-route threat costs.
 
 ### Compact touch controls (v2.9)
 
