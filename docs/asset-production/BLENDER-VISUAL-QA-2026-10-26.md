@@ -198,29 +198,62 @@ animated picture.
   bypasses apt mirrors with a checksum-verified official Blender 4.2.23
   Linux archive and a shared GitHub cache; this approach passed.
 
-## 2026-10-27 remaining-building staged-state QA
+## 2026-10-27 nine-building staged construction and fractured roof review
 
-A dedicated [nine-building state QA script](../../tools/blender/qa_remaining_buildings.py)
-and [preview-only Blender workflow](../../.github/workflows/remaining-building-state-review.yml)
-now cover Headquarters, Refinery and Barracks for each faction. Each output
-contains full-size construction scaffolding, a fractured-damage pose, two
-idle frames, source-reopen verification and 160px/80px contact sheets.
-The workflow was launched at
-[run 40385597132](https://github.com/shukritobi/chrono-dominion/actions/runs/40385597132);
-do not claim it passed until its actual render artifacts are inspected.
+**Preview-only.** Headquarters, Refineries and Barracks were re-rendered for
+Coalition, Federation and Psionic, using actual full-size scaffold states
+and independently editable broken roof geometry. Both successive targeted
+workflows completed successfully:
+
+- [Initial nine-building source-reopen and 80px/160px visual QA](https://github.com/shukritobi/chrono-dominion/actions/runs/40385597132).
+- [Final fractured-roof nine-building render, source-reopen and contact sheets](https://github.com/shukritobi/chrono-dominion/actions/runs/40386121140).
+- [Nine-building 80px/160px pixel QA script](../../tools/blender/qa_remaining_buildings.py).
+- [Preview-only render workflow](../../.github/workflows/remaining-building-state-review.yml).
+
+The saved editable `.blend` files for all nine were reopened and verified to
+contain scaffolding, fractured facade meshes and the new broken roof plates.
+All nine 160×800 RGBA atlases contain two idle, two construction and one
+damaged frame, without clipping. Every construction frame was validated.
+Actual 160px and 80px contact sheets were downloaded and inspected.
+
+| Building | Coalition damaged alpha at 80px | Federation | Psionic |
+|---|---:|---:|---:|
+| HQ | 99 → **116** | 109 → **151** | 133 → **134** |
+| Refinery | 86 → **102** | 97 → **112** | 69 → **69** |
+| Barracks | 101 → **108** | 77 → **145** | 54 → **54** |
+
+The 160px damaged alpha changes similarly improved for six of nine buildings:
+Coalition HQ 388→470, Refinery 346→403, Barracks 436→466;
+Federation HQ 416→594, Refinery 426→494, Barracks 308→587.
+The construction pixel counts were identical before and after the damage
+geometry pass, confirming no scaffold-state regression.
+
+**Artistic finding:** Coalition/Federation damage reads better at 80px but
+is still restrained. All three Psionic classes show effectively unchanged
+damaged silhouettes: the added generic debris is obscured by their existing
+floating/crystal architecture. The next geometry pass must specifically
+remove signature upper Psionic hardware and add displaced, visible broken
+crystals. Do not misrepresent source-geometry validation as proof of
+stronger visible damage in those three cases.
+
+**No production artwork was replaced.** A commit comparison against the
+pre-development main revision showed changes only to Blender modeling,
+animation, preview QA scripts, review workflows and QA documentation,
+not the live texture atlas or its manifest.
 
 ## Ordered next tasks for hourly agent
 
-1. **Finish nine-building construction/damage review:** inspect workflow
-   40385597132, download the actual contact sheets, check 80px damaged
-   visibility and source-reopen results, then strengthen weak states.
-2. **Radar/Tech art polish:** the six MK-II source models are rendered and
-   verified; improve Federation Lab mechanical idle motion and all six
-   broken hardware poses without redoing unchanged assets.
-3. **Psionic Factory:** deepen the actual front fabrication portal.
+1. **Psionic damaged silhouette repair:** target Headquarters, Refinery
+   and Barracks only. Their new roof debris was validated as editable geometry
+   but did not improve the 80px silhouette (134 / 69 / 54 changed pixels).
+   Remove/hide specific signature upper meshes and render visible fallen
+   crystals. Do not rerender Coalition/Federation buildings unchanged.
+2. **Radar/Tech art polish:** six MK-II sources are rendered and verified;
+   improve Federation Lab's physical scanner motion (its idle alpha mask is
+   unchanged despite RGB pulse), and create clearly broken scanner parts.
+3. **Psionic Factory:** deepen the physical fabrication portal.
 4. **Complete gameplay states:** add critical and destroyed geometry beyond
-   the current five-frame preview protocol and implement clear power-out
-   variants where appropriate.
+   the current five-frame preview protocol and implement power-out variants.
 5. Continue defenses, airfields, missing 3D vehicles and atlas manifests.
 
 **Never overwrite approved game textures without explicit approval.**
