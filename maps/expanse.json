@@ -1,0 +1,90 @@
+{
+  "id": "expanse",
+  "name": "Frontier Expanse XL",
+  "description": "Expansive 48×48 frontier with long flanking lanes, resource fields and separated waterways.",
+  "size": 48,
+  "theme": "verdant",
+  "ore": [
+    [
+      10,
+      14
+    ],
+    [
+      14,
+      20
+    ],
+    [
+      18,
+      26
+    ],
+    [
+      23,
+      12
+    ],
+    [
+      30,
+      18
+    ],
+    [
+      34,
+      22
+    ],
+    [
+      39,
+      33
+    ],
+    [
+      35,
+      38
+    ],
+    [
+      25,
+      36
+    ],
+    [
+      29,
+      42
+    ],
+    [
+      18,
+      38
+    ],
+    [
+      12,
+      29
+    ]
+  ],
+  "waterColor": "#2e667d",
+  "waterRects": [
+    [
+      14,
+      22,
+      12,
+      16
+    ],
+    [
+      27,
+      34,
+      30,
+      34
+    ],
+    [
+      22,
+      26,
+      20,
+      29
+    ],
+    [
+      7,
+      11,
+      31,
+      37
+    ],
+    [
+      36,
+      40,
+      9,
+      17
+    ]
+  ]
+}
