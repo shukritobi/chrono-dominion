@@ -8,3 +8,8 @@ coverage/
 .env.*
 !.env.example
 art/renders/tmp/
+
+# Retail sound archives and local/private exports must never enter the public game.
+audio/private/
+audio/classic/
+audio/local/
