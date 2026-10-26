@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.0.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.1.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v2.1 Tactical Focus Fire
+
+- **Coordinated defense:** the AI now distributes available fighters across separately observed base threats without giving one unit conflicting instructions in the same strategy tick.
+- **Priority-based local targeting:** nearby visible threats are ranked using faction-balanced weapon damage, threat distance, target health and estimated overkill.
+- **Fog-honest engagements:** computer-controlled units break direct target locks when a hostile disappears from sight, instead of tracking invisible live locations.
+- **Wounded reserve:** badly injured AI fighters stay out of offensive groups through their recovery cooldown unless their health improves; no free healing is added.
+- New [v2.1 regression tests](tests/targeting-v21.test.mjs) and [release notes](docs/RELEASE-2.1.md).
 
 ## v2.0 AI Reinforcements & Wounded Retreats
 
