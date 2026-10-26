@@ -2,13 +2,10 @@ name: Open War Factory Blender Review
 
 # Original hand-authored procedural meshes. Preview-only by design:
 # this job never modifies production art or the live game.
+# Completed factory batch: rerun only when explicitly reviewing factory changes.
+# Generic architecture edits for radar/tech must not regenerate factories.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/open-factory-review.yml"
-      - "tools/blender/building_architecture.py"
 
 permissions:
   contents: read
