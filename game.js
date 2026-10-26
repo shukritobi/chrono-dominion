@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.2 — match simulation coverage and fairness fixes. */
+/* Chrono Dominion v2.3 — sector reconnaissance and reliable harvesting. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1554,7 +1554,7 @@
       // Build one assignment table per AI decision tick. Only observed units
       // are candidates: unseen enemies never become omniscient attack orders.
       const side=1,available=new Map(fighters.filter(u=>u.hp>0&&u.built&&
-        u.kind!=='harvester'&&(u.retreatUntil||0)<=this.time)
+        u.kind!=='harvester'&&u.kind!=='recon'&&(u.retreatUntil||0)<=this.time)
         .map(u=>[u.id,u]));
       const assignments=new Map(),committed=new Map();
       const visible=this.entities.filter(e=>e.owner!==side&&e.hp>0&&e.type==='unit'&&
@@ -1603,6 +1603,33 @@
         if(unit&&unit.hp>0)unit.order={type:'attack',id:targetId};
       }
       return assignments;
+    }
+    scoutWaypoints(){
+      // Public terrain landmarks only: no opponent entity coordinates or
+      // hidden-world state. A reconnaissance loop visits distant sectors so
+      // a passive ore-only patrol cannot leave the opposing base unscouted.
+      const sectors=[[21,21],[13,13],[7,7],[8,26],[26,8],[26,26],[13,22],[22,13]];
+      const ore=(MAPS[this.settings.map]||MAPS.verdant).ore;
+      return [...sectors,...ore].map(([x,y])=>({x,y}));
+    }
+    assignScoutPatrol(scout){
+      const waypoints=this.scoutWaypoints();
+      if(!waypoints.length)return false;
+      const start=((scout.patrolIndex||0)%waypoints.length+waypoints.length)%waypoints.length;
+      for(let offset=0;offset<waypoints.length;offset++){
+        const index=(start+offset)%waypoints.length,point=waypoints[index];
+        if(!this.walkable(point.x,point.y))continue;
+        if(Math.hypot(scout.x-point.x,scout.y-point.y)<2)continue;
+        const path=this.findPath(scout.x,scout.y,point.x,point.y);
+        if(!path.length||Math.hypot(path.at(-1).x-point.x,path.at(-1).y-point.y)>1)continue;
+        scout.patrolIndex=(index+1)%waypoints.length;
+        scout.order={type:'move',x:point.x,y:point.y};
+        return true;
+      }
+      // No connected exploration destination: wait rather than repeatedly
+      // issuing unreachable orders and trapping the unit in a retry loop.
+      scout.order=null;
+      return false;
     }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
@@ -1680,19 +1707,11 @@
           continue;
         }
         if(scout.order?.type==='attack'&&this.entityById(scout.order.id))continue;
-        // Recon patrols travel between map-file ore sites and do not repeat
-        // the same waypoint once it has been reached.
-        if(scout.order?.type==='move'||scout.order?.type==='attackMove'){
-          if(dist(scout,scout.order)>1.5)continue;
-        }
-        const ore=(MAPS[this.settings.map]||MAPS.verdant).ore;
-        const route=ore.filter(pt=>!this.water(pt[0],pt[1])).slice(0,6);
-        if(!route.length)continue;
-        const index=((scout.patrolIndex||0)%route.length+route.length)%route.length;
-        const point=route[index];
-        scout.patrolIndex=(index+1)%route.length;
-        scout.order={type:'attackMove',x:clamp(point[0]+.35,1,32),y:clamp(point[1]+.35,1,32)};
-        // Contact information is remembered by the scout, and stored in saves.
+        // Explore distant map sectors, skipping lakes and disconnected
+        // routes. Patrol destinations are map data, never unseen enemies.
+        if(scout.order?.type==='move'&&dist(scout,scout.order)>1.5)continue;
+        this.assignScoutPatrol(scout);
+        // Contact is recorded only after actual line-of-sight discovery.
         const spotted=this.nearest(scout,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),8);
         if(spotted)scout.lastContact={x:spotted.x,y:spotted.y,time:this.time,kind:spotted.kind};
       }
@@ -2100,6 +2119,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.1.0',build:'tactical-focus-fire'};
+  window.ChronoDominion={version:'2.3.0',build:'sector-reconnaissance'};
   new Game();
 })();
