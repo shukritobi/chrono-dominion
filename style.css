@@ -113,3 +113,8 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .soundToggle[aria-pressed="true"]{color:#baf0d2;border-color:#68bcac;background:#244d47}
 .soundToggle:focus-visible{outline:2px solid #7de8d5;outline-offset:2px}
 @media(max-width:650px){.soundToggle{min-width:46px;padding:6px 3px;font-size:9px}}
+
+/* v1.4 unobtrusive battlefield performance readout */
+.perfStatus{font:10px Consolas,monospace;letter-spacing:.3px;color:#9bb8ba;white-space:nowrap;border-left:1px solid #537080;padding:3px 6px}
+@media(max-width:890px){.perfStatus{position:absolute;top:57px;right:8px;background:#0a1b2fbc;border:1px solid #416279;border-radius:3px;padding:3px 5px;pointer-events:none}}
+@media(max-width:430px){.perfStatus{font-size:9px;top:53px}}
