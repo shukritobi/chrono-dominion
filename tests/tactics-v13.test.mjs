@@ -48,7 +48,7 @@ const gameSource=read('game.js').replace('  new Game();','  window.__game = new 
 runInNewContext(gameSource,{window:w,document,console,localStorage,performance:{now:()=>0},
   requestAnimationFrame(){},setTimeout(){return 1;},clearTimeout(){},devicePixelRatio:1},{timeout:4000});
 const g=w.__game,settings={playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'recruit',startingCredits:5000};
-assert.equal(w.ChronoDominion.version,'1.9.0');
+assert.equal(w.ChronoDominion.version,'2.0.0');
 assert.ok(elements.get('soundToggle').textContent.includes('OFF'));
 elements.get('soundToggle').onclick();
 assert.equal(w.ChronoAudio.enabled,true);
