@@ -127,8 +127,10 @@ def reset_scene():
     # Cycles software mode is stable on headless Linux CI runners without EGL / X11.
     sc.render.engine="CYCLES"
     sc.cycles.device="CPU"
-    sc.cycles.samples=32
-    sc.cycles.use_denoising=True
+    sc.cycles.samples=48
+    # Ubuntu's apt Blender can be compiled without OpenImageDenoise.
+    # Rely on more CPU samples so our GitHub runner remains headless-safe.
+    sc.cycles.use_denoising=False
     sc.render.resolution_percentage=100
     sc.render.film_transparent=True
     sc.render.image_settings.file_format="PNG"
