@@ -332,6 +332,92 @@ def base_building(kind,faction):
                      (1.10,-1.09,z+.19),(.18,.18,.19),"glow")
         spark.hide_render=True
         PARTS["damage_only_spark"]=spark
+    if faction=="psionic" and kind in ("hq","refinery","barracks"):
+        # MK-IV: explicitly remove the intact high-profile alien signature
+        # geometry. Generic roof debris is hidden behind these tall crystals
+        # at an 80px RTS zoom, leaving the damage pose nearly unchanged.
+        # Preserve each intact mesh in the editable .blend; only hide it
+        # in the damaged render state.
+        collapse_names={
+            "hq":(
+                "Ascending neural command obelisk",
+                "Inner psionic government core",
+                "Citadel sovereign beacon",
+                "Orbiting Aether command shield",
+                "Telepathic core stabilization",
+                "Crystal hollow upper sanctum",
+                "Glazed sentry blade",
+                "Neural upper crest",
+            ),
+            "refinery":(
+                "Sorting crystal resonator",
+                "Mineral discrimination core",
+                "Rotating psionic extraction hoop",
+                "Mining containment interface",
+                "Raw violet ore shard",
+                "Green ore scanner",
+                "Crystal-grade sorting ring",
+            ),
+            "barracks":(
+                "Low faceted sanctuary wing roof",
+                "Wing roof open-sky skylight",
+                "Outspread neural petal",
+                "Lateral student telemetry orb",
+                "Short rear thought-collecting fin",
+                "Short broad recruitment portal",
+            ),
+        }[kind]
+        for selector in collapse_names:
+            matching=[o for o in ROOT.children if o.name.startswith(selector)]
+            if not matching:
+                raise ValueError("Missing Psionic breakable component: "+kind+"/"+selector)
+            for o in matching:
+                PARTS["damage_hide_"+str(len(PARTS))]=o
+
+        # Three visibly displaced faceted 3D crystal shards per building.
+        # These are real closed meshes, not decals or postprocessed sprites.
+        # Place them on the visible +X/-Y apron, outside the former intact
+        # roof silhouette. Each shard has a triangular cross-section and
+        # asymmetrically leaning apex.
+        shard_shapes={
+            "hq":(
+                ((1.24,-1.19,.76),(2.02,-1.73,2.30),.31),
+                ((-.46,-1.55,.76),(-.95,-1.93,1.94),.27),
+                ((1.46,.28,.83),(2.01,.38,1.80),.24),
+            ),
+            "refinery":(
+                ((1.32,-1.24,.76),(2.00,-1.82,2.10),.33),
+                ((-.53,-1.51,.76),(-1.20,-1.80,1.72),.27),
+                ((1.43,.29,.83),(2.06,.59,1.67),.24),
+            ),
+            "barracks":(
+                ((1.37,-1.29,.77),(2.05,-1.76,1.85),.38),
+                ((-.59,-1.53,.76),(-1.18,-1.87,1.70),.33),
+                ((1.40,.47,.80),(2.08,.64,1.63),.27),
+            ),
+        }[kind]
+        for i,(base,tip,width) in enumerate(shard_shapes):
+            x,y,z=base
+            tx,ty,tz=tip
+            vertices=[
+                (x-width,y-width*.65,z),
+                (x+width,y-width*.45,z+.07),
+                (x+width*.55,y+width*.76,z+.03),
+                (x-width*.63,y+width*.61,z-.04),
+                (tx,ty,tz),
+            ]
+            faces=[(0,3,2,1),(0,1,4),(1,2,4),(2,3,4),(3,0,4)]
+            crystal=mesh("Damage-only fallen psionic crystal "+kind+" "+str(i),
+                         vertices,faces,"glass" if i==0 else "armor")
+            crystal.hide_render=True
+            PARTS["damage_only_crystal_"+str(i)]=crystal
+        # Dark, stepped fracture where the tower/roof used to stand.
+        # This reveals the lost upper volume instead of merely dimming it.
+        breach=box("Damage-only shattered psionic roof cavity",
+                   (.03,-.16,{"hq":2.51,"refinery":2.16,"barracks":1.40}[kind]),
+                   (1.12,1.14,.17),"dark",.018)
+        breach.hide_render=True
+        PARTS["damage_only_psionic_breach"]=breach
     return model
 
 def animate(kind,state,frame,frames):
@@ -390,6 +476,9 @@ def animate(kind,state,frame,frames):
             for part in ("damage_breakable","damage_secondary","damage_tertiary","damage_quaternary"):
                 if part in PARTS:
                     PARTS[part].hide_render=True
+            for part,o in PARTS.items():
+                if part.startswith("damage_hide_"):
+                    o.hide_render=True
     if "radar_aux" in PARTS:
         # Run after the construction visibility reset, which otherwise
         # restores hidden rotor meshes in the damaged state.
