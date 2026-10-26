@@ -1,0 +1,65 @@
+{
+  "events": {
+    "voice.select.coalition.soldier": [
+      "ra2/ranger-yes-1.wav",
+      "ra2/ranger-yes-2.wav"
+    ],
+    "voice.move.soldier": [
+      "ra2/ranger-move.wav"
+    ],
+    "voice.attack.soldier": [
+      "ra2/ranger-attack.wav"
+    ],
+    "select": [
+      "ra2/selection.wav"
+    ],
+    "move": [
+      "ra2/command.wav"
+    ],
+    "attack": [
+      "ra2/attack-order.wav"
+    ],
+    "shot.soldier": [
+      "ra2/rifle.wav"
+    ],
+    "shot.tank": [
+      "ra2/tank-cannon.wav"
+    ],
+    "shot.heavy": [
+      "ra2/heavy-cannon.wav"
+    ],
+    "impact": [
+      "ra2/hit.wav"
+    ],
+    "explosion": [
+      "ra2/explosion.wav"
+    ],
+    "build": [
+      "ra2/construction.wav"
+    ],
+    "queue": [
+      "ra2/queue.wav"
+    ],
+    "ready": [
+      "ra2/unit-ready.wav"
+    ],
+    "ability": [
+      "yr/special-ability.wav"
+    ],
+    "win": [
+      "ra2/victory.wav"
+    ],
+    "defeat": [
+      "ra2/defeat.wav"
+    ]
+  },
+  "music": {
+    "music.menu": [
+      "tracks/menu.ogg"
+    ],
+    "music.battle": [
+      "tracks/battle-a.ogg",
+      "tracks/battle-b.ogg"
+    ]
+  }
+}
