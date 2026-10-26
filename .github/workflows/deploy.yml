@@ -15,7 +15,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: github-pages
+  group: ${{ github.event_name == 'pull_request' && format('verify-pr-{0}', github.event.pull_request.number) || 'github-pages' }}
   cancel-in-progress: true
 
 jobs:
@@ -76,6 +76,8 @@ jobs:
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
           node --check audio/voices.js
+          python3 tools/audio/build_builtin.py --check
+          node tests/builtin-audio-v224.test.mjs
           node tests/original-voice-library-v222.test.mjs
           node --check tools/audio/export-register.mjs
           node tests/audio-soundscape-v221.test.mjs
@@ -178,11 +180,32 @@ jobs:
     needs: verify
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Bake 473 original bundled sound files
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak ffmpeg
+          python3 tools/audio/build_builtin.py
+          test "$(find audio/builtin -type f -name '*.mp3' | wc -l)" -eq 473
+          test -f audio/builtin/audio-map.json
+      - name: Commit baked sounds to the repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/builtin/
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(audio): bundle 473 original MP3s for browser playback"
+            # A token-authored push does not retrigger this workflow.
+            git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning::Sound files baked into this deployment, but repository binary commit needs retry"
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

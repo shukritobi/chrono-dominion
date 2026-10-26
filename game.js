@@ -224,6 +224,13 @@
         $('voiceEnabled').checked=!!this.audio?.voiceEnabled;
       };
       updateMixer();
+      this.audio?.loadBuiltins?.()?.then?.(count=>{
+        if(!this.audio?.imported?.loaded){
+          $('audioStatus').textContent=count
+            ?count+' built-in original sounds ready. Local audio folders are optional.'
+            :'Built-in audio unavailable; synthesized effects and browser voices remain available.';
+        }
+      }).catch?.(()=>{});
       const closeAudio=()=>{$('audioPanel').classList.add('hidden');$('audioSettings').setAttribute('aria-expanded','false');};
       $('audioSettings').onclick=()=>{
         const opening=$('audioPanel').classList.contains('hidden');
@@ -258,7 +265,7 @@
         }catch(err){$('audioStatus').textContent='Could not read this folder. Try WAV, OGG or MP3 files.';}
         e.target.value='';
       };
-      $('audioClear').onclick=()=>{this.audio?.clearLocalPack();$('audioStatus').textContent='Local sound pack cleared. Original soundscape active.';};
+      $('audioClear').onclick=()=>{this.audio?.clearLocalPack();$('audioStatus').textContent='Local sound pack cleared. Built-in sound library restored.';};
       $('zoomIn').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom*1.15,.65,1.8);};
       $('zoomOut').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom/1.15,.65,1.8);};
       $('restart').onclick=()=>this.newMatch(this.settings);
@@ -1325,6 +1332,10 @@
           continue;
         }
         target.hp-=shot.damage;
+        if(target.owner===0&&target.type==='unit'&&this.time-(target.lastHurtVoiceAt??-100)>7){
+          target.lastHurtVoiceAt=this.time;
+          this.audio?.play('underFire',{kind:target.kind,faction:this.players[0]?.faction});
+        }
         this.noteBuildingDamage(target,shot.owner);
         if(shot.owner===1&&target.type==='building')this.aiSiegeHits++;
         if(target.type==='building'&&
