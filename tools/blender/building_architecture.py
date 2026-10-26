@@ -272,18 +272,18 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             # Wreckage only appears in the damaged sprite. Missing roof and
             # front portal steel are replaced by visibly fallen, tilted pieces.
             wreck=box("Damaged Aegis roof slab fallen into apron",
-                (1.08,-.90,1.06),(1.19,.87,.16),"armor",.028)
-            wreck.rotation_euler.y=.41
-            wreck.rotation_euler.x=-.22
+                (1.60,-1.46,1.16),(1.48,.93,.22),"armor",.028)
+            wreck.rotation_euler.y=.52
+            wreck.rotation_euler.x=-.31
             wreck.hide_render=True
             parts["damage_only_roof_slab"]=wreck
             wreck=box("Damaged Aegis portal girder diagonal",
-                (1.44,-.98,1.39),(.17,.20,1.51),"light",.022)
-            wreck.rotation_euler.y=.58
+                (1.73,-1.57,1.47),(.21,.23,1.64),"light",.022)
+            wreck.rotation_euler.y=.77
             wreck.hide_render=True
             parts["damage_only_portal_girder"]=wreck
-            for i,(x,y,z) in enumerate(((1.24,-1.37,.95),
-                                        (1.60,-.66,.95),(.70,-1.12,1.02))):
+            for i,(x,y,z) in enumerate(((1.49,-1.66,.97),
+                                        (1.93,-1.06,.97),(1.12,-1.58,1.05))):
                 rubble=box("Aegis shattered armor shard",(x,y,z),
                            (.39,.30,.16),"dark" if i==1 else "light",.014)
                 rubble.rotation_euler.y=.28+i*.24
@@ -513,18 +513,18 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 (-.08,0,2.58),(.80,.89,.16),"light",.012)
             # Collapsed portal and roof fragments, only visible in damage.
             wreck=box("Fallen Federation roof plate",
-                (.90,-1.02,1.08),(1.40,1.01,.23),"armor",.017)
-            wreck.rotation_euler.y=.45
-            wreck.rotation_euler.x=-.29
+                (1.58,-1.49,1.14),(1.52,1.03,.27),"armor",.017)
+            wreck.rotation_euler.y=.53
+            wreck.rotation_euler.x=-.32
             wreck.hide_render=True
             parts["damage_only_foundry_roof"]=wreck
             wreck=box("Bent Federation blast-gate girder",
-                (1.46,-1.07,1.38),(.24,.31,1.49),"dark",.019)
-            wreck.rotation_euler.y=.66
+                (1.76,-1.57,1.46),(.27,.33,1.67),"dark",.019)
+            wreck.rotation_euler.y=.80
             wreck.hide_render=True
             parts["damage_only_foundry_girder"]=wreck
-            for i,(x,y,z) in enumerate(((1.28,-1.41,.96),
-                                        (1.70,-.72,.97),(.75,-1.22,1.01))):
+            for i,(x,y,z) in enumerate(((1.48,-1.69,.98),
+                                        (1.95,-1.10,.99),(1.05,-1.61,1.05))):
                 rubble=box("Foundry blast-spall armor",(x,y,z),
                            (.47,.34,.21),"bronze" if i==0 else "armor",.012)
                 rubble.rotation_euler.y=.31+i*.19
