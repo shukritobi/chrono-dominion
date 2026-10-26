@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.3 — sector reconnaissance and reliable harvesting. */
+/* Chrono Dominion v2.4 — surveyed terrain and distributed scout objectives. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -99,7 +99,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -266,7 +266,7 @@
         time:this.time,nextAI:this.nextAI,nextId:this.nextId,
         selected:this.selected,groups:this.groups,camera:this.camera,stats:this.stats,
         customMap:this.settings.map==='custom'?MAPS.custom:null,
-        intel:this.intel,aiPlatoon:this.aiPlatoon,aiSupportPlatoon:this.aiSupportPlatoon,
+        intel:this.intel,aiExplored:[...this.aiExplored],aiPlatoon:this.aiPlatoon,aiSupportPlatoon:this.aiSupportPlatoon,
         fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
       };
       try{
@@ -310,6 +310,12 @@
           v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
           Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
         ).map(v=>({...v})):[]):[[],[]];
+      this.aiExplored=new Set(Array.isArray(saved.aiExplored)?
+        saved.aiExplored.slice(0,WORLD_SIZE*WORLD_SIZE).filter(key=>{
+          if(typeof key!=='string'||!/^\\d{1,2},\\d{1,2}$/.test(key))return false;
+          const [x,y]=key.split(',').map(Number);
+          return x>=0&&x<WORLD_SIZE&&y>=0&&y<WORLD_SIZE;
+        }):[]);
       this.aiPlatoon=this.restoreAIPlatoon(saved.aiPlatoon,saved.entities);
       this.aiSupportPlatoon=this.restoreAIPlatoon(saved.aiSupportPlatoon,saved.entities);
       if(this.aiSupportPlatoon&&this.aiPlatoon&&this.aiSupportPlatoon.ids.some(id=>this.aiPlatoon.ids.includes(id)))this.aiSupportPlatoon=null;
@@ -333,7 +339,7 @@
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
       $('startingCredits').value=String(this.settings.startingCredits||5000);
       this.drawMapPreview();
-      this.updateFog();this.updateUI(true);this.updateSaveButtons();
+      this.updateFog();this.updateAISurvey();this.updateUI(true);this.updateSaveButtons();
       $('overlay').classList.add('hidden');
       this.notify('Saved skirmish loaded');return true;
     }
@@ -387,7 +393,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -401,7 +407,7 @@
         this.add(side,'tank',a.x+4*sign,a.y+5*sign);
         const h=this.add(side,'harvester',a.x+2*sign,a.y+5*sign);h.order={type:'harvest'};
       }
-      this.updateFog();$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
+      this.updateFog();this.updateAISurvey();$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
     }
     initMap(){
       const oreSites=(MAPS[this.settings.map]||MAPS.verdant).ore;
@@ -1316,7 +1322,7 @@
       this.advanceProduction(dt);
       if(this.time>=this.nextAI){this.runAI();this.nextAI=this.time+(this.settings.difficulty==='veteran'?5:this.settings.difficulty==='recruit'?13:8);}
       this.particles=this.particles.filter(p=>(p.life-=dt)>0);
-      if(this.time>this.nextFog){this.updateFog();this.nextFog=this.time+.3;}
+      if(this.time>this.nextFog){this.updateFog();this.updateAISurvey();this.nextFog=this.time+.3;}
       if(this.time>this.nextUi){this.updateUI();this.nextUi=this.time+.45;}
       this.entities=this.entities.filter(e=>e.hp>0);
       for(let side=0;side<2;side++){if(!this.entities.some(e=>e.owner===side&&e.type==='building'&&e.hp>0)){this.finish(side===1);break;}}
@@ -1612,24 +1618,59 @@
       const ore=(MAPS[this.settings.map]||MAPS.verdant).ore;
       return [...sectors,...ore].map(([x,y])=>({x,y}));
     }
+    updateAISurvey(){
+      // Separate AI map memory. Never access the player's fog, hidden enemy
+      // coordinates, or last-seen opponent data while updating exploration.
+      if(!this.aiExplored)this.aiExplored=new Set();
+      for(const scout of this.entities){
+        if(scout.owner!==1||scout.hp<=0||!scout.built)continue;
+        const radius=scout.kind==='recon'?8.1:scout.type==='building'?5.8:4.8;
+        for(let x=Math.max(0,Math.floor(scout.x-radius));x<=Math.min(33,Math.ceil(scout.x+radius));x++){
+          for(let y=Math.max(0,Math.floor(scout.y-radius));y<=Math.min(33,Math.ceil(scout.y+radius));y++){
+            if((x-scout.x)**2+(y-scout.y)**2<=radius*radius)this.aiExplored.add(x+','+y);
+          }
+        }
+      }
+    }
+    scoutSurveyValue(point){
+      if(!this.aiExplored)this.aiExplored=new Set();
+      // Estimate how many passable unsurveyed cells an observer would reveal.
+      // This calculation depends only on terrain and the AI's own memory.
+      let unseen=0;
+      const rad=7;
+      for(let x=Math.max(1,Math.floor(point.x-rad));x<=Math.min(32,Math.ceil(point.x+rad));x++){
+        for(let y=Math.max(1,Math.floor(point.y-rad));y<=Math.min(32,Math.ceil(point.y+rad));y++){
+          if((x-point.x)**2+(y-point.y)**2>rad*rad)continue;
+          if(!this.aiExplored.has(x+','+y)&&!this.water(x,y))unseen++;
+        }
+      }
+      return unseen;
+    }
     assignScoutPatrol(scout){
       const waypoints=this.scoutWaypoints();
       if(!waypoints.length)return false;
-      const start=((scout.patrolIndex||0)%waypoints.length+waypoints.length)%waypoints.length;
+      const preferred=((scout.patrolIndex||0)%waypoints.length+waypoints.length)%waypoints.length;
+      const reservations=this.entities.filter(u=>u.id!==scout.id&&u.owner===1&&
+        u.kind==='recon'&&u.hp>0&&u.order?.type==='move')
+        .map(u=>u.order);
+      const options=[];
       for(let offset=0;offset<waypoints.length;offset++){
-        const index=(start+offset)%waypoints.length,point=waypoints[index];
+        const index=(preferred+offset)%waypoints.length,point=waypoints[index];
         if(!this.walkable(point.x,point.y))continue;
-        if(Math.hypot(scout.x-point.x,scout.y-point.y)<2)continue;
+        if(dist(scout,point)<2)continue;
+        if(reservations.some(goal=>dist(goal,point)<4.1))continue;
         const path=this.findPath(scout.x,scout.y,point.x,point.y);
-        if(!path.length||Math.hypot(path.at(-1).x-point.x,path.at(-1).y-point.y)>1)continue;
-        scout.patrolIndex=(index+1)%waypoints.length;
-        scout.order={type:'move',x:point.x,y:point.y};
-        return true;
+        if(!path.length||dist(path.at(-1),point)>1)continue;
+        const unseen=this.scoutSurveyValue(point);
+        const score=unseen*1.5-path.length*.95-offset*.08;
+        options.push({index,point,score,unseen});
       }
-      // No connected exploration destination: wait rather than repeatedly
-      // issuing unreachable orders and trapping the unit in a retry loop.
-      scout.order=null;
-      return false;
+      if(!options.length){scout.order=null;return false;}
+      options.sort((a,b)=>b.score-a.score||a.index-b.index);
+      const chosen=options[0];
+      scout.patrolIndex=(chosen.index+1)%waypoints.length;
+      scout.order={type:'move',x:chosen.point.x,y:chosen.point.y};
+      return true;
     }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
