@@ -2,7 +2,8 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const WORLD_SIZE = 34, TW = 64, TH = 32;
+  let WORLD_SIZE = 34;
+  const TW = 64, TH = 32;
   const SAVE_KEY='chrono-dominion-skirmish-v1';
   const FACTION_BALANCE={
     coalition:{tank:{speed:1.12},heavy:{speed:1.10},recon:{speed:1.18,hp:.9}},
@@ -14,6 +15,7 @@
     desert:{name:'Ashen Basin',description:'Open desert routes, a central canyon lake and exposed mineral deposits.',ore:[[10,10],[14,14],[20,16],[22,20],[26,24],[15,24],[24,12]],waterColor:'#426c88',waterRects:[[12,22,10,13],[15,19,13,21],[3,7,23,28]]},
     snow:{name:'Frostline',description:'Icy lake channels and ore-rich frozen highlands with narrow approaches.',ore:[[11,13],[14,18],[18,22],[24,21],[24,25],[21,11],[10,23]],waterColor:'#618c98',waterRects:[[13,17,3,14],[16,19,14,21],[19,23,20,31]]}
   };
+  const mapSize=name=>MAPS[name]?.size===48?48:34;
   const ABILITIES={
     coalition:{name:'Chrono Jump',cooldown:20,range:6.2,color:'#8bdbf9'},
     federation:{name:'Arc Discharge',cooldown:17,range:3.6,color:'#ffb36c'},
@@ -96,7 +98,7 @@
     constructor(){
       this.canvas=$('world');this.ctx=this.canvas.getContext('2d');
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
-      this.camera={x:0,y:545,zoom:1};this.keys=new Set();
+      this.camera={x:0,y:545,zoom:1};this.keys=new Set();this.mousePan=null;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
@@ -175,7 +177,10 @@
           e.preventDefault();this.unitAction(actions[k]);return;
         }
         if(this.state==='playing'&&k==='h'){this.centerHQ();return;}
-        if(this.state==='playing'&&k===' '){e.preventDefault();this.centerSelection();return;}
+        if(this.state==='playing'&&k===' '){
+          e.preventDefault();this.keys.add(' ');return;
+        }
+        if(this.state==='playing'&&k==='c'){e.preventDefault();this.centerSelection();return;}
         this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(!this.cancelCurrentMode()&&(this.state==='playing'||this.state==='paused'))this.pause();}});
       window.addEventListener('keyup',e=>this.keys.delete(e.key.toLowerCase()));
       this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -325,6 +330,7 @@
       const validMap=Object.hasOwn(MAPS,saved?.settings?.map)||
         (saved?.settings?.map==='custom'&&window.ChronoMaps?.validate(loadedCustom)?.valid);
       // Validate before mutating the current game. A broken older snapshot must never destroy a live session.
+      const savedSize=mapSize(saved?.settings?.map);
       const valid= saved.version===1&&saved.settings&&
         validFaction(saved.settings.playerFaction)&&validFaction(saved.settings.enemyFaction)&&
         validMap&&
@@ -333,14 +339,15 @@
         Array.isArray(saved.entities)&&saved.entities.length<2000&&
         saved.entities.every(e=>e&&Number.isInteger(e.id)&&e.id>0&&(e.owner===0||e.owner===1)&&
           (Object.hasOwn(BUILD,e.kind)||Object.hasOwn(UNITS,e.kind))&&
-          Number.isFinite(e.x)&&Number.isFinite(e.y)&&e.x>=0&&e.y>=0&&e.x<=WORLD_SIZE&&e.y<=WORLD_SIZE&&
+          Number.isFinite(e.x)&&Number.isFinite(e.y)&&e.x>=0&&e.y>=0&&e.x<=savedSize&&e.y<=savedSize&&
           Number.isFinite(e.hp)&&Number.isFinite(e.maxHp)&&e.maxHp>0)&&
         Array.isArray(saved.ores)&&saved.ores.length<=5000&&
         Array.isArray(saved.queues)&&saved.queues.length<=200&&
-        Array.isArray(saved.fog)&&saved.fog.length===WORLD_SIZE&&
-        saved.fog.every(row=>Array.isArray(row)&&row.length===WORLD_SIZE);
+        Array.isArray(saved.fog)&&saved.fog.length===savedSize&&
+        saved.fog.every(row=>Array.isArray(row)&&row.length===savedSize);
       if(!valid){this.notify('Saved game is incompatible with this version');return false;}
       if(saved.settings.map==='custom'&&loadedCustom)this.installCustomMap(loadedCustom);
+      WORLD_SIZE=mapSize(saved.settings.map);
       this.settings={...saved.settings};
       this.players=saved.players.map(p=>({...p}));
       this.stats=Array.isArray(saved.stats)&&saved.stats.length===2?saved.stats.map(v=>({...this.newStats(),...v})): [this.newStats(),this.newStats()];
@@ -348,7 +355,7 @@
       this.intel=Array.isArray(saved.intel)&&saved.intel.length===2?
         saved.intel.map(entries=>Array.isArray(entries)?entries.slice(0,150).filter(v=>
           v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
-          Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
+          Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=WORLD_SIZE&&v.y>=0&&v.y<=WORLD_SIZE
         ).map(v=>({...v})):[]):[[],[]];
       this.reconAlerts=new Map();
       // Treat local saves as untrusted input. Older snapshots omit this field.
@@ -388,7 +395,7 @@
       this.selected=Array.isArray(saved.selected)?saved.selected.filter(id=>this.entities.some(e=>e.id===id&&e.hp>0)):[];
       this.groups=saved.groups&&typeof saved.groups==='object'?saved.groups:{};
       this.camera=saved.camera&&Number.isFinite(saved.camera.x)&&Number.isFinite(saved.camera.y)&&Number.isFinite(saved.camera.zoom)?{
-        x:clamp(saved.camera.x,-1020,1020),y:clamp(saved.camera.y,50,1080),zoom:clamp(saved.camera.zoom,.65,1.8)
+        x:clamp(saved.camera.x,-WORLD_SIZE*TW/2,WORLD_SIZE*TW/2),y:clamp(saved.camera.y,50,WORLD_SIZE*TH),zoom:clamp(saved.camera.zoom,.65,1.8)
       }:{x:0,y:370,zoom:1};
       this.fog=saved.fog.map(row=>row.map(seen=>({seen:!!seen,visible:false})));
       this.placing=null;this.attackMoveArmed=false;this.abilityArmedId=null;this.resetTouch();
@@ -400,6 +407,12 @@
       this.updateFog();this.updateAISurvey();this.updateIntel(0);this.updateUI(true);this.updateSaveButtons();
       $('overlay').classList.add('hidden');
       this.notify('Saved skirmish loaded');return true;
+    }
+    get worldSize(){return WORLD_SIZE;}
+    clampCamera(){
+      const span=WORLD_SIZE*TW/2;
+      this.camera.x=clamp(this.camera.x,-span,span);
+      this.camera.y=clamp(this.camera.y,50,WORLD_SIZE*TH);
     }
     centerHQ(){
       const h=this.entities.find(e=>e.owner===0&&e.kind==='hq'&&e.hp>0);
@@ -428,10 +441,10 @@
       const map=$('mapSelect').value||'verdant',cfg=MAPS[map]||MAPS.verdant;
       $('mapDescription').textContent=cfg.description;
       const width=canvas.width||272,height=canvas.height||144;
-      const sx=width/WORLD_SIZE,sy=height/WORLD_SIZE;
+      const size=mapSize(map),sx=width/size,sy=height/size;
       ctx.clearRect(0,0,width,height);
       const colors=terrain[cfg.theme||map]||terrain.verdant;
-      for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){
+      for(let x=0;x<size;x++)for(let y=0;y<size;y++){
         const filled=this.water(x+.5,y+.5,map);
         ctx.fillStyle=filled?cfg.waterColor:colors[Math.floor(rand(x,y)*colors.length)];
         ctx.fillRect(x*sx,y*sy,Math.ceil(sx),Math.ceil(sy));
@@ -440,7 +453,7 @@
       for(const [x,y] of cfg.ore){
         ctx.beginPath();ctx.arc(x*sx,y*sy,Math.max(2.3,sx*.65),0,Math.PI*2);ctx.fill();
       }
-      for(const [x,y,color] of [[5,6,'#6fd8f0'],[28,27,'#fa8070']]){
+      for(const [x,y,color] of [[5,6,'#6fd8f0'],[size-6,size-7,'#fa8070']]){
         ctx.fillStyle='#041823';ctx.fillRect(x*sx-5,y*sy-5,10,10);
         ctx.fillStyle=color;ctx.fillRect(x*sx-3.5,y*sy-3.5,7,7);
       }
@@ -448,6 +461,7 @@
     }
     newMatch(s){
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
+      WORLD_SIZE=mapSize(s.map);
       this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
@@ -455,7 +469,7 @@
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
-        const a=side===0?{x:5,y:6}:{x:28,y:27},sign=side===0?1:-1;
+        const a=side===0?{x:5,y:6}:{x:WORLD_SIZE-6,y:WORLD_SIZE-7},sign=side===0?1:-1;
         this.add(side,'hq',a.x,a.y);
         this.add(side,'generator',a.x+3*sign,a.y);
         this.add(side,'refinery',a.x,a.y+3*sign);
@@ -591,7 +605,7 @@
       return {x,y,gx:wx/TW+wy/TH,gy:wy/TH-wx/TW};
     }
     resetTouch(){
-      this.touchPointer=null;this.touchGesture=null;this.touchPoints?.clear();
+      this.mousePan=null;this.touchPointer=null;this.touchGesture=null;this.touchPoints?.clear();
       this.dragStart=null;this.dragEnd=null;
     }
     touchMidpoint(){
@@ -621,11 +635,23 @@
         this.touchPointer={id:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};
         this.dragStart=p;this.dragEnd=p;this.canvas.setPointerCapture?.(e.pointerId);return;
       }
+      if(e.button===1||(e.button===0&&this.keys.has(' '))){
+        e.preventDefault();this.mousePan={id:e.pointerId,lastX:e.clientX,lastY:e.clientY};
+        this.dragStart=null;this.dragEnd=null;
+        this.canvas.setPointerCapture?.(e.pointerId);return;
+      }
       if(e.button===2){e.preventDefault();if(this.placing){this.placing=null;this.updateUI(true);}else this.command(p,e);return;}
       if(e.button!==0)return;
       this.dragStart=p;this.dragEnd=p;this.canvas.setPointerCapture?.(e.pointerId);
     }
     pointerMove(e){
+      if(this.mousePan&&this.mousePan.id===e.pointerId){
+        const pan=this.mousePan,zoom=this.camera.zoom;
+        this.camera.x-=(e.clientX-pan.lastX)/zoom;
+        this.camera.y-=(e.clientY-pan.lastY)/zoom;
+        pan.lastX=e.clientX;pan.lastY=e.clientY;this.clampCamera();
+        return;
+      }
       if(e.pointerType==='touch'&&this.touchPoints.has(e.pointerId)){
         this.touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
         if(this.touchPoints.size>=2){
@@ -658,6 +684,9 @@
       if(this.dragStart)this.dragEnd=p;
     }
     pointerCancel(e){
+      if(this.mousePan?.id===e.pointerId){
+        this.mousePan=null;this.dragStart=null;this.dragEnd=null;return;
+      }
       if(this.touchPoints.has(e.pointerId)){
         this.touchPoints.delete(e.pointerId);
         if(this.touchPoints.size>=2)this.rebaseTouchGesture();
@@ -670,6 +699,9 @@
       this.dragStart=null;this.dragEnd=null;
     }
     pointerUp(e){
+      if(this.mousePan?.id===e.pointerId){
+        this.mousePan=null;this.dragStart=null;this.dragEnd=null;return;
+      }
       if(this.state!=='playing')return;
       if(e.pointerType==='touch'){
         if(!this.touchPoints.has(e.pointerId))return;
@@ -1027,7 +1059,7 @@
         this.walkable(coord,n)&&!this.walkable(coord-1,n)&&!this.walkable(coord+1,n);
       let low=index,high=index;
       while(low>1&&index-low<15&&narrow(low-1))low--;
-      while(high<32&&high-index<15&&narrow(high+1))high++;
+      while(high<WORLD_SIZE-2&&high-index<15&&narrow(high+1))high++;
       if(high-low<1)return null;
       return {id:axis+':'+coord+':'+low+':'+high,axis,coord,low,high};
     }
@@ -1252,7 +1284,7 @@
         }
         shot.x=target.x;shot.y=target.y;shot.expired=true;
         if(shot.psychic&&target.type==='unit'&&target.kind!=='harvester'&&target.hp<target.maxHp*.6){
-          target.owner=shot.owner;target.order={type:'move',x:clamp(target.x+(shot.owner===0?1:-1),1,32),y:target.y+1};
+          target.owner=shot.owner;target.order={type:'move',x:clamp(target.x+(shot.owner===0?1:-1),1,WORLD_SIZE-2),y:target.y+1};
           target.path=[];target.engaging=false;
           this.particles.push({x:target.x,y:target.y,life:.85,color:'#cd84fa',type:'control'});
           if(shot.owner===0)this.notify('Enemy unit captured');
@@ -1300,7 +1332,7 @@
     productionBuilding(side,unitKind){
       const producerKind=UNITS[unitKind]?.from;
       if(!producerKind)return null;
-      const home=side===0?{x:6,y:6}:{x:28,y:28};
+      const home=side===0?{x:6,y:6}:{x:WORLD_SIZE-6,y:WORLD_SIZE-6};
       return this.nearest(home,b=>b.owner===side&&b.type==='building'&&
         b.kind===producerKind&&b.built);
     }
@@ -1426,7 +1458,7 @@
       if(this.keys.has('s')||this.keys.has('arrowdown'))this.camera.y+=pan;
       if(this.keys.has('a')||this.keys.has('arrowleft'))this.camera.x-=pan;
       if(this.keys.has('d')||this.keys.has('arrowright'))this.camera.x+=pan;
-      this.camera.x=clamp(this.camera.x,-1020,1020);this.camera.y=clamp(this.camera.y,50,1080);
+      this.clampCamera();
       for(const e of this.entities){
         if(e.hp<=0)continue;
         if(!e.built){e.construction+=dt/e.buildTime;if(e.construction>=1){e.construction=1;e.built=true;if(e.kind==='refinery'){const h=this.add(e.owner,'harvester',e.x+2,e.y+1);h.order={type:'harvest'};}}continue;}
@@ -1620,7 +1652,7 @@
         const id=saved.ids[i],slot=saved.slots[i];
         if(!Number.isInteger(id)||ids.has(id)||!entities.some(e=>e.id===id&&e.owner===1&&e.type==='unit')||
            !slot||!Number.isFinite(slot.x)||!Number.isFinite(slot.y)||
-           slot.x<1||slot.y<1||slot.x>32||slot.y>32)return null;
+           slot.x<1||slot.y<1||slot.x>WORLD_SIZE-2||slot.y>WORLD_SIZE-2)return null;
         ids.add(id);slots.push({x:slot.x,y:slot.y});
       }
       return {phase:saved.phase,ids:[...ids],slots,startedAt:saved.startedAt,
@@ -1980,7 +2012,9 @@
       // a passive ore-only patrol cannot leave the opposing base unscouted.
       const sectors=[[21,21],[13,13],[7,7],[8,26],[26,8],[26,26],[13,22],[22,13]];
       const ore=(MAPS[this.settings.map]||MAPS.verdant).ore;
-      return [...sectors,...ore].map(([x,y])=>({x,y}));
+      const scale=WORLD_SIZE/34;
+      return [...sectors.map(([x,y])=>[Math.round(x*scale),Math.round(y*scale)]),...ore]
+        .map(([x,y])=>({x,y}));
     }
     updateAISurvey(){
       // Separate AI map memory. Never access the player's fog, hidden enemy
@@ -1989,8 +2023,8 @@
       for(const scout of this.entities){
         if(scout.owner!==1||scout.hp<=0||!scout.built)continue;
         const radius=scout.kind==='recon'?8.1:scout.type==='building'?5.8:4.8;
-        for(let x=Math.max(0,Math.floor(scout.x-radius));x<=Math.min(33,Math.ceil(scout.x+radius));x++){
-          for(let y=Math.max(0,Math.floor(scout.y-radius));y<=Math.min(33,Math.ceil(scout.y+radius));y++){
+        for(let x=Math.max(0,Math.floor(scout.x-radius));x<=Math.min(WORLD_SIZE-1,Math.ceil(scout.x+radius));x++){
+          for(let y=Math.max(0,Math.floor(scout.y-radius));y<=Math.min(WORLD_SIZE-1,Math.ceil(scout.y+radius));y++){
             if((x-scout.x)**2+(y-scout.y)**2<=radius*radius)this.aiExplored.add(x+','+y);
           }
         }
@@ -2002,8 +2036,8 @@
       // This calculation depends only on terrain and the AI's own memory.
       let unseen=0;
       const rad=7;
-      for(let x=Math.max(1,Math.floor(point.x-rad));x<=Math.min(32,Math.ceil(point.x+rad));x++){
-        for(let y=Math.max(1,Math.floor(point.y-rad));y<=Math.min(32,Math.ceil(point.y+rad));y++){
+      for(let x=Math.max(1,Math.floor(point.x-rad));x<=Math.min(WORLD_SIZE-2,Math.ceil(point.x+rad));x++){
+        for(let y=Math.max(1,Math.floor(point.y-rad));y<=Math.min(WORLD_SIZE-2,Math.ceil(point.y+rad));y++){
           if((x-point.x)**2+(y-point.y)**2>rad*rad)continue;
           if(!this.aiExplored.has(x+','+y)&&!this.water(x,y))unseen++;
         }
@@ -2323,7 +2357,7 @@
       const report=(this.intel?.[0]||[]).find(c=>c.id===id);
       if(!report||this.state!=='playing')return false;
       const p=iso(report.x,report.y);
-      this.camera.x=clamp(p.x,-1020,1020);this.camera.y=clamp(p.y,50,1080);
+      this.camera.x=p.x;this.camera.y=p.y;this.clampCamera();
       this.notify('Camera at last reported position, not live tracking');
       return true;
     }
@@ -2377,7 +2411,7 @@
       const event=this.battleEvents?.find(e=>e.id===id);
       if(!event||this.state!=='playing')return false;
       const p=iso(event.x,event.y);
-      this.camera.x=clamp(p.x,-1020,1020);this.camera.y=clamp(p.y,50,1080);
+      this.camera.x=p.x;this.camera.y=p.y;this.clampCamera();
       return true;
     }
     updateBattleEvents(){
@@ -2758,7 +2792,7 @@
       for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){const cell=this.fog[x]?.[y];c.fillStyle=!cell?.seen?'#061019':this.water(x+.5,y+.5)?'#36617a':cell.visible?'#466449':'#294037';c.fillRect(x*w/WORLD_SIZE,y*h/WORLD_SIZE,Math.ceil(w/WORLD_SIZE),Math.ceil(h/WORLD_SIZE));}
       c.fillStyle='#c0a45b';for(const o of this.ores){if(o.amount>0&&this.fog[Math.floor(o.x)]?.[Math.floor(o.y)]?.seen)c.fillRect(o.x*w/WORLD_SIZE,o.y*h/WORLD_SIZE,3,3);}
       for(const e of this.entities){if(e.hp<=0||e.owner===1&&!this.isVisible(e.x,e.y))continue;c.fillStyle=e.owner===0?'#6bd7ec':'#ed7e6a';c.fillRect(e.x*w/WORLD_SIZE-2,e.y*h/WORLD_SIZE-2,e.type==='building'?5:3,e.type==='building'?5:3);}
-      const {x:cx,y:cy}=this.worldToGrid(this.camera.x,this.camera.y);c.strokeStyle='#9ddbe99c';c.lineWidth=1;c.strokeRect(clamp(cx-6,0,34)*w/34,clamp(cy-8,0,34)*h/34,12*w/34,16*h/34);
+      const {x:cx,y:cy}=this.worldToGrid(this.camera.x,this.camera.y);c.strokeStyle='#9ddbe99c';c.lineWidth=1;c.strokeRect(clamp(cx-6,0,WORLD_SIZE)*w/WORLD_SIZE,clamp(cy-8,0,WORLD_SIZE)*h/WORLD_SIZE,12*w/WORLD_SIZE,16*h/WORLD_SIZE);
     }
     worldToGrid(wx,wy){return{x:wx/TW+wy/TH,y:wy/TH-wx/TW};}
     draw(){
@@ -2803,6 +2837,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.21.0',build:'tactical-audio'};
+  window.ChronoDominion={version:'2.22.0',build:'expanse-camera-controls'};
   new Game();
 })();
