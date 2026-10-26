@@ -1953,7 +1953,6 @@
         // existing retreat / recovery cooldown is still active.
         if((scout.retreatUntil||0)>this.time||
            (scout.retreatCooldownAt||0)>this.time)continue;
-        if(this.scoutEscape(scout))continue;
         const endangered=this.entities.filter(u=>u.owner===side&&u.kind==='harvester'&&u.hp>0)
           .map(h=>({h,threat:this.nearest(h,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),5.5)}))
           .find(pair=>pair.threat);
@@ -1962,6 +1961,8 @@
           continue;
         }
         if(scout.order?.type==='attack'&&this.entityById(scout.order.id))continue;
+        // Harvester defense and active combat orders take priority over evasion.
+        if(this.scoutEscape(scout))continue;
         // Explore distant map sectors, skipping lakes and disconnected
         // routes. Patrol destinations are map data, never unseen enemies.
         if(scout.order?.type==='move'&&dist(scout,scout.order)>1.5){
