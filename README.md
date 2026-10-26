@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.4.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.6.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v2.6 Tactical Event History and v2.5 Intelligence
+
+- **Event log:** expand TACTICAL EVENTS below the radar to review building attacks, critical damage, destroyed friendly structures and observed headquarters threats. Tap a recorded event to jump to its historical location.
+- **No hidden-map leaks:** structure alerts mark only your own known buildings. Threat reports use the player's own sensor contacts rather than invisible enemy coordinates.
+- **Controlled alerts:** repeat structure hits are throttled, while a newly critical building generates a separate warning. Twelve events are kept in local saves; legacy saves remain compatible.
+- **v2.5 reconnaissance HUD:** shows explored and visible map percentages, live and remembered enemy contacts, and a jump to the last observed contact location.
+- **Tests:** [event history regressions](tests/events-v26.test.mjs), [v2.6 release notes](docs/RELEASE-2.6.md) and [v2.5 release notes](docs/RELEASE-2.5.md). These checks do not replace mobile or browser playtesting.
 
 ## v2.4 Adaptive Reconnaissance
 
