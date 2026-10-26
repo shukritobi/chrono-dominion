@@ -65,6 +65,9 @@ assert.equal(g.sideCanSee(1,refinery),false);
 assert.equal(g.coordinateAISiegeFocus([attacker,wing]).size,0,
   'AI must not fire at enemy structures through fog');
 assert.equal(attacker.order,snapshot,'missing visual contact makes no new order');
+g.resumeAISiegeAdvance(g.aiPlatoon,[attacker]);
+assert.equal(attacker.order?.type,'attackMove',
+  'loss of direct building vision resumes navigation toward the remembered objective');
 assert.equal(g.sideCanSee(1,playerHQ),false);
 const original=g.walkable.bind(g);
 g.walkable=(x,y)=>x>=1&&x<=32&&y>=1&&y<=32;
@@ -86,7 +89,8 @@ const initial=g.projectiles[0];
 assert.equal(initial.prevX,initial.x);
 g.updateProjectiles(.15);
 assert.ok(g.projectiles.length>0);
-assert.ok(g.projectiles[0].prevX!==g.projectiles[0].x,
+assert.ok(Math.hypot(g.projectiles[0].prevX-g.projectiles[0].x,
+  g.projectiles[0].prevY-g.projectiles[0].y)>.01,
   'flight stores last position for tracer drawing');
 g.drawProjectiles();
 g.updateProjectiles(2);
