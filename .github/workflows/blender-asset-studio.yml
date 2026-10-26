@@ -55,6 +55,9 @@ on:
     paths:
       - ".github/workflows/blender-asset-studio.yml"
       - "tools/blender/asset_studio.py"
+      - "tools/blender/animated_assets.py"
+      - "tools/blender/building_architecture.py"
+      - "tools/blender/pack_animated.py"
       - "tests/test_blender_asset_studio.py"
 
 permissions:
