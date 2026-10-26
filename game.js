@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.7 — dynamic surveyed-frontier reconnaissance. */
+/* Chrono Dominion v2.8 — anchored touch pinch zoom and two-finger pan. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -98,7 +98,7 @@
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
-      this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
+      this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
@@ -181,7 +181,7 @@
       this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
       this.canvas.addEventListener('pointerdown',e=>this.pointerDown(e));
       this.canvas.addEventListener('pointermove',e=>this.pointerMove(e));
-      this.canvas.addEventListener('pointercancel',()=>{this.touchPointer=null;this.dragStart=null;this.dragEnd=null;});
+      this.canvas.addEventListener('pointercancel',e=>this.pointerCancel(e));
       window.addEventListener('pointerup',e=>this.pointerUp(e));
       this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.camera.zoom=clamp(this.camera.zoom*(e.deltaY<0?1.09:.91),.65,1.8);},{passive:false});
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
@@ -249,8 +249,8 @@
       control.title=on?'Mute synthesized effects':'Enable synthesized effects (off by default)';
     }
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
-    returnMenu(){this.state='menu';this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
-    pause(){if(this.state==='playing'){this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
+    returnMenu(){this.state='menu';this.resetTouch();this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
+    pause(){if(this.state==='playing'){this.resetTouch();this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
     hasSave(){
       try{return typeof localStorage!=='undefined'&&!!localStorage.getItem(SAVE_KEY);}
       catch(err){return false;}
@@ -349,7 +349,7 @@
         x:clamp(saved.camera.x,-1020,1020),y:clamp(saved.camera.y,50,1080),zoom:clamp(saved.camera.zoom,.65,1.8)
       }:{x:0,y:370,zoom:1};
       this.fog=saved.fog.map(row=>row.map(seen=>({seen:!!seen,visible:false})));
-      this.placing=null;this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;
+      this.placing=null;this.attackMoveArmed=false;this.abilityArmedId=null;this.resetTouch();
       this.keys.clear();this.nextUi=0;this.nextFog=0;
       this.state='playing';
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
@@ -406,7 +406,7 @@
     }
     newMatch(s){
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
-      this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
+      this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
@@ -519,10 +519,33 @@
       const wx=(x-this.w/2)/this.camera.zoom+this.camera.x,wy=(y-this.h/2)/this.camera.zoom+this.camera.y;
       return {x,y,gx:wx/TW+wy/TH,gy:wy/TH-wx/TW};
     }
+    resetTouch(){
+      this.touchPointer=null;this.touchGesture=null;this.touchPoints?.clear();
+      this.dragStart=null;this.dragEnd=null;
+    }
+    touchMidpoint(){
+      const [a,b]=[...this.touchPoints.values()];
+      return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)};
+    }
+    rebaseTouchGesture(){
+      if(this.touchPoints.size<2){this.touchGesture=null;return;}
+      this.touchGesture=this.touchMidpoint();
+      if(this.touchPointer)this.touchPointer.moved=true;
+      this.dragStart=null;this.dragEnd=null;
+    }
     pointerDown(e){
       if(this.state!=='playing')return;
       const p=this.pointerPosition(e);this.mouse={x:p.x,y:p.y,worldX:p.gx,worldY:p.gy};
-      if(e.pointerType==='touch'||e.pointerType==='pen'){
+      if(e.pointerType==='touch'){
+        e.preventDefault();this.touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        this.canvas.setPointerCapture?.(e.pointerId);
+        if(this.touchPoints.size===1){
+          this.touchPointer={id:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};
+          this.dragStart=p;this.dragEnd=p;
+        }else this.rebaseTouchGesture();
+        return;
+      }
+      if(e.pointerType==='pen'){
         e.preventDefault();
         this.touchPointer={id:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};
         this.dragStart=p;this.dragEnd=p;this.canvas.setPointerCapture?.(e.pointerId);return;
@@ -532,13 +555,29 @@
       this.dragStart=p;this.dragEnd=p;this.canvas.setPointerCapture?.(e.pointerId);
     }
     pointerMove(e){
+      if(e.pointerType==='touch'&&this.touchPoints.has(e.pointerId)){
+        this.touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(this.touchPoints.size>=2){
+          const current=this.touchMidpoint(),previous=this.touchGesture||current;
+          const oldZoom=this.camera.zoom;
+          const nextZoom=clamp(oldZoom*current.distance/Math.max(1,previous.distance),.65,1.8);
+          // Keep the terrain beneath the previous midpoint under the new midpoint.
+          const bounds=this.canvas.getBoundingClientRect();
+          const oldX=previous.x-bounds.left-this.w/2,oldY=previous.y-bounds.top-this.h/2;
+          const newX=current.x-bounds.left-this.w/2,newY=current.y-bounds.top-this.h/2;
+          const anchorX=this.camera.x+oldX/oldZoom,anchorY=this.camera.y+oldY/oldZoom;
+          this.camera.zoom=nextZoom;
+          this.camera.x=anchorX-newX/nextZoom;this.camera.y=anchorY-newY/nextZoom;
+          this.touchGesture=current;this.dragStart=null;this.dragEnd=null;
+          return;
+        }
+      }
       const t=this.touchPointer;
       if(t&&t.id===e.pointerId){
-        const deltaX=e.clientX-t.lastX,deltaY=e.clientY-t.lastY;
+        const dx=e.clientX-t.lastX,dy=e.clientY-t.lastY;
         if(Math.hypot(e.clientX-t.startX,e.clientY-t.startY)>10)t.moved=true;
         if(t.moved){
-          this.camera.x-=deltaX/this.camera.zoom;
-          this.camera.y-=deltaY/this.camera.zoom;
+          this.camera.x-=dx/this.camera.zoom;this.camera.y-=dy/this.camera.zoom;
           this.dragStart=null;this.dragEnd=null;
         }
         t.lastX=e.clientX;t.lastY=e.clientY;
@@ -547,8 +586,32 @@
       this.mouse={x:p.x,y:p.y,worldX:p.gx,worldY:p.gy};
       if(this.dragStart)this.dragEnd=p;
     }
+    pointerCancel(e){
+      if(this.touchPoints.has(e.pointerId)){
+        this.touchPoints.delete(e.pointerId);
+        if(this.touchPoints.size>=2)this.rebaseTouchGesture();
+        else if(this.touchPoints.size===1){
+          const [id,p]=this.touchPoints.entries().next().value;
+          this.touchGesture=null;
+          this.touchPointer={id,startX:p.x,startY:p.y,lastX:p.x,lastY:p.y,moved:true};
+        }else this.resetTouch();
+      }else if(this.touchPointer?.id===e.pointerId)this.resetTouch();
+      this.dragStart=null;this.dragEnd=null;
+    }
     pointerUp(e){
       if(this.state!=='playing')return;
+      if(e.pointerType==='touch'){
+        if(!this.touchPoints.has(e.pointerId))return;
+        this.touchPoints.delete(e.pointerId);
+        if(this.touchPoints.size>=2){this.rebaseTouchGesture();return;}
+        if(this.touchPoints.size===1){
+          const [id,p]=this.touchPoints.entries().next().value;
+          this.touchGesture=null;
+          this.touchPointer={id,startX:p.x,startY:p.y,lastX:p.x,lastY:p.y,moved:true};
+          this.dragStart=null;this.dragEnd=null;return;
+        }
+        this.touchGesture=null;
+      }
       const t=this.touchPointer;
       if(t&&t.id===e.pointerId){
         this.touchPointer=null;this.dragStart=null;this.dragEnd=null;
