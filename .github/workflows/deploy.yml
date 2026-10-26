@@ -62,6 +62,7 @@ jobs:
           node tests/platoon-attrition-v215.test.mjs
           node tests/veterancy-v216.test.mjs
           node tests/objective-ranking-v217.test.mjs
+          node tests/assault-pathing-v218.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
@@ -127,6 +128,7 @@ jobs:
           test -f tests/platoon-attrition-v215.test.mjs
           test -f tests/veterancy-v216.test.mjs
           test -f tests/objective-ranking-v217.test.mjs
+          test -f tests/assault-pathing-v218.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md

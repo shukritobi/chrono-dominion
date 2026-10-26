@@ -4,8 +4,15 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.17.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.18.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
+
+### Reachable AI assaults and recovery (v2.18)
+
+- **Accessible targets:** Infantry and tanks reject strategic objectives that have no connected approach from the AI's available combat force.
+- **Approach selection:** Offensive units survey up to 36 walkable perimeter positions around a *reported* building, replacing the previous three-flank fallback that could order attacks into blocked building tiles.
+- **Stall recovery:** Active platoon members stuck more than 18 seconds can try another reachable flank. Navigation caches are cleared only when the route changes.
+- The nine-scenario simulation now reports assault launches and actual reroute events, not just platoon creation. See [v2.18 notes](docs/RELEASE-2.18.md) and [pathing tests](tests/assault-pathing-v218.test.mjs).
 
 ### Strategic AI attack objectives (v2.17)
 

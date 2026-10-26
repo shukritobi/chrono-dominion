@@ -142,7 +142,7 @@ function runScenario(map,difficulty,mi,di){
   const base=g.entities.filter(e=>e.kind==='hq');
   assert.equal(base.length,2);
   assert.ok(!g.fog[28]?.[27]?.seen,'fresh map must not expose the opposing command base');
-  let nextAction=5,iteration=0,peak=0,samples=0,platoonSeen=false,supportSeen=false,
+  let nextAction=5,iteration=0,peak=0,samples=0,platoonSeen=false,supportSeen=false,assaultLaunched=false,
     damageEvents=0,firstDamage=0,oreEvents=0,firstHarvest=0,
     firstObjectiveDiscovery=null,firstPlatoonAt=null;
   const observedRecon=new Set();
@@ -160,6 +160,7 @@ function runScenario(map,difficulty,mi,di){
       if(firstPlatoonAt===null)firstPlatoonAt=g.time;
     }
     if(g.aiSupportPlatoon)supportSeen=true;
+    if(g.aiPlatoon?.phase==='assault'||g.aiSupportPlatoon?.phase==='assault')assaultLaunched=true;
     if(firstObjectiveDiscovery===null&&g.intel[1].some(report=>
       report.type==='building'&&g.time-report.time<=180))
       firstObjectiveDiscovery=g.time;
@@ -188,7 +189,8 @@ function runScenario(map,difficulty,mi,di){
     damage:[...g.stats.map(s=>Math.round(s.damageDealt))],
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
-    peakEntities:peak,platoonSeen,supportSeen,firstDamage:Math.round(firstDamage),
+    peakEntities:peak,platoonSeen,supportSeen,assaultLaunched,
+    assaultReroutes:g.aiAssaultReroutes||0,firstDamage:Math.round(firstDamage),
     firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples,
     firstObjectiveDiscovery:firstObjectiveDiscovery===null?null:Math.round(firstObjectiveDiscovery),
     firstPlatoonAt:firstPlatoonAt===null?null:Math.round(firstPlatoonAt),
@@ -209,7 +211,7 @@ for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
      result.outcome].join(' | '));
 }
 const report={
-  schema:'chrono-dominion-balance-lab-v1',version:'2.17.0',
+  schema:'chrono-dominion-balance-lab-v1',version:'2.18.0',
   simulationSeconds:seconds,simulationStep:frame,
   disclaimer:'Scripted-player scenario coverage, not real human win rates or a verified fair multiplayer balance benchmark.',
   scenarios:results.length,results,
@@ -219,6 +221,8 @@ const report={
     casesWithIncome:results.filter(r=>r.harvest[0]+r.harvest[1]>0).length,
     casesWithCombat:results.filter(r=>r.damage[0]+r.damage[1]>0).length,
     casesWithPlatoons:results.filter(r=>r.platoonSeen).length,
+    casesWithAssaultLaunches:results.filter(r=>r.assaultLaunched).length,
+    totalAssaultReroutes:results.reduce((n,r)=>n+r.assaultReroutes,0),
     casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
@@ -245,6 +249,7 @@ assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
   r.reconLost>=0&&r.reconLost<=r.reconBuilt&&
+  Number.isInteger(r.assaultReroutes)&&r.assaultReroutes>=0&&
   (r.firstObjectiveDiscovery===null||r.firstObjectiveDiscovery>=0&&
     r.firstObjectiveDiscovery<=r.seconds+1)),
   'recon survival and objective-discovery telemetry must be internally consistent');
