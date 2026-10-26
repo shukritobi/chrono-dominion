@@ -82,6 +82,11 @@ jobs:
                 "$stage/sources/$faction-$kind.blend" \
                 --python-exit-code 1 --python-expr \
                 'import bpy; assert len([o for o in bpy.data.objects if o.type=="MESH"]) >= 10, "Missing editable source meshes"'
+              # Verify damage geometry is real editable source meshes.
+              blender --background --threads 2 \
+                "$stage/sources/$faction-$kind.blend" \
+                --python-exit-code 1 --python-expr \
+                'import bpy; debris=[o for o in bpy.data.objects if o.type=="MESH" and ("Fallen" in o.name or "fallen" in o.name or "Damaged Aegis" in o.name or "shattered armor" in o.name or "blast-spall" in o.name or "Bent Federation" in o.name)]; assert len(debris)>=2, "Missing editable MK-V roof/portal wreckage"; assert all(o.hide_render for o in debris), "Damage wreckage leaked into idle source"; print("Verified",len(debris),"editable hidden wreckage meshes")'
               test -s "$stage/packed/$faction-$kind.png"
               test -s "$stage/preview.png"
               echo "::endgroup::"
@@ -127,20 +132,54 @@ jobs:
                   count=sum(p>=32 for p in arrays[0])
                   build_diff=sum((a>=32)!=(b>=32) for a,b in zip(arrays[0],arrays[2]))
                   damage_diff=sum((a>=32)!=(b>=32) for a,b in zip(arrays[0],arrays[4]))
+                  # Alpha change alone can miss wreckage painted over the floor.
+                  idle=im.crop((0,0,160,160))
+                  damaged=im.crop((0,640,160,800))
+                  rgba_changed=sum(a!=b for a,b in zip(idle.getdata(),damaged.getdata()))
+                  idle80=idle.resize((80,80),Image.Resampling.LANCZOS)
+                  damage80=damaged.resize((80,80),Image.Resampling.LANCZOS)
+                  mask80a=idle80.getchannel("A")
+                  mask80b=damage80.getchannel("A")
+                  alpha80=sum((a>=32)!=(b>=32) for a,b in zip(mask80a.getdata(),mask80b.getdata()))
                   idle_distinct=im.crop((0,0,160,160)).tobytes()!=im.crop((0,160,160,320)).tobytes()
                   entry=next(x for x in summary if x["faction"]==faction)
                   entry.update(idle_opaque_pixels=count,
                                construction_alpha_changed_pixels=build_diff,
                                damaged_alpha_changed_pixels=damage_diff,
+                               damaged_rgba_changed_pixels=rgba_changed,
+                               damage_80px_alpha_changed_pixels=alpha80,
                                pixel_distinct_idle=idle_distinct)
                   print(faction,"opaque",count,"construction alpha delta",build_diff,
-                        "damage alpha delta",damage_diff,"idle distinct",idle_distinct)
+                        "damage alpha delta",damage_diff,"80px alpha delta",alpha80,
+                        "RGBA delta",rgba_changed,"idle distinct",idle_distinct)
                   assert count>=1000, "Factory silhouette is unexpectedly small"
                   assert build_diff>=300, "Construction state must alter geometry"
-                  assert damage_diff>=50, "Damage state must alter geometry"
+                  assert damage_diff>=400, "MK-V damage must visibly alter silhouette at 160px"
+                  assert alpha80>=70, "MK-V damage must visibly alter silhouette at 80px"
+                  assert rgba_changed>=900, "MK-V damage must be visually substantial"
                   assert idle_distinct, "Idle animation has identical frames"
           target=root/"two-open-factory-review.png"
           out.save(target,optimize=True)
+          # Actual 80px game-scale sprite cells, enlarged with NEAREST so
+          # reviewers can inspect the pixel art without resampling blur.
+          board=Image.new("RGB",(2*4*176+32,222),(13,20,33))
+          bd=ImageDraw.Draw(board)
+          bd.text((14,8),"MK-V FACTORY DAMAGE / TRUE 80px GAME SCALE (nearest x2)",fill=(132,221,240))
+          for ix,faction in enumerate(cols):
+              bd.text((ix*704+14,30),faction.upper(),fill=(233,240,249))
+              with Image.open(root/faction/"factory"/"packed"/(faction+"-factory.png")) as im:
+                  for row,label in enumerate(("IDLE","IDLE B","CONSTRUCT","CONSTRUCT B","DAMAGED")):
+                      if row not in (0,2,4):continue
+                      col={0:0,2:1,4:2}[row]
+                      sprite=im.crop((0,row*160,160,(row+1)*160))
+                      sprite=sprite.resize((80,80),Image.Resampling.LANCZOS)
+                      sprite=sprite.resize((160,160),Image.Resampling.NEAREST)
+                      base=Image.new("RGBA",(160,160),(20,29,43,255))
+                      base.alpha_composite(sprite)
+                      x=ix*704+14+col*174
+                      board.paste(base.convert("RGB"),(x,50))
+                      bd.text((x,214),label,fill=(233,240,249))
+          board.save(root/"damage-80px-contact.png",optimize=True)
           (root/"review-manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
           assert len(summary)==2
           print("Created 2 rendered + validated physically open factory preview assets")
