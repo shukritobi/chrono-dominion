@@ -218,16 +218,34 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 cyl("Asymmetrical smoke mast",(-.95,side*.75,3.56),.23,.9+(side+1)*.43,"dark")
                 cyl("Glowing stack outlet",(-.95,side*.75,4.00+(side+1)*.21),.23,.06,"glow")
         elif kind=="generator":
-            box("Thick fuel core",(0,0,1.26),(2.25,1.78,1.38),"armor",.08)
+            # RED BASTION MK-II FURNACE PLANT. Horizontal mass and offset heavy
+            # chimneys, no symmetric glass reactor tubes from the Coalition kit.
+            box("Bastion furnace chassis",(0,0,1.20),(2.72,2.28,1.14),"armor",.075)
+            box("Reinforced pig-iron machine deck",(-.28,-.02,1.84),(2.20,2.13,.21),"dark",.04)
+            box("Armored combustion hood",(-.48,0,2.34),(1.48,1.65,.85),"armor",.045)
+            box("Glowing open combustion throat",(.88,0,1.30),(.10,1.08,.49),"glow",.012)
             for side in (-1,1):
-                cyl("Exhaust furnace chimney",(-.55,side*.85,2.34),.40,2.45 if side==1 else 1.65,"dark")
-                cyl("Radiant furnace throat",(-.55,side*.85,3.59 if side==1 else 3.19),.31,.07,"glow")
+                # Deliberately asymmetric tall/short smoke shafts at the rear.
+                height=2.55 if side==1 else 1.88
+                y=side*.77
+                cyl("Exhaust smoke shaft",(-.79,y,2.14),.33,height,"dark",vertices=16)
+                cyl("Outer steel shaft collar",(-.79,y,2.02),.42,.16,"light")
+                cyl("Heat-scorched outlet",(-.79,y,2.14+height*.5),.32,.11,"bronze")
+                cyl("Visible inner stack fire",(-.79,y,2.14+height*.5+.065),.21,.08,"glow")
+                box("Emergency coolant pod",(.59,side*.81,1.08),(.80,.43,.74),"dark",.06)
                 for i in range(4):
-                    box("Side radiator slots",(.94,side*(.73+i*.07),.96+i*.20),
-                        (.06,.08,.09),"glow",.01)
-            parts["radar"]=cyl("Industrial turbine",(0,0,2.18),.57,.24,"bronze")
-            for x in (-.34,.34):
-                tower("Turbine support",x,0,2.20,.51,"light",.12)
+                    box("Radiator grille",(.73,side*.83,.90+i*.17),(.35,.07,.07),"glow",.015)
+                box("High pressure intake bracing",(-.36,side*1.14,1.46),(1.11,.20,.26),"light",.04)
+            cyl("Internal axial turbine",(0,0,2.62),.47,.32,"bronze",vertices=20)
+            cyl("Turbine iron grating",(0,0,2.85),.56,.12,"dark",vertices=20)
+            parts["radar"]=cyl("Exposed industrial rotor",(0,0,2.93),.28,.085,"light",vertices=12)
+            for i in range(8):
+                a=i*math.tau/8
+                box("Turbine radial blade",(math.cos(a)*.31,math.sin(a)*.31,2.95),(.25,.09,.045),"dark",.008)
+            for x in (-.98,-.55,.12,.69):
+                box("Lower heat channels",(1.34,x,1.22),(.07,.10,.59),"dark",.012)
+                box("Inner incandescent grille",(1.39,x,1.22),(.035,.065,.41),"glow",.006)
+            box("Overhung soot-rated service walkway",(1.48,0,.68),(.53,2.40,.12),"dark",.015)
         elif kind=="refinery":
             box("Open ore smelter",(0,0,1.16),(2.43,2.24,1.16),"dark",.10)
             box("Crushing hopper",(-.53,-.34,2.02),(1.43,1.35,.74),"armor",.09)
@@ -309,15 +327,31 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 spire("Citadel petal",math.cos(a)*1.25,math.sin(a)*1.25,.83,
                       .35,2.05,"light",3)
         elif kind=="generator":
-            prism("Energy conduit node",0,0,.84,1.0,1.10,"armor",6)
+            # AETHER SYNOD MK-II CRYSTAL LEVITATION WELL.
+            # Triangular vertical fins and an elevated hovering crystal differentiate
+            # this from both Coalition paired towers and Federation furnaces.
+            prism("Obsidian crystalline capacitor",0,0,.75,1.22,1.11,"armor",6)
+            prism("Recessed inner energy altar",0,0,1.78,.78,.34,"dark",6)
+            torus("Luminous primary induction channel",(0,0,1.79),.73,.065,"glow")
             for i in range(3):
                 a=i*math.tau/3
-                spire("Neural containment pylon",math.cos(a)*1.05,math.sin(a)*1.05,.9,
-                      .36,2.30,"light",3)
-                sphere("Conductor endpoint",(math.cos(a)*1.05,math.sin(a)*1.05,2.71),
-                       (.19,.19,.22),"glow")
-            sphere("Levitation energy sphere",(0,0,2.62),(.61,.61,.66),"glow")
-            parts["radar"]=torus("Continuous containment orbit",(0,0,2.58),.93,.12,"light",True)
+                x,y=math.cos(a)*1.26,math.sin(a)*1.26
+                prism("Three-stage neural foot anchor",x,y,.72,.38,.35,"dark",3)
+                prism("Lower crystalline socket",x,y,1.05,.28,.42,"light",3)
+                spire("Blade of the Triple Mind",x,y,1.41,.35,1.82,"armor",3)
+                spire("Violet inner antenna",x*.96,y*.96,2.01,.14,1.29,"glass",3)
+                sphere("Mental synchronization receptor",(x,y,3.33),
+                       (.17,.17,.19),"glow")
+                box("Conductor tether",(x*.55,y*.55,1.59),(.17,.12,.12),"glow",.018)
+            # A suspended energy pearl under a multi-layer faceted crystal spire.
+            sphere("Suspended neural seed",(0,0,2.51),(.41,.41,.43),"glass")
+            spire("Pointed crystalline psionic heart",0,0,2.51,.47,1.25,"light",6)
+            spire("Bright crystal fire inside obelisk",0,0,2.65,.21,1.03,"glow",6)
+            torus("Lower electromagnetic halo",(0,0,2.30),.60,.065,"glow")
+            parts["radar"]=torus("Rotating psi constellation",(0,0,2.83),.87,.085,"light",True)
+            for a in (0,math.pi*.5,math.pi,math.pi*1.5):
+                xx,yy=math.cos(a)*.93,math.sin(a)*.93
+                sphere("Orbiting guardian focus",(xx,yy,2.83),(.11,.11,.14),"glass")
         elif kind=="refinery":
             prism("Mineral morphing chamber",0,0,.91,1.30,1.05,"armor",6)
             spire("Suspended ore crystal",0,0,1.81,.71,2.09,"bronze",5)
