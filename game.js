@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.27 — sensor-honest anti-air defense targeting. */
+/* Chrono Dominion v2.30 — AI emergency aircraft withdrawal and servicing. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1340,17 +1340,26 @@
       const capacity=UNITS.aircraft.ammo;
       // Historical saves predate ammunition. Treat missing values as a full load.
       e.ammo=Number.isFinite(e.ammo)?clamp(Math.floor(e.ammo),0,capacity):capacity;
-      if(e.ammo>=capacity&&!e.rearming)return false;
-      if(e.ammo>0&&!e.rearming)return false;
+      // Only the AI may proactively withdraw a critically damaged, armed plane.
+      // The decision uses its own hull and friendly airfields, not enemy fog data.
+      const critical=e.owner===1&&e.hp>0&&e.hp/e.maxHp<=.30&&
+        (e.retreatCooldownAt||0)<=this.time;
+      if(e.ammo>=capacity&&!e.rearming&&!critical)return false;
+      if(e.ammo>0&&!e.rearming&&!critical)return false;
       const pad=this.nearest(e,b=>b.owner===e.owner&&b.kind==='airfield'&&b.built&&b.hp>0);
       if(!pad){
         // Losing the airfield must not permanently immobilize an aircraft.
-        if(e.rearming){e.rearming=false;e.order=e.rearmResume||null;e.rearmResume=null;e.rearmProgress=0;}
+        if(e.rearming){
+          e.rearming=false;e.order=e.rearmResume||null;e.rearmResume=null;e.rearmProgress=0;
+          if(e.repairRetreat)e.retreatCooldownAt=this.time+40;
+        }
+        e.repairRetreat=false;
         e.rearmDetour=null;e.rearmDetourDoneFor=null;
         return false;
       }
       if(!e.rearming){
         e.rearming=true;
+        e.repairRetreat=critical;
         e.rearmResume=e.order?{...e.order}:null;
         e.rearmProgress=0;
         e.rearmDetour=null;e.rearmDetourDoneFor=null;
@@ -1388,7 +1397,12 @@
           e.ammo++;
           e.rearmProgress-=2.5;
         }
-        if(e.ammo>=capacity){
+        // Emergency withdrawals wait for 75% hull, unless repairs are
+        // unaffordable. Ordinary empty-magazine visits still end at full ammo.
+        if(e.ammo>=capacity&&(!e.repairRetreat||
+           e.hp/e.maxHp>=.75||owner.credits<.75)){
+          if(e.repairRetreat)e.retreatCooldownAt=this.time+40;
+          e.repairRetreat=false;
           e.rearming=false;
           e.rearmProgress=0;
           e.rearmDetour=null;e.rearmDetourDoneFor=null;
@@ -3095,6 +3109,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.29.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.30.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();

@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.29.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.30.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.30 Emergency AI aircraft withdrawals
+
+- AI Strike Aircraft at or below 30% hull now interrupt their mission and return to a surviving friendly Air Command, even with ammunition remaining. They use the existing sensor-honest return detour and paid repair system, waiting for 75% hull before relaunching.
+- A 40-second cooldown prevents repeated emergency retreats. Aircraft return to their original mission after repairs; if funds run out or the airfield is destroyed, they are released rather than immobilized. Player aircraft are not automatically recalled.
+- Existing save key and schema version are preserved; the optional retreat flag is backward-compatible. [v2.30 release notes](docs/RELEASE-2.30.md) · [regression tests](tests/ai-air-withdrawal-v230.test.mjs).
 
 ### v2.29 Paid aircraft hull service
 
