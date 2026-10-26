@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.6 — tactical event history and structure alerts. */
+/* Chrono Dominion v2.7 — dynamic surveyed-frontier reconnaissance. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1664,13 +1664,30 @@
       }
       return unseen;
     }
+    scoutFrontiers(scout,reservations=[]){
+      // Generate potential survey positions from this AI's own explored cells,
+      // not static mission waypoints or hidden player entity coordinates.
+      if(!this.aiExplored?.size)return [];
+      const candidates=[];
+      for(let x=2;x<=WORLD_SIZE-2;x+=2)for(let y=2;y<=WORLD_SIZE-2;y+=2){
+        const p={x,y};
+        if(!this.aiExplored.has(x+','+y)||this.water(x,y))continue;
+        if(dist(scout,p)<2.5||reservations.some(q=>dist(q,p)<4.1))continue;
+        if(!this.walkable(x,y))continue;
+        const unseen=this.scoutSurveyValue(p);
+        if(unseen<5)continue;
+        candidates.push({point:p,unseen,estimate:unseen*1.7-dist(scout,p)*.85});
+      }
+      // Bounded A* cost: pathcheck only the 14 best sightline opportunities.
+      return candidates.sort((a,b)=>b.estimate-a.estimate||
+        a.point.x-b.point.x||a.point.y-b.point.y).slice(0,14);
+    }
     assignScoutPatrol(scout){
       const waypoints=this.scoutWaypoints();
-      if(!waypoints.length)return false;
-      const preferred=((scout.patrolIndex||0)%waypoints.length+waypoints.length)%waypoints.length;
+      const preferred=waypoints.length?
+        ((scout.patrolIndex||0)%waypoints.length+waypoints.length)%waypoints.length:0;
       const reservations=this.entities.filter(u=>u.id!==scout.id&&u.owner===1&&
-        u.kind==='recon'&&u.hp>0&&u.order?.type==='move')
-        .map(u=>u.order);
+        u.kind==='recon'&&u.hp>0&&u.order?.type==='move').map(u=>u.order);
       const options=[];
       for(let offset=0;offset<waypoints.length;offset++){
         const index=(preferred+offset)%waypoints.length,point=waypoints[index];
@@ -1683,10 +1700,18 @@
         const score=unseen*1.5-path.length*.95-offset*.08;
         options.push({index,point,score,unseen});
       }
+      for(const frontier of this.scoutFrontiers(scout,reservations)){
+        const path=this.findPath(scout.x,scout.y,frontier.point.x,frontier.point.y);
+        if(!path.length||dist(path.at(-1),frontier.point)>1)continue;
+        options.push({index:null,point:frontier.point,unseen:frontier.unseen,
+          score:frontier.unseen*1.7-path.length*.9+1});
+      }
       if(!options.length){scout.order=null;return false;}
-      options.sort((a,b)=>b.score-a.score||a.index-b.index);
+      options.sort((a,b)=>b.score-a.score||b.unseen-a.unseen||
+        (a.index??999)-(b.index??999));
       const chosen=options[0];
-      scout.patrolIndex=(chosen.index+1)%waypoints.length;
+      scout.patrolIndex=waypoints.length?
+        ((chosen.index===null?preferred:chosen.index)+1)%waypoints.length:0;
       scout.order={type:'move',x:chosen.point.x,y:chosen.point.y};
       return true;
     }
@@ -2290,6 +2315,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.4.0',build:'surveyed-sector-scouting'};
+  window.ChronoDominion={version:'2.7.0',build:'dynamic-frontier-scouting'};
   new Game();
 })();
