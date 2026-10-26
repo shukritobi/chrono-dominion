@@ -208,29 +208,70 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Ceramic barracks entrance step",(1.40+step*.13,0,.76-step*.055),
                     (.22,1.05,.08),"light",.014)
         elif kind=="factory":
-            # AEGIS MK-II MECHANIZED ASSEMBLY HANGAR.
-            # Oversized open production mouth plus overhead translating gantry.
-            box("White steel mechanized hangar",(-.40,0,1.18),(2.18,2.65,1.33),"armor",.10)
-            box("Aerospace load-bearing truss roof",(-.40,0,2.00),(2.54,2.86,.23),"light",.085)
-            box("Hangar roof inset",(-.26,0,2.12),(1.52,1.91,.07),"dark",.019)
-            box("Vehicle assembly loading apron",(1.25,0,.70),(.96,2.59,.15),"dark",.035)
-            box("Exposed black production mouth",(.75,0,1.24),(.07,1.54,1.08),"dark",.009)
-            box("Rear bay interior",( .67,0,1.00),(.13,1.30,.47),"bronze",.015)
+            # AEGIS MK-IV OPEN-BAY ASSEMBLY YARD.
+            # Camera faces +X and -Y. No full facade, curtain or front plane:
+            # the near-side wall and front roof are cut away to expose a
+            # physical vehicle workcell, robot gantry and drive-out rails.
+            box("Open assembly floor",(-.28,0,.78),(2.54,2.58,.18),"dark",.028)
+            box("Rear load-bearing hangar wall",(-1.36,0,1.47),
+                (.20,2.58,1.55),"armor",.045)
+            box("Far enclosed hangar sidewall",(-.49,1.23,1.46),
+                (1.94,.16,1.54),"armor",.035)
+            box("Near partial maintenance bulkhead",(-1.01,-1.23,1.43),
+                (.89,.16,1.48),"armor",.035)
+            box("Rear sheltered roof",(-.98,0,2.28),
+                (1.12,2.72,.20),"light",.065)
+            box("Rear raised roof sensor housing",(-1.00,.22,2.47),
+                (.73,.91,.18),"dark",.035)
+            # Four open gantry posts rather than an opaque roll-up door.
             for side in (-1,1):
-                y=side*.96
-                box("High strength portal leg",(.85,y,1.42),(.23,.30,1.52),"light",.044)
-                box("Cyan hydraulic alignment line",( .99,y,1.36),(.05,.12,1.18),"glow",.009)
-                box("Assembly gantry rail",(-.38,y,2.29),(2.15,.12,.17),"dark",.027)
-                tower("Workshop exhaust pilaster",-1.18,y,2.18,.72,"light",.15)
-                cyl("Roof vent pressure fan",(-1.18,y,2.97),.23,.09,"dark",vertices=12)
-            box("Overhead automated bridge",(-.07,0,2.38),(.29,2.13,.19),"light",.031)
-            box("Short equipment suspension",(-.07,0,2.04),(.12,.16,.60),"dark",.012)
-            parts["radar"]=box("Moving multi-head assembly gripper",(-.07,0,1.66),(.49,.47,.31),"bronze",.026)
+                y=side*1.12
+                box("Exposed front portal stanchion",(1.10,y,1.51),
+                    (.22,.23,1.57),"light",.032)
+                box("Cyan portal vertical status bar",(1.24,y,1.55),
+                    (.045,.07,1.14),"glow",.006)
+                box("Overhead traveling crane track",(-.04,y,2.40),
+                    (2.35,.12,.17),"dark",.023)
+                box("Exterior steel crane brace",(.64,y,2.21),
+                    (.40,.19,.18),"armor",.019)
+                box("Inside floor safety runner",(.15,side*.63,.89),
+                    (1.79,.075,.06),"glow",.007)
+            box("Open bay crosshead lintel",(1.10,0,2.35),
+                (.24,2.44,.24),"light",.034)
+            box("Hanging gantry spine",(-.05,0,2.36),
+                (.19,1.97,.15),"armor",.025)
+            box("Automated welding column",(-.15,-.65,1.45),
+                (.22,.20,.79),"light",.021)
+            box("Visible hydraulic welding boom",(.18,-.59,1.69),
+                (.66,.15,.15),"armor",.019)
+            sphere("Blue welding torch",(.56,-.59,1.59),
+                   (.12,.12,.12),"glow")
+            # Unfinished low-profile armored chassis in the open workcell.
+            box("Visible unfinished vehicle undercarriage",(.30,.09,1.08),
+                (1.24,.84,.21),"dark",.033)
+            box("Incomplete light vehicle armor shell",(.16,.09,1.30),
+                (.70,.58,.29),"armor",.042)
+            box("Exposed engine assembly",(-.21,.09,1.48),
+                (.24,.32,.17),"bronze",.018)
             for side in (-1,1):
-                box("Welding arm rail",(.23,side*.54,1.28),(.72,.07,.08),"glow",.012)
-            for j in range(5):
-                box("Guided vehicle exit stripe",(1.22,-1.03+j*.51,.81),
-                    (.47,.08,.055),"glow",.006)
+                y=.09+side*.46
+                box("Vehicle crawler under repair",(.34,y,1.04),
+                    (1.17,.18,.24),"light",.035)
+                for x in (-.05,.27,.59):
+                    cyl("Suspension drive roller",(x,y,1.04),.085,.20,
+                        "dark",axis="Y",vertices=12)
+            box("Production bay moving carriage",(.01,0,2.08),
+                (.42,.43,.24),"light",.021)
+            parts["radar"]=box("Traveling robot lift hook",(.01,0,1.83),
+                                (.23,.34,.31),"bronze",.021)
+            parts["damage_breakable"]=box("Detachable crane control hood",
+                (.01,0,2.55),(.63,.56,.15),"glass",.025)
+            # A physical ramp opens directly to the exterior +X.
+            box("Open vehicle launch ramp",(1.49,0,.76),
+                (.89,2.24,.17),"dark",.024)
+            for y in (-.69,-.35,0,.35,.69):
+                box("Exit alignment marker",(1.58,y,.87),
+                    (.53,.065,.04),"glow",.005)
         elif kind=="radar":
             box("Blue telemetry mast",(0,0,1.77),(1.48,1.52,2.14),"armor",.15)
             box("Tower receiver collar",(0,0,2.95),(1.76,1.74,.18),"light",.06)
@@ -380,35 +421,76 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 tower("Low brutalist sentry antenna",-1.12,side*.74,2.04,.58,"light",.09)
                 sphere("Bunker signal lamp",(-1.12,side*.74,2.65),(.10,.10,.11),"glow")
         elif kind=="factory":
-            # RED BASTION MK-II HEAVY FOUNDRY. Unequal smoke stacks,
-            # furnace glow, slotted blast gate and a visible forging ram.
-            box("Deeply armored industrial foundry",(-.13,0,1.30),(2.83,2.70,1.54),"armor",.042)
-            box("Soot-stained high-strength casting roof",(-.26,0,2.21),(2.98,2.90,.28),"dark",.018)
-            box("Red hydraulic access plinth",( .73,0,1.50),(.70,2.12,.99),"armor",.028)
-            box("Bright heated production mouth",(1.36,0,1.28),(.075,1.66,1.12),"bronze",.014)
+            # RED BASTION MK-IV OPEN-THROAT FORGE.
+            # The production bay is a genuine U-shell. Camera-visible
+            # negative-Y wall is removed over its forward half, with a
+            # suspended forging hammer and hot unfinished tracked hull.
+            box("Exposed heavy foundry floor",(-.25,0,.79),
+                (2.66,2.69,.19),"dark",.025)
+            box("Massive rear foundry bulkhead",(-1.40,0,1.46),
+                (.22,2.73,1.54),"armor",.021)
+            box("Full far foundry sidewall",(-.45,1.29,1.44),
+                (2.10,.19,1.48),"armor",.022)
+            box("Near rear furnace masonry",(-1.05,-1.29,1.46),
+                (.79,.19,1.49),"armor",.025)
+            box("Rear foundry roof canopy",(-.99,0,2.28),
+                (1.26,2.90,.26),"dark",.022)
+            box("Raised furnace heat-shield",(-1.02,0,2.47),
+                (1.15,2.67,.15),"armor",.016)
             for side in (-1,1):
-                for i in range(4):
-                    y=side*(.29+.20*i)
-                    box("Reinforced factory gate rib",(1.46,y,1.32),(.055,.10,1.02),"dark",.008)
-                height=1.89 if side==1 else 1.25
-                cyl("Industrial chimney buttress",(-1.00,side*.84,2.22),.34,height,
-                    "dark",vertices=14)
-                cyl("Burnt orange chimney outlet",(-1.00,side*.84,2.22+height*.5),
-                    .29,.09,"glow",vertices=14)
-                box("Upper overhead foundry handrail",(-.48,side*1.31,2.40),
-                    (1.93,.18,.26),"light",.018)
-                box("Cooling gas armored pipe",(.49,side*1.38,1.70),(.80,.17,.25),"dark",.021)
-                for z in (.89,1.10,1.31):
-                    box("Industrial incandescent cooling vent",(.98,side*1.22,z),
-                        (.31,.05,.095),"glow",.008)
-            cyl("Pressure forge spindle",(-.26,0,2.65),.33,.38,"bronze",vertices=12)
-            cyl("Hydraulic ram cylinder",(-.26,0,2.89),.19,.38,"light",vertices=12)
-            parts["radar"]=box("Active overhead forging press",(-.26,0,2.38),
-                               (.71,.79,.23),"dark",.025)
-            box("Broad ore-bay front ramp",(1.60,0,.78),(.59,2.58,.20),"dark",.025)
-            for i in range(5):
-                box("Hot impact warning stripe",(1.61,-1.06+i*.53,.90),
-                    (.30,.10,.055),"glow",.006)
+                y=side*1.15
+                box("Front blast portal pier",(1.10,y,1.49),
+                    (.35,.36,1.57),"armor",.025)
+                box("Riveted portal vertical guard",(1.30,y,1.51),
+                    (.085,.18,1.27),"bronze",.012)
+                box("Exposed gantry track",(-.12,y,2.48),
+                    (2.47,.16,.20),"light",.016)
+                box("Lower foundry guide channel",(.30,side*.71,.89),
+                    (1.60,.13,.08),"bronze",.009)
+                for x in (-.78,-.39):
+                    box("Thermal wall vent",(x,side*1.39,1.62),
+                        (.21,.045,.14),"glow",.007)
+            box("Open blast-gate crosshead",(1.09,0,2.38),
+                (.40,2.66,.30),"dark",.019)
+            box("Amber inner furnace grate",(-1.25,.31,1.33),
+                (.065,.88,.84),"bronze",.009)
+            for y in (-.02,.28,.58):
+                box("Furnace burning vertical slit",(-1.20,y,1.37),
+                    (.04,.09,.60),"glow",.006)
+            # Asymmetric roof stacks reinforce the industrial silhouette.
+            for side,height in ((-1,1.40),(1,1.91)):
+                y=side*.89
+                cyl("Blackened foundry smoke stack",(-1.00,y,2.37),
+                    .30,height,"dark",vertices=14)
+                cyl("Hot stack outlet",(-1.00,y,2.37+height*.50),
+                    .28,.10,"glow",vertices=14)
+            # Physical production line is seen through the missing wall.
+            box("Unfinished tracked siege chassis",(.27,.02,1.06),
+                (1.35,.89,.23),"dark",.026)
+            box("Unpainted front glacis",(.51,.02,1.27),
+                (.52,.72,.22),"light",.019)
+            box("Engine block on open hull",(-.21,.02,1.37),
+                (.38,.48,.28),"bronze",.018)
+            for side in (-1,1):
+                y=.02+side*.49
+                box("Exposed heavy vehicle track",(.27,y,1.04),
+                    (1.38,.20,.28),"armor",.025)
+                for x in (-.20,.11,.42,.73):
+                    cyl("Visible drive idler",(x,y,1.01),
+                        .10,.21,"dark",axis="Y",vertices=12)
+            cyl("Forging hydraulic piston",(-.08,0,2.38),
+                .18,.53,"bronze",vertices=12)
+            box("Suspended forge carriage",(-.08,0,2.21),
+                (.58,.72,.19),"armor",.014)
+            parts["radar"]=box("Animated heavy forging die",(-.08,0,1.91),
+                                (.48,.54,.38),"dark",.012)
+            parts["damage_breakable"]=box("Removable forge hoist armor",
+                (-.08,0,2.58),(.80,.89,.16),"light",.012)
+            box("External armor loading ramp",(1.55,0,.78),
+                (.91,2.51,.17),"dark",.022)
+            for y in (-.91,-.46,0,.46,.91):
+                box("Hazard chevron launch marking",(1.65,y,.89),
+                    (.46,.10,.045),"glow",.005)
         elif kind=="radar":
             box("Electronics blast tower",(0,0,1.52),(1.71,1.82,1.79),"armor",.06)
             box("Signal bunker top",(0,0,2.59),(2.02,2.11,.40),"dark",.03)
