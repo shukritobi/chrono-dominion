@@ -4,6 +4,10 @@ name: Nine Building Construction and Damage QA
 # Never publish or modify approved game art or production manifests.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/remaining-building-state-review.yml"
 
 permissions:
   contents: read
@@ -13,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  render-six:
+  render-nine:
     runs-on: ubuntu-24.04
     timeout-minutes: 65
     steps:
