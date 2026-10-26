@@ -75,9 +75,10 @@ g.power=side=>side===0?{make:0,use:100,low:true}:power(side);
 g.step(.05);
 assert.equal(g.projectiles.filter(p=>p.sourceId===beam.id).length,0,
   'unpowered energy tower cannot fire');
-g.power=power;
+g.power=side=>side===0?{make:1000,use:100,low:false}:power(side);
 beam.ready=0;
 g.step(.05);
+g.power=power;
 assert.equal(g.projectiles.find(p=>p.sourceId===beam.id)?.targetId,plane.id,
   'combat loop fires at the detected aircraft first');
 
