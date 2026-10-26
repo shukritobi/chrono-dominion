@@ -90,7 +90,12 @@ assert.equal(wounded.hp,beforeHP,'retreat provides no free HP');
 assert.equal(wounded.order?.type,'move','low HP unit is not forced back into combat');
 const cooldown=wounded.retreatCooldownAt;
 g.time=wounded.retreatUntil+.05;
-assert.equal(g.retreatWoundedAI([wounded],base,1).size,0,'retreat expires');
+assert.equal(g.retreatWoundedAI([wounded],base,1).size,1,
+  'wounded unit remains in defensive reserve after active retreat expires');
 assert.ok(cooldown>g.time,'retreat cooldown prevents oscillation');
+g.time=cooldown+.05;
+wounded.hp=wounded.maxHp*.42;
+assert.equal(g.retreatWoundedAI([wounded],base,1).size,0,
+  'recovered combat unit becomes eligible again after cooldown');
 g.draw();
 console.log('PASS: independent support platoons, assembly, fog, save migration, wounded retreat, no free healing');
