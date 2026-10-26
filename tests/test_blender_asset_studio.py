@@ -28,7 +28,8 @@ class StudioTests(unittest.TestCase):
         img = Image.new("RGBA", (160, 800))
         paint = ImageDraw.Draw(img)
         for row in range(5):
-            paint.rectangle((34, row * 160 + 32, 124, row * 160 + 136),
+            x0=39 if row==1 else 34
+            paint.rectangle((x0, row * 160 + 32, 124, row * 160 + 136),
                             fill=(48, 168, 226, 255))
         img.save(atlas)
         source = self.stage / "sources" / "coalition-generator.blend"
@@ -101,6 +102,16 @@ class StudioTests(unittest.TestCase):
                          "coalition-generator.blend").exists())
         self.assertTrue((self.game / "art" / "baked-v1" /
                          "coalition-generator.png").exists())
+
+    def test_pixel_identical_idle_frames_are_rejected(self):
+        atlas=self.stage/"packed"/"coalition-generator.png"
+        with Image.open(atlas) as img:
+            full=img.convert("RGBA")
+        first=full.crop((0,0,160,160))
+        full.paste(first,(0,160))
+        full.save(atlas)
+        with self.assertRaisesRegex(ValueError,"idle frames are pixel-identical"):
+            studio.inspect(self.stage,"coalition","generator")
 
     def test_missing_or_transparent_animation_frame_is_rejected(self):
         atlas = self.stage / "packed" / "coalition-generator.png"
