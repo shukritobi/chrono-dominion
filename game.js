@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.9 — touch camera and compact command controls. */
+/* Chrono Dominion v2.10 — intelligence-aware scout routing and safety. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1735,6 +1735,23 @@
       }
       return unseen;
     }
+    scoutThreatPenalty(point){
+      // Use ONLY the AI's own timestamped sensor reports, never the live
+      // positions of unseen player units or the player's explored map.
+      let penalty=0;
+      for(const report of this.intel?.[1]||[]){
+        if(!Number.isFinite(report.time)||!Number.isFinite(report.x)||!Number.isFinite(report.y))continue;
+        const age=this.time-report.time;
+        if(age<0||age>(report.type==='building'?180:12))continue;
+        if(report.type==='building'&&report.kind!=='turret')continue;
+        if(report.type==='unit'&&['harvester','recon'].includes(report.kind))continue;
+        const radius=report.type==='building'?7:5;
+        const separation=dist(point,report);
+        if(separation<radius)penalty+=200+(radius-separation)*25;
+        else if(separation<radius+2)penalty+=(radius+2-separation)*20;
+      }
+      return penalty;
+    }
     scoutFrontiers(scout,reservations=[]){
       // Generate potential survey positions from this AI's own explored cells,
       // not static mission waypoints or hidden player entity coordinates.
@@ -1745,9 +1762,11 @@
         if(!this.aiExplored.has(x+','+y)||this.water(x,y))continue;
         if(dist(scout,p)<2.5||reservations.some(q=>dist(q,p)<4.1))continue;
         if(!this.walkable(x,y))continue;
+        const risk=this.scoutThreatPenalty(p);
+        if(risk>=200)continue;
         const unseen=this.scoutSurveyValue(p);
         if(unseen<5)continue;
-        candidates.push({point:p,unseen,estimate:unseen*1.7-dist(scout,p)*.85});
+        candidates.push({point:p,unseen,estimate:unseen*1.7-dist(scout,p)*.85-risk});
       }
       // Bounded A* cost: pathcheck only the 14 best sightline opportunities.
       return candidates.sort((a,b)=>b.estimate-a.estimate||
@@ -1765,17 +1784,20 @@
         if(!this.walkable(point.x,point.y))continue;
         if(dist(scout,point)<2)continue;
         if(reservations.some(goal=>dist(goal,point)<4.1))continue;
+        const risk=this.scoutThreatPenalty(point);
+        if(risk>=200)continue;
         const path=this.findPath(scout.x,scout.y,point.x,point.y);
         if(!path.length||dist(path.at(-1),point)>1)continue;
         const unseen=this.scoutSurveyValue(point);
-        const score=unseen*1.5-path.length*.95-offset*.08;
+        const score=unseen*1.5-path.length*.95-offset*.08-risk;
         options.push({index,point,score,unseen});
       }
       for(const frontier of this.scoutFrontiers(scout,reservations)){
         const path=this.findPath(scout.x,scout.y,frontier.point.x,frontier.point.y);
         if(!path.length||dist(path.at(-1),frontier.point)>1)continue;
         options.push({index:null,point:frontier.point,unseen:frontier.unseen,
-          score:frontier.unseen*1.7-path.length*.9+1});
+          score:frontier.unseen*1.7-path.length*.9+1-
+            this.scoutThreatPenalty(frontier.point)});
       }
       if(!options.length){scout.order=null;return false;}
       options.sort((a,b)=>b.score-a.score||b.unseen-a.unseen||
@@ -1854,6 +1876,10 @@
       // Recon units move toward strategically useful ore, but defend harvesters
       // under attack. This produces an early contest rather than a blind HQ rush.
       for(const scout of owned('recon')){
+        // Wounded reconnaissance units must not be reassigned while their
+        // existing retreat / recovery cooldown is still active.
+        if((scout.retreatUntil||0)>this.time||
+           (scout.retreatCooldownAt||0)>this.time)continue;
         const endangered=this.entities.filter(u=>u.owner===side&&u.kind==='harvester'&&u.hp>0)
           .map(h=>({h,threat:this.nearest(h,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),5.5)}))
           .find(pair=>pair.threat);
@@ -1864,7 +1890,12 @@
         if(scout.order?.type==='attack'&&this.entityById(scout.order.id))continue;
         // Explore distant map sectors, skipping lakes and disconnected
         // routes. Patrol destinations are map data, never unseen enemies.
-        if(scout.order?.type==='move'&&dist(scout,scout.order)>1.5)continue;
+        if(scout.order?.type==='move'&&dist(scout,scout.order)>1.5){
+          // New sensor contacts can invalidate a once-safe destination.
+          // Preserve orders only when the endpoint is still reasonably safe.
+          if(this.scoutThreatPenalty(scout.order)<200)continue;
+          scout.order=null;
+        }
         this.assignScoutPatrol(scout);
         // Contact is recorded only after actual line-of-sight discovery.
         const spotted=this.nearest(scout,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),8);
