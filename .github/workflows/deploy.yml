@@ -75,6 +75,9 @@ jobs:
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
+          node --check audio/voices.js
+          node tests/original-voice-library-v222.test.mjs
+          node --check tools/audio/export-register.mjs
           node tests/audio-soundscape-v221.test.mjs
           node tests/expanse-camera-v222.test.mjs
           node tests/air-formations-v223.test.mjs
