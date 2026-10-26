@@ -4,8 +4,15 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.9.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.10.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
+
+### Scout safety and reconnaissance benchmarks (v2.10)
+
+- AI scouts avoid destinations near **previously observed** hostile turrets and recent combat contacts. Their route choice never consults hidden enemy coordinates.
+- Newly discovered dangers can cancel a scout's existing patrol destination, and wounded scouts retain their recovery cooldown rather than immediately receiving new scouting orders.
+- The nine-scenario balance lab now records first enemy-building discovery, scout losses/survivors, surveyed terrain and first platoon staging, allowing measurable comparison across maps and difficulties.
+- See [v2.10 release notes](docs/RELEASE-2.10.md) and [scout safety tests](tests/scout-safety-v210.test.mjs). Threat awareness is destination-based, not full route safety.
 
 ### Compact touch controls (v2.9)
 
