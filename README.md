@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.23.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.25.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
 
+
+### AI Air Wing (v2.25)
+
+- AI commanders now construct Air Command after reaching the required factory/radar tech and earning enough credits, and purchase up to two Strike Aircraft using the existing paid production queue.
+- Aircraft independently defend visible base threats, pursue only sensor-reported building positions, and patrol unexplored terrain when no target has been observed. Hidden enemy coordinates are never used to issue attacks.
+- Ground platoon staging excludes aircraft, while the player retains existing mixed-unit flight formations. [Release notes](docs/RELEASE-2.25.md) · [AI aviation regression tests](tests/ai-air-wing-v225.test.mjs).
 
 ### Flight-layer formation commands (v2.23)
 
