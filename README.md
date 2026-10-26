@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.5.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.6.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.6 Squad Right-of-Way
+
+- **Friendly passing priorities:** ore harvesters, heavy vehicles, tanks, scouts and infantry can temporarily make room for higher-priority traffic.
+- **Real side-pocket movement:** a yielding unit attempts a nearby lateral retreat that is both clear and reachable; it does not count forward movement within a one-tile corridor as yielding.
+- **Original commands preserved:** when the pull-over ends, the unit returns to its existing movement order. Manually issued commands cancel yielding immediately.
+- **No forced teleporting:** explicit Hold Position units and enemy combatants do not cooperate, and completely blocked corridors remain blocked when no passing pocket exists.
+- **Yield indication:** a gold ring around friendly yielding units, plus an optional count in the performance readout.
+- [v1.6 release notes](docs/RELEASE-1.6.md) | [Right-of-way tests](tests/right-of-way-v16.test.mjs).
 
 ## v1.5 Traffic-Aware Navigation
 
