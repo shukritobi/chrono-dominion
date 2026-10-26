@@ -150,7 +150,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             box("Compact tactical fort",(0,0,1.16),(1.78,1.73,1.09),"armor",.16)
             box("Optical turret housing",(0,0,2.02),(1.30,1.23,.68),"light",.18)
             for y in (-.30,.30):
-                barrel("Paired railgun",(.86,y,2.04),1.70,.10,"dark")
+                barrel("Paired railgun",.86,y,2.04,1.70,.10,"dark")
                 cyl("Heat shielding", (1.65,y,2.04),.17,.26,"light","X")
             sphere("Weapon acquisition lens",(.44,-.42,2.43),(.21,.14,.14),"glow")
         elif kind=="beam":
@@ -239,7 +239,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
         elif kind=="turret":
             box("Heavy artillery bunker",(0,0,1.25),(2.35,2.23,1.27),"armor",.07)
             box("Armored recoil hood",(.30,0,2.07),(1.90,1.75,.65),"dark",.035)
-            barrel("Oversized cannon",(1.29,0,2.27),2.07,.28,"bronze")
+            barrel("Oversized cannon",1.29,0,2.27,2.07,.28,"bronze")
             cyl("Recoiling muzzle",(2.38,0,2.27),.37,.42,"light","X")
             for side in (-1,1):
                 box("Slanted front blast shield",(1.25,side*.63,1.83),(.23,.36,1.01),"armor",.025)
@@ -260,7 +260,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             for y in (-1.15,-.65,0,.65,1.15):
                 box("Caution approach lights",(1.61,y,.93),(.20,.10,.06),"glow",.009)
             cyl("Roof flak cupola",(-.80,0,2.55),.29,.65,"light")
-            barrel("Rooftop anti-air barrel",(-.38,0,2.69),.80,.09,"dark")
+            barrel("Rooftop anti-air barrel",-.38,0,2.69,.80,.09,"dark")
     else:
         # Psionic Order: floating toroids, faceted polygons and mint neural apertures.
         if kind=="hq":
