@@ -14,6 +14,8 @@ from pathlib import Path
 
 import bpy
 from mathutils import Vector
+# Blender --python does not always include the source script directory in sys.path.
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 from building_architecture import build as build_faction_architecture
 
 FACTIONS = {
