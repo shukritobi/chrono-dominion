@@ -84,6 +84,7 @@ jobs:
           node tests/expanse-camera-v222.test.mjs
           node tests/air-formations-v223.test.mjs
           node tests/ai-air-wing-v225.test.mjs
+          node tests/aircraft-rearm-v226.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
@@ -159,6 +160,7 @@ jobs:
           test -f tests/expanse-camera-v222.test.mjs
           test -f tests/air-formations-v223.test.mjs
           test -f tests/ai-air-wing-v225.test.mjs
+          test -f tests/aircraft-rearm-v226.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
