@@ -87,7 +87,7 @@ jobs:
               test -s "$stage/sources/$faction-$kind.blend"
               blender --background --threads 2 \
                 "$stage/sources/$faction-$kind.blend" --python-exit-code 1 \
-                --python-expr 'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH"]; assert len(a)>=10,len(a); assert any("scaffold" in o.name.lower() for o in a); assert any("damaged fractured" in o.name.lower() for o in a); print("REOPENED SCAFFOLD AND DAMAGE MESHES",len(a))'
+                --python-expr 'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH"]; assert len(a)>=10,len(a); assert any("scaffold" in o.name.lower() for o in a); assert any("damaged fractured" in o.name.lower() for o in a); assert any("damage-only fallen roof plate" in o.name.lower() for o in a); print("REOPENED SCAFFOLD AND ROOF FRACTURE MESHES",len(a))'
               echo "::endgroup::"
             done
           done
