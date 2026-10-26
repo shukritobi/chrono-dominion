@@ -4,8 +4,12 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.26.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.27.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.27 Air defense targeting
+
+Sentry Turrets and Energy Towers now prioritise aircraft detected by their own side's sensors, without tracking hidden enemies. Energy Towers gain a 50% anti-air damage bonus while keeping normal ground damage. Existing saves remain compatible. See [v2.27 release notes](docs/RELEASE-2.27.md). Automated CI and deployment must be verified separately.
 
 ### Blender Asset Studio (preview first, publish only after approval)
 
