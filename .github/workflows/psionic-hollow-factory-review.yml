@@ -1,0 +1,105 @@
+name: Psionic MK-V Hollow Factory Geometry and Sprite Review
+
+# Preview-only, independent of live production textures and manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/psionic-hollow-factory-review.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-psionic-hollow-factory-preview
+  cancel-in-progress: true
+
+jobs:
+  render-and-inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Checkout current source
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11 and Pillow
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate geometry signatures and QA scripts
+        run: |
+          python -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/verify_psionic_factory_bay.py \
+            tools/blender/qa_psionic_factory_bay.py \
+            tools/blender/pack_animated.py tools/blender/asset_studio.py
+          python tools/blender/check_geometry_calls.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache verified Blender 4.2.23 LTS binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install verified official Blender binary without apt mirrors
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 \
+              "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 \
+            --max-time 90 "$base/blender-${version}.sha256" \
+            --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" \
+            --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only Psionic hollow twin-horn Factory
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="generated/psionic-open-factory/psionic/factory"
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/animated_assets.py -- \
+            --output "$stage" --kinds factory --factions psionic --size 160
+          python tools/blender/pack_animated.py \
+            --input "$stage" --output "$stage/packed" --size 160
+          python tools/blender/asset_studio.py validate \
+            --stage "$stage" --faction psionic --kind factory
+          python tools/blender/asset_studio.py preview \
+            --stage "$stage" --faction psionic --kind factory
+
+      - name: Reopen serialized Blender and raycast actual hollow portal
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/psionic-open-factory/psionic/factory/sources/psionic-factory.blend \
+            --python-exit-code 1 \
+            --python tools/blender/verify_psionic_factory_bay.py
+
+      - name: Inspect five RGBA sprite frames at 160px and 80px
+        run: python tools/blender/qa_psionic_factory_bay.py
+
+      - name: Upload source, PNG frames, atlas, raycast and contact sheets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-mkv-hollow-factory-review
+          path: generated/psionic-open-factory/
+          if-no-files-found: warn
+          retention-days: 30
