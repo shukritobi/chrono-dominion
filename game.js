@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.8 — anchored touch pinch zoom and two-finger pan. */
+/* Chrono Dominion v2.9 — touch camera and compact command controls. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -2378,6 +2378,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.8.0',build:'anchored-touch-camera'};
+  window.ChronoDominion={version:'2.9.0',build:'compact-touch-controls'};
   new Game();
 })();
