@@ -11,7 +11,7 @@
 
 - Primary and support squads preserve surviving members and assigned rally positions after a casualty or wounded retreat, instead of restarting every time.
 - Two surviving fighters can finish an existing rally. Fresh squads retain their original recruitment minimums; wounded troops remain in reserve until their cooldown ends.
-- Added [v2.15 regression tests](tests/platoon-attrition-v215.test.mjs) and [release notes](docs/RELEASE-2.15.md). Scripted battle-balance and deployment checks still need confirmation.
+- Added [v2.15 regression tests](tests/platoon-attrition-v215.test.mjs) and [release notes](docs/RELEASE-2.15.md). The [v2.15 verification and deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including the nine-scenario integrity suite. Comparative balance gains are not yet established.
 
 ### Safe scout detours (v2.13)
 
