@@ -33,12 +33,12 @@
         <label class="audioCheck"><input id="musicEnabled" type="checkbox" checked> ENABLE BACKGROUND MUSIC</label>
         <label class="audioCheck"><input id="voiceEnabled" type="checkbox" checked> ENABLE UNIT VOICES & ANNOUNCER</label>
         <button id="voicePreview" type="button">PREVIEW IRON FEDERATION VOICE</button>
-        <p>Original scripted tactical voices use the voices installed on your device; quality varies by browser.</p>
+        <p>473 original MP3 voice lines, sound effects and tracks load automatically from this game. Browser speech synthesis remains a fallback.</p>
         <p>Original synthesized soundtrack and effects, or load sounds from files on your device.</p>
         <button id="audioImport" type="button">IMPORT LOCAL SOUND FOLDER</button>
         <input id="audioFiles" class="hidden" type="file" webkitdirectory directory multiple accept=".wav,.ogg,.mp3,.m4a,.webm,.json">
         <button id="audioClear" type="button">REMOVE IMPORTED SOUNDS</button>
-        <p id="audioStatus" role="status" aria-live="polite">No local sound pack selected. Files stay on your device and are never uploaded.</p>
+        <p id="audioStatus" role="status" aria-live="polite">473 original sounds are built into the game. Local imports are optional.</p>
       </div>
       <div id="hint">Mouse: select / drag-select / right-click command · Space+drag or middle-drag: pan · Touch: tap select or command, drag pan, pinch zoom · Shift + right-click: attack-move · Ctrl+1–9: groups · H: HQ · C: selection · WASD: pan · Wheel: zoom · Esc: pause</div>
       <div id="toast" role="status"></div>
@@ -120,6 +120,7 @@
   <script src="./maps/catalog.js" defer></script>
   <script src="./maps/map-core.js" defer></script>
   <script src="./audio/voices.js" defer></script>
+  <script src="./audio/builtin-loader.js" defer></script>
   <script src="./audio/sfx.js" defer></script>
   <script src="./game.js" defer></script>
 </body>
