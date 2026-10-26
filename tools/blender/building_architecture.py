@@ -219,15 +219,18 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 (1.94,.16,1.54),"armor",.035)
             box("Near partial maintenance bulkhead",(-1.01,-1.23,1.43),
                 (.89,.16,1.48),"armor",.035)
-            box("Rear sheltered roof",(-.98,0,2.28),
+            # The roof is an actual detachable mesh in the damaged pose.
+            parts["damage_secondary"]=box("Rear sheltered roof",(-.98,0,2.28),
                 (1.12,2.72,.20),"light",.065)
             box("Rear raised roof sensor housing",(-1.00,.22,2.47),
                 (.73,.91,.18),"dark",.035)
             # Four open gantry posts rather than an opaque roll-up door.
             for side in (-1,1):
                 y=side*1.12
-                box("Exposed front portal stanchion",(1.10,y,1.51),
+                post=box("Exposed front portal stanchion",(1.10,y,1.51),
                     (.22,.23,1.57),"light",.032)
+                if side==-1:
+                    parts["damage_tertiary"]=post
                 box("Cyan portal vertical status bar",(1.24,y,1.55),
                     (.045,.07,1.14),"glow",.006)
                 box("Overhead traveling crane track",(-.04,y,2.40),
@@ -236,7 +239,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                     (.40,.19,.18),"armor",.019)
                 box("Inside floor safety runner",(.15,side*.63,.89),
                     (1.79,.075,.06),"glow",.007)
-            box("Open bay crosshead lintel",(1.10,0,2.35),
+            parts["damage_quaternary"]=box("Open bay crosshead lintel",(1.10,0,2.35),
                 (.24,2.44,.24),"light",.034)
             box("Hanging gantry spine",(-.05,0,2.36),
                 (.19,1.97,.15),"armor",.025)
@@ -266,6 +269,26 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                                 (.23,.34,.31),"bronze",.021)
             parts["damage_breakable"]=box("Detachable crane control hood",
                 (.01,0,2.55),(.63,.56,.15),"glass",.025)
+            # Wreckage only appears in the damaged sprite. Missing roof and
+            # front portal steel are replaced by visibly fallen, tilted pieces.
+            wreck=box("Damaged Aegis roof slab fallen into apron",
+                (1.08,-.90,1.06),(1.19,.87,.16),"armor",.028)
+            wreck.rotation_euler.y=.41
+            wreck.rotation_euler.x=-.22
+            wreck.hide_render=True
+            parts["damage_only_roof_slab"]=wreck
+            wreck=box("Damaged Aegis portal girder diagonal",
+                (1.44,-.98,1.39),(.17,.20,1.51),"light",.022)
+            wreck.rotation_euler.y=.58
+            wreck.hide_render=True
+            parts["damage_only_portal_girder"]=wreck
+            for i,(x,y,z) in enumerate(((1.24,-1.37,.95),
+                                        (1.60,-.66,.95),(.70,-1.12,1.02))):
+                rubble=box("Aegis shattered armor shard",(x,y,z),
+                           (.39,.30,.16),"dark" if i==1 else "light",.014)
+                rubble.rotation_euler.y=.28+i*.24
+                rubble.hide_render=True
+                parts["damage_only_aegis_shard_"+str(i)]=rubble
             # A physical ramp opens directly to the exterior +X.
             box("Open vehicle launch ramp",(1.49,0,.76),
                 (.89,2.24,.17),"dark",.024)
@@ -433,14 +456,16 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 (2.10,.19,1.48),"armor",.022)
             box("Near rear furnace masonry",(-1.05,-1.29,1.46),
                 (.79,.19,1.49),"armor",.025)
-            box("Rear foundry roof canopy",(-.99,0,2.28),
+            parts["damage_secondary"]=box("Rear foundry roof canopy",(-.99,0,2.28),
                 (1.26,2.90,.26),"dark",.022)
             box("Raised furnace heat-shield",(-1.02,0,2.47),
                 (1.15,2.67,.15),"armor",.016)
             for side in (-1,1):
                 y=side*1.15
-                box("Front blast portal pier",(1.10,y,1.49),
+                pier=box("Front blast portal pier",(1.10,y,1.49),
                     (.35,.36,1.57),"armor",.025)
+                if side==-1:
+                    parts["damage_tertiary"]=pier
                 box("Riveted portal vertical guard",(1.30,y,1.51),
                     (.085,.18,1.27),"bronze",.012)
                 box("Exposed gantry track",(-.12,y,2.48),
@@ -450,7 +475,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 for x in (-.78,-.39):
                     box("Thermal wall vent",(x,side*1.39,1.62),
                         (.21,.045,.14),"glow",.007)
-            box("Open blast-gate crosshead",(1.09,0,2.38),
+            parts["damage_quaternary"]=box("Open blast-gate crosshead",(1.09,0,2.38),
                 (.40,2.66,.30),"dark",.019)
             box("Amber inner furnace grate",(-1.25,.31,1.33),
                 (.065,.88,.84),"bronze",.009)
@@ -486,6 +511,25 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                                 (.48,.54,.38),"dark",.012)
             parts["damage_breakable"]=box("Removable forge hoist armor",
                 (-.08,0,2.58),(.80,.89,.16),"light",.012)
+            # Collapsed portal and roof fragments, only visible in damage.
+            wreck=box("Fallen Federation roof plate",
+                (.90,-1.02,1.08),(1.40,1.01,.23),"armor",.017)
+            wreck.rotation_euler.y=.45
+            wreck.rotation_euler.x=-.29
+            wreck.hide_render=True
+            parts["damage_only_foundry_roof"]=wreck
+            wreck=box("Bent Federation blast-gate girder",
+                (1.46,-1.07,1.38),(.24,.31,1.49),"dark",.019)
+            wreck.rotation_euler.y=.66
+            wreck.hide_render=True
+            parts["damage_only_foundry_girder"]=wreck
+            for i,(x,y,z) in enumerate(((1.28,-1.41,.96),
+                                        (1.70,-.72,.97),(.75,-1.22,1.01))):
+                rubble=box("Foundry blast-spall armor",(x,y,z),
+                           (.47,.34,.21),"bronze" if i==0 else "armor",.012)
+                rubble.rotation_euler.y=.31+i*.19
+                rubble.hide_render=True
+                parts["damage_only_foundry_shard_"+str(i)]=rubble
             box("External armor loading ramp",(1.55,0,.78),
                 (.91,2.51,.17),"dark",.022)
             for y in (-.91,-.46,0,.46,.91):
