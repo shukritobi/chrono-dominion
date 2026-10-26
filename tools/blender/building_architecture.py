@@ -89,16 +89,31 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
     if faction=="coalition":
         # Aegis Accord architecture: paired, disciplined, and mechanically symmetrical.
         if kind=="hq":
-            box("Central command block",(0,0,1.23),(2.65,2.20,1.12),"armor",.14)
-            box("Layered command deck",(0,0,1.91),(2.35,2.05,.30),"light",.09)
-            box("Observation glazed tower",(-.25,0,2.62),(1.32,1.28,1.25),"glass",.14)
-            box("Upper antenna control roof",(-.25,0,3.33),(1.50,1.51,.23),"armor",.07)
-            spire("Command beacon",-.25,0,3.43,.24,.89,"light",6)
-            sphere("Citadel secure link",(-.25,0,4.33),(.20,.20,.20),"glow")
+            # AEGIS MK-II COMMAND CITADEL: stepped, symmetrical aerospace HQ.
+            # Broad three-tier silhouette, guarded glass bridge and clear signal crown.
+            box("Titanium strategic podium",(0,0,1.01),(2.86,2.52,.82),"armor",.16)
+            box("Aerospace logistics overhang",(-.12,0,1.58),(2.70,2.42,.23),"light",.09)
+            box("Central command bridge",(-.24,0,2.06),(1.77,1.68,.91),"glass",.11)
+            box("Upper citadel armor roof",(-.24,0,2.63),(2.02,1.93,.24),"armor",.09)
+            box("Raised operations deck",(-.32,0,3.03),(1.31,1.27,.57),"light",.10)
+            box("Periscope telemetry upper cap",(-.31,0,3.40),(1.51,1.49,.17),"dark",.055)
+            cyl("Aegis signal transmitter",(-.31,0,3.86),.19,.88,"light",vertices=12)
+            sphere("HQ signal beacon",(-.31,0,4.35),(.20,.20,.23),"glow")
             for side in (-1,1):
-                tower("Paired roof telemetry",.57,side*.62,2.12,1.25,"light",.10)
-                box("Defence side wing",(-.88,side*.88,1.15),(.70,.58,.82),"dark")
-            light_stripe(-.25,-.68,3.11,1.03)
+                y=side*1.13
+                box("Reinforced command wing",(.27,y,1.34),(1.42,.56,.93),"armor",.085)
+                box("Armored outer parapet",(.17,y,1.91),(1.55,.59,.19),"light",.042)
+                tower("Independent optical sensor",.18,side*1.00,2.12,1.01,"dark",.14)
+                sphere("Optical sensor eye",(.18,side*1.00,3.16),(.11,.12,.12),"glow")
+                for x in (-.84,-.15,.54):
+                    box("Aegis blue window slit",(x,side*1.44,1.47),(.28,.06,.13),"glass",.015)
+                box("Structural lateral duct",(1.26,side*.67,.84),(.26,.39,.37),"dark",.03)
+            # Raised entry framing, visible in the game's 3/4 orthographic view.
+            box("Command entry landing",(1.20,0,.79),(.71,1.08,.19),"light",.04)
+            box("Hardened access door",(1.48,0,1.15),(.07,.76,.61),"dark",.018)
+            for y in (-.31,.31):
+                box("Entry cyan direction strip",(1.55,y,1.16),(.028,.055,.52),"glow",.006)
+            box("Bridge-wide communications illumination",(.68,0,2.22),(.06,1.21,.11),"glow",.015)
         elif kind=="generator":
             # AEGIS MK-II DOUBLE-CONTAINMENT FUSION STATION
             # Three explicit masses ensure a clear silhouette at ~150px:
@@ -144,13 +159,32 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             parts["radar"]=torus("Rotating Blue Reactor Gyroscope",(.14,0,2.75),.43,.077,"glow",True)
             sphere("Fusion Control Focal Point",(.14,0,2.77),(.14,.14,.15),"glass")
         elif kind=="refinery":
-            box("Sealed ore sorting factory",(-.28,0,1.24),(2.08,2.32,1.37),"armor",.12)
-            box("Inspection booth",(-.76,-.76,2.18),(.74,.66,.58),"glass",.06)
-            for i in range(3):
-                cyl("Sealed separator vessel",(-.73+i*.63,.66,2.33),.22,1.05,"light")
-                sphere("Sensor beacon",(-.73+i*.63,.66,2.92),(.12,.13,.15),"glow")
-            box("Material conveyer",(1.13,-.02,.95),(.71,.89,.40),"dark")
-            box("Sorting gantry",(.30,-.23,2.60),(.12,1.77,.19),"glow",.025)
+            # AEGIS MK-II ENCLOSED ORE SORTER: a low processing line rather than
+            # another HQ/tower; a visible stepped conveyor makes its function obvious.
+            box("Hermetic ore sorter chassis",(-.38,0,1.20),(2.23,2.33,1.19),"armor",.12)
+            box("Clean inspection deck",(-.39,0,1.87),(2.38,2.45,.19),"light",.075)
+            box("Glazed quality-control office",(-.87,-.69,2.24),(.79,.70,.58),"glass",.045)
+            box("Office reinforced canopy",(-.87,-.69,2.61),(.91,.84,.13),"dark",.028)
+            for j in range(3):
+                x=-.85+j*.68
+                cyl("Isolated mineral centrifuge",(x,.70,2.35),.25,.99,"light",vertices=16)
+                cyl("Transparent separation window",(x,.70,2.37),.20,.71,"glass",vertices=16)
+                cyl("Bottom blue induction collar",(x,.70,2.04),.27,.09,"glow",vertices=16)
+                cyl("Top pressure ring",(x,.70,2.90),.30,.14,"dark",vertices=16)
+                sphere("Laser mass detector",(x,.70,3.04),(.12,.12,.13),"glow")
+            box("Sealed front belt housing",(1.02,-.06,.96),(.86,1.08,.43),"dark",.03)
+            box("Active extraction conveyor",(1.42,-.06,1.20),(.93,.72,.08),"bronze",.017)
+            for j in range(4):
+                box("Separated mineral parcel",(1.15+j*.16,-.06,1.29),
+                    (.11,.36,.13),"light",.012)
+            for side in (-1,1):
+                tower("Belt side gantry",1.14,side*.59,1.33,1.05,"light",.11)
+                box("Ventilated sorter shield",(-.53,side*1.17,1.44),(1.54,.13,.59),"dark",.018)
+                for i in range(4):
+                    box("External inspection LED",(-1.04+i*.33,side*1.25,1.55),
+                        (.19,.05,.12),"glow",.009)
+            box("Overhead programmable sensor beam",(1.14,0,2.48),(.20,1.43,.16),"glass",.022)
+            box("Ore approach ramp",(1.67,-.06,.76),(.69,.80,.12),"light",.03)
         elif kind=="barracks":
             box("Modular recruitment building",(0,0,1.18),(2.45,2.18,1.12),"armor",.13)
             for side in (-1,1):
@@ -208,15 +242,33 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
     elif faction=="federation":
         # Iron Federation: architectural mass, offset machinery, red-hot industrial cores.
         if kind=="hq":
-            box("Red Bastion tier one",(0,0,1.23),(3.06,2.70,1.13),"armor",.07)
-            box("Reinforced brutalist podium",(-.25,0,2.03),(2.55,2.31,.62),"dark",.035)
-            box("Armored central keep",(-.35,.15,2.81),(1.64,1.59,1.19),"armor",.06)
-            box("Muzzle-window slit",(.51,-.58,2.64),(.09,.43,.16),"glow",.02)
-            for i in range(4):
-                box("Bunker battlement",(-1.02+i*.65,-1.22,2.38),(.41,.22,.41),"light",.02)
+            # RED BASTION MK-II SIEGE COMMAND: low, massive and intimidating.
+            # Tiered armored red keep and offset smoke defense tower, not glass.
+            box("Bastion reinforced ground bunker",(0,0,1.10),(3.07,2.98,1.02),"armor",.042)
+            box("Sloped blast proof parapet",(-.27,.04,1.79),(2.88,2.64,.45),"dark",.025)
+            box("Elevated heavy central keep",(-.44,.18,2.52),(1.98,1.73,1.16),"armor",.042)
+            box("Top command shell",(-.48,.18,3.18),(2.17,1.91,.17),"light",.023)
+            box("Command central heat shield",(.63,-.13,2.44),(.07,.83,.60),"dark",.018)
+            for z in (2.18,2.37,2.56):
+                box("Amber hardened bridge slit",(.69,-.13,z),(.026,.66,.075),"glow",.008)
             for side in (-1,1):
-                cyl("Asymmetrical smoke mast",(-.95,side*.75,3.56),.23,.9+(side+1)*.43,"dark")
-                cyl("Glowing stack outlet",(-.95,side*.75,4.00+(side+1)*.21),.23,.06,"glow")
+                y=side*1.04
+                box("Outer artillery bastion",( .76,y,1.55),(1.05,.61,1.09),"dark",.034)
+                box("Crimson angled bunker glacis",(.97,y,1.83),(.76,.66,.47),"armor",.023)
+                cyl("Armored bastion observation cupola",(.66,y,2.38),.37,.36,"light",vertices=12)
+                cyl("Cupola armored roof",(.66,y,2.64),.39,.16,"dark",vertices=12)
+                for x in (-1.28,-.56,.16):
+                    box("Vertical ferrocrete wall ribs",(x,side*1.51,1.30),(.16,.08,.83),"light",.019)
+            # A single towering irregular signal chimney prevents Aegis symmetry.
+            cyl("Bastion strategic signal chimney",(-1.10,.49,3.22),.33,1.80,"dark",vertices=14)
+            cyl("Command antenna smoked socket",(-1.10,.49,4.13),.38,.22,"bronze",vertices=14)
+            cyl("Amber unshielded communication core",(-1.10,.49,4.34),.16,.23,"glow",vertices=12)
+            tower("Second lower comms stack",-1.29,-.72,2.92,.71,"dark",.23)
+            box("Bastion access port",(1.57,0,1.20),(.09,1.01,.99),"dark",.018)
+            box("Industrial gate threshold",(1.76,0,.67),(.53,1.27,.12),"light",.028)
+            for side in (-1,1):
+                for z in (1.03,1.23,1.45):
+                    box("Heavy gate running lights",(1.68,side*.46,z),(.04,.08,.07),"glow",.006)
         elif kind=="generator":
             # RED BASTION MK-II FURNACE PLANT. Horizontal mass and offset heavy
             # chimneys, no symmetric glass reactor tubes from the Coalition kit.
@@ -247,12 +299,33 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Inner incandescent grille",(1.39,x,1.22),(.035,.065,.41),"glow",.006)
             box("Overhung soot-rated service walkway",(1.48,0,.68),(.53,2.40,.12),"dark",.015)
         elif kind=="refinery":
-            box("Open ore smelter",(0,0,1.16),(2.43,2.24,1.16),"dark",.10)
-            box("Crushing hopper",(-.53,-.34,2.02),(1.43,1.35,.74),"armor",.09)
+            # RED BASTION MK-II ORE CRUSHER AND FURNACE.
+            # Open exposed hopper, staggered rotary drums and industrial stack.
+            box("Iron ore furnace block",(-.26,0,1.10),(2.55,2.45,1.03),"armor",.045)
+            box("Riveted cast-iron roof",(-.35,.10,1.74),(2.58,2.43,.22),"dark",.02)
+            box("Crushing jaw open central hopper",(-.87,-.36,2.26),(1.03,1.23,.82),"bronze",.04)
+            box("Hopper lower recess",(-.87,-.36,2.72),(.81,1.01,.16),"dark",.014)
+            for x in (-1.13,-.82,-.52):
+                box("Industrial crusher tooth",(x,-.37,2.78),(.15,.69,.18),"light",.018)
             for side in (-1,1):
-                cyl("External smelter drum",(.72,side*.77,1.52),.42,1.43,"bronze",axis="X")
-                cyl("Industrial silo",(-.93,side*.94,2.47),.34,1.49,"light")
-            box("Furnace exit slot",(1.23,0,1.17),(.07,.94,.31),"glow",.015)
+                y=side*.86
+                cyl("Ore-bearing separator drum",(.52,y,1.64),.42,1.16,"dark",axis="X",vertices=14)
+                cyl("Red turbine crank collar",(1.10,y,1.64),.50,.15,"armor",axis="X",vertices=14)
+                cyl("Glowing furnace drum portal",(1.22,y,1.64),.30,.04,"bronze",axis="X")
+                for n in range(4):
+                    box("Crank cage interlock",(.30+n*.21,y,2.08),(.11,.62,.08),"light",.014)
+                box("Platform side blast shield",(-.31,side*1.22,1.26),(1.70,.16,.74),"dark",.035)
+            cyl("Central ore smelting exhaust shaft",(-.80,.68,3.08),.33,2.00,"dark",vertices=16)
+            cyl("Exhaust heated collar",(-.80,.68,4.10),.39,.21,"bronze",vertices=16)
+            cylinder_wall=0
+            for height in (2.40,2.74,3.18):
+                cyl("Stack clamping ring",(-.80,.68,height),.38,.10,"armor",vertices=16)
+            box("Open belt transfer bed",(1.20,-.16,.90),(.78,1.38,.22),"dark",.028)
+            for index in range(5):
+                box("Packed raw mineral chunk",(1.05+index*.13,-.18,.99),
+                    (.10,.44,.13),"bronze",.01)
+            box("Glowing furnace refuse outlet",(1.43,0,1.37),(.08,1.11,.33),"glow",.012)
+            box("Industrial front belt lip",(1.58,0,.73),(.51,1.44,.08),"armor",.011)
         elif kind=="barracks":
             box("Fortified garrison bunker",(0,0,1.10),(2.70,2.54,1.08),"armor",.065)
             box("Sloped bunker roof",(0,0,1.81),(2.94,2.72,.36),"dark",.045)
@@ -317,15 +390,25 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
     else:
         # Psionic Order: floating toroids, faceted polygons and mint neural apertures.
         if kind=="hq":
-            prism("Citadel neural foundation",0,0,1.02,1.40,1.14,"armor",6)
-            prism("Translucent citadel upper tier",0,0,2.21,.94,1.48,"light",6)
-            spire("Aether command needle",0,0,3.54,.57,1.05,"armor",6)
-            sphere("Floating command nexus",(0,0,4.65),(.36,.34,.36),"glow")
-            parts["radar"]=torus("Orbiting neural shield",(0,0,3.53),1.16,.09,"glow",True)
+            # AETHER SYNOD MK-II NEURAL CITADEL: triangular gothic spires,
+            # tall levitating command crystal, staggered orbiting shield ring.
+            prism("Six-wing alien command plinth",0,0,.88,1.46,.95,"armor",6)
+            prism("Obsidian command circuit tier",0,0,1.82,1.11,.60,"dark",6)
+            prism("Crystal hollow upper sanctum",0,0,2.44,.92,1.16,"light",6)
+            spire("Ascending neural command obelisk",0,0,3.48,.60,1.14,"armor",6)
+            spire("Inner psionic government core",0,0,3.68,.34,.83,"glass",6)
+            sphere("Citadel sovereign beacon",(0,0,4.69),(.24,.24,.27),"glow")
             for i in range(4):
-                a=i*math.tau/4
-                spire("Citadel petal",math.cos(a)*1.25,math.sin(a)*1.25,.83,
-                      .35,2.05,"light",3)
+                a=i*math.tau/4+math.pi/4
+                x,y=math.cos(a)*1.31,math.sin(a)*1.31
+                prism("Anchor of the Four Synods",x,y,.76,.36,.63,"dark",4)
+                spire("Psi sentry crescent",x,y,1.36,.33,1.93,"armor",3)
+                spire("Glazed sentry blade",x*.96,y*.96,1.61,.17,1.42,"glass",3)
+                sphere("Neural upper crest",(x,y,3.36),(.12,.14,.14),"glow")
+                box("Nexus control conduit",(x*.69,y*.69,1.24),(.24,.13,.12),"glow",.018)
+            torus("Lower sovereign energy seal",(0,0,2.15),.95,.07,"glow")
+            parts["radar"]=torus("Orbiting Aether command shield",(0,0,3.44),1.03,.11,"light",True)
+            sphere("Telepathic core stabilization",(0,0,3.43),(.39,.40,.36),"glass")
         elif kind=="generator":
             # AETHER SYNOD MK-II CRYSTAL LEVITATION WELL.
             # Triangular vertical fins and an elevated hovering crystal differentiate
@@ -353,15 +436,29 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 xx,yy=math.cos(a)*.93,math.sin(a)*.93
                 sphere("Orbiting guardian focus",(xx,yy,2.83),(.11,.11,.14),"glass")
         elif kind=="refinery":
-            prism("Mineral morphing chamber",0,0,.91,1.30,1.05,"armor",6)
-            spire("Suspended ore crystal",0,0,1.81,.71,2.09,"bronze",5)
+            # AETHER SYNOD MK-II CRYSTAL EXTRACTOR: ore pods and a horizontal
+            # mineral beam distinguish it from the vertical HQ/generator towers.
+            prism("Quartz psychic sorting podium",0,0,.87,1.38,.97,"armor",6)
+            prism("Dark suspended ore processor",-.21,0,1.73,1.08,.61,"dark",6)
             for i in range(3):
-                a=i*math.tau/3
-                sphere("Orbiting ore analyzer",(math.cos(a)*1.25,math.sin(a)*1.25,2.31),
-                       (.28,.28,.30),"glow")
-                spire("Mineral extruder",math.cos(a)*1.25,math.sin(a)*1.25,.89,
-                      .27,1.19,"light",3)
-            parts["radar"]=torus("Resonance sorting halo",(0,0,2.81),.86,.085,"glow",True)
+                angle=i*math.tau/3
+                x,y=math.cos(angle)*1.23,math.sin(angle)*1.23
+                prism("Crystalline storage pod",x,y,.78,.39,.62,"light",5)
+                spire("Raw violet ore shard",x,y,1.39,.31,.95,"glass",5)
+                sphere("Green ore scanner",(x,y,2.37),(.15,.15,.17),"glow")
+                torus("Crystal-grade sorting ring",(x,y,1.59),.34,.047,"glow")
+            # Horizontal controlled intake conveyor to show ore-handling purpose.
+            box("Biomorphic extraction belt",(1.17,-.10,1.05),(.78,.84,.17),"dark",.035)
+            for i in range(4):
+                spire("Conveyed mineral",(1.0+i*.18,-.10,1.16),.09,.24,"glass",4)
+            prism("Mining containment interface",-.11,0,2.40,.86,.30,"armor",6)
+            spire("Sorting crystal resonator",-.11,0,2.70,.48,.91,"glass",5)
+            sphere("Mineral discrimination core",(-.11,0,3.61),(.18,.17,.19),"glow")
+            torus("Sorting-level base halo",(-.11,0,2.47),.86,.082,"glow")
+            parts["radar"]=torus("Rotating psionic extraction hoop",(-.11,0,3.03),.64,.082,"light",True)
+            for side in (-1,1):
+                box("Material guide fin",(.61,side*.80,1.47),(.95,.18,.20),"armor",.025)
+                box("Green guide nerve",(.63,side*.78,1.63),(.69,.065,.09),"glow",.015)
         elif kind=="barracks":
             prism("Neural training sanctuary",0,0,1.06,1.47,1.08,"armor",6)
             sphere("Sanctuary thought chamber",(0,0,2.13),(1.11,1.11,.45),"dark")
