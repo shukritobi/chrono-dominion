@@ -447,6 +447,19 @@ def animate(kind,state,frame,frames):
             PARTS["radar"].rotation_euler.y=.32
         else:
             PARTS["radar"].rotation_euler.y=0
+    if "tech_clamp" in PARTS:
+        # Federation siege lab: a real retracting hydraulic carriage.
+        # Moving the actual mesh beyond the roof changes alpha silhouettes
+        # at 80px, unlike an emission pulse or an axis-symmetric rotor.
+        clamp=PARTS["tech_clamp"]
+        clamp.location=(1.13,-1.44,3.05)
+        clamp.rotation_euler=(0,0,0)
+        if state=="idle" and frame%2:
+            clamp.location=(1.88,-1.44,3.56)
+            clamp.rotation_euler.y=-.23
+        elif state=="damaged":
+            clamp.location=(1.81,-1.63,2.73)
+            clamp.rotation_euler=(.31,.68,-.14)
     if "radar_aux" in PARTS:
         # Independently counter-rotate the second scanner / gyroscope.
         # Preserve the deliberately angled vertical torus plane.
