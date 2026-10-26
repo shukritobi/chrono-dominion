@@ -2247,6 +2247,58 @@
       scout.order={type:'move',x:chosen.point.x,y:chosen.point.y};
       return true;
     }
+    coordinateAIAirWing(aircraft,knowledge,base,invaders=[]){
+      // Air strikes use the AI's own sensor reports, never unseen live enemy positions.
+      // Aircraft patrol unexplored terrain only when no reported objective exists.
+      const planes=aircraft.filter(e=>e.hp>0&&e.built);
+      const threats=invaders.filter(e=>e.hp>0&&this.sideCanSee(1,e));
+      const objectives=this.rankAIObjectives(knowledge,base);
+      const claimed=[];
+      for(let i=0;i<planes.length;i++){
+        const plane=planes[i];
+        const threat=threats.length?[...threats].sort((a,b)=>
+          dist(plane,a)-dist(plane,b)||a.id-b.id)[0]:null;
+        if(threat){
+          if(plane.order?.type!=='attack'||plane.order.id!==threat.id)
+            plane.order={type:'attack',id:threat.id};
+          continue;
+        }
+        if(objectives.length){
+          const report=objectives[i%objectives.length];
+          // A report is navigation intel, not permission to fire at a hidden entity.
+          const visible=this.entities.find(e=>e.id===report.id&&e.hp>0&&
+            e.owner===0&&this.sideCanSee(1,e));
+          const order=visible?{type:'attack',id:visible.id}:
+            {type:'attackMove',x:report.x,y:report.y};
+          if(plane.order?.type!==order.type||
+             (order.type==='attack'?plane.order.id!==order.id:
+              Math.hypot(plane.order.x-order.x,plane.order.y-order.y)>.5))
+            plane.order=order;
+          continue;
+        }
+        // Retain useful patrols; reassign only after reaching them or when
+        // they become unsafe. No enemy-base coordinates are consulted.
+        if(plane.order?.type==='move'&&dist(plane,plane.order)>1.2&&
+          this.scoutThreatPenalty(plane.order)<200&&
+          this.scoutSurveyValue(plane.order)>3){
+          claimed.push(plane.order);continue;
+        }
+        let best=null,bestScore=-Infinity;
+        for(let x=3;x<WORLD_SIZE-2;x+=4)for(let y=3;y<WORLD_SIZE-2;y+=4){
+          const point={x,y},unseen=this.scoutSurveyValue(point);
+          if(unseen<5||claimed.some(p=>dist(p,point)<5))continue;
+          const risk=this.scoutThreatPenalty(point);
+          if(risk>=200)continue;
+          const score=unseen*1.8+this.scoutAdvanceScore(point,unseen)-
+            dist(plane,point)*.75-risk;
+          if(score>bestScore){best=point;bestScore=score;}
+        }
+        if(best){
+          plane.order={type:'move',x:best.x,y:best.y};
+          claimed.push(best);
+        }else plane.order=null;
+      }
+    }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
       if(!base)return;
@@ -2269,6 +2321,8 @@
       else if(!owned('factory').length)choice='factory';
       else if(!owned('radar').length&&me.credits>2600)choice='radar';
       else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
+      else if(!owned('airfield').length&&built('factory')&&built('radar')&&
+        me.credits>3500&&this.time>130)choice='airfield';
       else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&me.credits>2200)choice='turret';
       if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
         for(let j=0;j<48;j++){
@@ -2288,6 +2342,9 @@
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
         else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';
         else if(built('radar')&&built('barracks')&&!owned('specialist').length&&me.credits>=1400)unit='specialist';
+        else if(built('airfield')&&owned('aircraft').length<2&&
+          me.credits>=UNITS.aircraft.cost+800&&
+          (owned('tank').length+owned('heavy').length>=2||this.time>240))unit='aircraft';
         else if(built('factory')&&me.credits>1100){
           unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
         }else if(built('barracks')&&me.credits<350)unit=null;
@@ -2346,7 +2403,10 @@
       }
       // Local defense takes precedence; only platoons that have assembled
       // receive an offensive order. Scouts continue their own ore patrols.
-      const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
+      this.coordinateAIAirWing(owned('aircraft'),knowledge,base,invaders);
+      // Airborne units have independent orders; never assign them ground-only rally slots.
+      const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&
+        e.kind!=='harvester'&&e.kind!=='aircraft');
       const wounded=this.retreatWoundedAI(fighters,base,side);
       const active=fighters.filter(e=>!wounded.has(e.id));
       const oldAttackers=threatened?new Set([...(this.aiPlatoon?.ids||[]),...(this.aiSupportPlatoon?.ids||[])]):new Set();
