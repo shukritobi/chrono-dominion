@@ -281,18 +281,53 @@ remain editable in each saved .blend, and visibility is state-specific.
   and power-out states. **No live sprite atlas or production manifest was
   changed by this modeling/review pass.**
 
+## 2026-10-27 Federation Technology Lab MK-III mechanical clamp animation
+
+**Preview-only; production atlas and manifest remain untouched.** The
+Iron Federation's Siege Science Institute now has an independent editable
+twin-jaw ballistic test clamp on an exposed hydraulic carriage. Its second
+idle pose lifts the actual 32-vertex clamp mesh beyond the roofline rather
+than changing only emissive RGB pixels.
+
+- [Successful targeted Blender source reopen, render and pixel QA](https://github.com/shukritobi/chrono-dominion/actions/runs/40401409351).
+- [New MK-III external test clamp mesh](../../tools/blender/building_architecture.py).
+- [State-specific clamp elevation and damaged collapse](../../tools/blender/animated_assets.py).
+- [Targeted headless Blender workflow](../../.github/workflows/federation-tech-clamp-review.yml).
+- [160px/80px pixel acceptance and contact sheet generator](../../tools/blender/qa_federation_tech_clamp.py).
+- The first attempt [failed an actual pixel QA gate](https://github.com/shukritobi/chrono-dominion/actions/runs/40401110038):
+  the clamp visibly moved *within* the roof silhouette, but both idle
+  alpha-mask differences were **0 pixels**. This was a real art/readability
+  failure, not a missing Blender model.
+- The corrected pose raises the clamp from **z=3.05** to **z=4.65** while
+  extending it toward the exposed near-side gantry. Idle alpha-mask change
+  increased from **0 to 282 pixels at 160px** and from **0 to 74 pixels at 80px**.
+  Both idle frames remain RGBA-distinct.
+- The five-frame atlas is **160×800 RGBA**. The editable compressed
+  **128,763-byte .blend** source was reopened by Blender and verified to
+  contain the **32-vertex clamp mesh** and **43 total mesh objects**.
+- The first construction frame is **byte-identical** to the MK-II source
+  render. First-construction-vs-idle alpha change remains **1,016 pixels
+  at 80px**. Damaged-vs-idle alpha change remains **104 pixels at 80px**.
+- I downloaded and inspected the actual **160px and 80px contact sheets**.
+  At 80px the raised double-jaw fixture is now visibly above the roof,
+  although its thin details remain subtle. At 160px the physical lift is
+  unmistakable. Further polish could add a more substantial telescoping
+  support mast, but the mechanical-idle milestone now passes.
+- Preview archive includes the editable Blender source, original frame PNGs,
+  packed atlas, alpha-difference image, both contact sheets and JSON metrics.
+  No approved game artwork was published.
+
 ## Ordered next tasks for hourly agent
 
-1. **Federation Technology Lab mechanical idle:** its two idle poses
-   change RGB emission but **0 alpha pixels**. Make the ballistic clamp
-   visibly translate, pivot or raise above the roof in two distinct
-   Blender poses, then targeted render, reopen and inspect at 80px/160px.
-2. **Radar and Tech damaged-state clarity:** add broken rotor blades,
-   tilted scanner dishes and collapsed experimental hardware in all six
-   MK-II classes. Prefer targeted source and workflow QA, no unrelated
-   rerenders.
-3. **Psionic Factory:** replace the glowing front screen with a physically
+1. **Radar and Technology Lab damaged-state clarity:** add broken
+   scanner blades, tilted dishes, shattered gyres and collapsed experimental
+   hardware to all six classes, with damage readability checked at 80px.
+   Prefer a targeted review, no unrelated rerenders.
+2. **Psionic Factory:** replace the glowing front screen with a physically
    hollow fabrication bay while preserving its twin-horn silhouette.
+3. **Federation Technology Lab mechanical polish:** the 80px idle alpha
+   difference is now **74 pixels**, but a telescoping lift rail could make
+   the raised jaws more convincing at 80px. Do not rerender unchanged.
 4. **Complete gameplay states:** introduce critical, destroyed and power-out
    geometry beyond the five-frame preview contract.
 5. Continue defenses, airfields, remaining 3D vehicles and asset atlas
