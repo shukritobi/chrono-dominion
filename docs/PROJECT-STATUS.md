@@ -1,7 +1,9 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.14.0 (see `package.json`, `game.js` and [v2.14 release notes](RELEASE-2.14.md)).
+**Current prototype:** v2.15.0 (see `package.json`, `game.js` and [v2.15 release notes](RELEASE-2.15.md)).
+
+v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks passed; full CI and balance results for this version remain to be verified.
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
