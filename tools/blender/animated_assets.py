@@ -334,7 +334,7 @@ def animate(kind,state,frame,frames):
             elif part.startswith("damage_rubble_"):
                 o.hide_render=state!="damaged"
         if state=="damaged":
-            for part in ("damage_breakable","damage_secondary","damage_tertiary"):
+            for part in ("damage_breakable","damage_secondary","damage_tertiary","damage_quaternary"):
                 if part in PARTS:
                     PARTS[part].hide_render=True
     if "idle_beacon" in PARTS:
