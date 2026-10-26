@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.20.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.21.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
 
+
+### Animated faction roster and first aircraft (v2.21)
+
+- Three factions now have independently animated infantry/specialists, HD-style armored scout/siege/harvester visuals, distinctive active/damaged structures and glow/lighting effects. The original 32-direction battle tank/turret atlases remain in place.
+- **Air Command** is buildable after the Factory and Radar, adding selectable, flying Strike Aircraft for Coalition, Federation and Psionic Order. Air units cross lakes and ground obstacles while retaining standard move, attack and production controls.
+- See [v2.21 visual release notes](docs/RELEASE-2.21-ART.md) for features, implementation, tests, and remaining animation limitations.
 
 ### Coordinated AI siege and improved battle effects (v2.19)
 
