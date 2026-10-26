@@ -42,6 +42,8 @@ jobs:
           node tests/platoons-v19.test.mjs
           node tests/multi-platoon-v20.test.mjs
           node tests/targeting-v21.test.mjs
+          node tests/match-lifecycle-v22.test.mjs
+          node tools/simulate-matches.mjs --quick
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
           node --check maps/map-core.js
@@ -80,6 +82,7 @@ jobs:
           test -f map-editor.html
           test -f audio/sfx.js
           test -f tools/maps/build.mjs
+          test -f tools/simulate-matches.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
