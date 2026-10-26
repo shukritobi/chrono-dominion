@@ -14,7 +14,7 @@
 
 Added `tests/platoon-attrition-v215.test.mjs` covering casualty continuity, slot alignment, two-survivor assault, wounded support reserve and save/load. Registered the test in `npm test`, `npm run check` and GitHub Actions.
 
-A focused V8 runtime smoke test of the updated game code passed before committing. Full Node.js CI and Pages deployment require independent confirmation.
+A focused V8 runtime smoke test passed before committing. The full GitHub Actions verification job, including the nine-scenario 240-second balance matrix and the new v2.15 regression, passed; the Pages deployment job succeeded. The public site displayed PROTOTYPE 2.15 · RESILIENT PLATOONS. [Verified workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617). These checks do not prove a human win-rate improvement.
 
 ## Remaining
 
