@@ -262,6 +262,35 @@ def base_building(kind,faction):
     PARTS["idle_beacon"]=sphere(
         "Visible animated base telemetry lamp",beacon_position,
         (.145,.145,.15),"glow",segments=12,rings=8)
+    # Construction begins with the actual full-size foundation, not a
+    # miniature copy of the finished building. Only upper equipment is
+    # hidden during the first construction frame.
+    PARTS["construction_structures"]=tuple(
+        o for o in ROOT.children if o != PARTS["idle_beacon"])
+    for index,(x,y) in enumerate(((-1.25,-1.20),(1.25,-1.20),
+                                  (-1.25,1.20),(1.25,1.20))):
+        post=box("Temporary build scaffold post",(x,y,1.29),
+                 (.10,.10,1.36),"light",.012)
+        post.hide_render=True
+        PARTS["scaffold_post_"+str(index)]=post
+    for y in (-1.20,1.20):
+        beam=box("Temporary build scaffold top rail",(0,y,1.97),
+                 (2.60,.11,.12),"light",.012)
+        beam.hide_render=True
+        PARTS["scaffold_rail_"+str(y)]=beam
+    # Three actual jagged wreckage meshes replace the former
+    # lean-and-dim-only damaged pose. Their position is on the visible
+    # camera-facing apron (+X, -Y), not floating over the roof.
+    for index,(dx,dy,dz) in enumerate(((0.0,0.0,0.0),
+                                      (-.28,.26,-.12),(.16,.48,-.18))):
+        fragment=mesh("Damaged fractured facade slab",[
+            (1.02+dx,-1.30+dy,.80+dz),
+            (1.56+dx,-1.30+dy,.79+dz),
+            (1.48+dx,-1.18+dy,1.55+dz),
+            (1.13+dx,-1.12+dy,1.20+dz)
+        ],[(0,1,2),(0,2,3)],"armor" if index==0 else "dark")
+        fragment.hide_render=True
+        PARTS["damage_rubble_"+str(index)]=fragment
     return model
 
 def animate(kind,state,frame,frames):
@@ -287,13 +316,32 @@ def animate(kind,state,frame,frames):
         PARTS["radar"].rotation_euler.z=phase
     if "muzzle" in PARTS:
         PARTS["muzzle"].hide_render=state!="attack"
+    if "construction_structures" in PARTS:
+        # Reset every render. Blender keeps hide_render flags between
+        # sequential frames, so a hidden construction part must not leak
+        # into the idle or damaged states.
+        foundation_names=("foundation","technical deck","plinth",
+                          "energy well","stone dais","base skirt",
+                          "identity strip","furnace indicator",
+                          "foundation needle","front blast buttress")
+        early_build=state=="construct" and frame==0
+        for o in PARTS["construction_structures"]:
+            o.hide_render=(early_build and
+                           not any(t in o.name.lower() for t in foundation_names))
+        for part,o in PARTS.items():
+            if part.startswith("scaffold_"):
+                o.hide_render=not early_build
+            elif part.startswith("damage_rubble_"):
+                o.hide_render=state!="damaged"
+        if state=="damaged":
+            for part in ("damage_breakable","damage_secondary","damage_tertiary"):
+                if part in PARTS:
+                    PARTS[part].hide_render=True
     if "idle_beacon" in PARTS:
         PARTS["idle_beacon"].hide_render=(
-            state=="damaged" or (state=="idle" and frame%2==0))
-    if state=="construct":
-        ROOT.scale=(.48+frame/max(1,frames-1)*.52,)*3
-    elif state=="damaged":
-        ROOT.rotation_euler.x=.08
+            state!="idle" or frame%2==0)
+    if state=="damaged":
+        ROOT.rotation_euler.x=.045
     # Building idle frames actually pulse; otherwise symmetric toroids render static.
     glow=MATS.get("glow")
     if glow and glow.use_nodes:
