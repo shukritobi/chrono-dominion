@@ -2893,6 +2893,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.22.0',build:'expanse-camera-controls'};
+  window.ChronoDominion={version:'2.23.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
