@@ -317,20 +317,79 @@ than changing only emissive RGB pixels.
   packed atlas, alpha-difference image, both contact sheets and JSON metrics.
   No approved game artwork was published.
 
+## 2026-10-27 MK-IV six Radar / Technology Lab physical destruction preview
+
+**Preview-only. All six Blender sources and five-frame 160×800 RGBA atlases
+were rendered; no live textures or production manifest were replaced.**
+This pass adds a separate original, fully editable damage-wreckage module
+[`radar_tech_wreckage.py`](../../tools/blender/radar_tech_wreckage.py)
+and state-specific visibility in
+[`animated_assets.py`](../../tools/blender/animated_assets.py).
+
+- [Initial six-building headless Blender render, source-reopen and 80px/160px pixel QA](https://github.com/shukritobi/chrono-dominion/actions/runs/40410246463):
+  **5 of 6 passed**, but the Federation Technology Lab failed the honest
+  visual gate: its intact furnace remained upright and damage alpha changed
+  only **111** pixels at 80px, up from **104** in MK-II. The failure was
+  retained as an artifact rather than lowering the gate.
+- [Successful focused Federation Lab repair](https://github.com/shukritobi/chrono-dominion/actions/runs/40410509055):
+  hid the intact upper furnace shaft **only** in the damaged state, leaving
+  a separately editable toppled furnace cylinder and torn test cradle.
+  Its damage alpha rose from **111 to 209 pixels at 80px**, and from
+  **461 to 870 pixels at 160px**. The repaired Blender source reopened
+  with **53 editable mesh objects**, including the original and collapsed
+  furnace. The moving MK-III test clamp still changes **74 idle alpha
+  pixels at 80px**, and early construction still changes **1,016**.
+- [Six-building Blender preview workflow](../../.github/workflows/radar-tech-damage-review.yml)
+  and [strict image QA](../../tools/blender/qa_radar_tech_damage.py);
+  [single-failure targeted repair workflow](../../.github/workflows/federation-tech-damage-fix.yml)
+  and [repair QA](../../tools/blender/qa_federation_tech_damage.py).
+- Each of the five first-pass sources was reopened in headless Blender with
+  **43 / 43 / 44 radar meshes** and **46 / 48 tech meshes** for
+  Coalition / Federation / Psionic respectively (Federation Tech separately
+  reopened with 53 meshes). Damage-only meshes were hidden in the saved
+  intact source. Construction frame 0 was pixel-identical to MK-II across
+  all six, confirming no scaffold regression.
+- Actual downloaded 160px and 80px contact sheets and the focused repaired
+  Federation Lab were inspected. All six damaged poses have visibly removed
+  signature upper equipment and separately editable broken hardware, not
+  only a lighting or tilt change. Coalition's reflector is detached;
+  Federation's phased array collapses; Psionic scanner gyres shatter;
+  Coalition's science gantry falls; Federation's chimney collapses;
+  Psionic's oracle rings and crystal spires break.
+
+| Class | Coalition MK-II → MK-IV damage alpha at 80px | Federation | Psionic |
+|---|---:|---:|---:|
+| Radar | 122 → **324** (+202) | 181 → **322** (+141) | 146 → **293** (+147) |
+| Technology Lab | 120 → **202** (+82) | 104 → **209** (+105) | 139 → **304** (+165) |
+
+The consolidated local QA recomputed the prior MK-II pixel baselines from
+the original archived PNGs, replaced **only** the failed Federation Tech
+with the targeted repaired source and atlas, and verified that every
+improvement exceeds 20 changed alpha pixels at 80px. All six retain
+five populated, unclipped RGBA frames and editable Blender source.
+A commit comparison from `9c671afb` through the focused repair found
+**no modifications to published atlas files or their manifests**. Other
+gameplay commits occurred concurrently; this review does not claim they
+were part of the asset change.
+
+**Visual limitation:** Fallen details are still small at 80px, especially
+the Coalition lab's shattered glazing, but the lost roofline and scanner
+silhouettes now read clearly. Critical/destroyed/power-out gameplay states
+remain unimplemented, and none of these previews is approved for publication.
+
 ## Ordered next tasks for hourly agent
 
-1. **Radar and Technology Lab damaged-state clarity:** add broken
-   scanner blades, tilted dishes, shattered gyres and collapsed experimental
-   hardware to all six classes, with damage readability checked at 80px.
-   Prefer a targeted review, no unrelated rerenders.
-2. **Psionic Factory:** replace the glowing front screen with a physically
-   hollow fabrication bay while preserving its twin-horn silhouette.
-3. **Federation Technology Lab mechanical polish:** the 80px idle alpha
-   difference is now **74 pixels**, but a telescoping lift rail could make
-   the raised jaws more convincing at 80px. Do not rerender unchanged.
-4. **Complete gameplay states:** introduce critical, destroyed and power-out
-   geometry beyond the five-frame preview contract.
-5. Continue defenses, airfields, remaining 3D vehicles and asset atlas
-   integration after explicit art approval.
+1. **Psionic Factory:** turn the twin-horn front portal into a physically
+   hollow fabrication bay, preserve the distinct horns, and use a targeted
+   Blender source-reopen/raycast and 80px/160px sprite review.
+2. **Critical / destroyed / power-out:** extend the current five-frame
+   building preview contract with separate geometry and validation for
+   structural collapse, powerless machinery and late destruction. Stage
+   separately; do not alter the published game atlas format prematurely.
+3. **Damage polish:** add bright fracture edges and more visible displaced
+   mechanical wreckage where 80px inspection shows subtle fragments.
+4. **Remaining assets:** finish defenses, airfields, unmodeled vehicle types,
+   32-facing movement and destruction, then assess art integration only
+   after explicit approval.
 
 **Never overwrite approved game textures without explicit approval.**
