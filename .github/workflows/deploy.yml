@@ -55,6 +55,7 @@ jobs:
           node tests/scout-safety-v210.test.mjs
           node tests/scout-routes-v211.test.mjs
           node tests/scout-evasion-v212.test.mjs
+          node tests/scout-detours-v213.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
@@ -115,6 +116,7 @@ jobs:
           test -f tests/scout-safety-v210.test.mjs
           test -f tests/scout-routes-v211.test.mjs
           test -f tests/scout-evasion-v212.test.mjs
+          test -f tests/scout-detours-v213.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
