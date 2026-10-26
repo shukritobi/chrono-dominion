@@ -1,6 +1,7 @@
 name: Federation Technology Lab MK-III Mechanical Idle Review
 
 # Preview-only targeted 3D geometry verification; no production art writes.
+# MK-III second pass: verify elevated carriage visibly escapes the roof alpha mask.
 on:
   workflow_dispatch:
   push:
