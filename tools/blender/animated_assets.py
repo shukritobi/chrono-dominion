@@ -352,7 +352,7 @@ def animate(kind,state,frame,frames):
     if "radar_aux" in PARTS:
         # Run after the construction visibility reset, which otherwise
         # restores hidden rotor meshes in the damaged state.
-        PARTS["radar_aux"].hide_render=(kind in ("radar","tech") and state=="damaged")
+        PARTS["radar_aux"].hide_render=(kind in ("radar","tech") and (state=="damaged" or (state=="construct" and frame==0)))
     if "idle_beacon" in PARTS:
         PARTS["idle_beacon"].hide_render=(
             state!="idle" or frame%2==0)
