@@ -37,7 +37,7 @@
         <button id="audioClear" type="button">REMOVE IMPORTED SOUNDS</button>
         <p id="audioStatus" role="status" aria-live="polite">No local sound pack selected. Files stay on your device and are never uploaded.</p>
       </div>
-      <div id="hint">Mouse: select / drag-select / right-click command · Touch: tap select or command, drag pan, pinch zoom · Shift + right-click: attack-move · Ctrl+1–9: groups · H: HQ · WASD: pan · Wheel: zoom · Esc: pause</div>
+      <div id="hint">Mouse: select / drag-select / right-click command · Space+drag or middle-drag: pan · Touch: tap select or command, drag pan, pinch zoom · Shift + right-click: attack-move · Ctrl+1–9: groups · H: HQ · C: selection · WASD: pan · Wheel: zoom · Esc: pause</div>
       <div id="toast" role="status"></div>
       <div id="overlay" class="overlay">
         <section class="menu">
@@ -56,7 +56,7 @@
           <div id="skirmishMenu" class="hidden">
             <label>YOUR ARMY<select id="playerFaction"><option value="coalition">Coalition Forces</option><option value="federation">Iron Federation</option><option value="psionic">Psionic Order</option></select></label>
             <label>ENEMY ARMY<select id="enemyFaction"><option value="federation">Iron Federation</option><option value="coalition">Coalition Forces</option><option value="psionic">Psionic Order</option></select></label>
-            <label>BATTLEFIELD<select id="mapSelect"><option value="verdant">Verdant Front</option><option value="desert">Ashen Basin</option><option value="snow">Frostline</option><option value="custom" disabled>Custom Battlefield · Create in Map Forge</option></select></label>
+            <label>BATTLEFIELD<select id="mapSelect"><option value="verdant">Verdant Front</option><option value="desert">Ashen Basin</option><option value="snow">Frostline</option><option value="expanse">Frontier Expanse XL · 48×48</option><option value="custom" disabled>Custom Battlefield · Create in Map Forge</option></select></label>
             <div class="mapPreview"><canvas id="mapPreview" width="272" height="144" aria-label="Skirmish map preview"></canvas><p id="mapDescription">Twin lake basins and contested ore deposits.</p></div>
             <label>STARTING CREDITS<select id="startingCredits"><option value="3000">3,000 · Challenging</option><option value="5000" selected>5,000 · Standard</option><option value="8000">8,000 · Quick Build</option></select></label>
             <label>DIFFICULTY<select id="difficulty"><option value="recruit">Recruit</option><option value="standard" selected>Standard</option><option value="veteran">Veteran</option></select></label>
@@ -65,7 +65,7 @@
           </div>
           <div id="howMenu" class="hidden">
             <p>Deploy buildings from the right sidebar. Your refinery sends harvesters to ore, generating credits. Build a barracks for infantry, a war factory for tanks and defenses to protect your base. Click one of your buildings to repair it over time using credits, or sell a non-command building for a partial refund. Pause to save/load a match in this browser (also F6/F9).</p>
-            <p>Choose a unit, then right-click the ground to move or an enemy to attack. On phones and tablets, tap a friendly unit and then tap the destination or enemy; drag one finger to pan, drag two fingers to pan together, or pinch to zoom. The +/- zoom buttons also work. Tap CANCEL to abandon a pending building placement, attack-move or Chrono Jump without a keyboard. Move several units together to keep a formation. Use G guard, B hold, V aggressive, X stop, or T then right-click for attack-move. Select a specialist and press F to use its unique ability: Coalition teleport requires a right-click target; Federation Arc and Psionic Jam pulse around the unit. Units route to the nearest reachable shoreline when commanded across impassable terrain. Damaged buildings smoke or burn and repairs show visible sparks. Placement preview shows a 3×3 building footprint. Harvesters collect automatically. Destroy all hostile structures to win.</p>
+            <p>Choose a unit, then right-click the ground to move or an enemy to attack. On phones and tablets, tap a friendly unit and then tap the destination or enemy; drag one finger to pan, drag two fingers to pan together, or pinch to zoom. On desktop, hold Space while dragging the left mouse button or drag with the middle mouse button to pan without issuing unit commands. The +/- zoom buttons also work. Tap CANCEL to abandon a pending building placement, attack-move or Chrono Jump without a keyboard. Move several units together to keep a formation. Use G guard, B hold, V aggressive, X stop, or T then right-click for attack-move. Select a specialist and press F to use its unique ability: Coalition teleport requires a right-click target; Federation Arc and Psionic Jam pulse around the unit. Units route to the nearest reachable shoreline when commanded across impassable terrain. Damaged buildings smoke or burn and repairs show visible sparks. Placement preview shows a 3×3 building footprint. Harvesters collect automatically. Destroy all hostile structures to win.</p>
             <button id="backHow">BACK</button>
           </div>
           <div id="pauseMenu" class="hidden">
@@ -83,7 +83,7 @@
             <button class="primary" id="playAgain">PLAY AGAIN</button>
             <button id="resultQuit">MAIN MENU</button>
           </div>
-          <div class="version">PROTOTYPE 2.21 · TACTICAL AUDIO</div>
+          <div class="version">PROTOTYPE 2.22 · EXPANSE CAMERA</div>
         </section>
       </div>
     </main>

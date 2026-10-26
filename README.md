@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.20.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.22.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
+
+### Frontier Expanse XL and camera navigation (v2.22)
+
+- **48×48 Frontier Expanse XL** is a new selectable map, almost twice the original 34×34 area. Original maps, legacy saves and the 34×34 Map Forge remain compatible.
+- Desktop camera navigation: middle mouse button drag, or hold Space + left-drag. Existing one- and two-finger touch panning, pinch zoom, WASD/arrows and clickable radar remain.
+- Dynamic battlefield size now governs spawning, fog, AI surveying, movement bounds, minimap, map preview and saved-game validation. See [v2.22 regression](tests/expanse-camera-v222.test.mjs) and [release notes](docs/RELEASE-2.22.md).
 
 ### Coordinated AI siege and improved battle effects (v2.19)
 

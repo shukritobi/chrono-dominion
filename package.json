@@ -1,6 +1,6 @@
 {
   "name": "chrono-dominion",
-  "version": "2.21.0",
+  "version": "2.22.0",
   "private": true,
   "type": "module",
   "description": "Original-browser-RTS playable skirmish prototype",
