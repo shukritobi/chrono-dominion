@@ -203,7 +203,18 @@ const report={
     casesWithIncome:results.filter(r=>r.harvest[0]+r.harvest[1]>0).length,
     casesWithCombat:results.filter(r=>r.damage[0]+r.damage[1]>0).length,
     casesWithPlatoons:results.filter(r=>r.platoonSeen).length,
-    peakEntities:Math.max(...results.map(r=>r.peakEntities))
+    peakEntities:Math.max(...results.map(r=>r.peakEntities)),
+    mapEconomy:Object.fromEntries(MAPS.map(map=>{
+      const cases=results.filter(r=>r.map===map);
+      return [map,{
+        playerOre:cases.reduce((n,r)=>n+r.harvest[0],0),
+        enemyOre:cases.reduce((n,r)=>n+r.harvest[1],0),
+        enemyToPlayerOreRatio:Number((
+          cases.reduce((n,r)=>n+r.harvest[1],0)/
+          Math.max(1,cases.reduce((n,r)=>n+r.harvest[0],0))
+        ).toFixed(3))
+      }];
+    }))
   }
 };
 if(out)writeFileSync(out,JSON.stringify(report,null,2)+'\n');
@@ -212,4 +223,13 @@ else console.log('BALANCE LAB SUMMARY:',JSON.stringify(report.summary));
 assert.equal(results.length,9,'complete three-map/three-difficulty matrix');
 assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
+assert.equal(report.summary.casesWithIncome,9,
+  'all scripted map/difficulty scenarios must generate some delivered income');
+assert.ok(report.summary.casesWithCombat>=6,
+  'the battlefield simulator must exercise actual projectile combat on most maps');
+if(seconds>=220){
+  for(const match of results.filter(r=>r.map==='desert'))
+    assert.ok(match.harvest[1]>=3000,
+      'Ashen Basin AI economic regression: inaccessible ore or failed deliveries');
+}
 console.log('PASS: 9 deterministic headless skirmish scenarios, resource/economy integrity, fog and production safety');
