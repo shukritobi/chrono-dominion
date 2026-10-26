@@ -152,20 +152,75 @@ saved Blender files and hidden in idle/construct states.
 - Existing game-art manifests were compared with the pre-MK-V commit:
   their Git blob hashes are unchanged. **No preview art was published.**
 
+## 2026-10-27 MK-II Radar Arrays and Technology Laboratories
+
+**Preview-only; no published atlas replacement.** Six distinct original
+procedural Blender models now exist: Coalition parabolic SkyScan reflector and
+split-wing quantum annex; Federation double-ended IronWatch array and
+near-side chimney siege laboratory; Psionic counter-rotating psychic scanner
+and broad three-oracle research chamber. Physical scanner geometry rotates
+between idle frames. A second independently counter-rotating rotor is used
+where the model includes one. The 3D components are meshes, not a flat
+animated picture.
+
+- [Successful final six-building Blender render, source reopen and contact-sheet QA](https://github.com/shukritobi/chrono-dominion/actions/runs/40385354333).
+- [Preview-only radar/tech renderer workflow](../../.github/workflows/radar-tech-mk2-review.yml).
+- [80px and 160px image inspection and acceptance logic](../../tools/blender/qa_radar_tech.py).
+- All six original editable compressed `.blend` files were reopened in
+  headless Blender, with **34-39 mesh objects** each. The Blender job rendered
+  **six RGBA 160×800 atlases**, with five populated frames per building.
+- The final archive contains the source files, all PNG frames, packed
+  atlases, per-asset previews, two contact sheets and quantitative JSON QA.
+- Visual review of the **actual** final 160px and 80px sheets confirmed
+  recognizable rotating radar hardware, faction materials and early
+  construction scaffolds. The initial preview showed floating unbuilt
+  research rings in construction frame 0; this was fixed and re-rendered.
+- A second inspection found the Federation research building's original
+  furnace largely hidden behind the roof. Its thermal chimney was moved
+  to the visible near side and raised, giving the science lab a taller
+  asymmetrical silhouette distinct from the horizontal radar array.
+- Idle alpha-mask changed pixels, in Coalition/Federation/Psionic order:
+  **Radar 650 / 641 / 447**; **Technology Lab 282 / 0 / 502**.
+  Federation Lab's two idle frames are nevertheless RGB-distinct from the
+  active emissive pulse, but physical motion remains visually restrained.
+- First construction frame vs idle at 80px: **Radar 581 / 900 / 360**;
+  **Technology Lab 688 / 1016 / 581** changed alpha pixels.
+- Damaged frame vs idle at 80px: **Radar 122 / 181 / 146**;
+  **Technology Lab 120 / 104 / 139** changed alpha pixels.
+- Technical acceptance passed, but the Federation Tech Lab needs a stronger
+  moving experimental test fixture, and all six would benefit from more
+  dramatically broken hardware in the damaged frame before approval.
+- The asset roster remains **Planned** for complete critical/destroyed
+  gameplay states. These are **five-frame previews only**.
+- The older MK-V factory workflow run 40376236530 failed because the
+  Ubuntu apt package installation timed out (exit code 124), not because
+  the revised factory alpha thresholds failed. The new radar/tech workflow
+  bypasses apt mirrors with a checksum-verified official Blender 4.2.23
+  Linux archive and a shared GitHub cache; this approach passed.
+
+## 2026-10-27 remaining-building staged-state QA
+
+A dedicated [nine-building state QA script](../../tools/blender/qa_remaining_buildings.py)
+and [preview-only Blender workflow](../../.github/workflows/remaining-building-state-review.yml)
+now cover Headquarters, Refinery and Barracks for each faction. Each output
+contains full-size construction scaffolding, a fractured-damage pose, two
+idle frames, source-reopen verification and 160px/80px contact sheets.
+The workflow was launched at
+[run 40385597132](https://github.com/shukritobi/chrono-dominion/actions/runs/40385597132);
+do not claim it passed until its actual render artifacts are inspected.
+
 ## Ordered next tasks for hourly agent
 
-1. **Remaining building-class construction/damage QA:** validate Headquarters,
-   Refinery and Barracks across all three factions with the full-size scaffold
-   and fractured-damage renderer. Factory MK-V is modeled and pixel-inspected,
-   but do not promote to production without artistic approval.
-2. **Radar Arrays and Technology Labs:** author six original faction-distinct
-   MK-II structures, with physical moving radar hardware and readable
-   laboratory silhouettes; render editable sources, 160×800 atlases and
-   compare at 100% and 50% sprite scale.
-3. **Psionic Factory:** consider deepening the physical front fabrication
-   portal; it currently reads as a glowing materialization screen.
-4. **Animation polish:** implement mechanical movement and stronger damaged
-   silhouettes without losing the established faction design language.
+1. **Finish nine-building construction/damage review:** inspect workflow
+   40385597132, download the actual contact sheets, check 80px damaged
+   visibility and source-reopen results, then strengthen weak states.
+2. **Radar/Tech art polish:** the six MK-II source models are rendered and
+   verified; improve Federation Lab mechanical idle motion and all six
+   broken hardware poses without redoing unchanged assets.
+3. **Psionic Factory:** deepen the actual front fabrication portal.
+4. **Complete gameplay states:** add critical and destroyed geometry beyond
+   the current five-frame preview protocol and implement clear power-out
+   variants where appropriate.
 5. Continue defenses, airfields, missing 3D vehicles and atlas manifests.
 
 **Never overwrite approved game textures without explicit approval.**
