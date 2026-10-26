@@ -99,7 +99,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -336,7 +336,7 @@
       this.aiPlatoon=this.restoreAIPlatoon(saved.aiPlatoon,saved.entities);
       this.aiSupportPlatoon=this.restoreAIPlatoon(saved.aiSupportPlatoon,saved.entities);
       // Stuck detection is transient; old snapshots never stored it.
-      this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;
+      this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;
       if(this.aiSupportPlatoon&&this.aiPlatoon&&this.aiSupportPlatoon.ids.some(id=>this.aiPlatoon.ids.includes(id)))this.aiSupportPlatoon=null;
       this.entities=saved.entities.map(e=>({...e,
         kills:Number.isInteger(e.kills)&&e.kills>=0?Math.min(9999,e.kills):0,
@@ -414,7 +414,7 @@
       this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.trafficYieldCount=0;this.laneReservations=new Map();
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -1192,7 +1192,8 @@
       // A shot is now a moving projectile. Damage is resolved on impact, not firing.
       if(source.owner===0||this.sideCanSee(0,source))this.audio?.play('shot');
       this.projectiles.push({
-        x:source.x,y:source.y,targetId:target.id,owner:source.owner,sourceId:source.id,
+        x:source.x,y:source.y,prevX:source.x,prevY:source.y,
+        targetId:target.id,owner:source.owner,sourceId:source.id,
         sourceKind:source.kind,damage:damage*bonus,psychic,age:0,
         speed:source.kind==='soldier'?8.5:source.kind==='tank'?6.8:source.kind==='heavy'?5:psychic?7:10,
         color:psychic?'#bb78ff':faction==='psionic'?'#a3f5c8':source.type==='building'?'#77d9ff':'#f4b36c'
@@ -1201,6 +1202,7 @@
     }
     updateProjectiles(dt){
       for(const shot of this.projectiles){
+        shot.prevX=shot.x;shot.prevY=shot.y;
         shot.age+=dt;
         const target=this.entityById(shot.targetId);
         if(!target||target.owner===shot.owner||shot.age>8){shot.expired=true;continue;}
@@ -1220,6 +1222,12 @@
         }
         target.hp-=shot.damage;
         this.noteBuildingDamage(target,shot.owner);
+        if(shot.owner===1&&target.type==='building')this.aiSiegeHits++;
+        if(target.type==='building'&&
+          (shot.sourceKind==='heavy'||shot.sourceKind==='tank'||target.hp<=0)){
+          this.particles.push({x:target.x,y:target.y,life:.5,
+            type:'shockwave',radius:shot.sourceKind==='heavy'?34:23,color:shot.color});
+        }
         if(this.stats[shot.owner])this.stats[shot.owner].damageDealt+=Math.max(0,Math.min(shot.damage,target.hp+shot.damage));
         this.particles.push({x:target.x,y:target.y,life:.38,color:shot.color,type:'hit'});
         if(this.sideCanSee(0,target))this.audio?.play('impact');
@@ -1241,8 +1249,13 @@
         c.save();
         c.strokeStyle=shot.color;c.fillStyle=shot.color;c.lineWidth=2.8;
         c.shadowColor=shot.color;c.shadowBlur=9;
-        c.beginPath();c.moveTo(p.x-6,p.y-10);c.lineTo(p.x,p.y-12);c.stroke();
-        c.beginPath();c.arc(p.x,p.y-12,3.3,0,Math.PI*2);c.fill();c.restore();
+        // Draw tracer along the actual projectile displacement.
+        // Old save projectiles without previous coordinates remain valid.
+        const previous=iso(shot.prevX??shot.x,shot.prevY??shot.y);
+        c.globalAlpha=.7;c.beginPath();
+        c.moveTo(previous.x,previous.y-12);c.lineTo(p.x,p.y-12);c.stroke();
+        c.globalAlpha=1;c.beginPath();
+        c.arc(p.x,p.y-12,3.3,0,Math.PI*2);c.fill();c.restore();
       }
     }
     productionBuilding(side,unitKind){
@@ -1496,7 +1509,7 @@
       }
       return visited;
     }
-    chooseFlank(origin,report,side=0,reachable=null){
+    chooseFlank(origin,report,side=0,reachable=null,reserved=[]){
       // Sample walkable firing approaches around the REPORTED objective,
       // rather than sending units into its (blocked) structure footprint.
       const access=reachable||this.assaultReachableTiles(origin);
@@ -1512,8 +1525,12 @@
         seen.add(key);
         const p={x,y},sideOffset=(-(p.x-report.x)*vy+(p.y-report.y)*vx)/length;
         const flank=Math.max(0,1.5-sign*sideOffset);
+        const congestion=reserved.reduce((total,used)=>{
+          const spacing=dist(p,used);
+          return total+(spacing<2.4?32+(2.4-spacing)*8:spacing<3.5?5:0);
+        },0);
         candidates.push({p,score:dist(origin,p)*.8+
-          dist(p,report)*.4+flank*1.1});
+          dist(p,report)*.4+flank*1.1+congestion});
       }
       candidates.sort((a,b)=>a.score-b.score||a.p.x-b.p.x||a.p.y-b.p.y);
       return candidates[0]?.p||null;
@@ -1540,7 +1557,8 @@
         }
         if(this.time-old.time<18)continue;
         // Rotate flank preference after a genuine 18-second movement stall.
-        const next=this.chooseFlank(unit,plan.target,i+1+old.retries);
+        const next=this.chooseFlank(unit,plan.target,i+1+old.retries,
+          null,[unit.order]);
         if(next&&dist(next,unit.order)>1.2){
           unit.order={type:'attackMove',x:next.x,y:next.y};
           unit.path=[];unit.pathTarget=null;unit.pathGoal=null;
@@ -1660,9 +1678,10 @@
         if(ready>=Math.ceil(members.length*.7)||
           (this.time-plan.startedAt>22&&ready>=Math.ceil(members.length*.5))){
           plan.phase='assault';
+          const claimed=[];
           members.forEach((unit,i)=>{
-            const flank=this.chooseFlank(unit,plan.target,i);
-            if(flank)unit.order={type:'attackMove',x:flank.x,y:flank.y};
+            const flank=this.chooseFlank(unit,plan.target,i,null,claimed);
+            if(flank){claimed.push(flank);unit.order={type:'attackMove',x:flank.x,y:flank.y};}
           });
         }
       }
@@ -1722,9 +1741,10 @@
         if(arrived>=Math.ceil(members.length*.75)||
           (this.time-plan.startedAt>20&&arrived>=Math.ceil(members.length*.5))){
           plan.phase='assault';
+          const claimed=[];
           members.forEach((u,i)=>{
-            const flank=this.chooseFlank(u,plan.target,i+1);
-            if(flank)u.order={type:'attackMove',x:flank.x,y:flank.y};
+            const flank=this.chooseFlank(u,plan.target,i+1,null,claimed);
+            if(flank){claimed.push(flank);u.order={type:'attackMove',x:flank.x,y:flank.y};}
           });
         }
       }
@@ -1822,6 +1842,52 @@
         if(unit&&unit.hp>0)unit.order={type:'attack',id:targetId};
       }
       return assignments;
+    }
+    coordinateAISiegeFocus(fighters,engagements=new Map(),threatened=false){
+      // Direct siege orders require ACTUAL AI line of sight. Remembered
+      // reports permit navigation only, not magically attacking hidden objects.
+      const assigned=new Map();
+      if(threatened)return assigned;
+      const targets=this.entities.filter(e=>e.owner===0&&e.type==='building'&&
+        e.hp>0&&e.built&&this.sideCanSee(1,e));
+      if(!targets.length)return assigned;
+      const incoming=new Map(),planned=new Map();
+      for(const shot of this.projectiles){
+        if(shot.owner===1&&!shot.expired)
+          incoming.set(shot.targetId,(incoming.get(shot.targetId)||0)+shot.damage);
+      }
+      const squads=[this.aiPlatoon,this.aiSupportPlatoon].filter(p=>p?.phase==='assault');
+      for(const squad of squads){
+        const members=squad.ids.map(id=>fighters.find(u=>u.id===id))
+          .filter(u=>u&&u.hp>0&&u.built&&u.kind!=='recon'&&
+            u.kind!=='harvester'&&!engagements.has(u.id)&&
+            (u.retreatUntil||0)<=this.time&&
+            (u.retreatCooldownAt||0)<=this.time);
+        for(const unit of members){
+          const range=this.stat(unit,'range');
+          const options=targets.filter(b=>dist(unit,b)<=Math.max(6,range+1.8));
+          if(!options.length)continue;
+          const score=b=>{
+            const pending=(planned.get(b.id)||0)+(incoming.get(b.id)||0);
+            const waste=Math.max(0,pending+this.stat(unit,'damage')-b.hp);
+            const priority=['turret','beam'].includes(b.kind)?35:
+              b.id===squad.targetId?30:
+              ['factory','refinery','tech'].includes(b.kind)?22:15;
+            return priority+(b.id===squad.targetId?10:0)-
+              dist(unit,b)*1.8+(1-b.hp/b.maxHp)*8-
+              waste/Math.max(20,b.maxHp)*75;
+          };
+          options.sort((a,b)=>score(b)-score(a)||a.id-b.id);
+          const target=options[0];
+          planned.set(target.id,(planned.get(target.id)||0)+this.stat(unit,'damage'));
+          assigned.set(unit.id,target.id);
+          if(unit.order?.type!=='attack'||unit.order.id!==target.id){
+            unit.order={type:'attack',id:target.id};
+            this.aiSiegeOrders=(this.aiSiegeOrders||0)+1;
+          }
+        }
+      }
+      return assigned;
     }
     scoutWaypoints(){
       // Public terrain landmarks only: no opponent entity coordinates or
@@ -2130,6 +2196,7 @@
         }
       }
       const engagements=this.assignAIEngagements(active,invaders,base);
+      this.coordinateAISiegeFocus(active,engagements,threatened);
       for(const fighter of active){
         if(engagements.has(fighter.id))continue;
         if(fighter.order?.type==='attack'){
@@ -2572,6 +2639,13 @@
         const a=iso(p.x,p.y);c.save();c.translate(a.x,a.y);c.globalAlpha=clamp(p.life,0,1);
         if(p.type==='marker'){this.drawRing(0,0,20*(1.5-p.life),p.color);}
         else if(p.type==='boom'){c.fillStyle=p.color;c.beginPath();c.arc(0,-13,22*(1.1-p.life),0,7);c.fill();}
+        else if(p.type==='shockwave'){
+          const progress=1-p.life/.5;
+          c.strokeStyle=p.color;c.lineWidth=Math.max(.7,3*(1-progress));
+          c.globalAlpha=clamp(p.life/.5,0,1)*.8;
+          c.beginPath();c.ellipse(0,-11,Math.max(2,(p.radius||23)*progress),
+            Math.max(1,(p.radius||23)*progress*.5),0,0,Math.PI*2);c.stroke();
+        }
         else if(p.type==='abilityPulse'){
           const fraction=1-p.life/.85;
           const size=(p.radius||90)*fraction;
@@ -2644,6 +2718,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.18.0',build:'reachable-assault-approaches'};
+  window.ChronoDominion={version:'2.19.0',build:'coordinated-siege-fire'};
   new Game();
 })();
