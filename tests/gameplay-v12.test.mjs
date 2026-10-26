@@ -71,8 +71,10 @@ scout.hp=0;g.time+=1;g.updateIntel(1);
 assert.ok(!g.sideCanSee(1,playerHQ),'visibility ends when scout is removed');
 assert.ok(g.intel[1].some(x=>x.id===playerHQ.id),'brief last-seen position memory remains');
 g.runAI();
-assert.ok(g.entities.some(e=>e.owner===1&&e.type==='unit'&&e.order?.type==='attackMove'),
-  'AI can issue an exploration attack-move toward known hostile structures');
+assert.ok(g.aiPlatoon?.phase==='rally'&&g.aiPlatoon.ids.length>=3,
+  'AI forms a scouting-informed platoon instead of sending one fighter to attack');
+assert.ok(g.aiPlatoon.ids.every(id=>g.entityById(id)?.order?.type==='move'),
+  'platoon members receive coordinated rally orders before assault');
 assert.ok(g.saveGame());
 const saved=JSON.parse(store.get('chrono-dominion-skirmish-v1'));
 assert.ok(saved.intel[1].some(x=>x.id===playerHQ.id),'intel persisted in skirmish save');
