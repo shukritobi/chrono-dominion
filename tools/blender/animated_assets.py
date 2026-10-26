@@ -250,7 +250,19 @@ def base_aircraft():
 
 def base_building(kind,faction):
     # Faction and kind each select a unique 3D silhouette; authored from the design bible.
-    return build_faction_architecture(faction,kind,box,cyl,sphere,mesh,PARTS,MATS,ROOT)
+    model=build_faction_architecture(faction,kind,box,cyl,sphere,mesh,PARTS,MATS,ROOT)
+    # Every structure has a physically blinking status lamp at a readable
+    # foreground footing. Material-only emission fluctuations sometimes
+    # render to identical RGBA PNGs on Linux CPU Cycles.
+    beacon_position = {
+        "coalition": (1.20,-1.25,.78),
+        "federation": (1.30,-1.29,.89),
+        "psionic": (1.18,-.96,.88)
+    }[faction]
+    PARTS["idle_beacon"]=sphere(
+        "Visible animated base telemetry lamp",beacon_position,
+        (.145,.145,.15),"glow",segments=12,rings=8)
+    return model
 
 def animate(kind,state,frame,frames):
     # Two-frame poses are opposite, not sin(0) and sin(pi) (which are identical).
@@ -275,6 +287,9 @@ def animate(kind,state,frame,frames):
         PARTS["radar"].rotation_euler.z=phase
     if "muzzle" in PARTS:
         PARTS["muzzle"].hide_render=state!="attack"
+    if "idle_beacon" in PARTS:
+        PARTS["idle_beacon"].hide_render=(
+            state=="damaged" or (state=="idle" and frame%2==0))
     if state=="construct":
         ROOT.scale=(.48+frame/max(1,frames-1)*.52,)*3
     elif state=="damaged":
