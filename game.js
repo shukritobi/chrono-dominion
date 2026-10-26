@@ -99,7 +99,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -336,7 +336,7 @@
       this.aiPlatoon=this.restoreAIPlatoon(saved.aiPlatoon,saved.entities);
       this.aiSupportPlatoon=this.restoreAIPlatoon(saved.aiSupportPlatoon,saved.entities);
       // Stuck detection is transient; old snapshots never stored it.
-      this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;
+      this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;
       if(this.aiSupportPlatoon&&this.aiPlatoon&&this.aiSupportPlatoon.ids.some(id=>this.aiPlatoon.ids.includes(id)))this.aiSupportPlatoon=null;
       this.entities=saved.entities.map(e=>({...e,
         kills:Number.isInteger(e.kills)&&e.kills>=0?Math.min(9999,e.kills):0,
@@ -414,7 +414,7 @@
       this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.trafficYieldCount=0;this.laneReservations=new Map();
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -1669,6 +1669,7 @@
       }
       const members=plan.ids.map(id=>soldiers.find(u=>u.id===id)).filter(Boolean);
       if(plan.phase==='rally'){
+        this.resumeAIRallyOrders(plan,members);
         const ready=members.filter((unit,i)=>{
           const index=plan.ids.indexOf(unit.id),spot=plan.slots[index];
           return Math.hypot(unit.x-spot.x,unit.y-spot.y)<=1.8;
@@ -1735,6 +1736,7 @@
       }
       const members=plan.ids.map(id=>ready.find(u=>u.id===id)).filter(Boolean);
       if(plan.phase==='rally'){
+        this.resumeAIRallyOrders(plan,members);
         const arrived=members.filter(u=>{
           const spot=plan.slots[plan.ids.indexOf(u.id)];
           return Math.hypot(u.x-spot.x,u.y-spot.y)<=1.8;
@@ -1844,6 +1846,26 @@
         if(unit&&unit.hp>0)unit.order={type:'attack',id:targetId};
       }
       return assignments;
+    }
+    resumeAIRallyOrders(plan,members){
+      // Tactical defense may interrupt a squad's rally order. Once combat
+      // ends, resume the ORIGINAL assigned slot instead of waiting until the
+      // entire staging plan expires. Never interrupt an observed engagement.
+      if(plan?.phase!=='rally')return;
+      for(const unit of members){
+        const index=plan.ids.indexOf(unit.id),spot=plan.slots[index];
+        if(!spot||dist(unit,spot)<=1.8||unit.engaging)continue;
+        const order=unit.order;
+        if(order?.type==='attack'){
+          const enemy=this.entityById(order.id);
+          if(enemy&&enemy.hp>0&&this.sideCanSee(1,enemy))continue;
+        }
+        if(order?.type==='move'&&dist(order,spot)<.5)continue;
+        unit.order={type:'move',x:spot.x,y:spot.y};
+        unit.path=[];unit.pathTarget=null;unit.pathGoal=null;
+        unit.pathRecheck=0;unit.yieldOrder=null;unit.laneWaiting=null;
+        this.aiRallyResumes=(this.aiRallyResumes||0)+1;
+      }
     }
     resumeAISiegeAdvance(plan,members){
       // Direct-fire orders become unusable when a structure leaves AI sight
@@ -2742,6 +2764,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.19.0',build:'coordinated-siege-fire'};
+  window.ChronoDominion={version:'2.20.0',build:'rally-order-recovery'};
   new Game();
 })();
