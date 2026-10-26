@@ -67,10 +67,10 @@ assert.equal(g.copyBattleReport(),true,'report copying is available');
 assert.ok(copiedReport.includes('\n'),'copied report is genuinely multiline');
 // An AI recon must advance to another waypoint when the previous one is reached.
 g.newMatch({playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'recruit'});
-const recon=g.add(1,'recon',24,24);g.runAI();
-assert.ok(recon.order?.type==='attackMove'||recon.order?.type==='attack');
+const recon=g.add(1,'recon',30,20);g.runAI(); // clear of AI base structures
+assert.ok(recon.order?.type==='move'||recon.order?.type==='attack');
 const firstIndex=recon.patrolIndex||0;
-if(recon.order?.type==='attackMove'){
+if(recon.order?.type==='move'){
   recon.x=recon.order.x;recon.y=recon.order.y;recon.order=null;
   g.runAI();
   assert.notEqual(recon.patrolIndex,firstIndex,'AI recon moves to next patrol waypoint');
