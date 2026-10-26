@@ -120,7 +120,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             box("Modular recruitment building",(0,0,1.18),(2.45,2.18,1.12),"armor",.13)
             for side in (-1,1):
                 box("Symmetric dorm wing",(-.28,side*.93,1.14),(1.50,.53,1.02),"light",.05)
-                tower("Field antenna",(-1.02,side*.75,1.90),1.07,"light",.09)
+                tower("Field antenna",-1.02,side*.75,1.90,1.07,"light",.09)
             box("Command training balcony",(.58,-.15,1.93),(.85,1.25,.26),"dark")
             box("Blue entrance",(1.27,-.02,1.08),(.08,.82,.91),"glass",.02)
             light_stripe(1.37,-.02,1.79,.76)
