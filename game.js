@@ -197,6 +197,7 @@
       $('mapSelect').addEventListener('change',()=>this.drawMapPreview());
       $('backMenu').onclick=()=>this.showMenu('mainMenu');
       $('openHow').onclick=()=>this.showMenu('howMenu');
+      $('menuAudioSettings').onclick=()=>{$('audioPanel').classList.remove('hidden');$('audioSettings').setAttribute('aria-expanded','true');};
       $('backHow').onclick=()=>this.showMenu('mainMenu');
       $('start').onclick=()=>{const get=id=>$(id).value;this.audio?.unlock();this.newMatch({playerFaction:get('playerFaction'),enemyFaction:get('enemyFaction'),map:get('mapSelect'),difficulty:get('difficulty'),startingCredits:Number(get('startingCredits'))});};
       $('cancelMode').onclick=()=>this.cancelCurrentMode();
