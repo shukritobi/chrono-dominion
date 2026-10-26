@@ -50,6 +50,8 @@
     return true;
   }
   function find(name,meta={}){
+    // A muted speech channel still retains original click/tone feedback.
+    if(!voiceEnabled&&['select','move','attack','ready'].includes(String(name).split('.')[0]))return null;
     const faction=String(meta.faction||'').toLowerCase(),kind=String(meta.kind||'').toLowerCase();
     const choices=[];
     if(faction&&kind)choices.push('voice.'+name+'.'+faction+'.'+kind);
@@ -62,9 +64,10 @@
     choices.push(name);
     if(name.includes('.'))choices.push(name.split('.')[0]);
     for(const key of choices){const entries=loaded.get(key);if(entries?.length)return entries[Math.floor(Math.random()*entries.length)];}
-    return null;
+    return root.ChronoBuiltin?.find?.(name,meta)||null;
   }
   function fileUrl(file){
+    if(typeof file==='string')return file; // Repo-hosted original MP3, no object URL needed.
     if(urls.has(file))return urls.get(file);
     if(!root.URL?.createObjectURL)return null;
     const url=root.URL.createObjectURL(file);urls.set(file,url);return url;
@@ -109,7 +112,8 @@
   function resumeMusic(){
     stopMusic();
     if(!enabled||!musicEnabled||!context||context.state!=='running')return;
-    const files=loaded.get('music.'+scene)||loaded.get('music.battle')||loaded.get('music');
+    const files=loaded.get('music.'+scene)||loaded.get('music.battle')||loaded.get('music')||
+      root.ChronoBuiltin?.music?.(scene);
     const C=AudioClass();
     if(files?.length&&typeof C==='function'){
       const file=files[Math.floor(Math.random()*files.length)],src=fileUrl(file);
@@ -169,6 +173,7 @@
     },
     announce(event,meta={}){
       if(!enabled)return false;
+      if(!voiceEnabled)return this.play('alert');
       const key='announce.'+String(event);
       const now=typeof root.performance?.now==='function'?root.performance.now()/1000:Date.now()/1000;
       // Keep strategic warnings audible without a flood of repeated alerts.
@@ -262,4 +267,10 @@
     }
   };
   root.ChronoAudio=api;
+  // Seamlessly replace the synthesized score with the authored MP3 when
+  // the small built-in manifest finishes loading after user audio unlock.
+  root.ChronoBuiltin?.load?.().then(ok=>{
+    if(ok&&enabled&&musicEnabled&&context?.state==='running'&&scene!=='pause'&&scene!=='victory'&&scene!=='defeat')
+      resumeMusic();
+  }).catch(()=>{});
 })(typeof window!=='undefined'?window:globalThis);
