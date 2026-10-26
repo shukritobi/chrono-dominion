@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chrono Dominion · 3D Asset Gallery</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#e8f0fb;background:#0a111c}
+*{box-sizing:border-box}body{margin:0}
+header{padding:28px max(20px,calc((100vw - 1200px)/2));border-bottom:1px solid #2a3f56;background:linear-gradient(120deg,#13283c,#101726)}
+h1{margin:0 0 8px;font-size:clamp(25px,4vw,38px)}p{color:#9bb1c7;margin:5px 0 12px;line-height:1.6}
+a{color:#8de8f0}main{max-width:1200px;margin:0 auto;padding:22px;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,420px);gap:20px}
+@media(max-width:780px){main{grid-template-columns:1fr;}}
+.preview{background:radial-gradient(circle at 50% 60%,#284358,#0b1523 68%);border:1px solid #30485a;border-radius:16px;min-height:440px;display:grid;place-items:center;position:relative}
+canvas{image-rendering:auto;width:min(80%,460px);height:auto;aspect-ratio:1;filter:drop-shadow(0 10px 13px #02050a99)}
+.preview:after{content:"TRANSPARENT PNG · BLENDER SOURCE";position:absolute;bottom:15px;font-size:11px;letter-spacing:2px;color:#8296aa}
+.panel{border:1px solid #30485a;background:#111e2b;border-radius:16px;padding:22px;}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:grid;gap:7px;color:#abc0d6;font-size:13px}
+select,input{width:100%;background:#192f43;color:white;border:1px solid #3a5369;border-radius:8px;padding:10px}
+select:focus-visible,input:focus-visible{outline:2px solid #6bd5e0}
+.toggle{display:flex;gap:12px;align-items:center;margin:18px 0}.toggle input{width:20px;height:20px}
+.info{margin-top:15px;padding-top:18px;border-top:1px solid #2d3d4d;font-size:13px;color:#afc1d5}
+#status{color:#b9e9c9}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.chip{padding:7px 10px;border:1px solid #315169;background:#193148;color:#b8dfea;border-radius:22px;font-size:11px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>CHRONO DOMINION <span style="color:#6de0e8">/ 3D ART LAB</span></h1>
+  <p>Browse the original textured Blender models and transparent directional animation frames.</p>
+  <a href="../index.html">Back to the game</a> · <a href="../art/baked-v1/manifest.json">Browse atlas metadata</a>
+</header>
+<main>
+  <section class="preview"><canvas id="preview" width="480" height="480" aria-label="Current 3D sprite preview"></canvas></section>
+  <section class="panel">
+    <h2 style="margin-top:0">Sprite inspector</h2>
+    <div class="controls">
+      <label>Faction<select id="faction"></select></label>
+      <label>Unit / structure<select id="kind"></select></label>
+      <label>Animation<select id="state"></select></label>
+      <label>Direction <output id="dirLabel">0°</output><input id="direction" type="range" min="0" max="7" value="0" step="1"></label>
+    </div>
+    <label class="toggle"><input type="checkbox" id="play" checked> Play animation automatically</label>
+    <p id="status" role="status">Loading Blender atlases…</p>
+    <div class="info" id="info">The gallery uses the exact image sheets loaded by the game. Each model has an editable .blend source.</div>
+    <div class="chips">
+      <span class="chip">PBR MATERIALS</span><span class="chip">160px FRAMES</span>
+      <span class="chip">8 DIRECTIONS FOR UNITS</span><span class="chip">LIVE ANIMATIONS</span>
+    </div>
+  </section>
+</main>
+<script>
+'use strict';
+const $=x=>document.getElementById(x),ctx=$('preview').getContext('2d');
+const render={manifest:null,images:new Map(),asset:null,frame:0,last:0};
+const base='./baked-v1/';
+const names={soldier:'Rifle Infantry',specialist:'Faction Specialist',tank:'Battle Tank',
+heavy:'Siege Tank',harvester:'Ore Harvester',recon:'Recon Vehicle',aircraft:'Strike Aircraft',
+hq:'Command Citadel',generator:'Power Reactor',refinery:'Ore Refinery',barracks:'Barracks',
+factory:'War Factory',radar:'Radar Array',tech:'Technology Lab',turret:'Defence Turret',
+beam:'Energy Tower',airfield:'Air Command'};
+function options(el,list,selected){
+ el.innerHTML='';
+ for(const [value,label] of list){const o=document.createElement('option');o.value=value;o.textContent=label;el.appendChild(o);}
+ if(selected&&list.some(x=>x[0]===selected))el.value=selected;
+}
+function refresh(){
+ const faction=$('faction').value;
+ const kinds=render.manifest.entries[faction]||{};
+ options($('kind'),Object.keys(kinds).map(k=>[k,names[k]||k]),$('kind').value||'soldier');
+ changeAsset();
+}
+function changeAsset(){
+ const faction=$('faction').value,kind=$('kind').value;
+ const e=render.manifest.entries[faction]?.[kind];
+ if(!e)return;
+ render.asset=e;render.frame=0;render.last=0;
+ options($('state'),Object.keys(e.states).map(s=>[s,s.toUpperCase()]),$('state').value);
+ $('direction').max=String(e.directions-1);
+ if(Number($('direction').value)>=e.directions)$('direction').value='0';
+ $('dirLabel').textContent=Math.round(Number($('direction').value)*360/e.directions)+'°';
+ $('status').textContent='Loading '+faction+' '+kind+'…';
+ const key=faction+'/'+kind;
+ if(!render.images.has(key)){
+  const img=new Image();img.onload=()=>{if(render.images.get(key)===img)$('status').textContent='Rendered asset ready · '+img.width+' × '+img.height;};
+  img.onerror=()=>{$('status').textContent='Sprite missing: '+e.file;};
+  img.src=base+e.file;render.images.set(key,img);
+ }else $('status').textContent='Rendered atlas selected: '+kind;
+ $('info').textContent='States: '+Object.keys(e.states).join(', ')+' · Directions: '+e.directions+
+  ' · Editable: '+faction+'-'+kind+'.blend';
+}
+function draw(time){
+ const e=render.asset,manifest=render.manifest;
+ ctx.clearRect(0,0,480,480);
+ if(e&&manifest){
+  const key=$('faction').value+'/'+$('kind').value,img=render.images.get(key);
+  if(img&&img.complete&&img.naturalWidth){
+   const state=$('state').value,frames=e.states[state]||1;
+   if($('play').checked&&time-render.last>170){render.last=time;render.frame=(render.frame+1)%frames;}
+   const offset=Object.keys(e.states).slice(0,Object.keys(e.states).indexOf(state))
+      .reduce((acc,k)=>acc+e.states[k],0);
+   const sz=manifest.frameSize,dir=Number($('direction').value)||0;
+   ctx.imageSmoothingEnabled=true;
+   ctx.imageSmoothingQuality='high';
+   ctx.drawImage(img,dir*sz,(offset+render.frame%frames)*sz,sz,sz,0,0,480,480);
+  }
+ }
+ requestAnimationFrame(draw);
+}
+async function start(){
+ try{
+  const r=await fetch(base+'manifest.json',{cache:'no-cache'});
+  if(!r.ok)throw Error('No rendered sprite manifest has been published yet.');
+  const m=await r.json();
+  if(m.format!=='chrono-blender-v1')throw Error('Unsupported atlas format');
+  render.manifest=m;
+  options($('faction'),Object.keys(m.entries).map(f=>[f,f.toUpperCase()]));
+  $('faction').value='coalition';
+  refresh();
+ }catch(err){$('status').textContent='Atlases unavailable: '+err.message;}
+}
+$('faction').addEventListener('change',refresh);
+$('kind').addEventListener('change',changeAsset);
+$('state').addEventListener('change',()=>{render.frame=0;});
+$('direction').addEventListener('input',()=>$('dirLabel').textContent=
+ Math.round(Number($('direction').value)*360/Math.max(1,render.asset?.directions||8))+'°');
+requestAnimationFrame(draw);start();
+</script>
+</body>
+</html>
