@@ -81,7 +81,6 @@ def box(name, loc, size, material, bevel=.07):
         modifier = obj.modifiers.new("Hard surface bevel","BEVEL")
         modifier.width = bevel
         modifier.segments = 2
-        obj.modifiers.new("Smooth weighted normals","WEIGHTED_NORMAL")
     return parent(obj)
 
 def cyl(name, loc, radius, depth, material, axis="Z", vertices=16):
@@ -115,11 +114,11 @@ def reset_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
     sc=bpy.context.scene
-    try:
-        sc.render.engine = "BLENDER_EEVEE_NEXT"
-    except (TypeError, ValueError):
-        sc.render.engine = "BLENDER_EEVEE"
-    sc=bpy.context.scene
+    # Cycles software mode is stable on headless Linux CI runners without EGL / X11.
+    sc.render.engine="CYCLES"
+    sc.cycles.device="CPU"
+    sc.cycles.samples=6
+    sc.cycles.use_denoising=False
     sc.render.resolution_percentage=100
     sc.render.film_transparent=True
     sc.render.image_settings.file_format="PNG"
