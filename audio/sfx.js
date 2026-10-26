@@ -36,6 +36,9 @@
   let voiceEnabled=read(VOICE_KEY,'true')!=='false';
   let context=null,scene='menu',musicTimer=null,musicElement=null,nextBeat=0,step=0;
   const last=new Map(),urls=new Map(),loaded=new Map(),active=[];
+  const builtin=new Map();
+  const BUILTIN_ROOT='./audio/builtin/';
+  let builtinPromise=null;
   let lastImport={loaded:0,matched:0,tracks:0,unmapped:0};
   const AudioClass=()=>root.Audio;
   function osc(frequency,end,duration,type,gain,at){
@@ -61,10 +64,15 @@
     if(faction)choices.push(name+'.'+faction);
     choices.push(name);
     if(name.includes('.'))choices.push(name.split('.')[0]);
-    for(const key of choices){const entries=loaded.get(key);if(entries?.length)return entries[Math.floor(Math.random()*entries.length)];}
+    // The player's imported pack overrides the shipped sounds, even for a generic event.
+    for(const source of [loaded,builtin])for(const key of choices){
+      const entries=source.get(key);
+      if(entries?.length)return entries[Math.floor(Math.random()*entries.length)];
+    }
     return null;
   }
   function fileUrl(file){
+    if(typeof file==='string')return file;
     if(urls.has(file))return urls.get(file);
     if(!root.URL?.createObjectURL)return null;
     const url=root.URL.createObjectURL(file);urls.set(file,url);return url;
@@ -109,7 +117,8 @@
   function resumeMusic(){
     stopMusic();
     if(!enabled||!musicEnabled||!context||context.state!=='running')return;
-    const files=loaded.get('music.'+scene)||loaded.get('music.battle')||loaded.get('music');
+    const files=loaded.get('music.'+scene)||loaded.get('music.battle')||loaded.get('music')||
+      builtin.get('music.'+scene)||builtin.get('music.battle')||builtin.get('music');
     const C=AudioClass();
     if(files?.length&&typeof C==='function'){
       const file=files[Math.floor(Math.random()*files.length)],src=fileUrl(file);
@@ -137,7 +146,34 @@
     get sfxVolume(){return sfxVolume;},
     get musicVolume(){return musicVolume;},
     get imported(){return {...lastImport};},
+    get builtinCount(){return [...builtin.values()].reduce((n,v)=>n+v.length,0);},
     get scene(){return scene;},
+    loadBuiltins(){
+      if(builtinPromise)return builtinPromise;
+      if(typeof root.fetch!=='function')return Promise.resolve(0);
+      builtinPromise=root.fetch(BUILTIN_ROOT+'audio-map.json',{cache:'force-cache'})
+        .then(response=>{
+          if(!response.ok)throw new Error('Built-in audio manifest is missing');
+          return response.json();
+        })
+        .then(data=>{
+          if(!data||data.schema!=='chrono-dominion-builtin-audio-v1')throw new Error('Invalid audio manifest');
+          let count=0;
+          for(const [event,files] of Object.entries({...data.events,...data.music})){
+            if(!/^[a-z0-9._-]{1,70}$/i.test(event)||!Array.isArray(files))continue;
+            // Only read MP3 paths relative to our own game's audio directory.
+            const safe=files.filter(path=>typeof path==='string'&&
+              /^(?:voices|announcer|sfx|music)\/[a-z0-9._/-]+\.mp3$/i.test(path)&&
+              !path.includes('..')).map(path=>BUILTIN_ROOT+path);
+            if(safe.length){builtin.set(event.toLowerCase(),safe);count+=safe.length;}
+          }
+          if(enabled&&musicEnabled&&context?.state==='running'&&
+              (scene==='menu'||scene==='battle'))resumeMusic();
+          return count;
+        })
+        .catch(()=>0); // Game remains playable when assets are absent or offline.
+      return builtinPromise;
+    },
     unlock(){
       if(!enabled)return false;
       const C=root.AudioContext||root.webkitAudioContext;
@@ -153,7 +189,7 @@
     },
     setEnabled(next){
       enabled=!!next;write(KEY,enabled);
-      if(enabled)this.unlock();
+      if(enabled){this.loadBuiltins();this.unlock();}
       else{stopMusic();root.ChronoVoices?.stop?.();for(const a of active.splice(0)){try{a.pause();}catch(e){}}}
       return enabled;
     },
@@ -165,7 +201,7 @@
     },
     previewVoice(faction='federation',kind='soldier'){
       if(!enabled)this.setEnabled(true);
-      return voiceEnabled&&!!root.ChronoVoices?.speak?.('ready',{faction,kind},sfxVolume,true);
+      return voiceEnabled&&(this.play('ready',{faction,kind})||!!root.ChronoVoices?.speak?.('ready',{faction,kind},sfxVolume,true));
     },
     announce(event,meta={}){
       if(!enabled)return false;
@@ -174,7 +210,7 @@
       // Keep strategic warnings audible without a flood of repeated alerts.
       if(now-(last.get(key)??-Infinity)<(event==='unitLost'?3:5))return false;
       last.set(key,now);
-      const clip=find(key,meta);
+      const clip=voiceEnabled?find(key,meta):null;
       if(clip&&startClip(clip,sfxVolume*.92))return true;
       if(voiceEnabled&&root.ChronoVoices?.speak?.(key,meta,sfxVolume,true))return true;
       return this.play('alert');
@@ -206,7 +242,8 @@
       const gap=(base==='select'||base==='move'||base==='attack')?.35:spec.gap;
       if(now-(last.get(base)??-Infinity)<gap)return false;
       last.set(base,now);
-      const f=find(String(name),meta);
+      const isVoice=['select','move','attack','ready'].includes(base);
+      const f=find(String(name),!voiceEnabled&&isVoice?{}:meta);
       if(f&&startClip(f,sfxVolume*.88))return true;
       if(voiceEnabled&&['select','move','attack','ready'].includes(base)&&
          root.ChronoVoices?.speak?.(base,meta,sfxVolume))return true;
@@ -262,4 +299,6 @@
     }
   };
   root.ChronoAudio=api;
+  // Load the tiny manifest immediately, not all 473 recordings. MP3s load on demand.
+  api.loadBuiltins();
 })(typeof window!=='undefined'?window:globalThis);
