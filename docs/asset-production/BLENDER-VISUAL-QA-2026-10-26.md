@@ -46,13 +46,54 @@ Twelve editable .blend models and twelve transparent 160 x 800 RGBA atlases were
 4. Add a physical, blinking building telemetry lamp in the generator to make very subtle two-frame idle animations more visible.
 5. Extend tools/blender/asset_studio.py to reject genuinely pixel-identical idle frames, comparing full RGBA bytes (not just alpha), with a regression test.
 
+## 2026-10-27 verified MK-III follow-up
+
+**Preview-only.** Psionic Barracks and Factory were rebuilt as visibly different
+3D silhouettes. The Barracks is now a low, broad twin-wing initiation campus
+with a sunken ritual court; the Factory is a tall twin-fork materialization
+shipyard with a forward vehicle production aperture. Both models are original
+editable Blender geometry, not image-generation output.
+
+- [Successful final Psionic MK-III Blender review, editable sources, atlases and contact sheet](https://github.com/shukritobi/chrono-dominion/actions/runs/40356325572)
+- [Psionic architecture source redesign](../../tools/blender/building_architecture.py)
+- [Animated construction and damaged-state implementation](../../tools/blender/animated_assets.py)
+- [Preview-only validation workflow](../../.github/workflows/psionic-silhouette-review.yml)
+- Previous Barracks/Factory idle alpha-mask intersection-over-union: **0.8112**.
+- Revised Barracks/Factory idle alpha-mask intersection-over-union: **0.7208**.
+  Lower overlap confirms greater pixel silhouette differentiation at 160px.
+- Both final sprite atlases are transparent **160×800 RGBA**, with all five
+  building frames populated and both idle poses pixel-distinct.
+- Construction now shows full-size foundations and temporary scaffold rails
+  instead of uniformly scaling the entire completed structure. Compared to
+  idle, the first construction frame changes **1,257** Barracks and **1,645**
+  Factory alpha-mask pixels (alpha >= 32).
+- Damage now reveals a missing Barracks roof, a removed Factory fork and its
+  attached light/guide, plus three fractured facade debris meshes. Compared
+  to idle, damaged frames change **253** Barracks and **865** Factory
+  alpha-mask pixels.
+- Both compressed editable `.blend` files were reopened in headless Blender,
+  with at least ten mesh objects verified in each scene. This checks the
+  serialized source itself, not only file presence.
+- Visual inspection: the new low sanctuary and tall industrial portal are
+  distinguishable at 160px. The Factory still needs a deeper physical open
+  garage aperture in a later geometry pass; its current glowing gate reads
+  more like a fabrication screen than a hollow bay.
+- The game-facing baked manifest and all approved textures remain unchanged.
+
 ## Ordered next tasks for hourly agent
 
-1. Render the first new asset with the revised animated beacon, and verify the two idle frames show clearly visible pixel and alpha differences. If not, fix placement/visibility.
-2. Correct Psionic Barracks vs. Factory silhouette reuse, then render and review independently.
-3. Make Coalition and Federation factory garage doors and moving machinery clearly visible at 160px.
-4. Add real damaged-state meshes (broken plating, bent equipment, sparks, collapsed portions) and revised staged construction animation.
-5. Continue original Blender Radar and Tech Lab modeling for all factions, then beam/turret/airfield improvements, then unfinished 3D vehicles.
-6. Save editable Blender models, true PNG animation atlases and preview contact sheets; preserve production textures until specifically approved.
+1. **Coalition + Federation War Factories:** replace visually closed facade
+   panels with true open assembly bays; render all three factory previews
+   before considering a production promotion.
+2. **Damage state QA across all buildings:** the common renderer now supports
+   scaffold-first construction and fractured facade geometry, but only the
+   Psionic Barracks and Factory have undergone detailed pixel/Blender-source
+   revalidation with the new implementation.
+3. **Radar Arrays and Technology Labs:** upgrade the six unique faction
+   silhouettes to MK-II, render editable sources and compare at 100% and 50%
+   sprite scale.
+4. **Animation polish:** add more mechanical idle movement, exposed
+   production equipment and readable damage breakage beyond five base frames.
+5. Continue defenses, airfields, missing 3D vehicles and atlas manifests.
 
-**Do not use the discarded AI-generated picture sprite pack.** Reviews must come from actual Blender output and inspected PNGs, not code-only predictions.
+**Never overwrite approved game textures without explicit approval.**
