@@ -455,8 +455,11 @@ def animate(kind,state,frame,frames):
         clamp.location=(1.13,-1.44,3.05)
         clamp.rotation_euler=(0,0,0)
         if state=="idle" and frame%2:
-            clamp.location=(1.88,-1.44,3.56)
-            clamp.rotation_euler.y=-.23
+            # Raise the complete jaws above the roofline, not merely across
+            # its opaque silhouette. The previous 0.51m lift changed RGB
+            # but yielded exactly zero alpha-mask pixels at both 160/80px.
+            clamp.location=(1.93,-1.44,4.65)
+            clamp.rotation_euler.y=-.13
         elif state=="damaged":
             clamp.location=(1.81,-1.63,2.73)
             clamp.rotation_euler=(.31,.68,-.14)
