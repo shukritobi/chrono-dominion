@@ -144,3 +144,35 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .battleEventRow.critical,.battleEventRow.loss{border-left:3px solid #f17674;color:#ffd5c5}
 .battleEventQuiet{padding:7px;margin:0;font:10px Consolas,monospace;color:#7e98a9}
 @media(max-width:550px){.battleEventsPanel>summary{font-size:9px;padding:6px 3px}.battleEventRow{font-size:9px;padding:7px 3px;gap:3px}.battleEventRow time{font-size:8px}.battleEventList{max-height:96px}}
+
+/* v2.9 compact-screen command accessibility: keep controls reachable without obscuring the battlefield. */
+@media (pointer:coarse) {
+  #topbar button,.tabs button,.buildActions button,.unitActions button,.specialAction,
+  .reconContactJump,.battleEventRow,.queueEntry button {min-height:44px;touch-action:manipulation}
+  .zoomControls button,#pauseBtn {min-width:44px;min-height:44px}
+  .tabs button {padding-block:9px}
+  .buildItem {min-height:100px;height:auto;padding:8px 4px}
+  .queueEntry button {min-width:36px}
+  #sidebar {overscroll-behavior:contain}
+  .production,.selection,.queueList,.battleEventList {overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+}
+@media (max-width:550px) and (pointer:coarse) {
+  #sidebar {width:clamp(150px,39vw,205px);min-width:clamp(150px,39vw,205px)}
+  #topbar {gap:4px;padding-inline:5px}
+  .brand {font-size:10px;letter-spacing:0}
+  .resources {gap:4px;font-size:10px}
+  .perfStatus {top:51px}
+  .buildItem {min-height:96px}
+  .buildActions {flex-direction:row;flex-wrap:wrap}
+  .buildActions button {flex-basis:45%}
+  .unitActions {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .selection {max-height:34dvh}
+  .queueList {max-height:18dvh}
+}
+@media (max-height:500px) and (pointer:coarse) {
+  .radarFrame {padding:3px 5px}
+  #radar {height:68px}
+  .factionBox {display:none}
+  .selection {max-height:30dvh;min-height:0}
+  .queueList {max-height:17dvh}
+}
