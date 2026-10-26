@@ -20,10 +20,22 @@
           <span id="army">♜ 0</span>
         </div>
         <span id="perfStatus" class="perfStatus" aria-live="off" title="Performance and living unit count">FPS · UNITS</span>
-        <button id="soundToggle" class="soundToggle" aria-pressed="false" aria-label="Enable battle sound effects" title="Toggle synthesized effects (off by default)">♪ OFF</button>
+        <button id="soundToggle" class="soundToggle" aria-pressed="false" aria-label="Enable game audio" title="Toggle sound and music (off by default)">♪ OFF</button>
+        <button id="audioSettings" class="soundToggle" type="button" aria-expanded="false" aria-controls="audioPanel" title="Audio mixer and local sound packs">⚙ AUDIO</button>
         <div class="zoomControls"><button id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button><button id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button></div>
         <button id="cancelMode" class="cancelMode hidden" type="button" aria-label="Cancel current placement or targeted order" title="Cancel placement, attack-move or ability targeting">✕ CANCEL</button>
         <button id="pauseBtn" title="Pause / resume (Escape)">Ⅱ</button>
+      </div>
+      <div id="audioPanel" class="audioPanel hidden" role="group" aria-label="Audio settings">
+        <div class="audioPanelHead"><strong>TACTICAL AUDIO</strong><button id="audioClose" aria-label="Close audio settings" type="button">×</button></div>
+        <label>SOUND EFFECTS <span id="sfxLevel">80%</span><input id="sfxVolume" type="range" min="0" max="100" value="80" aria-label="Sound effects volume"></label>
+        <label>MUSIC <span id="musicLevel">35%</span><input id="musicVolume" type="range" min="0" max="100" value="35" aria-label="Music volume"></label>
+        <label class="audioCheck"><input id="musicEnabled" type="checkbox" checked> ENABLE BACKGROUND MUSIC</label>
+        <p>Original synthesized soundtrack and effects, or load sounds from files on your device.</p>
+        <button id="audioImport" type="button">IMPORT LOCAL SOUND FOLDER</button>
+        <input id="audioFiles" class="hidden" type="file" webkitdirectory directory multiple accept=".wav,.ogg,.mp3,.m4a,.webm,.json">
+        <button id="audioClear" type="button">REMOVE IMPORTED SOUNDS</button>
+        <p id="audioStatus" role="status" aria-live="polite">No local sound pack selected. Files stay on your device and are never uploaded.</p>
       </div>
       <div id="hint">Mouse: select / drag-select / right-click command · Touch: tap select or command, drag pan, pinch zoom · Shift + right-click: attack-move · Ctrl+1–9: groups · H: HQ · WASD: pan · Wheel: zoom · Esc: pause</div>
       <div id="toast" role="status"></div>
@@ -70,7 +82,7 @@
             <button class="primary" id="playAgain">PLAY AGAIN</button>
             <button id="resultQuit">MAIN MENU</button>
           </div>
-          <div class="version">PROTOTYPE 2.20 · RALLY RECOVERY</div>
+          <div class="version">PROTOTYPE 2.21 · TACTICAL AUDIO</div>
         </section>
       </div>
     </main>
