@@ -1470,7 +1470,10 @@
       // travel to reachable shelter but do not receive free healing.
       const withdrawing=new Set();
       for(const unit of fighters){
-        if((unit.retreatUntil||0)>this.time){
+        if((unit.retreatUntil||0)>this.time||
+           ((unit.retreatCooldownAt||0)>this.time&&unit.hp/unit.maxHp<.36)){
+          // After reaching safety, wounded troops remain in reserve through
+          // the cooldown instead of immediately rejoining an assault.
           withdrawing.add(unit.id);
           continue;
         }
