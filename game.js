@@ -753,21 +753,29 @@
       }else{
         // Restrict group destinations to terrain reachable from the squad's
         // current position; prevents assigning half a squad behind a lake.
-        const origin={x:chosen.reduce((sum,e)=>sum+e.x,0)/chosen.length,
-                      y:chosen.reduce((sum,e)=>sum+e.y,0)/chosen.length};
-        const slots=this.formationSlots(p.gx,p.gy,chosen.length,origin);
-        const remaining=chosen.slice();
-        for(const slot of slots){
-          let best=0;
-          for(let i=1;i<remaining.length;i++)if(dist(remaining[i],slot)<dist(remaining[best],slot))best=i;
-          const unit=remaining.splice(best,1)[0];
-          if(!unit)break;
-          unit.yieldOrder=null;unit.yieldRetryAt=0;unit.laneWaiting=null;
-          unit.order={type:this.attackMoveArmed||event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
-          unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.pathRecheck=0;unit.trafficWait=0;unit.trafficRepath=false;
-        }
-        for(const unit of remaining){
-          unit.order=null;unit.yieldOrder=null;unit.yieldRetryAt=0;unit.laneWaiting=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.trafficWait=0;unit.trafficRepath=false;
+        // Keep ground units on connected terrain while letting aircraft use
+        // their independent flight layer, even in mixed selections.
+        const groups=[chosen.filter(e=>e.kind!=='aircraft'),
+          chosen.filter(e=>e.kind==='aircraft')];
+        for(const group of groups){
+          if(!group.length)continue;
+          const airborne=group[0].kind==='aircraft';
+          const origin={x:group.reduce((sum,e)=>sum+e.x,0)/group.length,
+                        y:group.reduce((sum,e)=>sum+e.y,0)/group.length};
+          const slots=this.formationSlots(p.gx,p.gy,group.length,origin,airborne);
+          const remaining=group.slice();
+          for(const slot of slots){
+            let best=0;
+            for(let i=1;i<remaining.length;i++)if(dist(remaining[i],slot)<dist(remaining[best],slot))best=i;
+            const unit=remaining.splice(best,1)[0];
+            if(!unit)break;
+            unit.yieldOrder=null;unit.yieldRetryAt=0;unit.laneWaiting=null;
+            unit.order={type:this.attackMoveArmed||event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
+            unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.pathRecheck=0;unit.trafficWait=0;unit.trafficRepath=false;
+          }
+          for(const unit of remaining){
+            unit.order=null;unit.yieldOrder=null;unit.yieldRetryAt=0;unit.laneWaiting=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.trafficWait=0;unit.trafficRepath=false;
+          }
         }
       }
       this.audio?.play(target?'attack':'move',{kind:chosen[0]?.kind,faction:this.players[0]?.faction});
@@ -889,13 +897,15 @@
       }
       return seen;
     }
-    formationSlots(cx,cy,count,origin=null){
+    formationSlots(cx,cy,count,origin=null,airborne=false){
       const want=Math.max(0,Math.min(count,120)),center={
         x:clamp(Math.round(cx),1,WORLD_SIZE-2),y:clamp(Math.round(cy),1,WORLD_SIZE-2)
       };
       if(!want)return [];
-      const connected=origin?this.reachableTiles(origin):null;
-      const usable=(x,y)=>this.walkable(x,y)&&(!connected||connected.has(x+','+y));
+      const connected=!airborne&&origin?this.reachableTiles(origin):null;
+      const usable=(x,y)=>airborne?
+        x>=1&&y>=1&&x<=WORLD_SIZE-2&&y<=WORLD_SIZE-2:
+        this.walkable(x,y)&&(!connected||connected.has(x+','+y));
       const candidates=[];
       // Rings closest to the ordered destination first. Each cell is unique.
       for(let radius=0;radius<WORLD_SIZE&&candidates.length<want*4;radius++){
