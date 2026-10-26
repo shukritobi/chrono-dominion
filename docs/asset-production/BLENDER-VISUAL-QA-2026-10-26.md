@@ -377,18 +377,66 @@ the Coalition lab's shattered glazing, but the lost roofline and scanner
 silhouettes now read clearly. Critical/destroyed/power-out gameplay states
 remain unimplemented, and none of these previews is approved for publication.
 
+## 2026-10-27 Psionic MK-V physically hollow twin-horn factory
+
+**Preview-only; five-frame production contract unchanged.** The MK-III
+Psionic War Factory still used two solid planar facade meshes and five
+glowing grille bars as a fake fabrication opening. The MK-V authored model
+removes these panels, retains the tall twin-horn identity, and provides a
+real +X front portal, a near-side -Y open manufacturing cell, a recessed
+rear reactor wall, and an unfinished hovercraft with exposed nacelles.
+
+- [Successful focused Blender render, source-reopen raycast and pixel QA](https://github.com/shukritobi/chrono-dominion/actions/runs/40417540169).
+- [Original MK-V hollow factory meshes](../../tools/blender/building_architecture.py),
+  [reopened-source geometry raycasts](../../tools/blender/verify_psionic_factory_bay.py),
+  [actual 160px/80px PNG QA](../../tools/blender/qa_psionic_factory_bay.py),
+  and [preview-only workflow](../../.github/workflows/psionic-hollow-factory-review.yml).
+- The [first targeted render](https://github.com/shukritobi/chrono-dominion/actions/runs/40417403781)
+  **failed an honest side-aperture geometry gate**: although front rays
+  reached the rear reactor at **x=-0.672**, a near-side ray struck the old
+  tall hexagonal podium at **y=-1.160**. Lowering the podium to a true
+  low-profile foundation exposed the side workcell; the corrected ray hit
+  a visible nacelle alignment fixture at **y=-0.462**. Both front probes
+  at **z=1.56 and 1.68** still reached the reactor at **x=-0.672**.
+- The corrected editable **135,547-byte .blend** reopened successfully;
+  the five-frame transparent atlas remains **160×800 RGBA**, with five
+  populated, unclipped frames and non-identical idle RGBA poses.
+- Early construction versus idle: **2,031 changed alpha pixels at 160px**
+  and **509 at 80px**. Damaged versus intact: **829 at 160px** and
+  **204 at 80px**. Idle RGBA changes **4,800 pixels** at 160px.
+- Independently compared the downloaded MK-V atlas against the archived
+  MK-III factory atlas. The new intact frame changes **332 alpha pixels
+  and 5,281 RGBA pixels at 160px**, or **72 alpha pixels and 1,487 RGBA
+  pixels at 80px**. Silhouette intersection-over-union is **0.9370**
+  at 160px and **0.9465** at 80px.
+- The actual 160px and 80px PNG sheets were inspected: the former opaque
+  green grille has been replaced by an open, lit internal assembly cell
+  and visible unfinished hovercraft. The two tall purple fabrication
+  horns remain identifiable. At 80px, tiny chassis details are subtle
+  but the transparent portal reads more clearly.
+- All outputs are GitHub Actions preview artifacts and downloadable
+  editable models, **not approved live textures**. No published atlas
+  or manifest was changed by this asset pass.
+
+The following **additional states are separate experiments**, not changes
+to the existing five-frame atlas:
+[extended-state Blender renderer](../../tools/blender/preview_extended_factory_states.py),
+[quantitative extra-state QA](../../tools/blender/qa_extended_factory_states.py),
+and [independent review workflow](../../.github/workflows/psionic-factory-extra-states-review.yml).
+They load the already validated MK-V source without rerendering the
+five-frame atlas and stage critical, destroyed and power-out PNGs plus a
+second editable .blend. Treat their QA as **pending until the workflow
+reports a passing result**.
+
 ## Ordered next tasks for hourly agent
 
-1. **Psionic Factory:** turn the twin-horn front portal into a physically
-   hollow fabrication bay, preserve the distinct horns, and use a targeted
-   Blender source-reopen/raycast and 80px/160px sprite review.
-2. **Critical / destroyed / power-out:** extend the current five-frame
+1. **Critical / destroyed / power-out:** extend the current five-frame
    building preview contract with separate geometry and validation for
    structural collapse, powerless machinery and late destruction. Stage
    separately; do not alter the published game atlas format prematurely.
-3. **Damage polish:** add bright fracture edges and more visible displaced
+2. **Damage polish:** add bright fracture edges and more visible displaced
    mechanical wreckage where 80px inspection shows subtle fragments.
-4. **Remaining assets:** finish defenses, airfields, unmodeled vehicle types,
+3. **Remaining assets:** finish defenses, airfields, unmodeled vehicle types,
    32-facing movement and destruction, then assess art integration only
    after explicit approval.
 
