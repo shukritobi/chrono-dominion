@@ -2453,6 +2453,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.10.0',build:'scout-safety'};
+  window.ChronoDominion={version:'2.11.0',build:'threat-aware-scout-routes'};
   new Game();
 })();
