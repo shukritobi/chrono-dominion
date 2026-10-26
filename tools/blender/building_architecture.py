@@ -186,21 +186,51 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             box("Overhead programmable sensor beam",(1.14,0,2.48),(.20,1.43,.16),"glass",.022)
             box("Ore approach ramp",(1.67,-.06,.76),(.69,.80,.12),"light",.03)
         elif kind=="barracks":
-            box("Modular recruitment building",(0,0,1.18),(2.45,2.18,1.12),"armor",.13)
+            # AEGIS MK-II TRAINING CAMP. Long twin accommodation wings,
+            # lower than headquarters, with an identifiable central entrance.
+            box("Modular Aegis campus hall",(-.24,0,1.17),(2.17,1.47,1.06),"armor",.12)
+            box("Broad reinforced drill-field deck",(.20,0,.70),(2.73,2.77,.18),"dark",.075)
             for side in (-1,1):
-                box("Symmetric dorm wing",(-.28,side*.93,1.14),(1.50,.53,1.02),"light",.05)
-                tower("Field antenna",-1.02,side*.75,1.90,1.07,"light",.09)
-            box("Command training balcony",(.58,-.15,1.93),(.85,1.25,.26),"dark")
-            box("Blue entrance",(1.27,-.02,1.08),(.08,.82,.91),"glass",.02)
-            light_stripe(1.37,-.02,1.79,.76)
+                y=side*1.01
+                box("Paired training dormitory wing",(-.41,y,1.13),(1.70,.73,.95),"light",.075)
+                box("Stepped corridor roof",(-.49,y,1.73),(1.89,.86,.17),"armor",.035)
+                box("Raised radio-mast footing",(-1.04,y,1.88),(.34,.35,.16),"dark",.025)
+                tower("Field communication antenna",-1.04,y,1.96,1.28,"light",.085)
+                sphere("Tactical signal tip",(-1.04,y,3.31),(.14,.14,.15),"glow")
+                for i in range(3):
+                    box("Dormitory entrance glass",(0.01+i*.32,side*1.37,1.16),
+                        (.20,.045,.22),"glass",.011)
+                box("Dormitory roof induction rail",(-.40,y,1.84),(1.45,.06,.06),"glow",.009)
+            box("Training instruction terrace",(.74,0,1.88),(.79,1.08,.22),"dark",.035)
+            box("Recruit access portal",(1.21,0,1.20),(.07,.83,.84),"glass",.013)
+            box("Lit structural arch",(1.31,0,1.71),(.07,.99,.10),"glow",.015)
+            for step in range(3):
+                box("Ceramic barracks entrance step",(1.40+step*.13,0,.76-step*.055),
+                    (.22,1.05,.08),"light",.014)
         elif kind=="factory":
-            box("Precision assembly hangar",(-.22,0,1.34),(2.30,2.57,1.51),"armor",.14)
-            box("High-strength hangar roof",(-.28,0,2.24),(2.53,2.78,.23),"light")
-            box("Open production bay",(.97,0,1.17),(.11,1.38,1.20),"dark",.025)
-            for y in (-.55,.55):
-                tower("Robot line support",.88,y,1.43,1.0,"light",.14)
-            parts["radar"]=box("Bridge gantry crossbeam",(.15,0,2.73),(.26,2.45,.20),"glow",.035)
-            box("Survey crane carriage",(.15,-.50,2.48),(.43,.38,.18),"dark",.03)
+            # AEGIS MK-II MECHANIZED ASSEMBLY HANGAR.
+            # Oversized open production mouth plus overhead translating gantry.
+            box("White steel mechanized hangar",(-.40,0,1.18),(2.18,2.65,1.33),"armor",.10)
+            box("Aerospace load-bearing truss roof",(-.40,0,2.00),(2.54,2.86,.23),"light",.085)
+            box("Hangar roof inset",(-.26,0,2.12),(1.52,1.91,.07),"dark",.019)
+            box("Vehicle assembly loading apron",(1.25,0,.70),(.96,2.59,.15),"dark",.035)
+            box("Exposed black production mouth",(.75,0,1.24),(.07,1.54,1.08),"dark",.009)
+            box("Rear bay interior",( .67,0,1.00),(.13,1.30,.47),"bronze",.015)
+            for side in (-1,1):
+                y=side*.96
+                box("High strength portal leg",(.85,y,1.42),(.23,.30,1.52),"light",.044)
+                box("Cyan hydraulic alignment line",( .99,y,1.36),(.05,.12,1.18),"glow",.009)
+                box("Assembly gantry rail",(-.38,y,2.29),(2.15,.12,.17),"dark",.027)
+                tower("Workshop exhaust pilaster",-1.18,y,2.18,.72,"light",.15)
+                cyl("Roof vent pressure fan",(-1.18,y,2.97),.23,.09,"dark",vertices=12)
+            box("Overhead automated bridge",(-.07,0,2.38),(.29,2.13,.19),"light",.031)
+            box("Short equipment suspension",(-.07,0,2.04),(.12,.16,.60),"dark",.012)
+            parts["radar"]=box("Moving multi-head assembly gripper",(-.07,0,1.66),(.49,.47,.31),"bronze",.026)
+            for side in (-1,1):
+                box("Welding arm rail",(.23,side*.54,1.28),(.72,.07,.08),"glow",.012)
+            for j in range(5):
+                box("Guided vehicle exit stripe",(1.22,-1.03+j*.51,.81),
+                    (.47,.08,.055),"glow",.006)
         elif kind=="radar":
             box("Blue telemetry mast",(0,0,1.77),(1.48,1.52,2.14),"armor",.15)
             box("Tower receiver collar",(0,0,2.95),(1.76,1.74,.18),"light",.06)
@@ -327,23 +357,58 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             box("Glowing furnace refuse outlet",(1.43,0,1.37),(.08,1.11,.33),"glow",.012)
             box("Industrial front belt lip",(1.58,0,.73),(.51,1.44,.08),"armor",.011)
         elif kind=="barracks":
-            box("Fortified garrison bunker",(0,0,1.10),(2.70,2.54,1.08),"armor",.065)
-            box("Sloped bunker roof",(0,0,1.81),(2.94,2.72,.36),"dark",.045)
+            # RED BASTION MK-II MILITARY BARRACKS.
+            # Opposed fortified firing towers and squat armored roll-door.
+            box("Massive reinforced troop bunker",(0,0,1.16),(2.87,2.66,1.18),"armor",.055)
+            box("Recessed barracks thermal roof",(-.16,0,1.87),(2.83,2.48,.28),"dark",.032)
             for side in (-1,1):
-                box("Machine-gun bastion",(.70,side*.93,1.95),(.87,.66,.84),"light",.04)
-                box("Defensive firing slit",(1.18,side*.93,2.09),(.07,.39,.11),"glow",.015)
-            box("Garrison bulkhead",(1.36,0,1.10),(.08,.91,.82),"dark",.01)
-            for i in range(4):box("Reinforced blast rib",(1.43,-.45+i*.3,1.10),(.05,.12,.76),"light",.01)
-        elif kind=="factory":
-            box("Broad weapons foundry",(0,0,1.27),(2.86,2.60,1.47),"armor",.08)
-            box("Riveted thermal roof",(-.13,0,2.19),(2.95,2.73,.30),"dark",.02)
-            box("Forge blast gate",(1.47,0,1.33),(.08,1.53,1.15),"dark",.015)
+                y=side*.92
+                box("Corbeled corner watchtower",(.58,y,1.90),(.93,.74,.94),"dark",.024)
+                box("Red painted flak parapet",(.72,y,2.42),(.88,.78,.18),"armor",.019)
+                cyl("Flak viewing cupola",(.53,y,2.61),.24,.28,"light",vertices=12)
+                box("Orange fortified gun slit",(1.11,y,2.13),(.045,.46,.10),"glow",.009)
+                box("Hardened troop housing wing",(-.66,y,1.19),(1.03,.65,.85),"dark",.026)
+                for x in (-1.03,-.73,-.43):
+                    box("Slotted garrison window",(x,side*1.32,1.36),
+                        (.10,.05,.28),"glow",.009)
+                box("Hatchback defensive rail",(1.07,y,1.27),(.17,.57,.35),"light",.022)
+            box("Fortress troops bulkhead",(1.44,0,1.13),(.11,1.03,.89),"dark",.014)
             for i in range(5):
-                box("Vertical hardened ribs",(1.53,-.67+i*.33,1.37),(.04,.12,1.10),"light",.009)
+                box("Fortress portal grille",(1.50,-.45+i*.225,1.12),(.045,.085,.75),"light",.008)
+            box("External recruitment platform",(1.60,0,.66),(.54,1.43,.15),"armor",.024)
             for side in (-1,1):
-                cyl("Forge exhaust",(-.92,side*.73,2.64),.33,1.31,"dark")
-                cyl("Industrial heat signature",(-.92,side*.73,3.30),.30,.09,"glow")
-            parts["radar"]=box("Overhead forging ram",(.2,0,2.55),(.28,.77,.43),"bronze",.04)
+                tower("Low brutalist sentry antenna",-1.12,side*.74,2.04,.58,"light",.09)
+                sphere("Bunker signal lamp",(-1.12,side*.74,2.65),(.10,.10,.11),"glow")
+        elif kind=="factory":
+            # RED BASTION MK-II HEAVY FOUNDRY. Unequal smoke stacks,
+            # furnace glow, slotted blast gate and a visible forging ram.
+            box("Deeply armored industrial foundry",(-.13,0,1.30),(2.83,2.70,1.54),"armor",.042)
+            box("Soot-stained high-strength casting roof",(-.26,0,2.21),(2.98,2.90,.28),"dark",.018)
+            box("Red hydraulic access plinth",( .73,0,1.50),(.70,2.12,.99),"armor",.028)
+            box("Bright heated production mouth",(1.36,0,1.28),(.075,1.66,1.12),"bronze",.014)
+            for side in (-1,1):
+                for i in range(4):
+                    y=side*(.29+.20*i)
+                    box("Reinforced factory gate rib",(1.46,y,1.32),(.055,.10,1.02),"dark",.008)
+                height=1.89 if side==1 else 1.25
+                cyl("Industrial chimney buttress",(-1.00,side*.84,2.22),.34,height,
+                    "dark",vertices=14)
+                cyl("Burnt orange chimney outlet",(-1.00,side*.84,2.22+height*.5),
+                    .29,.09,"glow",vertices=14)
+                box("Upper overhead foundry handrail",(-.48,side*1.31,2.40),
+                    (1.93,.18,.26),"light",.018)
+                box("Cooling gas armored pipe",(.49,side*1.38,1.70),(.80,.17,.25),"dark",.021)
+                for z in (.89,1.10,1.31):
+                    box("Industrial incandescent cooling vent",(.98,side*1.22,z),
+                        (.31,.05,.095),"glow",.008)
+            cyl("Pressure forge spindle",(-.26,0,2.65),.33,.38,"bronze",vertices=12)
+            cyl("Hydraulic ram cylinder",(-.26,0,2.89),.19,.38,"light",vertices=12)
+            parts["radar"]=box("Active overhead forging press",(-.26,0,2.38),
+                               (.71,.79,.23),"dark",.025)
+            box("Broad ore-bay front ramp",(1.60,0,.78),(.59,2.58,.20),"dark",.025)
+            for i in range(5):
+                box("Hot impact warning stripe",(1.61,-1.06+i*.53,.90),
+                    (.30,.10,.055),"glow",.006)
         elif kind=="radar":
             box("Electronics blast tower",(0,0,1.52),(1.71,1.82,1.79),"armor",.06)
             box("Signal bunker top",(0,0,2.59),(2.02,2.11,.40),"dark",.03)
@@ -460,23 +525,52 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Material guide fin",(.61,side*.80,1.47),(.95,.18,.20),"armor",.025)
                 box("Green guide nerve",(.63,side*.78,1.63),(.69,.065,.09),"glow",.015)
         elif kind=="barracks":
-            prism("Neural training sanctuary",0,0,1.06,1.47,1.08,"armor",6)
-            sphere("Sanctuary thought chamber",(0,0,2.13),(1.11,1.11,.45),"dark")
-            sphere("Mind control seed",(0,0,2.51),(.39,.39,.40),"glow")
+            # AETHER SYNOD MK-II INITIATION SANCTUARY.
+            # Five low ritual petals around a domed neural training chamber.
+            prism("Sanctuary sixfold graded stage",0,0,.87,1.44,.89,"armor",6)
+            prism("Raised glass initiation vault",0,0,1.73,1.10,.35,"glass",6)
+            sphere("Central neural memory dome",(0,0,2.00),(1.04,1.04,.47),"dark")
+            sphere("Floating initiate core",(0,0,2.60),(.38,.38,.42),"glass")
+            sphere("Luminous mindspring nucleus",(0,0,2.61),(.17,.17,.18),"glow")
             for i in range(5):
                 a=i*math.tau/5
-                spire("Neural initiation petal",math.cos(a)*1.14,math.sin(a)*1.14,1.12,
-                      .34,1.49,"light",3)
-            parts["radar"]=torus("Meditation field",(0,0,2.38),.92,.083,"glow")
+                x,y=math.cos(a)*1.22,math.sin(a)*1.22
+                prism("Ritual training foot",x,y,.78,.36,.48,"dark",3)
+                spire("Curved initiation crystal blade",x,y,1.17,.34,1.44,"light",3)
+                spire("Inner guided crystal antenna",x*.96,y*.96,1.35,
+                      .14,1.08,"glass",3)
+                sphere("Student neural register",(x,y,2.69),(.13,.13,.15),"glow")
+            torus("Sanctuary lower meditation ring",(0,0,2.10),.96,.09,"glow")
+            parts["radar"]=torus("Floating psychic training gyre",(0,0,2.53),
+                                .78,.085,"light",True)
+            for side in (-1,1):
+                box("Gateway to sanctuary",(1.15,side*.36,1.03),(.33,.22,.49),"dark",.025)
+                box("Entry neuro-luminescent vein",(1.32,side*.36,1.06),
+                    (.04,.075,.35),"glow",.009)
         elif kind=="factory":
-            prism("Psi fabrication crucible",0,0,.87,1.44,1.44,"armor",6)
+            # AETHER SYNOD MK-II MATTER FABRICATOR.
+            # Broad square fabrication dock surrounded by four vertical fins,
+            # hovering induction rings and a suspended production seed.
+            prism("Matter conversion hexagonal foundation",0,0,.86,1.43,1.17,"armor",6)
+            prism("Dark manufacturing pit",0,0,1.88,1.08,.28,"dark",6)
             for i in range(4):
-                a=i*math.tau/4
-                spire("Fabrication focusing pylon",math.cos(a)*1.25,math.sin(a)*1.25,1.00,
-                      .38,2.12,"light",3)
-            parts["radar"]=torus("Fabrication accelerator",(0,0,2.65),.93,.13,"glow",True)
-            sphere("Suspended quantum matter",(0,0,2.59),(.54,.52,.57),"glass")
-            sphere("Foundry fabrication heart",(0,0,2.59),(.21,.19,.21),"glow")
+                a=i*math.tau/4+math.pi/4
+                x,y=math.cos(a)*1.34,math.sin(a)*1.34
+                prism("Fabricator stabilizer anchor",x,y,.86,.35,.41,"dark",4)
+                spire("Angled materialization antenna",x,y,1.20,.31,2.05,"armor",3)
+                spire("Violet internal waveguide",x*.97,y*.97,1.63,
+                      .15,1.43,"glass",3)
+                sphere("Production guide point",(x,y,3.31),(.15,.15,.16),"glow")
+                box("Green material conduit",(x*.63,y*.63,1.27),(.27,.12,.09),"glow",.014)
+            box("Platform with hovering vehicle feed",(.98,0,1.04),(.88,1.28,.25),"dark",.034)
+            for y in (-.50,0,.50):
+                box("Vehicle levitation led strip",(1.02,y,1.20),(.48,.07,.06),"glow",.011)
+            sphere("Levitated matter nucleus",(-.10,0,2.51),(.52,.52,.53),"glass")
+            sphere("Luminous assembled matter",(-.10,0,2.51),(.21,.20,.23),"glow")
+            torus("Lower matter synthesis field",(-.10,0,2.22),.71,.10,"glow")
+            parts["radar"]=torus("Orbiting fabrication arc",(-.10,0,2.75),
+                                .92,.12,"light",True)
+            spire("Overhead alignment spike",-.10,0,2.91,.19,.57,"light",3)
         elif kind=="radar":
             prism("Neural radar plinth",0,0,.92,1.03,1.13,"armor",6)
             for side in (-1,1):
