@@ -1,0 +1,113 @@
+name: Psionic Factory Extra Destruction and Power-Out Preview
+
+# Uses already validated MK-V source from the successful targeted workflow.
+# No regeneration of the five-frame atlas and no writes to live game art.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/psionic-factory-extra-states-review.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-psionic-factory-extra-states-preview
+  cancel-in-progress: true
+
+jobs:
+  extra-states:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - name: Checkout extra-state modeling source
+        uses: actions/checkout@v4
+
+      - name: Setup Python and Pillow
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify separate-state Python source
+        run: |
+          python -m py_compile tools/blender/preview_extended_factory_states.py \
+            tools/blender/qa_extended_factory_states.py
+          python -m pip install --quiet Pillow
+
+      - name: Download existing validated MK-V factory model and five-frame atlas
+        uses: actions/download-artifact@v4
+        with:
+          name: chrono-psionic-mkv-hollow-factory-review
+          run-id: 40417540169
+          github-token: ${{ github.token }}
+          path: generated/psionic-open-factory/
+
+      - name: Confirm source and five-frame atlas are intact
+        run: |
+          test -s generated/psionic-open-factory/psionic/factory/sources/psionic-factory.blend
+          test -s generated/psionic-open-factory/psionic/factory/packed/psionic-factory.png
+          sha256sum generated/psionic-open-factory/psionic/factory/packed/psionic-factory.png > original-atlas.sha256
+
+      - name: Cache verified Blender 4.2.23 LTS binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install verified official Blender binary without apt mirrors
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 \
+              "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 \
+            --max-time 90 "$base/blender-${version}.sha256" \
+            --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" \
+            --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render three NEW independent extended-state previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 \
+            generated/psionic-open-factory/psionic/factory/sources/psionic-factory.blend \
+            --python-exit-code 1 \
+            --python tools/blender/preview_extended_factory_states.py -- \
+            --output generated/psionic-open-factory/extra-states
+
+      - name: Reopen extended Blender and verify hidden editable wreckage
+        shell: bash
+        run: |
+          blender --background --threads 2 \
+            generated/psionic-open-factory/extra-states/psionic-factory-extended-states.blend \
+            --python-exit-code 1 \
+            --python-expr 'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and o.name.startswith("Destroyed-only")]; assert len(a)==3,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); print("REOPENED THREE EDITABLE DESTRUCTION MESHES")'
+
+      - name: Compare 80px and 160px extra-state pixels against intact
+        run: |
+          python tools/blender/qa_extended_factory_states.py
+          sha256sum --check original-atlas.sha256
+
+      - name: Upload separate extended states and original validated source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-factory-extra-three-states-preview
+          path: generated/psionic-open-factory/
+          if-no-files-found: warn
+          retention-days: 30
