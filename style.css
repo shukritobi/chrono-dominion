@@ -176,3 +176,11 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
   .selection {max-height:30dvh;min-height:0}
   .queueList {max-height:17dvh}
 }
+
+/* v2.9 touch-only escape hatch for build placement and targeted abilities. */
+.cancelMode{min-height:36px;padding:5px 9px;border-radius:5px;border-color:#e6a86b;color:#ffe7c4;background:#523326;font:700 10px Consolas,monospace;white-space:nowrap}
+.cancelMode:focus-visible{outline:2px solid #ffe0a5;outline-offset:2px}
+@media (pointer:coarse){.cancelMode{min-height:44px;min-width:76px;touch-action:manipulation}}
+@media (max-width:700px){
+  .cancelMode:not(.hidden){position:absolute;top:95px;right:8px;z-index:5;box-shadow:0 3px 12px #07111daa}
+}
