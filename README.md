@@ -4,8 +4,15 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.21.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.22.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
 
+
+### Frontier XL and camera navigation (v2.22)
+
+- New selectable **48×48 Frontier Expanse XL** map nearly doubles the tile area of the legacy 34×34 skirmish fields.
+- Middle-mouse drag or hold Space + left drag to pan; C centers selection and H centers HQ. One-finger touch pan, two-finger pinch and pan, WASD, mouse wheel zoom and radar click-to-jump remain supported.
+- AI scouting, two-base spawning, map preview, fog, navigation, camera bounds and both XL/legacy save formats adapt to battlefield size. Original 34×34 Map Forge editor remains unchanged.
+- [v2.22 release notes](docs/RELEASE-2.22.md) · [XL camera regression test](tests/expanse-camera-v222.test.mjs).
 
 ### Animated faction roster and first aircraft (v2.21)
 

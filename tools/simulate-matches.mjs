@@ -212,7 +212,7 @@ for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
      result.outcome].join(' | '));
 }
 const report={
-  schema:'chrono-dominion-balance-lab-v1',version:'2.20.0',
+  schema:'chrono-dominion-balance-lab-v1',version:'2.22.0',
   simulationSeconds:seconds,simulationStep:frame,
   disclaimer:'Scripted-player scenario coverage, not real human win rates or a verified fair multiplayer balance benchmark.',
   scenarios:results.length,results,
