@@ -5,6 +5,9 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Bake original Blender art"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -26,8 +29,10 @@ jobs:
           node tests/smoke.test.mjs
           node --check art/vehicle-renderer.js
           node --check art/animated-entities.js
+          node --check art/baked-atlas-loader.js
           node tests/vehicle-art.test.mjs
           node tests/animated-art-v221.test.mjs
+          node tests/baked-art-v223.test.mjs
           node tests/combat-economy.test.mjs
           node tests/save-formation.test.mjs
           node tests/tactics.test.mjs
@@ -75,7 +80,7 @@ jobs:
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
-          python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py
+          python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py tools/blender/animated_assets.py tools/blender/pack_animated.py
       - name: Archive nine-scenario balance metrics
         if: always()
         uses: actions/upload-artifact@v4
@@ -91,6 +96,10 @@ jobs:
           test -f game.js
           test -f art/vehicle-renderer.js
           test -f art/animated-entities.js
+          test -f art/baked-atlas-loader.js
+          test -f tools/blender/animated_assets.py
+          test -f tools/blender/pack_animated.py
+          test -f tests/baked-art-v223.test.mjs
           test -f tests/animated-art-v221.test.mjs
           test -f art/pilot/coalition-power.svg
           test -f art/pilot/federation-power.svg
