@@ -64,8 +64,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: blender-studio-${{ github.event.inputs.faction || 'coalition' }}-${{ github.event.inputs.kind || 'generator' }}
-  cancel-in-progress: false
+  group: blender-studio-${{ github.event.inputs.faction || 'coalition' }}-${{ github.event.inputs.kind || 'generator' }}-${{ github.event.inputs.action || 'preview' }}
+  # A new preview supersedes stale preview jobs; it never interrupts approved publishing.
+  cancel-in-progress: ${{ github.event.inputs.action != 'publish' }}
 
 jobs:
   studio:
