@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.1 — coordinated target allocation and honest combat visibility. */
+/* Chrono Dominion v2.2 — match simulation coverage and fairness fixes. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -385,7 +385,7 @@
     newMatch(s){
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
@@ -1583,7 +1583,7 @@
       if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
         for(let j=0;j<48;j++){
           const angle=j*2.39996,radius=4.2+Math.floor(j/8)*.85;
-          const anchor=choice==='turret'&&threatened?(this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester')||base):base;
+          const anchor=choice==='turret'&&threatened?(this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester'&&this.sideCanSee(side,b))||base):base;
           // Keep all AI construction in supply radius of its living buildings.
           const origin=anchor===base?base:myBuildings.reduce((p,b)=>dist(anchor,b)<dist(anchor,p)?b:p,base);
           const x=Math.round(origin.x+Math.cos(angle)*radius),y=Math.round(origin.y+Math.sin(angle)*radius);
