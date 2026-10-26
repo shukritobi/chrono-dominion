@@ -639,6 +639,23 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                          ((0,0,0,1.31,.23,.27),
                           (-.51,0,-.12,.25,.38,.39),
                           (.51,0,-.12,.25,.38,.39)),"bronze")
+            # MK-III: A second, genuinely translating experimental test clamp.
+            # Its long paired jaws project beyond the near-side roof edge so
+            # the two poses alter the actual 80px outer silhouette, not only
+            # their emissive material. The clamp is one editable rotor mesh.
+            box("External clamp gantry foot",(1.13,-1.25,2.48),
+                (.31,.37,.47),"dark",.025)
+            box("Exposed servo gantry guide",(1.20,-1.41,2.85),
+                (1.02,.24,.17),"light",.017)
+            box("Retracting piston cylinder",(1.39,-1.42,3.04),
+                (.49,.25,.24),"bronze",.023)
+            parts["tech_clamp"]=scanner_array(
+                "Animated exposed twin jaw siege test clamp",
+                (1.35,-1.44,3.18),
+                ((0,0,0,1.39,.27,.19),
+                 (-.56,-.03,-.24,.19,.32,.64),
+                 (.56,-.03,-.24,.19,.32,.64),
+                 (0,.02,.18,.37,.29,.22)),"light")
             box("Fortified experimental access",(1.21,.54,1.19),(.08,.63,.83),"dark",.013)
             for z in (.91,1.14,1.37):
                 box("Access warning beacon",(1.29,.54,z),(.06,.40,.09),"glow",.009)
