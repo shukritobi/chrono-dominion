@@ -1,7 +1,7 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.19.0 (see `package.json`, `game.js` and [v2.19 release notes](RELEASE-2.19.md)).
+**Current prototype:** v2.20.0 (see `package.json`, `game.js` and [v2.19 release notes](RELEASE-2.19.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
@@ -22,6 +22,8 @@ v2.12 adds bounded sensor-only emergency scout evasion when remembered defenses 
 v2.10 adds sensor-report-based scout threat avoidance, mid-patrol replanning, retreat-cooldown protection, and reconnaissance telemetry in the nine-scenario balance lab. Its regression test is included in CI; v2.11 extends route safety using remembered threats.
 
 v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible cancel button for pending build/attack-move/Chrono Jump orders, with automated stylesheet and behavior tests; real-device verification remains outstanding.
+
+v2.20 restores primary/support rally movement after tactical interruptions, without overriding visible engagements or rewriting active paths. The recovery count is transient and included in the nine-scenario report. See [v2.20 release notes](RELEASE-2.20.md).
 
 ## Implemented in the repository
 
@@ -45,14 +47,14 @@ v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible canc
 
 - The **308-family asset register** is a plan, not 308 completed sprites. `art/rendered/manifest.json` currently has no packed PNG atlases and explicitly enables fallback artwork.
 - Most final 3D source models, animation frames, infantry animation sets, building destruction effects, environment variations and soundtrack remain unfinished.
-- Aircraft, naval warfare, garrisons, advanced mind-control chains, veterancy, country-specific units, superweapons, campaign missions, multiplayer and replay support remain unimplemented.
+- Aircraft, naval warfare, garrisons, advanced mind-control chains, country-specific units, superweapons, campaign missions, multiplayer and replay support remain unimplemented.
 - AI reconnaissance samples explored tiles near uncharted territory while retaining landmark patrol fallback. v2.11 prices whole scout routes using last-known threats, but cannot predict unknown enemy ambushes, optimize long-term territory ownership or guarantee scout safety. Battle balance remains provisional; the headless player is scripted and not a human substitute.
 - Two-finger pinch and camera pan are implemented, but mobile UI layout, low-end device performance, accessibility and long-session browser testing require hands-on verification.
 - No third-party proprietary game artwork, audio or code is included. The project's redistribution license is still undecided.
 
 ## Next development priorities
 
-1. Confirm v2.13 CI/deployment and compare scout survival, objective discovery and route-planning cost under identical nine-scenario settings.
+1. Compare v2.19 and v2.20 assault launches and rally recovery under identical scripted scenarios; validate real-player battle pacing.
 2. Add a measurable objective-discovery benchmark and tune AI squad staging on difficult maps.
 3. Produce and integrate original rendered unit/structure atlases with animation and proper art provenance.
 4. Improve touch-first selection feedback, responsive sidebar controls and browser accessibility.

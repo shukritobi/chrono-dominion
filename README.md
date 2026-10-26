@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.19.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.20.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
 
 ### Coordinated AI siege and improved battle effects (v2.19)
@@ -15,6 +15,11 @@
 - **Clearer combat visuals:** Projectiles use movement-based tracer strokes and vehicle strikes create original fading shockwave rings. All effects respect the player's fog and existing save schema.
 - **Measured combat:** Nine-scenario lab now reports siege focus orders and confirmed AI hits on structures. See [v2.19 release notes](docs/RELEASE-2.19.md).
 - [Full v2.19 PR verification](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed. Recorded 44,588 combined combat damage, 32 changed siege orders and 294 confirmed AI hits on buildings in scripted simulations; scout losses rose to 12.
+
+### Resumable AI staging (v2.20)
+
+- Primary and support squads now resume their saved rally destinations after temporary combat interrupts their movement orders. Visible enemy engagements and already-arrived members are left alone; active valid paths are not repeatedly reset.
+- A new transient `rallyResumes` counter appears in the nine-scenario balance report. See [v2.20 release notes](docs/RELEASE-2.20.md) and [rally regression tests](tests/rally-recovery-v220.test.mjs). Existing saves remain compatible.
 
 ### Reachable AI assaults and recovery (v2.18)
 
