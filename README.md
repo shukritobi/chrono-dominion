@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.28.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.29.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.29 Paid aircraft hull service
+
+- Damaged Strike Aircraft now receive up to 12 HP per game second of hull repairs while rearming beside a powered friendly Air Command. Repairs cost ¤0.75 per HP, are capped by available credits and remaining damage, and pause when power is low.
+- Reloading continues when credits run out, and the original mission resumes as before. Fully armed aircraft are never diverted solely for repairs. Existing saves require no migration.
+- [v2.29 release notes](docs/RELEASE-2.29.md) · [regression tests](tests/aircraft-repair-v229.test.mjs).
 
 ### v2.28 Safer air return routes and reconnaissance
 
