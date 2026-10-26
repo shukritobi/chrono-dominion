@@ -62,3 +62,19 @@ The original 240-second sweep saw AI platoon staging in **0/9** runs, even when 
 3. Create additional scripted-player styles, including defensive turtling, aggressive early infantry pressure and tank-only attack patterns.
 4. Include longer end-to-end games that terminate in victory or defeat, rather than treating the 240-second time limit as a win-rate proxy.
 5. Treat win rates, balance and visual frame-rate performance as **unknown** until representative human testing and real-browser profiling are available.
+
+## v2.3 reconnaissance follow-up (same 240-second matrix)
+
+After the concurrent sector-reconnaissance update, the full CI matrix was run again. It passed all nine game-state checks and recorded the following totals:
+
+| Map | Scripted player ore | AI ore | AI/player ore ratio |
+|---|---:|---:|---:|
+| Verdant Front | 26,640 | 12,960 | 0.486 |
+| Ashen Basin | 25,560 | 23,760 | 0.930 |
+| Frostline | 20,520 | 12,600 | 0.614 |
+
+In this run, all nine cases harvested income and recorded actual combat damage. **Two of nine** scenarios formed an AI assault platoon, compared with **zero of nine** before sector reconnaissance. The maximum simultaneous entity count was 51. None reached the normal victory/defeat condition before the four-minute scripted limit.
+
+**Interpretation:** the Ashen Basin mining fix remains effective after the new scouting changes, and map-wide reconnaissance can lead the existing AI to organize some platoon assaults. Verdant and Frostline remain priority economy-analysis targets. The sample does not establish win rates, consistent faction parity or correct performance during an entire human-played battle.
+
+Evidence: [v2.3 verified nine-scenario CI run](https://github.com/shukritobi/chrono-dominion/actions/runs/40258244438). The workflow's **balance-lab** artifact contains JSON metrics for reproducing and comparing the scenarios.
