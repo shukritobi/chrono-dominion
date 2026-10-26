@@ -4,8 +4,13 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.22.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.23.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
 
+
+### Flight-layer formation commands (v2.23)
+
+- Mixed ground/aircraft selections now receive separate movement and attack-move formations. Aircraft can fly to water and otherwise ground-blocked destinations while ground troops keep connected, walkable slots.
+- Includes regression tests for mixed orders, Frontier Expanse XL, and save/load. See [flight formation notes](docs/AIR-FORMATIONS.md).
 
 ### Frontier XL and camera navigation (v2.22)
 
