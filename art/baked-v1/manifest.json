@@ -123,6 +123,125 @@
           160,
           800
         ]
+      },
+      "hq": {
+        "file": "coalition-hq.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "refinery": {
+        "file": "coalition-refinery.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "barracks": {
+        "file": "coalition-barracks.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "tech": {
+        "file": "coalition-tech.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "turret": {
+        "file": "coalition-turret.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "beam": {
+        "file": "coalition-beam.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "airfield": {
+        "file": "coalition-airfield.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
       }
     },
     "federation": {
@@ -244,6 +363,125 @@
           160,
           800
         ]
+      },
+      "hq": {
+        "file": "federation-hq.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "refinery": {
+        "file": "federation-refinery.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "barracks": {
+        "file": "federation-barracks.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "tech": {
+        "file": "federation-tech.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "turret": {
+        "file": "federation-turret.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "beam": {
+        "file": "federation-beam.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "airfield": {
+        "file": "federation-airfield.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
       }
     },
     "psionic": {
@@ -351,6 +589,125 @@
       },
       "radar": {
         "file": "psionic-radar.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "hq": {
+        "file": "psionic-hq.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "refinery": {
+        "file": "psionic-refinery.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "barracks": {
+        "file": "psionic-barracks.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "tech": {
+        "file": "psionic-tech.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "turret": {
+        "file": "psionic-turret.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "beam": {
+        "file": "psionic-beam.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "airfield": {
+        "file": "psionic-airfield.png",
         "directions": 1,
         "states": {
           "idle": 2,
