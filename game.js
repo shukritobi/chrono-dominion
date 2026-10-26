@@ -33,7 +33,8 @@
     radar:{name:'Radar Array',icon:'◎',cost:900,hp:450,power:-40,requires:['refinery']},
     tech:{name:'Technology Lab',icon:'✧',cost:2200,hp:550,power:-90,requires:['factory','radar']},
     turret:{name:'Sentry Turret',icon:'♜',cost:600,hp:420,power:-20,requires:['generator'],range:5.1,damage:15,rate:1.1},
-    beam:{name:'Energy Tower',icon:'◉',cost:1200,hp:470,power:-75,requires:['barracks','radar'],range:6.5,damage:26,rate:1.65}
+    beam:{name:'Energy Tower',icon:'◉',cost:1200,hp:470,power:-75,requires:['barracks','radar'],range:6.5,damage:26,rate:1.65},
+    airfield:{name:'Air Command',icon:'✈',cost:1750,hp:700,power:-55,requires:['factory','radar']}
   };
   const UNITS = {
     soldier:{name:'Rifle Squad',icon:'♟',cost:200,hp:70,speed:1.9,range:3.0,damage:11,rate:1.05,from:'barracks'},
@@ -41,12 +42,13 @@
     tank:{name:'Battle Tank',icon:'▰',cost:850,hp:270,speed:1.55,range:4.0,damage:32,rate:1.45,from:'factory'},
     heavy:{name:'Siege Tank',icon:'▱',cost:1450,hp:420,speed:1.02,range:5.0,damage:53,rate:2.0,from:'factory',requires:['tech']},
     harvester:{name:'Ore Harvester',icon:'◈',cost:900,hp:310,speed:1.23,range:0,damage:0,from:'refinery'},
-    recon:{name:'Recon Vehicle',icon:'⌁',cost:550,hp:145,speed:2.55,range:3.2,damage:13,rate:.9,from:'factory'}
+    recon:{name:'Recon Vehicle',icon:'⌁',cost:550,hp:145,speed:2.55,range:3.2,damage:13,rate:.9,from:'factory'},
+    aircraft:{name:'Strike Aircraft',icon:'✈',cost:1600,hp:220,speed:4.4,range:4.5,damage:38,rate:1.65,from:'airfield',requires:['radar']}
   };
   const NAMES = {
-    coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester',recon:'Lynx Scout'},
-    federation:{hq:'Iron Command',generator:'Thermal Reactor',refinery:'Industrial Refinery',barracks:'Garrison',factory:'Armour Foundry',radar:'Signal Tower',tech:'Weapons Institute',turret:'Gun Nest',beam:'Arc Coil',soldier:'Rifleman',specialist:'Arc Trooper',tank:'Bull Tank',heavy:'Mammoth Tank',harvester:'Ore Carrier',recon:'Iron Patrol'},
-    psionic:{hq:'Neural Nexus',generator:'Bio Reactor',refinery:'Neural Refinery',barracks:'Initiation Chamber',factory:'Mind Forge',radar:'Psi Scanner',tech:'Ascension Spire',turret:'Neural Sentinel',beam:'Psychic Spire',soldier:'Acolyte',specialist:'Neural Disciple',tank:'Viper Tank',heavy:'Mindbreaker',harvester:'Psi Collector',recon:'Shade Runner'}
+    coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester',recon:'Lynx Scout',airfield:'Sky Command',aircraft:'Falcon Interceptor'},
+    federation:{hq:'Iron Command',generator:'Thermal Reactor',refinery:'Industrial Refinery',barracks:'Garrison',factory:'Armour Foundry',radar:'Signal Tower',tech:'Weapons Institute',turret:'Gun Nest',beam:'Arc Coil',soldier:'Rifleman',specialist:'Arc Trooper',tank:'Bull Tank',heavy:'Mammoth Tank',harvester:'Ore Carrier',recon:'Iron Patrol',airfield:'Aviation Foundry',aircraft:'Iron Talon'},
+    psionic:{hq:'Neural Nexus',generator:'Bio Reactor',refinery:'Neural Refinery',barracks:'Initiation Chamber',factory:'Mind Forge',radar:'Psi Scanner',tech:'Ascension Spire',turret:'Neural Sentinel',beam:'Psychic Spire',soldier:'Acolyte',specialist:'Neural Disciple',tank:'Viper Tank',heavy:'Mindbreaker',harvester:'Psi Collector',recon:'Shade Runner',airfield:'Aether Platform',aircraft:'Spectre Wing'}
   };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -509,7 +511,7 @@
         key==='speed'?[1,1.06,1.12][rank]:1;
       return base*(mods?.[key]??1)*bonus;
     }
-    unitRadius(e){return e.kind==='soldier'||e.kind==='specialist'?.23:e.kind==='heavy'?.56:e.kind==='harvester'?.47:e.kind==='recon'?.33:.39;}
+    unitRadius(e){return e.kind==='soldier'||e.kind==='specialist'?.23:e.kind==='heavy'?.56:e.kind==='harvester'?.47:e.kind==='recon'?.33:e.kind==='aircraft'?.35:.39;}
     name(e){return NAMES[this.players[e.owner].faction][e.kind]||this.getDef(e).name;}
     count(side,kind){return this.entities.filter(e=>e.owner===side&&e.kind===kind&&e.hp>0&&e.built).length;}
     prereq(side,key){const def=BUILD[key]||UNITS[key];if(!def)return false;
@@ -966,6 +968,8 @@
       return trace(nearest);
     }
     canOccupyUnit(e,x,y,ignoreUnits=false){
+      // Aircraft operate in their own altitude layer, cross water, and do not block ground traffic.
+      if(e.kind==='aircraft')return x>=.8&&y>=.8&&x<=WORLD_SIZE-.8&&y<=WORLD_SIZE-.8;
       const r=this.unitRadius(e);
       if(x<.8||y<.8||x>WORLD_SIZE-.8||y>WORLD_SIZE-.8||this.water(x,y))return false;
       for(const b of this.entities){
@@ -976,7 +980,7 @@
         const nearby=this.unitBuckets?.nearby(x,y)||
           this.entities.filter(unit=>unit.type==='unit');
         for(const b of nearby){
-          if(b.hp<=0||b.id===e.id||b.type!=='unit')continue;
+          if(b.hp<=0||b.id===e.id||b.type!=='unit'||b.kind==='aircraft')continue;
           const margin=r+this.unitRadius(b);
           if((b.x-x)**2+(b.y-y)**2<margin*margin*.84)return false;
         }
@@ -996,7 +1000,7 @@
         if(pass)this.unitBuckets.rebuild(this.entities);
         const units=this.entities.filter(e=>e.type==='unit'&&e.hp>0).sort((a,b)=>a.id-b.id);
         for(const a of units)for(const b of this.unitBuckets.nearby(a.x,a.y)){
-          if(b.id<=a.id||b.hp<=0||b.type!=='unit')continue;
+          if(b.id<=a.id||b.hp<=0||b.type!=='unit'||a.kind==='aircraft'||b.kind==='aircraft')continue;
           const minimum=(this.unitRadius(a)+this.unitRadius(b))*.95;
           let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
           if(d>=minimum)continue;
@@ -1163,6 +1167,18 @@
       e.pathRecheck=0;e.trafficWait=0;e.trafficRepath=false;
     }
     move(e,tx,ty,dt){
+      // Aircraft move directly through the air instead of consuming ground A* paths.
+      if(e.kind==='aircraft'){
+        const dx=tx-e.x,dy=ty-e.y,len=Math.hypot(dx,dy);
+        if(len<.24)return true;
+        const speed=this.stat(e,'speed'),step=Math.min(speed*dt,len);
+        const nx=clamp(e.x+dx/len*step,.8,WORLD_SIZE-.8);
+        const ny=clamp(e.y+dy/len*step,.8,WORLD_SIZE-.8);
+        this.setUnitPosition(e,nx,ny);
+        e.desiredHeading=Math.atan2(dy,dx);
+        if(!e.engaging)e.desiredTurretHeading=e.desiredHeading;
+        return Math.hypot(tx-e.x,ty-e.y)<.24;
+      }
       let d=Math.hypot(tx-e.x,ty-e.y);
       if(d<.24){e.path=[];e.pathGoal=null;e.trafficWait=0;e.trafficRepath=false;return true;}
       const old=e.pathTarget;
@@ -2459,7 +2475,7 @@
       $('factionInfo').textContent=power.low?'LOW POWER':'COMMAND SYSTEMS ONLINE';
       this.updateReconPanel();this.updateBattleEvents();
       for(const b of $('tabs').querySelectorAll('button'))b.classList.toggle('active',b.dataset.tab===this.tab);
-      let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester'];
+      let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech','airfield']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester','aircraft'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
         const label=NAMES[me.faction][key]||d.name;const available=ready&&rich&&!q;let reason=!ready?'Requires tech':!rich?'Not enough credits':q?'In production':'';
         const preview=(key==='generator'||key==='turret')?'./art/pilot/'+me.faction+'-'+(key==='generator'?'power':'turret')+'.svg':(key==='soldier'||key==='specialist')?'./art/pilot/'+me.faction+'-'+(key==='soldier'?'infantry':'specialist')+'.svg':key==='tank'?'./art/pilot/'+({coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'}[me.faction])+'.svg':key==='recon'?'./art/pilot/'+me.faction+'-recon.svg':null;
@@ -2621,6 +2637,13 @@
       const c=this.ctx,pal=COLORS[this.players[e.owner].faction],p=iso(e.x,e.y),h=(e.kind==='hq'?44:e.kind==='radar'?36:e.kind==='generator'?27:24)*Math.max(.25,e.construction);
       const shape=(pts,color)=>{c.beginPath();c.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)c.lineTo(...pts[i]);c.closePath();c.fillStyle=color;c.fill();};
       c.save();c.translate(p.x,p.y);
+      // Version 2.21: detailed, live-animated faction structures supersede static pilot icons.
+      const animated=window.ChronoAnimatedArt;
+      if(animated?.drawBuilding(c,e,{faction:this.players[e.owner].faction,time:this.time})){
+        if(this.selected.includes(e.id))this.drawRing(0,2,53,pal.color);
+        this.drawBuildingCondition(e,103,66);
+        this.health(e,0,-114,64);c.restore();return;
+      }
       const powerImage=e.kind==='generator'?this.buildingSprites[this.players[e.owner].faction]:e.kind==='turret'?this.defenseSprites[this.players[e.owner].faction]:null;
       if(powerImage&&powerImage.complete&&powerImage.naturalWidth>0){
         if(this.selected.includes(e.id))this.drawRing(0,2,51,pal.color);
@@ -2666,6 +2689,14 @@
       if((e.stunnedUntil||0)>this.time){this.drawRing(0,-8,26,'#bd93e8');}
       if(e.yieldOrder&&e.owner===0)this.drawRing(0,0,21,'#eac278');
       else if(e.laneWaiting&&e.owner===0)this.drawRing(0,0,23,'#75bafa');
+      const animated=window.ChronoAnimatedArt,artFaction=this.players[e.owner].faction;
+      if(animated?.drawUnit(c,e,{faction:artFaction,time:this.time})){
+        if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='aircraft'?33:e.kind==='heavy'?29:24,pal.color);
+        const offset=e.kind==='aircraft'?-104:(e.kind==='soldier'||e.kind==='specialist'?-58:-73);
+        this.health(e,0,offset,e.kind==='heavy'?47:36);
+        this.drawRankBadge(e,23,offset-12);
+        c.restore();return;
+      }
       const atlas=(e.kind==='tank')?this.vehicleAtlases?.[this.players[e.owner].faction]:null;
       if(atlas?.hull&&atlas?.turret){
         const art=window.ChronoVehicleArt,srcSize=art.frameSize,cols=art.columns;
@@ -2673,6 +2704,7 @@
         const drawLayer=(sheet,frame)=>c.drawImage(sheet,(frame%cols)*srcSize,Math.floor(frame/cols)*srcSize,srcSize,srcSize,-49,-63,98,98);
         if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
         drawLayer(atlas.hull,hullFrame);drawLayer(atlas.turret,turretFrame);
+        animated?.tankOverlay(c,e,{faction:artFaction,time:this.time});
         this.health(e,0,-59,43);this.drawRankBadge(e,24,-69);c.restore();return;
       }
       const inf=e.kind==='soldier'?this.infantrySprites[this.players[e.owner].faction]:e.kind==='specialist'?this.specialistSprites[this.players[e.owner].faction]:null;
