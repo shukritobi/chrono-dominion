@@ -1,3 +1,18 @@
+## Built-in audio (v2.24)
+
+The public GitHub Pages deployment **automatically produces and ships the full 473-clip original sound pack**. No sound-folder import is required.
+
+- `audio/builtin-loader.js` loads `./audio/builtin/audio-map.json` and resolves sound IDs to MP3 URLs; only the small manifest is fetched at page load.
+- `tools/audio/build_builtin.py` generates the 473 original MP3 recordings and the manifest during GitHub Actions deployment using the dialogue in `audio/voices.js`, eSpeak, FFmpeg and procedural synthesis.
+- `audio/sfx.js` plays built-in MP3s first when no local override exists, then browser synthesized sounds if a clip is unavailable. If an optional folder is imported, that local folder always takes priority.
+- Gameplay voices for three factions, announcer events, weapon effects and three music loops are pre-mapped.
+- The output is generated into `audio/builtin/` **for the deployed site**, not checked into Git. To generate it locally, install `node`, `python3`, `espeak`, `ffmpeg` and run `npm run audio:build`. Validate without encoding with `npm run audio:check`.
+- Browsers require a user gesture to unlock playback. Click **♪ OFF** once to enable audio. Sound and voice options are then remembered on that device.
+
+These are original scripted, synthesized placeholders, not Westwood or EA game recordings. They can be replaced per event later with improved recordings without changing the game logic.
+
+---
+
 # Chrono Dominion Audio Soundscape (v2.21)
 
 Chrono Dominion ships an **original procedurally generated music bed** and **synthesized game effects**. Nothing in this public repository contains EA / Westwood game audio. The audio engine is opt-in and retains the existing mute-on-first-launch behavior.
