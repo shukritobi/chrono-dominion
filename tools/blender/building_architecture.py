@@ -100,14 +100,49 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Defence side wing",(-.88,side*.88,1.15),(.70,.58,.82),"dark")
             light_stripe(-.25,-.68,3.11,1.03)
         elif kind=="generator":
-            box("Fusion bridge reactor",(0,0,1.33),(1.63,1.40,1.36),"armor",.17)
+            # AEGIS MK-II DOUBLE-CONTAINMENT FUSION STATION
+            # Three explicit masses ensure a clear silhouette at ~150px:
+            #  (1) two tall mirrored glass reactors, (2) low control bridge,
+            #  (3) horizontal luminous distribution rails at ground level.
+            box("Central Fusion Supervisory Housing",(.05,0,1.34),(1.28,1.25,1.17),"armor",.15)
+            box("Protected Reactor Access Fascia",(.70,-.08,1.18),(.14,1.08,.79),"dark",.025)
+            box("Recessed Status Display",(.79,-.08,1.41),(.05,.75,.30),"glass",.018)
+            box("Upper Instrumentation Bridge",(-.10,0,2.06),(1.54,2.34,.25),"light",.075)
+            box("Telemetry Light Rail",(.00,-1.09,2.03),(1.18,.08,.08),"glow",.012)
             for side in (-1,1):
-                cyl("Symmetric fusion stack",(-.18,side*.93,1.98),.36,2.45,"light")
-                cyl("Coolant ring lower",(-.18,side*.93,1.35),.45,.12,"glow")
-                cyl("Coolant ring upper",(-.18,side*.93,2.73),.45,.12,"glow")
-                sphere("Top vent glow",(-.18,side*.93,3.25),(.22,.22,.19),"glow")
-            parts["radar"]=torus("Active stabilizing field",(.20,0,2.25),.58,.075,"glow",True)
-            box("System feed display",(1.01,-.20,1.21),(.09,.56,.35),"glass",.028)
+                y=side*1.03
+                # Two distinct reactor towers on a shared containment foundation.
+                cyl("Octagonal Reactor Footing",(-.29,y,.91),.51,.44,"dark",vertices=12)
+                cyl("Reactor Base Clamp",(-.29,y,1.14),.47,.18,"light",vertices=16)
+                cyl("Inner Cyan Fusion Plasma",(-.29,y,2.09),.23,1.72,"glow",vertices=24)
+                cyl("Translucent Containment Shell",(-.29,y,2.11),.34,1.70,"glass",vertices=24)
+                # Circumferential armored clamps and separated cyan bands.
+                for level in (1.28,1.68,2.48,2.91):
+                    cyl("Visible Outer Support Collar",(-.29,y,level),.45,.105,"light",vertices=24)
+                for level in (1.48,2.08,2.67):
+                    torus("Pulsing Magnetic Confinement Ring",(-.29,y,level),.39,.045,"glow")
+                cyl("Turbine Vent Crown",(-.29,y,3.13),.45,.27,"dark",vertices=20)
+                cyl("Top Turbine Finial",(-.29,y,3.31),.26,.19,"light",vertices=20)
+                sphere("Status Beacon",(-.29,y,3.50),(.16,.16,.17),"glow")
+                # Paired side maintenance outriggers keep towers mechanically grounded.
+                box("Reinforced Lateral Side Foot",(.19,side*1.32,1.03),(.82,.23,.37),"armor",.045)
+                for level in (1.40,2.48):
+                    box("Pressure Service Link",(.26,side*.71,level),(.69,.20,.15),"dark",.02)
+                    box("Cooling Light Conduit",(.28,side*.70,level+.11),(.59,.08,.075),"glow",.011)
+                for index in range(3):
+                    box("Reactor Instrument Ribs",(-.66,side*.99,1.57+index*.44),
+                        (.10,.14,.25),"light",.025)
+            # Main control cab and reactor distribution manifold.
+            box("Armored Precision Control Roof",(.11,0,2.39),(1.17,1.04,.20),"armor",.055)
+            box("Central Cyan Operational Indicator",(.68,0,2.30),(.065,.75,.085),"glow",.012)
+            for side in (-1,1):
+                box("Forward Heat Sink Grating",(1.01,side*.40,1.06),(.10,.23,.48),"dark",.015)
+                for z in (1.00,1.13,1.27):
+                    box("Heat Sink Display Strip",(1.08,side*.40,z),(.04,.16,.055),"light",.009)
+            # Active toroidal gyro is deliberately offset and becomes animated
+            # via the existing PARTS['radar'] animation controller.
+            parts["radar"]=torus("Rotating Blue Reactor Gyroscope",(.14,0,2.75),.43,.077,"glow",True)
+            sphere("Fusion Control Focal Point",(.14,0,2.77),(.14,.14,.15),"glass")
         elif kind=="refinery":
             box("Sealed ore sorting factory",(-.28,0,1.24),(2.08,2.32,1.37),"armor",.12)
             box("Inspection booth",(-.76,-.76,2.18),(.74,.66,.58),"glass",.06)
