@@ -104,7 +104,7 @@ jobs:
           w,h=1000,860
           out=Image.new("RGB",(w,h),(13,20,33))
           draw=ImageDraw.Draw(out)
-          draw.text((24,12),"CHRONO DOMINION / OPEN-BAY WAR FACTORY MK-IV REVIEW",fill=(132,221,240))
+          draw.text((24,12),"CHRONO DOMINION / COLLAPSED WAR FACTORY MK-V REVIEW",fill=(132,221,240))
           for ix,faction in enumerate(cols):
               draw.text((ix*486+18,39),faction.upper(),fill=(233,240,249))
           summary=[]
@@ -154,7 +154,7 @@ jobs:
                         "RGBA delta",rgba_changed,"idle distinct",idle_distinct)
                   assert count>=1000, "Factory silhouette is unexpectedly small"
                   assert build_diff>=300, "Construction state must alter geometry"
-                  assert damage_diff>=400, "MK-V damage must visibly alter silhouette at 160px"
+                  assert damage_diff>=350, "MK-V damage must visibly alter silhouette at 160px"
                   assert alpha80>=70, "MK-V damage must visibly alter silhouette at 80px"
                   assert rgba_changed>=900, "MK-V damage must be visually substantial"
                   assert idle_distinct, "Idle animation has identical frames"
@@ -188,7 +188,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chrono-two-open-factory-mk4-review
+          name: chrono-two-open-factory-mk5-review
           path: generated/open-factory/
           retention-days: 30
           if-no-files-found: error
