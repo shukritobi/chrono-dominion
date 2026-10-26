@@ -59,10 +59,10 @@ assert.equal(g.projectiles.at(-1).damage,g.stat(turret,'damage'),
   'ordinary sentries retain normal aircraft damage');
 
 // Enemy towers follow the same sensor rules as player towers.
-const enemyTower=g.add(1,'beam',26,25);
-const playerPlane=g.add(0,'aircraft',29,25);
+const enemyTower=g.add(1,'beam',10,26);
+const playerPlane=g.add(0,'aircraft',13,26);
 assert.equal(g.defenseTarget(enemyTower)?.id,playerPlane.id);
-playerPlane.x=32.2;playerPlane.y=25;
+playerPlane.x=16.2;playerPlane.y=26;
 assert.notEqual(g.defenseTarget(enemyTower)?.id,playerPlane.id,
   'AI cannot fire at aircraft beyond its sensor coverage');
 
