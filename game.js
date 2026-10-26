@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.31 — power-outage aircraft service recovery. */
+/* Chrono Dominion v2.32 — dedicated air-only Skyguard defenses. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -36,7 +36,8 @@
     tech:{name:'Technology Lab',icon:'✧',cost:2200,hp:550,power:-90,requires:['factory','radar']},
     turret:{name:'Sentry Turret',icon:'♜',cost:600,hp:420,power:-20,requires:['generator'],range:5.1,damage:15,rate:1.1},
     beam:{name:'Energy Tower',icon:'◉',cost:1200,hp:470,power:-75,requires:['barracks','radar'],range:6.5,damage:26,rate:1.65,antiAirBonus:1.5},
-    airfield:{name:'Air Command',icon:'✈',cost:1750,hp:700,power:-55,requires:['factory','radar']}
+    airfield:{name:'Air Command',icon:'✈',cost:1750,hp:700,power:-55,requires:['factory','radar']},
+    flak:{name:'Skyguard Battery',icon:'⌁',cost:950,hp:440,power:-45,requires:['radar'],range:7.3,damage:32,rate:1.2,antiAirOnly:true}
   };
   const UNITS = {
     soldier:{name:'Rifle Squad',icon:'♟',cost:200,hp:70,speed:1.9,range:3.0,damage:11,rate:1.05,from:'barracks'},
@@ -48,9 +49,9 @@
     aircraft:{name:'Strike Aircraft',icon:'✈',cost:1600,hp:220,speed:4.4,range:4.5,damage:38,rate:1.65,ammo:4,from:'airfield',requires:['radar']}
   };
   const NAMES = {
-    coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester',recon:'Lynx Scout',airfield:'Sky Command',aircraft:'Falcon Interceptor'},
-    federation:{hq:'Iron Command',generator:'Thermal Reactor',refinery:'Industrial Refinery',barracks:'Garrison',factory:'Armour Foundry',radar:'Signal Tower',tech:'Weapons Institute',turret:'Gun Nest',beam:'Arc Coil',soldier:'Rifleman',specialist:'Arc Trooper',tank:'Bull Tank',heavy:'Mammoth Tank',harvester:'Ore Carrier',recon:'Iron Patrol',airfield:'Aviation Foundry',aircraft:'Iron Talon'},
-    psionic:{hq:'Neural Nexus',generator:'Bio Reactor',refinery:'Neural Refinery',barracks:'Initiation Chamber',factory:'Mind Forge',radar:'Psi Scanner',tech:'Ascension Spire',turret:'Neural Sentinel',beam:'Psychic Spire',soldier:'Acolyte',specialist:'Neural Disciple',tank:'Viper Tank',heavy:'Mindbreaker',harvester:'Psi Collector',recon:'Shade Runner',airfield:'Aether Platform',aircraft:'Spectre Wing'}
+    coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester',recon:'Lynx Scout',airfield:'Sky Command',aircraft:'Falcon Interceptor',flak:'Skyguard Battery'},
+    federation:{hq:'Iron Command',generator:'Thermal Reactor',refinery:'Industrial Refinery',barracks:'Garrison',factory:'Armour Foundry',radar:'Signal Tower',tech:'Weapons Institute',turret:'Gun Nest',beam:'Arc Coil',soldier:'Rifleman',specialist:'Arc Trooper',tank:'Bull Tank',heavy:'Mammoth Tank',harvester:'Ore Carrier',recon:'Iron Patrol',airfield:'Aviation Foundry',aircraft:'Iron Talon',flak:'Iron Flak Array'},
+    psionic:{hq:'Neural Nexus',generator:'Bio Reactor',refinery:'Neural Refinery',barracks:'Initiation Chamber',factory:'Mind Forge',radar:'Psi Scanner',tech:'Ascension Spire',turret:'Neural Sentinel',beam:'Psychic Spire',soldier:'Acolyte',specialist:'Neural Disciple',tank:'Viper Tank',heavy:'Mindbreaker',harvester:'Psi Collector',recon:'Shade Runner',airfield:'Aether Platform',aircraft:'Spectre Wing',flak:'Aether Lance'}
   };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -835,7 +836,7 @@
         // Only hostile entities are affected. Power generators and other
         // infrastructure remain invulnerable to these specialist pulses.
         const victims=this.entities.filter(u=>u.hp>0&&u.owner!==e.owner&&dist(u,e)<=ability.range&&
-          (u.type==='unit'||u.kind==='turret'||u.kind==='beam'));
+          (u.type==='unit'||u.kind==='turret'||u.kind==='beam'||u.kind==='flak'));
         for(const u of victims){
           if(faction==='federation'){
             const amount=u.type==='building'?25:38;
@@ -1297,7 +1298,7 @@
     airReturnExposure(side,from,to){
       // Navigation uses only this faction's timestamped sensor reports.
       const reports=(this.intel?.[side]||[]).filter(r=>
-        r.type==='building'&&['turret','beam'].includes(r.kind)&&
+        r.type==='building'&&['turret','beam','flak'].includes(r.kind)&&
         Number.isFinite(r.x)&&Number.isFinite(r.y)&&Number.isFinite(r.time)&&
         this.time>=r.time&&this.time-r.time<=180);
       if(!reports.length)return 0;
@@ -1306,7 +1307,7 @@
       for(let i=1;i<=samples;i++){
         const t=i/samples,point={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
         for(const report of reports){
-          const reach=report.kind==='beam'?7.4:6,gap=dist(point,report);
+          const reach=report.kind==='flak'?8.3:report.kind==='beam'?7.4:6,gap=dist(point,report);
           if(gap<reach)exposure+=1+(reach-gap)/reach;
         }
       }
@@ -1443,12 +1444,14 @@
       const range=this.stat(defender,'range');
       const visible=b=>b.owner!==defender.owner&&b.type==='unit'&&b.built&&
         b.hp>0&&this.sideCanSee(defender.owner,b);
-      return this.nearest(defender,b=>visible(b)&&b.kind==='aircraft',range)||
-        this.nearest(defender,b=>visible(b)&&b.kind!=='aircraft',range);
+      const air=this.nearest(defender,b=>visible(b)&&b.kind==='aircraft',range);
+      return air||(BUILD[defender.kind]?.antiAirOnly?null:
+        this.nearest(defender,b=>visible(b)&&b.kind!=='aircraft',range));
     }
     shoot(source,target){
       const def=this.getDef(source),damage=this.stat(source,'damage');
       if(!damage||!target||source.hp<=0||target.hp<=0||source.owner===target.owner)return;
+      if(def.antiAirOnly&&target.kind!=='aircraft')return;
       if(source.kind==='aircraft'&&(source.ammo??UNITS.aircraft.ammo)<=0)return;
       if(source.kind==='aircraft')source.ammo=Math.max(0,(source.ammo??UNITS.aircraft.ammo)-1);
       source.ready=Math.max(.2,(def.rate||1.2)*[1,.93,.85][this.veterancyRank(source)]);
@@ -2189,7 +2192,7 @@
           const score=b=>{
             const pending=(planned.get(b.id)||0)+(incoming.get(b.id)||0);
             const waste=Math.max(0,pending+this.stat(unit,'damage')-b.hp);
-            const priority=['turret','beam'].includes(b.kind)?48:
+            const priority=['turret','beam','flak'].includes(b.kind)?48:
               b.id===squad.targetId?30:
               ['factory','refinery','tech'].includes(b.kind)?22:15;
             return priority+(b.id===squad.targetId?10:0)-
@@ -2472,12 +2475,17 @@
         if(b.hp/b.maxHp<.58&&me.credits>550)b.repairing=true;
       }
       const shortage=this.power(side).low;
+      // Only AI-observed aircraft contacts can trigger anti-air construction.
+      const airThreatSeen=knowledge.some(r=>r.type==='unit'&&r.kind==='aircraft'&&
+        Number.isFinite(r.time)&&r.time<=this.time&&this.time-r.time<=28);
       let choice=null;
       if(!owned('generator').length||shortage)choice='generator';
       else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       else if(!owned('factory').length)choice='factory';
       else if(!owned('radar').length&&me.credits>2600)choice='radar';
+      else if(airThreatSeen&&built('radar')&&owned('flak').length<1&&
+        me.credits>=BUILD.flak.cost+500)choice='flak';
       else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
       else if(!owned('airfield').length&&built('factory')&&built('radar')&&
         me.credits>3500&&this.time>130)choice='airfield';
@@ -2758,7 +2766,7 @@
       $('factionInfo').textContent=power.low?'LOW POWER':'COMMAND SYSTEMS ONLINE';
       this.updateReconPanel();this.updateBattleEvents();
       for(const b of $('tabs').querySelectorAll('button'))b.classList.toggle('active',b.dataset.tab===this.tab);
-      let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech','airfield']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester','aircraft'];
+      let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech','airfield']:this.tab==='defenses'?['turret','beam','flak']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester','aircraft'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
         const label=NAMES[me.faction][key]||d.name;const available=ready&&rich&&!q;let reason=!ready?'Requires tech':!rich?'Not enough credits':q?'In production':'';
         const preview=(key==='generator'||key==='turret')?'./art/pilot/'+me.faction+'-'+(key==='generator'?'power':'turret')+'.svg':(key==='soldier'||key==='specialist')?'./art/pilot/'+me.faction+'-'+(key==='soldier'?'infantry':'specialist')+'.svg':key==='tank'?'./art/pilot/'+({coalition:'coalition-lynx',federation:'federation-bull',psionic:'psionic-viper'}[me.faction])+'.svg':key==='recon'?'./art/pilot/'+me.faction+'-recon.svg':null;
@@ -2957,6 +2965,7 @@
       else if(e.kind==='factory'){c.fillStyle='#23303c';c.fillRect(-23,-h-2,42,14);c.fillStyle=pal.trim;c.fillRect(-18,-h,31,3);}
       else if(e.kind==='tech'||e.kind==='beam'){c.strokeStyle=pal.trim;c.lineWidth=4;c.beginPath();c.moveTo(0,-h-3);c.lineTo(0,-h-39);c.stroke();c.fillStyle=pal.trim;c.beginPath();c.arc(0,-h-39,9,0,7);c.fill();}
       else if(e.kind==='turret'){c.fillStyle='#202d39';c.fillRect(-14,-h-9,28,12);c.strokeStyle=pal.trim;c.lineWidth=5;c.beginPath();c.moveTo(0,-h-5);c.lineTo(27,-h-13);c.stroke();}
+      else if(e.kind==='flak'){c.fillStyle=pal.trim;c.fillRect(-17,-h-13,34,8);c.strokeStyle=pal.trim;c.lineWidth=4;c.beginPath();c.moveTo(-12,-h-12);c.lineTo(-22,-h-32);c.moveTo(12,-h-12);c.lineTo(22,-h-32);c.stroke();}
       else{c.fillStyle=pal.trim;c.fillRect(-15,-h-9,29,5);}
       if(!e.built){c.fillStyle='#0a1524ab';c.fillRect(-33,-h-8,66,22);c.fillStyle=pal.trim;c.fillRect(-30,-h,60*e.construction,3);}
       if(this.selected.includes(e.id))this.drawRing(0,3,50,pal.color);
@@ -3134,6 +3143,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.31.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.32.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();

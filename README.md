@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.31.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.32.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.32 Dedicated Skyguard anti-air defenses
+
+- Three factions can build original animated **Skyguard Battery** defenses (Iron Flak Array / Aether Lance) after Radar. They target **aircraft only**, consume power, and require shared sensor visibility.
+- AI commanders construct at most one battery after their own sensors report an enemy aircraft. Previously observed aircraft contacts expire; hidden opponent positions are never used.
+- Returning aircraft avoid observed Skyguard batteries, while ground scouts do not treat air-only weapons as a ground hazard. [v2.32 release notes](docs/RELEASE-2.32.md) · [regression](tests/anti-air-battery-v232.test.mjs).
 
 ### v2.31 Airfield power-outage recovery
 
