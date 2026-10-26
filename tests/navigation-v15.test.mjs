@@ -69,6 +69,22 @@ assert.ok(soldier.x<14&&Number.isFinite(soldier.x));
 assert.ok(!game.water(soldier.x,soldier.y));
 assert.ok(game.move(soldier,soldier.x,soldier.y,.05),'already reached coordinates complete immediately');
 
+// A parked heavy vehicle forces progress-based replanning. The moving soldier
+// must eventually ask for a traffic-costed route, not repeatedly reuse the
+// original straight path forever.
+game.entities=[];
+game.water=()=>false;
+const walker=game.add(0,'soldier',8,15);
+game.add(0,'heavy',9,15);
+let replans=0;
+const originalCosts=game.trafficCosts.bind(game);
+game.trafficCosts=(unit)=>{replans++;return originalCosts(unit);};
+for(let i=0;i<90;i++)game.move(walker,15,15,.05);
+assert.ok(replans>0,'a persistent traffic stall triggers a penalized replan');
+assert.ok(walker.x>=8&&walker.x<=15,'the blocked unit moves without teleporting');
+assert.ok(!game.water(walker.x,walker.y));
+game.trafficCosts=originalCosts;
+
 // Existing saves contain ordinary path/position state, not transient queue
 // nodes; the next frame can rebuild the pathfinder after loading.
 setup();
