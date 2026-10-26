@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.25 — AI air wing and independent ground platoons. */
+/* Chrono Dominion v2.26 — strike aircraft ordnance and airfield servicing. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -45,7 +45,7 @@
     heavy:{name:'Siege Tank',icon:'▱',cost:1450,hp:420,speed:1.02,range:5.0,damage:53,rate:2.0,from:'factory',requires:['tech']},
     harvester:{name:'Ore Harvester',icon:'◈',cost:900,hp:310,speed:1.23,range:0,damage:0,from:'refinery'},
     recon:{name:'Recon Vehicle',icon:'⌁',cost:550,hp:145,speed:2.55,range:3.2,damage:13,rate:.9,from:'factory'},
-    aircraft:{name:'Strike Aircraft',icon:'✈',cost:1600,hp:220,speed:4.4,range:4.5,damage:38,rate:1.65,from:'airfield',requires:['radar']}
+    aircraft:{name:'Strike Aircraft',icon:'✈',cost:1600,hp:220,speed:4.4,range:4.5,damage:38,rate:1.65,ammo:4,from:'airfield',requires:['radar']}
   };
   const NAMES = {
     coalition:{hq:'Field Command',generator:'Fusion Array',refinery:'Ore Processor',barracks:'Training Centre',factory:'Vehicle Assembly',radar:'Tactical Radar',tech:'Chrono Laboratory',turret:'Auto Cannon',beam:'Prism Array',soldier:'Ranger',specialist:'Chrono Operative',tank:'Lynx Tank',heavy:'Bulwark MBT',harvester:'Alloy Harvester',recon:'Lynx Scout',airfield:'Sky Command',aircraft:'Falcon Interceptor'},
@@ -447,6 +447,7 @@
       const def=BUILD[kind]||UNITS[kind],modifier=FACTION_BALANCE[this.players[owner]?.faction]?.[kind]||{};
       const hitPoints=Math.round(def.hp*(modifier.hp||1));
       const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:hitPoints,maxHp:hitPoints,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0,abilityReadyAt:0,stunnedUntil:0};
+      if(kind==='aircraft')e.ammo=UNITS.aircraft.ammo;
       if(e.type==='unit'){e.stance='guard';e.guardX=x;e.guardY=y;e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
       this.entities.push(e);this.unitBuckets?.insert(e);
       if(this.stats[owner]){if(e.type==='unit')this.stats[owner].unitsDeployed++;else this.stats[owner].buildingsConstructed++;}
@@ -1293,9 +1294,50 @@
       d=Math.hypot(tx-e.x,ty-e.y);
       return d<.24;
     }
+    serviceAircraft(e,dt){
+      if(e.kind!=='aircraft')return false;
+      const capacity=UNITS.aircraft.ammo;
+      // Historical saves predate ammunition. Treat missing values as a full load.
+      e.ammo=Number.isFinite(e.ammo)?clamp(Math.floor(e.ammo),0,capacity):capacity;
+      if(e.ammo>=capacity&&!e.rearming)return false;
+      if(e.ammo>0&&!e.rearming)return false;
+      const pad=this.nearest(e,b=>b.owner===e.owner&&b.kind==='airfield'&&b.built&&b.hp>0);
+      if(!pad){
+        // Losing the airfield must not permanently immobilize an aircraft.
+        if(e.rearming){e.rearming=false;e.order=e.rearmResume||null;e.rearmResume=null;e.rearmProgress=0;}
+        return false;
+      }
+      if(!e.rearming){
+        e.rearming=true;
+        e.rearmResume=e.order?{...e.order}:null;
+        e.rearmProgress=0;
+        e.order=null;
+      }
+      if(dist(e,pad)>1.7){
+        this.move(e,pad.x,pad.y,dt);
+        return true;
+      }
+      // A powerless airfield can shelter aircraft but cannot reload them.
+      if(!this.power(e.owner).low){
+        e.rearmProgress=(Number.isFinite(e.rearmProgress)?e.rearmProgress:0)+dt;
+        while(e.rearmProgress>=2.5&&e.ammo<capacity){
+          e.ammo++;
+          e.rearmProgress-=2.5;
+        }
+        if(e.ammo>=capacity){
+          e.rearming=false;
+          e.rearmProgress=0;
+          e.order=e.rearmResume||null;
+          e.rearmResume=null;
+        }
+      }
+      return true;
+    }
     shoot(source,target){
       const def=this.getDef(source),damage=this.stat(source,'damage');
       if(!damage||!target||source.hp<=0||target.hp<=0||source.owner===target.owner)return;
+      if(source.kind==='aircraft'&&(source.ammo??UNITS.aircraft.ammo)<=0)return;
+      if(source.kind==='aircraft')source.ammo=Math.max(0,(source.ammo??UNITS.aircraft.ammo)-1);
       source.ready=Math.max(.2,(def.rate||1.2)*[1,.93,.85][this.veterancyRank(source)]);
       const faction=this.players[source.owner].faction;
       const bonus=source.kind==='specialist'&&faction==='federation'?1.3:1;
@@ -1521,6 +1563,7 @@
             }
           }
           if(e.kind==='harvester'){this.processHarvester(e,dt);continue;}
+          if(this.serviceAircraft(e,dt))continue;
           if(e.owner===1&&(e.retreatUntil||0)>this.time&&e.order?.type==='move'){
             this.move(e,e.order.x,e.order.y,dt);
             continue;
@@ -2250,7 +2293,8 @@
     coordinateAIAirWing(aircraft,knowledge,base,invaders=[]){
       // Air strikes use the AI's own sensor reports, never unseen live enemy positions.
       // Aircraft patrol unexplored terrain only when no reported objective exists.
-      const planes=aircraft.filter(e=>e.hp>0&&e.built);
+      const planes=aircraft.filter(e=>e.hp>0&&e.built&&!e.rearming&&
+        (e.ammo??UNITS.aircraft.ammo)>0);
       const threats=invaders.filter(e=>e.hp>0&&this.sideCanSee(1,e));
       const objectives=this.rankAIObjectives(knowledge,base);
       const claimed=[];
@@ -2564,6 +2608,8 @@
         html+='<p class="veterancyInfo">'+this.veterancyName(e)+' · '+(e.kills||0)+
           ' KILLS'+(this.veterancyRank(e)?' · COMBAT BONUSES ACTIVE':'')+'</p>';
       if(e.kind==='recon')html+='<p class="scoutInfo">RECON · extended vision · fast scouting</p>';
+      if(e.kind==='aircraft')html+='<p class="scoutInfo">ORDNANCE '+(e.ammo??UNITS.aircraft.ammo)+' / '+UNITS.aircraft.ammo+
+        (e.rearming?' · RETURNING / REARMING':'')+'</p>';
       if(e.owner===0&&e.type==='building'){
         const canRepair=e.built&&e.hp<e.maxHp;
         const disabledRepair=(!canRepair||!e.repairing&&this.players[0].credits<1)?' disabled':'';
@@ -2974,6 +3020,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.25.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.26.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
