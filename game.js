@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.0 — multi-platoon tactics and damage-aware retreats. */
+/* Chrono Dominion v2.1 — coordinated target allocation and honest combat visibility. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1223,9 +1223,15 @@
           }
           const command=e.order,range=this.stat(e,'range'),stance=e.stance||'guard';
           let target=command?.type==='attack'?this.entityById(command.id):null;
+          // The computer may not chase a unit after contact is lost in fog.
+          // Player-issued attack orders retain their existing behaviour.
+          if(e.owner===1&&target&&!this.sideCanSee(1,target)){
+            e.order=null;target=null;
+          }
           if(!target&&command?.type!=='move'){
             const detection=stance==='aggressive'?range+4.0:stance==='hold'?range:range+1.5;
-            target=this.nearest(e,b=>b.owner!==e.owner&&b.built,detection);
+            target=this.nearest(e,b=>b.owner!==e.owner&&b.built&&
+              (e.owner!==1||this.sideCanSee(1,b)),detection);
           }
           e.engaging=!!target;
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
@@ -1494,6 +1500,60 @@
       }
       return withdrawing;
     }
+    assignAIEngagements(fighters,invaders,base){
+      // Build one assignment table per AI decision tick. Only observed units
+      // are candidates: unseen enemies never become omniscient attack orders.
+      const side=1,available=new Map(fighters.filter(u=>u.hp>0&&u.built&&
+        u.kind!=='harvester'&&(u.retreatUntil||0)<=this.time)
+        .map(u=>[u.id,u]));
+      const assignments=new Map(),committed=new Map();
+      const visible=this.entities.filter(e=>e.owner!==side&&e.hp>0&&e.type==='unit'&&
+        this.sideCanSee(side,e)).sort((a,b)=>a.id-b.id);
+      const assign=(unit,target)=>{
+        assignments.set(unit.id,target.id);available.delete(unit.id);
+        committed.set(target.id,(committed.get(target.id)||0)+this.stat(unit,'damage'));
+      };
+      const structures=this.entities.filter(e=>e.owner===side&&e.type==='building'&&e.hp>0);
+      // A base assault takes precedence over a far-away field skirmish.
+      const defenders=[...invaders].filter(e=>visible.some(t=>t.id===e.id)).sort((a,b)=>{
+        const threatDistance=e=>Math.min(...structures.map(s=>dist(s,e)));
+        return threatDistance(a)-threatDistance(b)||a.hp-b.hp||a.id-b.id;
+      });
+      for(const enemy of defenders){
+        const defenders=[...available.values()].filter(u=>dist(u,enemy)<=9)
+          .sort((a,b)=>dist(a,enemy)-dist(b,enemy)||a.id-b.id);
+        const cap=Math.min(2,defenders.length);
+        for(let i=0;i<cap;i++)assign(defenders[i],enemy);
+      }
+      // Remaining combatants share target intentions. Prefer vulnerable,
+      // threatening contacts while penalising projected overkill and the
+      // number of assigned attackers. Never replace a completed squad rally
+      // with an enemy outside local tactical detection.
+      for(const fighter of [...available.values()].sort((a,b)=>a.id-b.id)){
+        const detection=Math.max(6.5,this.stat(fighter,'range')+1.5);
+        const targets=visible.filter(enemy=>dist(fighter,enemy)<=detection);
+        if(!targets.length)continue;
+        const rank=enemy=>{
+          const already=committed.get(enemy.id)||0;
+          const future=already+this.stat(fighter,'damage');
+          const excess=Math.max(0,future-enemy.hp);
+          const baseThreat=structures.some(b=>dist(b,enemy)<7)?2.8:0;
+          return baseThreat+Math.min(2.5,enemy.damage?this.stat(enemy,'damage')/15:0)+
+            (1-enemy.hp/enemy.maxHp)*2.0-dist(fighter,enemy)*.32-
+            excess/Math.max(25,enemy.maxHp)*5.0-
+            Math.max(0,already-enemy.hp*.75)/Math.max(25,enemy.maxHp)*4.0;
+        };
+        targets.sort((a,b)=>rank(b)-rank(a)||a.id-b.id);
+        assign(fighter,targets[0]);
+      }
+      // Apply all assignments after planning, rather than overwriting orders
+      // once for every nearby intruder in a loop.
+      for(const [id,targetId] of assignments){
+        const unit=this.entityById(id);
+        if(unit&&unit.hp>0)unit.order={type:'attack',id:targetId};
+      }
+      return assignments;
+    }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
       if(!base)return;
@@ -1596,26 +1656,23 @@
       const supportIds=this.coordinateAISupport(active,knowledge,base,threatened,platoonIds);
       const responders=[...active].filter(e=>e.kind!=='recon').sort((a,b)=>a.id-b.id);
       if(threatened){
-        for(const fighter of active){
-          if(oldAttackers.has(fighter.id)&&!responders.includes(fighter))continue;
+        for(const fighter of responders){
           if(oldAttackers.has(fighter.id)&&fighter.order?.type==='attackMove')
             fighter.order={type:'move',x:base.x+1.5,y:base.y+1.5};
         }
       }
-      if(threatened){
-        for(const invader of invaders){
-          const defenders=[...responders].sort((a,b)=>dist(a,invader)-dist(b,invader)).slice(0,2);
-          for(const defender of defenders)defender.order={type:'attack',id:invader.id};
-        }
-      }
+      const engagements=this.assignAIEngagements(active,invaders,base);
       for(const fighter of active){
-        const attacker=this.nearest(fighter,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),6.5);
-        if(attacker){fighter.order={type:'attack',id:attacker.id};continue;}
+        if(engagements.has(fighter.id))continue;
+        if(fighter.order?.type==='attack'){
+          // Clear expired/out-of-sight direct targets, but leave rally and
+          // attack-move orders to the coordinated platoon controllers.
+          const enemy=this.entityById(fighter.order.id);
+          if(!enemy||enemy.hp<=0||!this.sideCanSee(side,enemy))fighter.order=null;
+        }
         if(fighter.kind==='recon'&&fighter.order?.type==='attackMove')continue;
         if(platoonIds.has(fighter.id)||supportIds.has(fighter.id))continue;
-        if(fighter.order?.type==='attack'&&this.entityById(fighter.order.id))continue;
-        // Non-platoon units stay in reserve until more units are ready
-        // or a visible threat requires a local defense response.
+        // Unassigned reserves wait for the next genuine scouting contact.
       }
     }
     updateFog(){
