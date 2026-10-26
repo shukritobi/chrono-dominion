@@ -515,7 +515,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             # Horizontal controlled intake conveyor to show ore-handling purpose.
             box("Biomorphic extraction belt",(1.17,-.10,1.05),(.78,.84,.17),"dark",.035)
             for i in range(4):
-                spire("Conveyed mineral",(1.0+i*.18,-.10,1.16),.09,.24,"glass",4)
+                spire("Conveyed mineral",1.0+i*.18,-.10,1.16,.09,.24,"glass",4)
             prism("Mining containment interface",-.11,0,2.40,.86,.30,"armor",6)
             spire("Sorting crystal resonator",-.11,0,2.70,.48,.91,"glass",5)
             sphere("Mineral discrimination core",(-.11,0,3.61),(.18,.17,.19),"glow")
