@@ -1,7 +1,7 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.20.0 (see `package.json`, `game.js` and [v2.19 release notes](RELEASE-2.19.md)).
+**Current prototype:** v2.21.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
@@ -32,7 +32,7 @@ v2.20 restores primary/support rally movement after tactical interruptions, with
 - Unit selection, control groups, formations, stances, attack-move, navigation around terrain, traffic avoidance and narrow-lane yielding. A player reconnaissance HUD shows surveyed map coverage and contact history. An expandable tactical event history records friendly building damage and observed base threats.
 - Two-stage AI squad coordination, tactical target allocation, scouting, saved intelligence, wounded-unit retreats and map-wide reconnaissance patrols. Dynamic scout frontier points supplement fixed map landmarks.
 - Save/load through browser local storage with the original `chrono-dominion-skirmish-v1` key.
-- Original SVG art pilots, procedural isometric tank and turret renderers, directional rendering metadata and synthesized sound effects.
+- Original SVG art pilots, procedural 32-direction tank and turret atlases, animated high-definition vector infantry/vehicles/buildings, basic flying strike aircraft, directional metadata and synthesized sound effects.
 - A Map Forge editor, built-in custom map support and source map catalog.
 - GitHub Actions verification and Pages deployment, with automated regression tests and a nine-scenario, three-map/three-difficulty headless balance lab.
 
@@ -46,8 +46,8 @@ v2.20 restores primary/support rally movement after tactical interruptions, with
 ## Planned, incomplete or placeholder
 
 - The **308-family asset register** is a plan, not 308 completed sprites. `art/rendered/manifest.json` currently has no packed PNG atlases and explicitly enables fallback artwork.
-- Most final 3D source models, animation frames, infantry animation sets, building destruction effects, environment variations and soundtrack remain unfinished.
-- Aircraft, naval warfare, garrisons, advanced mind-control chains, country-specific units, superweapons, campaign missions, multiplayer and replay support remain unimplemented.
+- Final Blender source models, packed frame atlases, detailed infantry death animations, destroyed-building models, environment variations and a complete soundtrack remain unfinished. Runtime vector infantry walking and building activity animations are available.
+- Aircraft have a first-pass playable unit, but landing, rearming, dogfighting and dedicated air defenses are not implemented. Naval warfare, garrisons, advanced mind-control chains, country-specific units, superweapons, campaigns, multiplayer and replays remain unimplemented.
 - AI reconnaissance samples explored tiles near uncharted territory while retaining landmark patrol fallback. v2.11 prices whole scout routes using last-known threats, but cannot predict unknown enemy ambushes, optimize long-term territory ownership or guarantee scout safety. Battle balance remains provisional; the headless player is scripted and not a human substitute.
 - Two-finger pinch and camera pan are implemented, but mobile UI layout, low-end device performance, accessibility and long-session browser testing require hands-on verification.
 - No third-party proprietary game artwork, audio or code is included. The project's redistribution license is still undecided.
@@ -56,7 +56,7 @@ v2.20 restores primary/support rally movement after tactical interruptions, with
 
 1. Compare v2.19 and v2.20 assault launches and rally recovery under identical scripted scenarios; validate real-player battle pacing.
 2. Add a measurable objective-discovery benchmark and tune AI squad staging on difficult maps.
-3. Produce and integrate original rendered unit/structure atlases with animation and proper art provenance.
+3. Convert the new animated vector classes to production-quality original Blender/atlas sources; profile performance and refine aircraft combat.
 4. Improve touch-first selection feedback, responsive sidebar controls and browser accessibility.
 5. Expand the original factions and their gameplay systems before campaign or multiplayer scope.
 
