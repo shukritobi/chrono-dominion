@@ -1513,13 +1513,29 @@
         targetId:saved.targetId,targetTime:saved.targetTime,
         target:{x:saved.target.x,y:saved.target.y}};
     }
+    rankAIObjectives(knowledge,base,avoidId=null){
+      // Enemy locations come solely from the AI's observed sensor reports.
+      // Never infer coordinates from hidden opponents or player fog.
+      const value={hq:110,tech:87,factory:82,refinery:78,
+        barracks:68,radar:60,generator:54,turret:32};
+      return knowledge.filter(k=>k&&k.type==='building'&&
+        Number.isInteger(k.id)&&Number.isFinite(k.x)&&Number.isFinite(k.y)&&
+        Number.isFinite(k.time)&&this.time>=k.time&&this.time-k.time<=180)
+        .map(k=>{
+          const age=this.time-k.time;
+          const danger=Math.min(25,this.scoutThreatPenalty(k)*.045);
+          const duplicate=avoidId===k.id?38:0;
+          return {report:k,score:(value[k.kind]??48)-dist(base,k)*.85-
+            age*.12-danger-duplicate};
+        })
+        .sort((a,b)=>b.score-a.score||b.report.time-a.report.time||
+          a.report.id-b.report.id).map(entry=>entry.report);
+    }
     coordinateAIPlatoon(fighters,knowledge,base,threatened){
       // All targets are previously scouted *reports*, never invisible live
       // enemy objects. A platoon is a bounded, persistent squad of up to 5.
       if(threatened){this.aiPlatoon=null;return new Set();}
-      const report=knowledge.filter(k=>k.type==='building'&&this.time-k.time<=180)
-        .sort((a,b)=>b.time-a.time||Math.hypot(a.x-base.x,a.y-base.y)-
-          Math.hypot(b.x-base.x,b.y-base.y))[0];
+      const report=this.rankAIObjectives(knowledge,base)[0];
       if(!report){this.aiPlatoon=null;return new Set();}
       const soldiers=fighters.filter(u=>u.kind!=='recon'&&u.hp>0&&u.built&&
         u.hp/u.maxHp>=.36&&(u.retreatUntil||0)<=this.time&&
@@ -1600,11 +1616,13 @@
       // A second, smaller force can organize independently of the primary
       // platoon, without stealing already-committed attackers or scouts.
       if(threatened){this.aiSupportPlatoon=null;return new Set();}
-      const reports=knowledge.filter(k=>k.type==='building'&&this.time-k.time<=180);
+      const reports=this.rankAIObjectives(knowledge,base,this.aiPlatoon?.targetId);
       if(!reports.length){this.aiSupportPlatoon=null;return new Set();}
       const minimum=this.settings.difficulty==='recruit'?4:2;
       const ready=fighters.filter(u=>u.hp>0&&u.built&&u.kind!=='recon'&&
-        !committed.has(u.id)&&u.hp/u.maxHp>=.36&&(u.retreatUntil||0)<=this.time)
+        !committed.has(u.id)&&u.hp/u.maxHp>=.36&&
+        (u.retreatUntil||0)<=this.time&&
+        (u.retreatCooldownAt||0)<=this.time)
         .sort((a,b)=>a.id-b.id);
       let plan=this.aiSupportPlatoon;
       if(plan){
@@ -1620,11 +1638,7 @@
       if(!plan){
         if(ready.length<minimum){this.aiSupportPlatoon=null;return new Set();}
         const units=ready.slice(0,Math.min(4,ready.length));
-        const report=[...reports].sort((a,b)=>{
-          const ad=this.aiPlatoon?.targetId===a.id?1:0;
-          const bd=this.aiPlatoon?.targetId===b.id?1:0;
-          return ad-bd||b.time-a.time;
-        })[0];
+        const report=reports[0];
         const origin={x:units.reduce((sum,u)=>sum+u.x,0)/units.length,
           y:units.reduce((sum,u)=>sum+u.y,0)/units.length};
         const deltaX=report.x-origin.x,deltaY=report.y-origin.y;
@@ -2573,6 +2587,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.16.0',build:'unit-veterancy'};
+  window.ChronoDominion={version:'2.17.0',build:'strategic-ai-targets'};
   new Game();
 })();
