@@ -114,8 +114,11 @@ def mesh(name, verts, faces, material):
 def reset_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
-    bpy.context.scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in \
-        bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items.keys() else "BLENDER_EEVEE"
+    sc=bpy.context.scene
+    try:
+        sc.render.engine = "BLENDER_EEVEE_NEXT"
+    except (TypeError, ValueError):
+        sc.render.engine = "BLENDER_EEVEE"
     sc=bpy.context.scene
     sc.render.resolution_percentage=100
     sc.render.film_transparent=True
@@ -125,7 +128,8 @@ def reset_scene():
     sc.render.resolution_x=160
     sc.render.resolution_y=160
     sc.view_settings.view_transform="Standard"
-    sc.view_settings.look="Medium High Contrast"
+    try:sc.view_settings.look="Medium High Contrast"
+    except (TypeError, ValueError):pass
     bpy.ops.object.light_add(type="AREA",location=(-4,-5,9))
     sun=bpy.context.object
     sun.name="Large studio softbox"
@@ -301,6 +305,8 @@ def animate(kind,state,frame,frames):
         ROOT.location.x=-.05 if frame==0 else 0
     if "radar" in PARTS:
         PARTS["radar"].rotation_euler.z=phase
+    if "muzzle" in PARTS:
+        PARTS["muzzle"].hide_render=state!="attack"
     if state=="construct":
         ROOT.scale=(.48+frame/max(1,frames-1)*.52,)*3
     elif state=="damaged":
