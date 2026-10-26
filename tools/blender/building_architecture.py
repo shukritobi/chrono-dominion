@@ -810,7 +810,7 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             # are no transparent facade sheets masquerading as a doorway.
             # Ray tests from +X and -Y must reach interior manufacturing
             # equipment without intersecting a portal facade or side wall.
-            prism("Wide matter foundry foundation",-.28,0,.84,1.34,.72,
+            prism("Wide matter foundry foundation",-.28,0,.84,1.34,.24,
                   "armor",6)
             box("Open vehicle synthesis slipway",(.60,0,.94),
                 (2.30,1.77,.23),"dark",.035)
