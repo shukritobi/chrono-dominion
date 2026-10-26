@@ -45,8 +45,8 @@ function sandbox() {
 test('automatically indexes shipped recordings and ignores traversal',async()=>{
   const {api,requests}=sandbox();
   assert.equal(api.enabled,false);
-  assert.equal(await api.loadBuiltins(),4);
-  assert.equal(api.builtinCount,4);
+  assert.equal(await api.loadBuiltins(),5);
+  assert.equal(api.builtinCount,5);
   assert.equal(requests.length,1);
   assert.equal(requests[0],'./audio/builtin/audio-map.json');
 });
@@ -81,7 +81,7 @@ test('local overrides and voice mute do not delete built-in pack',async()=>{
   assert.equal(api.play('select',{faction:'coalition',kind:'soldier'}),true);
   assert.ok(media.some(x=>x.src==='blob:local/custom.mp3'));
   api.clearLocalPack();
-  assert.equal(api.builtinCount,4);
+  assert.equal(api.builtinCount,5);
   api.setVoiceEnabled(false);
   assert.equal(api.announce('unitLost'),true);
 });
