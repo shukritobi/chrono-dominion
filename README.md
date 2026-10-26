@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.34.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.35.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.35 Complete pathfinding on Frontier Expanse XL
+
+- A* navigation now explores up to the actual map's distinct cell count, rather than stopping after 1,450 heap pops. Long, winding but reachable routes on the 48×48 map no longer end prematurely.
+- Repeated heap entries do not consume the search budget. Corner-cut prevention, traffic and danger weighting, unreachable-goal fallback, legacy 34×34 paths and saves remain unchanged.
+- [v2.35 release notes](docs/RELEASE-2.35.md) · [XL maze regression](tests/xl-pathfinding-v235.test.mjs).
 
 ### v2.34 Fog-honest automatic combat acquisition
 

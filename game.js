@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.34 — fog-honest automatic target acquisition. */
+/* Chrono Dominion v2.35 — complete XL map A* route exploration. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1002,11 +1002,17 @@
         }
         path.reverse();return path;
       };
+      // Count unique expanded tiles, not stale heap entries. The old fixed
+      // 1450-pop limit truncated valid routes on the 48x48 Expanse map.
+      // At most WORLD_SIZE² distinct cells can be closed, so this also bounds
+      // work on unreachable destinations without weakening corner rules.
       let expansions=0;
-      while(open.length&&expansions++<1450){
+      const maxExpansions=WORLD_SIZE*WORLD_SIZE;
+      while(open.length&&expansions<maxExpansions){
         const node=pop();
         if(closed.has(node.key))continue;
         closed.add(node.key);
+        expansions++;
         const remaining=Math.hypot(node.x-tx,node.y-ty),travelled=costs.get(node.key);
         if(remaining<nearestDist-.001||(Math.abs(remaining-nearestDist)<.001&&travelled<nearestCost)){
           nearest=node.key;nearestDist=remaining;nearestCost=travelled;
@@ -3171,6 +3177,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.34.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.35.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
