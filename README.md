@@ -9,7 +9,7 @@
 
 ### Compact touch controls (v2.9)
 
-Coarse-pointer devices now use larger command targets, responsive narrow-screen sidebars and short-landscape HUD constraints. See [v2.9 notes](docs/RELEASE-2.9.md). Physical device validation remains pending.
+Coarse-pointer devices now use larger command targets, responsive narrow-screen sidebars and short-landscape HUD constraints. A visible CANCEL button dismisses pending building placement, attack-move and targeted Chrono Jump orders without requiring a keyboard or right-click. See [v2.9 notes](docs/RELEASE-2.9.md). Physical device validation remains pending.
 
 ### Touch camera controls (v2.8)
 
