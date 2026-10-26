@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.25.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Final Blender-rendered sprite atlases and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.26.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### Aircraft Ordnance and Rearming (v2.26)
+
+- Strike Aircraft now carry four shots, automatically return to a surviving friendly Air Command when empty, and reload one shot every 2.5 seconds if the base has sufficient power.
+- Air wings retain their prior orders during servicing; AI planners leave returning aircraft alone. Depleted aircraft cannot fire, and selected aircraft display their remaining ordnance.
+- Old local saves remain compatible. [Release notes](docs/RELEASE-2.26.md) · [Regression tests](tests/aircraft-rearm-v226.test.mjs).
 
 ### AI Air Wing (v2.25)
 
