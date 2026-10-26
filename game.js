@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.5 — traffic-aware navigation and efficient pathfinding. */
+/* Chrono Dominion v1.6 — friendly right-of-way and safe yielding in crowded lanes. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -384,7 +384,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.trafficYieldCount=0;
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -848,6 +848,73 @@
       }
       if(ownGrid)this.unitBuckets=null;
     }
+    trafficPriority(e){
+      // The loaded harvester keeps right of way to prevent resource starvation.
+      // Explicit Hold-position units never voluntarily yield.
+      if(e.kind==='harvester')return e.load>0?320:240;
+      return ({heavy:210,tank:175,recon:150,specialist:130,soldier:115})[e.kind]||100;
+    }
+    startTrafficYield(unit,approacher,dx,dy){
+      if(unit.hp<=0||unit.type!=='unit'||unit.stance==='hold'||
+          unit.yieldOrder||(unit.yieldRetryAt||0)>this.time||
+          (unit.stunnedUntil||0)>this.time)return false;
+      const d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
+      // Check both shoulders before retreating. A pocket must be reachable
+      // and remain clear of the approaching unit.
+      const offsets=[[ -uy,ux],[uy,-ux],[-ux,-uy],[ux,uy]];
+      let best=null,bestScore=Infinity;
+      for(const scale of [1.15,1.75,2.35]){
+        for(let i=0;i<offsets.length;i++){
+          const [sx,sy]=offsets[i],x=unit.x+sx*scale,y=unit.y+sy*scale;
+          if(!this.canOccupyUnit(unit,x,y))continue;
+          const route=this.findPath(unit.x,unit.y,x,y);
+          const final=route.at(-1);
+          if(!final||Math.hypot(final.x-x,final.y-y)>.85)continue;
+          const first=route[0];
+          // Don't ask a unit to pass through another unit on its first step.
+          if(first&&!this.canOccupyUnit(unit,
+              unit.x+(first.x-unit.x)*.2,unit.y+(first.y-unit.y)*.2))continue;
+          const nearest= this.unitBuckets?.nearby(x,y)||this.entities.filter(e=>e.type==='unit');
+          const clearance=nearest.reduce((m,other)=>other.id===unit.id?m:
+            Math.min(m,Math.hypot(other.x-x,other.y-y)),5);
+          const score=route.length+scale*.35+(i>=2?3:0)+(2.7-clearance)*.15;
+          if(score<bestScore){bestScore=score;best={x,y};}
+        }
+        if(best)break;
+      }
+      if(!best)return false;
+      unit.yieldOrder={x:best.x,y:best.y,expires:this.time+4};
+      unit.yieldRetryAt=this.time+2;
+      unit.path=[];unit.pathTarget=null;unit.pathGoal=null;
+      unit.pathRecheck=0;unit.trafficWait=0;unit.trafficRepath=false;
+      this.trafficYieldCount=(this.trafficYieldCount||0)+1;
+      return true;
+    }
+    tryTrafficYield(unit,dx,dy){
+      if(unit.yieldOrder||(unit.yieldRetryAt||0)>this.time)return false;
+      const length=Math.hypot(dx,dy)||1,vx=dx/length,vy=dy/length;
+      const nearby=this.unitBuckets?.nearby(unit.x+vx*.55,unit.y+vy*.55)||
+        this.entities.filter(e=>e.type==='unit');
+      const blocker=nearby.filter(other=>other.hp>0&&other.owner===unit.owner&&
+        other.id!==unit.id&&other.type==='unit'&&
+        (other.x-unit.x)*vx+(other.y-unit.y)*vy>0&&
+        Math.hypot(other.x-unit.x,other.y-unit.y)<
+          this.unitRadius(unit)+this.unitRadius(other)+.75)
+        .sort((a,b)=>Math.hypot(a.x-unit.x,a.y-unit.y)-
+          Math.hypot(b.x-unit.x,b.y-unit.y))[0];
+      if(!blocker)return false;
+      const mine=this.trafficPriority(unit),theirs=this.trafficPriority(blocker);
+      const higher=mine>theirs||(mine===theirs&&unit.id<blocker.id);
+      // Only friendly units coordinate; enemies never yield to an attack.
+      // A lower-priority mover can take the side pocket itself.
+      return higher?this.startTrafficYield(blocker,unit,vx,vy):
+        this.startTrafficYield(unit,blocker,vx,vy);
+    }
+    finishYield(e){
+      e.yieldOrder=null;e.yieldRetryAt=this.time+1.35;
+      e.path=[];e.pathTarget=null;e.pathGoal=null;
+      e.pathRecheck=0;e.trafficWait=0;e.trafficRepath=false;
+    }
     move(e,tx,ty,dt){
       let d=Math.hypot(tx-e.x,ty-e.y);
       if(d<.24){e.path=[];e.pathGoal=null;e.trafficWait=0;e.trafficRepath=false;return true;}
@@ -889,6 +956,9 @@
       // Accumulate genuine waypoint stalls, then use a traffic-priced A*.
       const progress=beforeProgress-Math.hypot(point.x-e.x,point.y-e.y);
       e.trafficWait=progress>.008?Math.max(0,(e.trafficWait||0)-dt*2):(e.trafficWait||0)+dt;
+      if(e.trafficWait>.25&&!e.yieldOrder){
+        if(this.tryTrafficYield(e,dx,dy))e.trafficWait=0;
+      }
       if(e.trafficWait>.65){
         e.trafficWait=0;e.trafficRepath=true;e.pathRecheck=0;
       }
@@ -986,6 +1056,16 @@
         e.ready=Math.max(0,e.ready-dt);
         if((e.stunnedUntil||0)>this.time)continue;
         if(e.type==='unit'){
+          if(e.yieldOrder){
+            const destination=e.yieldOrder;
+            if(this.time>=destination.expires||
+               Math.hypot(e.x-destination.x,e.y-destination.y)<.34){
+              this.finishYield(e);
+            }else{
+              this.move(e,destination.x,destination.y,dt);
+              continue;
+            }
+          }
           if(e.kind==='harvester'){this.processHarvester(e,dt);continue;}
           const command=e.order,range=this.stat(e,'range'),stance=e.stance||'guard';
           let target=command?.type==='attack'?this.entityById(command.id):null;
