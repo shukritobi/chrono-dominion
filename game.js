@@ -1685,6 +1685,7 @@
           });
         }
       }
+      this.resumeAISiegeAdvance(plan,members);
       this.recoverStalledAIAssault(plan,members);
       return new Set(plan.ids);
     }
@@ -1748,6 +1749,7 @@
           });
         }
       }
+      this.resumeAISiegeAdvance(plan,members);
       this.recoverStalledAIAssault(plan,members);
       return new Set(plan.ids);
     }
@@ -1842,6 +1844,28 @@
         if(unit&&unit.hp>0)unit.order={type:'attack',id:targetId};
       }
       return assignments;
+    }
+    resumeAISiegeAdvance(plan,members){
+      // Direct-fire orders become unusable when a structure leaves AI sight
+      // or dies. Rejoin the last *reported* objective, not hidden live data.
+      if(plan?.phase!=='assault')return;
+      const claimed=[];
+      for(let i=0;i<members.length;i++){
+        const unit=members[i],order=unit.order;
+        if(order?.type==='attackMove'){
+          claimed.push(order);continue;
+        }
+        if(order?.type==='attack'){
+          const target=this.entityById(order.id);
+          if(target&&this.sideCanSee(1,target))continue;
+        }
+        const flank=this.chooseFlank(unit,plan.target,i,null,claimed);
+        if(!flank)continue;
+        claimed.push(flank);
+        unit.order={type:'attackMove',x:flank.x,y:flank.y};
+        unit.path=[];unit.pathTarget=null;unit.pathGoal=null;
+        unit.pathRecheck=0;
+      }
     }
     coordinateAISiegeFocus(fighters,engagements=new Map(),threatened=false){
       // Direct siege orders require ACTUAL AI line of sight. Remembered
