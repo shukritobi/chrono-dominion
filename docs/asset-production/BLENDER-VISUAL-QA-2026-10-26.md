@@ -241,19 +241,61 @@ pre-development main revision showed changes only to Blender modeling,
 animation, preview QA scripts, review workflows and QA documentation,
 not the live texture atlas or its manifest.
 
+## 2026-10-27 Psionic MK-IV collapsed crystal damage repair
+
+**Preview-only; not published to game art.** The Psionic Headquarters,
+Refinery and Barracks now have deliberately missing upper crystal hardware,
+collapsed signature structures, three individually editable fallen faceted
+crystals and a fractured roof cavity in their damaged frame. These are
+original 3D meshes, not picture sprites. The untouched original meshes
+remain editable in each saved .blend, and visibility is state-specific.
+
+- [Successful three-building Blender render and pixel QA workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40393298356).
+- [MK-IV damage geometry and state-specific visibility](../../tools/blender/animated_assets.py).
+- [Targeted 80px and 160px comparison QA](../../tools/blender/qa_psionic_crystal_damage.py).
+- [Targeted preview-only workflow](../../.github/workflows/psionic-crystal-damage-review.yml).
+- Each of the **three** editable Blender sources was reopened successfully.
+  The saved HQ / Refinery / Barracks sources contain **58 / 57 / 57**
+  editable mesh objects, including three hidden damage-only crystal
+  wreckage meshes and a fractured cavity each.
+- All three atlases remain transparent **160×800 RGBA**, with five
+  nonempty unclipped states and distinct idle RGBA frames.
+- **Damaged alpha-mask change at 80px:** HQ **134 → 392** (+258);
+  Refinery **69 → 151** (+82); Barracks **54 → 152** (+98).
+- **Damaged alpha-mask change at 160px:** HQ **1,554**; Refinery
+  **593**; Barracks **587** pixels.
+- Early-construction versus idle changes at 160px remain **2,057 / 1,843 /
+  1,260** pixels. Direct PNG comparison with the preceding nine-building
+  archive confirmed the early construction frame is byte-identical for
+  all three buildings; only damaged states were intentionally redesigned.
+- Actual downloaded rendered PNGs were inspected side-by-side with the
+  earlier damaged frames and current intact poses. At 80px, the HQ is
+  conspicuously shorter and has lost its sovereign beacon and command ring;
+  the Refinery has lost its upper resonator and floating crystal tips; the
+  Barracks has lost both intact dormitory roof caps and exposed its court.
+  Fallen shards are visible, though dark against the damaged purple shell.
+- Visual polish still desirable: expose brighter fracture edges and
+  asymmetrical broken roof gaps. The MK-IV damage is clearly distinguishable
+  but not yet a complete destroyed-state animation.
+- The current asset roster remains **Planned** for full critical/destroyed
+  and power-out states. **No live sprite atlas or production manifest was
+  changed by this modeling/review pass.**
+
 ## Ordered next tasks for hourly agent
 
-1. **Psionic damaged silhouette repair:** target Headquarters, Refinery
-   and Barracks only. Their new roof debris was validated as editable geometry
-   but did not improve the 80px silhouette (134 / 69 / 54 changed pixels).
-   Remove/hide specific signature upper meshes and render visible fallen
-   crystals. Do not rerender Coalition/Federation buildings unchanged.
-2. **Radar/Tech art polish:** six MK-II sources are rendered and verified;
-   improve Federation Lab's physical scanner motion (its idle alpha mask is
-   unchanged despite RGB pulse), and create clearly broken scanner parts.
-3. **Psionic Factory:** deepen the physical fabrication portal.
-4. **Complete gameplay states:** add critical and destroyed geometry beyond
-   the current five-frame preview protocol and implement power-out variants.
-5. Continue defenses, airfields, missing 3D vehicles and atlas manifests.
+1. **Federation Technology Lab mechanical idle:** its two idle poses
+   change RGB emission but **0 alpha pixels**. Make the ballistic clamp
+   visibly translate, pivot or raise above the roof in two distinct
+   Blender poses, then targeted render, reopen and inspect at 80px/160px.
+2. **Radar and Tech damaged-state clarity:** add broken rotor blades,
+   tilted scanner dishes and collapsed experimental hardware in all six
+   MK-II classes. Prefer targeted source and workflow QA, no unrelated
+   rerenders.
+3. **Psionic Factory:** replace the glowing front screen with a physically
+   hollow fabrication bay while preserving its twin-horn silhouette.
+4. **Complete gameplay states:** introduce critical, destroyed and power-out
+   geometry beyond the five-frame preview contract.
+5. Continue defenses, airfields, remaining 3D vehicles and asset atlas
+   integration after explicit art approval.
 
 **Never overwrite approved game textures without explicit approval.**
