@@ -54,7 +54,8 @@ const gameSrc=read('game.js').replace('  new Game();','  window.__game = new Gam
 runInNewContext(gameSrc,{window,document,localStorage,console,performance:{now:()=>0},
   requestAnimationFrame(){},devicePixelRatio:1,setTimeout:()=>1,clearTimeout(){}},{timeout:4000});
 const g=window.__game;
-assert.equal(window.ChronoDominion.version,'2.4.0');
+assert.equal(window.ChronoDominion.version,JSON.parse(read('package.json')).version,
+  'runtime build metadata matches package version');
 assert.ok(window.ChronoMapCatalog.custom,'custom map installed into runtime catalog');
 g.newMatch({map:'custom',playerFaction:'coalition',enemyFaction:'federation',difficulty:'recruit',startingCredits:5000});
 assert.equal(g.settings.map,'custom');
