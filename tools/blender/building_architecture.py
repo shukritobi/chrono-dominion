@@ -805,22 +805,35 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             box("Recessed ritual entry",(1.60,0,1.17),
                 (.06,.79,.28),"dark",.005)
         elif kind=="factory":
-            # AETHER SYNOD MK-III / TWIN-HORN MATTER SHIPYARD.
-            # Intentionally TALL, FRONT-OPEN and RECTILINEAR in silhouette.
-            # Twin elevated forks flank a luminous fabrication portal,
-            # unlike the low twin-wing Barracks or the HQ central obelisk.
+            # AETHER SYNOD MK-V / HOLLOW TWIN-HORN MATTER SHIPYARD.
+            # The near side and +X portal are actual EMPTY openings. There
+            # are no transparent facade sheets masquerading as a doorway.
+            # Ray tests from +X and -Y must reach interior manufacturing
+            # equipment without intersecting a portal facade or side wall.
             prism("Wide matter foundry foundation",-.28,0,.84,1.34,.72,
                   "armor",6)
-            box("Long dark vehicle synthesis slipway",(.60,0,.94),
+            box("Open vehicle synthesis slipway",(.60,0,.94),
                 (2.30,1.77,.23),"dark",.035)
+            # Solid backstop makes the open bay's depth legible in isometric
+            # view, while its near-side wall is deliberately absent.
+            box("Recessed manufacturing rear bulkhead",(-.79,0,1.58),
+                (.14,1.43,1.13),"dark",.012)
+            box("Interior hexagonal reactor window",(-.695,0,1.64),
+                (.045,.74,.58),"glass",.009)
             for side in (-1,1):
-                y=side*.88
-                box("Projecting portal buttress",(.43,y,1.39),
-                    (1.76,.36,.78),"armor",.055)
-                box("Long mint guided fabrication rail",(.58,y,1.86),
-                    (1.62,.11,.085),"glow",.011)
+                y=side*.94
+                # Rear piers and short forward portal columns leave the
+                # central near-side workcell unobstructed at z~1.3-1.8.
+                box("Rear bay buttress",(-.55,y,1.52),
+                    (.38,.34,1.16),"armor",.038)
+                box("Open portal corner pier",(1.23,y,1.56),
+                    (.25,.30,1.34),"light",.031)
+                box("Elevated portal side truss",(.32,y,2.27),
+                    (2.00,.15,.17),"armor",.025)
+                box("Mint guidance rail",(.58,side*.78,1.10),
+                    (1.56,.08,.075),"glow",.009)
                 fork=box("Tall vertical fabrication fork",(-.43,side*1.17,2.13),
-                    (.58,.55,2.36),"light",.065)
+                         (.58,.55,2.36),"light",.065)
                 tip=spire("Asymmetric fork spearhead",-.43,side*1.17,3.27,
                           .35,.58,"armor",3)
                 if side==1:
@@ -836,32 +849,40 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                                  (.13,.14,.16),"glow")
                 if side==1:
                     parts["damage_tertiary"]=top_light
-                for x in (-.42,.06,.54,1.02):
-                    box("Suspended transport channel",(x,side*.56,1.11),
-                        (.22,.055,.06),"glass",.009)
-            # The visible production bay faces the +X game camera.
-            box("Dark recessed synthesis opening",(1.23,0,1.60),
-                (.10,1.47,1.13),"dark",.006)
-            box("Bright matter transfer portal",(1.31,0,1.57),
-                (.045,1.19,.84),"glass",.005)
-            for y in (-.50,-.25,0,.25,.50):
-                box("Five aperture energy ribs",(1.35,y,1.62),
-                    (.045,.07,.67),"glow",.005)
-            box("Overhead open portal lintel",(1.24,0,2.31),
-                (.31,1.94,.26),"armor",.025)
-            box("Forecourt hover-vehicle ramp",(1.57,0,.74),
-                (.58,1.83,.17),"dark",.023)
+                # Partially installed thrust modules expose vehicle assembly.
+                cyl("Unfinished hover-engine nacelle",
+                    (.03,side*.35,1.26),.17,.39,"light",axis="X")
+                sphere("Nacelle alignment glow",(.29,side*.35,1.26),
+                       (.12,.13,.13),"glow")
+            # Open front aperture: only side posts and a high lintel.
+            # In particular there is NO front glass, dark face, grille,
+            # energy-rib curtain or opaque door across the middle.
+            box("Open fabrication bay lintel",(1.24,0,2.33),
+                (.30,2.10,.22),"armor",.025)
+            for y in (-.72,.72):
+                box("Open portal luminous jamb",(1.38,y,1.55),
+                    (.045,.075,1.08),"glow",.008)
+            box("Suspended unfinished hovercraft chassis",(.24,0,1.28),
+                (.88,.50,.18),"bronze",.028)
+            box("Unfinished hovercraft central spine",(.08,0,1.42),
+                (.60,.17,.13),"light",.015)
+            for side in (-1,1):
+                box("Exposed hovercraft side strut",(.20,side*.25,1.39),
+                    (.49,.10,.13),"dark",.009)
+            # Movable overhead assembly gripper, clear of the entrance ray.
+            parts["radar"]=box("Oscillating levitation gripper",(.15,0,2.27),
+                               (.41,.55,.18),"light",.019)
+            box("Gantry vertical hoist",(.15,0,2.02),
+                (.10,.11,.38),"dark",.01)
+            sphere("Held assembly nucleus",(-.12,0,2.01),
+                   (.25,.25,.20),"glass")
+            sphere("Matter synthesis flash",(-.12,0,2.03),
+                   (.11,.12,.12),"glow")
+            box("Forecourt hover-vehicle ramp",(1.62,0,.74),
+                (.61,1.83,.17),"dark",.023)
             for y in (-.60,-.30,0,.30,.60):
-                box("Glowing outward launch guidance",(1.61,y,.85),
+                box("Outward launch guidance",(1.64,y,.85),
                     (.43,.075,.04),"glow",.007)
-            # A real separately movable object, animated by the common
-            # building 'radar' pivot during idle poses.
-            parts["radar"]=box("Oscillating levitation gripper",(.50,0,2.35),
-                                (.43,.65,.19),"light",.02)
-            sphere("Held assembly nucleus",(.49,0,2.14),
-                   (.32,.32,.28),"glass")
-            sphere("Matter synthesis flash",(.49,0,2.15),
-                   (.12,.13,.14),"glow")
         elif kind=="radar":
             # AETHER SYNOD MNEMONIC ARRAY: opposed crystalline horns
             # enclosing two independently counter-rotating vertical hoops.
