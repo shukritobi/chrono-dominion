@@ -190,7 +190,8 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,platoonSeen,supportSeen,assaultLaunched,
-    assaultReroutes:g.aiAssaultReroutes||0,firstDamage:Math.round(firstDamage),
+    assaultReroutes:g.aiAssaultReroutes||0,
+    siegeFocusOrders:g.aiSiegeOrders||0,aiStructureHits:g.aiSiegeHits||0,firstDamage:Math.round(firstDamage),
     firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples,
     firstObjectiveDiscovery:firstObjectiveDiscovery===null?null:Math.round(firstObjectiveDiscovery),
     firstPlatoonAt:firstPlatoonAt===null?null:Math.round(firstPlatoonAt),
@@ -211,7 +212,7 @@ for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
      result.outcome].join(' | '));
 }
 const report={
-  schema:'chrono-dominion-balance-lab-v1',version:'2.18.0',
+  schema:'chrono-dominion-balance-lab-v1',version:'2.19.0',
   simulationSeconds:seconds,simulationStep:frame,
   disclaimer:'Scripted-player scenario coverage, not real human win rates or a verified fair multiplayer balance benchmark.',
   scenarios:results.length,results,
@@ -223,6 +224,9 @@ const report={
     casesWithPlatoons:results.filter(r=>r.platoonSeen).length,
     casesWithAssaultLaunches:results.filter(r=>r.assaultLaunched).length,
     totalAssaultReroutes:results.reduce((n,r)=>n+r.assaultReroutes,0),
+    casesWithSiegeFocus:results.filter(r=>r.siegeFocusOrders>0).length,
+    totalSiegeFocusOrders:results.reduce((n,r)=>n+r.siegeFocusOrders,0),
+    totalAIStructureHits:results.reduce((n,r)=>n+r.aiStructureHits,0),
     casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
@@ -250,6 +254,8 @@ assert.ok(report.summary.peakEntities>=16,'actual units and structures were crea
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
   r.reconLost>=0&&r.reconLost<=r.reconBuilt&&
   Number.isInteger(r.assaultReroutes)&&r.assaultReroutes>=0&&
+  Number.isInteger(r.siegeFocusOrders)&&r.siegeFocusOrders>=0&&
+  Number.isInteger(r.aiStructureHits)&&r.aiStructureHits>=0&&
   (r.firstObjectiveDiscovery===null||r.firstObjectiveDiscovery>=0&&
     r.firstObjectiveDiscovery<=r.seconds+1)),
   'recon survival and objective-discovery telemetry must be internally consistent');

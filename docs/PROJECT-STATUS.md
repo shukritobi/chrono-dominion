@@ -1,13 +1,15 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.18.0 (see `package.json`, `game.js` and [v2.18 release notes](RELEASE-2.18.md)).
+**Current prototype:** v2.19.0 (see `package.json`, `game.js` and [v2.19 release notes](RELEASE-2.19.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
 v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoon post-retreat cooldown gap. Full GitHub Actions and balance results must be checked independently.
 
 v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. The [verified main-branch CI and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed. The nine scripted matches recorded 5/9 actual assault-launch scenarios, 1 stalled-attacker reroute, 6/9 discovered objectives, 10 scouts lost and 74.8% mean survey coverage. These do not establish human win rates.
+
+v2.19 adds observed-only AI building focus fire, damage-aware target spread, reserved siege flanks and original tracer/shockwave drawing. CI and match results must be verified before claiming deployment or balance gains.
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
@@ -60,4 +62,4 @@ v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible canc
 
 `npm test` runs regression checks. `npm run balance` runs nine scripted 240-second scenarios. `npm run balance:full` runs a longer diagnostic matrix. The source of truth for active CI commands is `.github/workflows/deploy.yml`.
 
-See [latest release notes](RELEASE-2.18.md), [full blueprint](game-design/FULL-BLUEPRINT.md), and [asset production plan](asset-production/ASSET-PRODUCTION-PLAN.md).
+See [latest release notes](RELEASE-2.19.md), [full blueprint](game-design/FULL-BLUEPRINT.md), and [asset production plan](asset-production/ASSET-PRODUCTION-PLAN.md).

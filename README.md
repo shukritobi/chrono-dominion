@@ -4,8 +4,16 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.18.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.19.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
+
+### Coordinated AI siege and improved battle effects (v2.19)
+
+- **Observed-target suppression:** Primary and support assault squads concentrate attacks on visible defensive emplacements or higher-value structures. Predicted committed volleys and projectiles reduce waste against nearly destroyed structures.
+- **Command priorities:** Guarding against sighted base raiders, casualty withdrawal, and post-retreat cooldown still override siege directives. Unseen enemy buildings can only be pursued as last-reported map positions, never directly shot.
+- **Less crowded attacks:** AI platoon members reserve nearby perimeter slots to spread out when attacking known objectives; stalled units avoid repeating their previous blocked destination.
+- **Clearer combat visuals:** Projectiles use movement-based tracer strokes and vehicle strikes create original fading shockwave rings. All effects respect the player's fog and existing save schema.
+- **Measured combat:** Nine-scenario lab now reports siege focus orders and confirmed AI hits on structures. See [v2.19 release notes](docs/RELEASE-2.19.md).
 
 ### Reachable AI assaults and recovery (v2.18)
 
