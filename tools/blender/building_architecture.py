@@ -535,8 +535,10 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 y=side*.99
                 prism("Outward cantilevered student dorm wing",-.30,y,.90,.80,.76,
                       "armor",6)
-                box("Low faceted sanctuary wing roof",(-.36,y,1.73),
+                wing_roof=box("Low faceted sanctuary wing roof",(-.36,y,1.73),
                     (1.70,.78,.16),"light",.046)
+                if side==1:
+                    parts["damage_breakable"]=wing_roof
                 box("Wing roof open-sky skylight",(-.29,y,1.84),
                     (1.02,.29,.06),"glass",.015)
                 box("Mint transverse initiation inlay",(.31,y,1.61),
@@ -585,14 +587,20 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                     (1.76,.36,.78),"armor",.055)
                 box("Long mint guided fabrication rail",(.58,y,1.86),
                     (1.62,.11,.085),"glow",.011)
-                box("Tall vertical fabrication fork",(-.43,side*1.17,2.13),
+                fork=box("Tall vertical fabrication fork",(-.43,side*1.17,2.13),
                     (.58,.55,2.36),"light",.065)
-                spire("Asymmetric fork spearhead",-.43,side*1.17,3.27,
-                      .35,.58,"armor",3)
+                tip=spire("Asymmetric fork spearhead",-.43,side*1.17,3.27,
+                          .35,.58,"armor",3)
+                if side==1:
+                    parts["damage_breakable"]=fork
+                    parts["damage_secondary"]=tip
                 box("Fork internal reactor slit",(-.09,side*1.17,2.48),
                     (.055,.13,.97),"glow",.009)
-                sphere("Matter-stabilizer light",(-.43,side*1.17,3.82),
-                       (.13,.14,.16),"glow")
+                top_light=sphere("Matter-stabilizer light",
+                                 (-.43,side*1.17,3.82),
+                                 (.13,.14,.16),"glow")
+                if side==1:
+                    parts["damage_tertiary"]=top_light
                 for x in (-.42,.06,.54,1.02):
                     box("Suspended transport channel",(x,side*.56,1.11),
                         (.22,.055,.06),"glass",.009)
