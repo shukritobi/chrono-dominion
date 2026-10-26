@@ -2053,6 +2053,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.0.0',build:'reinforcements-and-retreats'};
+  window.ChronoDominion={version:'2.1.0',build:'tactical-focus-fire'};
   new Game();
 })();
