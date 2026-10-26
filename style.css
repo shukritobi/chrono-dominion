@@ -118,3 +118,12 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .perfStatus{font:10px Consolas,monospace;letter-spacing:.3px;color:#9bb8ba;white-space:nowrap;border-left:1px solid #537080;padding:3px 6px}
 @media(max-width:890px){.perfStatus{position:absolute;top:57px;right:8px;background:#0a1b2fbc;border:1px solid #416279;border-radius:3px;padding:3px 5px;pointer-events:none}}
 @media(max-width:430px){.perfStatus{font-size:9px;top:53px}}
+
+/* v2.5 player-sensor intelligence panel */
+.reconPanel{margin-top:6px;padding:7px 8px;background:#111e2d;border:1px solid #395367;border-radius:4px;font:10px Consolas,monospace;color:#94b3c1}
+.reconTotals{display:flex;justify-content:space-between;gap:8px;letter-spacing:.4px}
+.reconTotals b{color:#9fe0d7}.reconContacts{margin-top:5px;font-size:9px;letter-spacing:.25px}
+.reconContacts b{color:#e9bd86}.reconContactJump{margin-top:6px;display:block;width:100%;min-height:27px;text-align:left;padding:4px 6px;font:10px Consolas,monospace;color:#e6d4ae;background:#1e3448;border:1px solid #567184;border-radius:3px}
+.reconContactJump:focus-visible{outline:2px solid #a3e9e0;outline-offset:1px}
+.reconQuiet{display:block;margin-top:6px;font-size:9px;color:#8199a9}
+@media(max-width:550px){.reconPanel{padding:4px;font-size:9px}.reconContacts{font-size:8px}.reconContactJump{font-size:9px;min-height:32px}}

@@ -99,7 +99,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -185,6 +185,7 @@
       window.addEventListener('pointerup',e=>this.pointerUp(e));
       this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.camera.zoom=clamp(this.camera.zoom*(e.deltaY<0?1.09:.91),.65,1.8);},{passive:false});
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
+      $('reconStatus').addEventListener('click',e=>{const b=e.target.closest?.('button[data-contact-id]');if(b)this.centerIntelContact(Number(b.dataset.contactId));});
       $('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){this.tab=b.dataset.tab;this.updateUI(true);}});
       $('production').addEventListener('click',e=>{const b=e.target.closest('button[data-key]');if(b)this.chooseProduction(b.dataset.key);});
       $('queueList').addEventListener('click',e=>{const b=e.target.closest?.('button[data-cancel-key]');if(b)this.cancelProduction(b.dataset.cancelKey);});
@@ -310,6 +311,7 @@
           v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
           Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
         ).map(v=>({...v})):[]):[[],[]];
+      this.reconAlerts=new Map();
       this.aiExplored=new Set(Array.isArray(saved.aiExplored)?
         saved.aiExplored.slice(0,WORLD_SIZE*WORLD_SIZE).filter(key=>{
           if(typeof key!=='string'||!/^\d{1,2},\d{1,2}$/.test(key))return false;
@@ -339,7 +341,7 @@
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
       $('startingCredits').value=String(this.settings.startingCredits||5000);
       this.drawMapPreview();
-      this.updateFog();this.updateAISurvey();this.updateUI(true);this.updateSaveButtons();
+      this.updateFog();this.updateAISurvey();this.updateIntel(0);this.updateUI(true);this.updateSaveButtons();
       $('overlay').classList.add('hidden');
       this.notify('Saved skirmish loaded');return true;
     }
@@ -393,7 +395,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -407,7 +409,7 @@
         this.add(side,'tank',a.x+4*sign,a.y+5*sign);
         const h=this.add(side,'harvester',a.x+2*sign,a.y+5*sign);h.order={type:'harvest'};
       }
-      this.updateFog();this.updateAISurvey();$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
+      this.updateFog();this.updateAISurvey();this.updateIntel(0);$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
     }
     initMap(){
       const oreSites=(MAPS[this.settings.map]||MAPS.verdant).ore;
@@ -1322,7 +1324,7 @@
       this.advanceProduction(dt);
       if(this.time>=this.nextAI){this.runAI();this.nextAI=this.time+(this.settings.difficulty==='veteran'?5:this.settings.difficulty==='recruit'?13:8);}
       this.particles=this.particles.filter(p=>(p.life-=dt)>0);
-      if(this.time>this.nextFog){this.updateFog();this.updateAISurvey();this.nextFog=this.time+.3;}
+      if(this.time>this.nextFog){this.updateFog();this.updateAISurvey();this.updateIntel(0);this.checkPlayerThreats();this.nextFog=this.time+.3;}
       if(this.time>this.nextUi){this.updateUI();this.nextUi=this.time+.45;}
       this.entities=this.entities.filter(e=>e.hp>0);
       for(let side=0;side<2;side++){if(!this.entities.some(e=>e.owner===side&&e.type==='building'&&e.hp>0)){this.finish(side===1);break;}}
@@ -1795,6 +1797,61 @@
       }
     }
     isVisible(x,y){const ix=clamp(Math.floor(x),0,WORLD_SIZE-1),iy=clamp(Math.floor(y),0,WORLD_SIZE-1);return !!this.fog[ix]?.[iy]?.visible;}
+    playerReconSummary(){
+      // Player reconnaissance only reads their own fog and sensor reports.
+      let seen=0,visible=0,total=0;
+      for(const row of this.fog)for(const cell of row){
+        total++;if(cell.seen)seen++;if(cell.visible)visible++;
+      }
+      const contacts=(this.intel?.[0]||[]).filter(c=>Number.isFinite(c.time)&&
+        this.time-c.time<=(c.type==='building'?180:28));
+      const live=contacts.filter(c=>this.time-c.time<=.65&&this.sideCanSee(0,c));
+      const latest=contacts.length?[...contacts].sort((a,b)=>b.time-a.time)[0]:null;
+      return {seen,visible,total,percent:total?Math.floor(seen/total*100):0,
+        live:live.length,tracked:contacts.length,latest};
+    }
+    centerIntelContact(id){
+      // Jump to the saved report, never the current hidden entity position.
+      const report=(this.intel?.[0]||[]).find(c=>c.id===id);
+      if(!report||this.state!=='playing')return false;
+      const p=iso(report.x,report.y);
+      this.camera.x=clamp(p.x,-1020,1020);this.camera.y=clamp(p.y,50,1080);
+      this.notify('Camera at last reported position, not live tracking');
+      return true;
+    }
+    checkPlayerThreats(){
+      if(this.state!=='playing')return;
+      const base=this.entities.find(e=>e.owner===0&&e.kind==='hq'&&e.hp>0);
+      if(!base)return;
+      if(!this.reconAlerts)this.reconAlerts=new Map();
+      const threats=(this.intel?.[0]||[]).filter(c=>c.type==='unit'&&
+        this.time-c.time<.4&&dist(c,base)<9&&this.sideCanSee(0,c));
+      for(const threat of threats){
+        if(this.time-(this.reconAlerts.get(threat.id)??-999)<18)continue;
+        this.reconAlerts.set(threat.id,this.time);
+        this.notify('BASE ALERT: hostile unit spotted near headquarters');
+        break;
+      }
+      if(this.reconAlerts.size>40)for(const [id,at] of this.reconAlerts){
+        if(this.time-at>60)this.reconAlerts.delete(id);
+      }
+    }
+    updateReconPanel(){
+      const panel=$('reconStatus');
+      if(!panel||!this.fog.length)return;
+      const info=this.playerReconSummary(),report=info.latest;
+      let html='<div class="reconTotals"><span>SCOUTED <b>'+info.percent+'%</b></span>'+
+        '<span>VISIBLE <b>'+Math.floor(info.visible/Math.max(1,info.total)*100)+'%</b></span></div>'+
+        '<div class="reconContacts">ENEMY CONTACTS: <b>'+info.live+' LIVE</b> · '+info.tracked+' RECORDED</div>';
+      if(report){
+        const age=Math.max(0,Math.floor(this.time-report.time));
+        const label=NAMES[this.players[1]?.faction]?.[report.kind]||'Hostile '+report.type;
+        html+='<button class="reconContactJump" type="button" data-contact-id="'+report.id+
+          '" title="Center camera on last seen position, not live tracking">'+
+          this.escape(label)+' · '+(age<1?'NOW':age+'s AGO')+' ⌖</button>';
+      }else html+='<span class="reconQuiet">NO ENEMY CONTACT RECORDED</span>';
+      panel.innerHTML=html;
+    }
     updateSelection(){
       const targets=this.selected.map(id=>this.entityById(id)).filter(Boolean),box=$('selection');
       if(!targets.length){box.innerHTML='<strong>NO SELECTION</strong><p>Click a unit or building to inspect it.</p>';return;}
@@ -1837,6 +1894,7 @@
       $('factionBadge').textContent=COLORS[me.faction].badge;
       $('factionBadge').style.color=COLORS[me.faction].color;
       $('factionInfo').textContent=power.low?'LOW POWER':'COMMAND SYSTEMS ONLINE';
+      this.updateReconPanel();
       for(const b of $('tabs').querySelectorAll('button'))b.classList.toggle('active',b.dataset.tab===this.tab);
       let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
