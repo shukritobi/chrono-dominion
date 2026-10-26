@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const source=readFileSync(new URL('../art/animated-entities.js',import.meta.url),'utf8');
+const vehicles=readFileSync(new URL('../art/vehicle-renderer.js',import.meta.url),'utf8');
 const gameSource=readFileSync(new URL('../game.js',import.meta.url),'utf8')
   .replace('  new Game();','  window.__gameUnderTest = new Game();');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
@@ -74,6 +75,7 @@ for(const [fi,faction] of Object.keys(renderer.themes).entries()){
 }
 assert.equal(renderer.drawUnit(ctx,{kind:'undefined'},{faction:'coalition'}),false);
 
+runInNewContext(vehicles,scope,{timeout:5000});
 runInNewContext(gameSource,scope,{timeout:7000});
 const game=window.__gameUnderTest;
 game.newMatch({playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'recruit'});
