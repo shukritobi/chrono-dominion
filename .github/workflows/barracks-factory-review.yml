@@ -30,9 +30,24 @@ jobs:
             tools/blender/pack_animated.py tools/blender/asset_studio.py
       - name: Install Blender and Pillow
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender python3-pil
+          # The hosted Ubuntu image normally has apt package lists already.
+          # Avoid an unbounded apt-get update, which has stalled earlier runs.
+          export DEBIAN_FRONTEND=noninteractive
+          if ! command -v blender >/dev/null || ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            timeout 540s sudo apt-get install -y -qq --no-install-recommends \
+              -o Acquire::Retries=2 -o Acquire::http::Timeout=30 \
+              -o Acquire::https::Timeout=30 blender python3-pil || {
+                echo "::warning::Cached apt install unavailable; refreshing package metadata with a timeout"
+                timeout 180s sudo apt-get update -qq \
+                  -o Acquire::Retries=1 -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30
+                timeout 540s sudo apt-get install -y -qq --no-install-recommends \
+                  -o Acquire::Retries=2 -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30 blender python3-pil
+              }
+          fi
           blender --version | head -2
+          python3 -c 'from PIL import Image; print("Pillow ready")'
       - name: Test production isolation and sprite validation
         run: python3 -m unittest discover -s tests -p 'test_blender_asset_studio.py' -v
       - name: Render and validate 6 independent editable Blender models
