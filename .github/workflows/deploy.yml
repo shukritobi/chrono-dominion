@@ -43,7 +43,7 @@ jobs:
           node tests/multi-platoon-v20.test.mjs
           node tests/targeting-v21.test.mjs
           node tests/match-lifecycle-v22.test.mjs
-          node tools/simulate-matches.mjs --quick
+          node tools/simulate-matches.mjs --duration=240
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
           node --check maps/map-core.js
