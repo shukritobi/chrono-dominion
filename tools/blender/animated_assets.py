@@ -324,10 +324,6 @@ def animate(kind,state,frame,frames):
         # Independently counter-rotate the second scanner / gyroscope.
         # Preserve the deliberately angled vertical torus plane.
         PARTS["radar_aux"].rotation_euler.z=-phase*1.4
-        if kind in ("radar","tech") and state=="damaged":
-            PARTS["radar_aux"].hide_render=True
-        else:
-            PARTS["radar_aux"].hide_render=False
     if "muzzle" in PARTS:
         PARTS["muzzle"].hide_render=state!="attack"
     if "construction_structures" in PARTS:
@@ -353,6 +349,10 @@ def animate(kind,state,frame,frames):
             for part in ("damage_breakable","damage_secondary","damage_tertiary","damage_quaternary"):
                 if part in PARTS:
                     PARTS[part].hide_render=True
+    if "radar_aux" in PARTS:
+        # Run after the construction visibility reset, which otherwise
+        # restores hidden rotor meshes in the damaged state.
+        PARTS["radar_aux"].hide_render=(kind in ("radar","tech") and state=="damaged")
     if "idle_beacon" in PARTS:
         PARTS["idle_beacon"].hide_render=(
             state!="idle" or frame%2==0)
