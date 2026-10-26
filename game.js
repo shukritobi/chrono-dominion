@@ -1800,6 +1800,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'1.7.0',build:'safe-production-deployment'};
+  window.ChronoDominion={version:'1.8.0',build:'fair-chokepoint-queues'};
   new Game();
 })();
