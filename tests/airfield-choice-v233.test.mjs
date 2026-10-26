@@ -65,7 +65,8 @@ assert.equal(loaded.rearmPadId,null);
 assert.equal(loaded.order.type,'attackMove','no pads restores previous mission');
 
 // Historical snapshots omit the new optional assignment field.
-g.entityById(near.id).hp=g.entityById(near.id).maxHp;
+const revived=g.entities.find(e=>e.id===near.id);
+revived.hp=revived.maxHp;
 const legacy=g.add(0,'aircraft',6,16);
 legacy.ammo=0;legacy.order={type:'move',x:20,y:20};
 g.serviceAircraft(legacy,.1);
