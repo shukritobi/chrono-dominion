@@ -861,7 +861,11 @@
       const d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
       // Check both shoulders before retreating. A pocket must be reachable
       // and remain clear of the approaching unit.
-      const offsets=[[ -uy,ux],[uy,-ux],[-ux,-uy],[ux,uy]];
+      // A yield must clear the lane laterally. Moving forward or backward
+      // along a one-cell corridor is not a passing pocket.
+      const offsets=[[-uy,ux],[uy,-ux],
+        [-uy*.86-ux*.5,ux*.86-uy*.5],
+        [uy*.86-ux*.5,-ux*.86-uy*.5]];
       let best=null,bestScore=Infinity;
       for(const scale of [1.15,1.75,2.35]){
         for(let i=0;i<offsets.length;i++){
