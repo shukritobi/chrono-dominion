@@ -187,3 +187,21 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 
 /* v2.16: combat-experience progress in the unit inspection panel. */
 .veterancyInfo { color:#f2d99c; font-size:12px; letter-spacing:.045em; font-weight:700; }
+
+/* v2.21 soundscape mixer, local-only audio import */
+.audioPanel{position:absolute;right:14px;top:60px;width:min(320px,calc(100% - 20px));z-index:9;
+  padding:15px;background:#0b1b2cf5;border:1px solid #7299ad;border-radius:7px;color:#d8edf5;
+  box-shadow:0 14px 36px #0009;touch-action:auto;user-select:text}
+.audioPanelHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
+  font-size:12px;letter-spacing:1.4px;color:#b4dfe9}
+.audioPanelHead button{width:28px;height:28px;font-size:19px;border-radius:4px}
+.audioPanel label{display:block;margin:10px 0;font-size:10px;font-weight:800;letter-spacing:.9px}
+.audioPanel label span{float:right;color:#b6dfb9;font-family:Consolas,monospace}
+.audioPanel input[type=range]{display:block;width:100%;margin:7px 0;accent-color:#78c9d4;cursor:pointer}
+.audioPanel .audioCheck{display:flex;align-items:center;gap:8px}
+.audioPanel .audioCheck input{accent-color:#70c7bd}
+.audioPanel p{font-size:10px;line-height:1.5;color:#9cb6c6;margin:9px 0}
+.audioPanel>button{width:100%;padding:9px;font-size:10px;font-weight:800;letter-spacing:.6px;margin-top:5px;border-radius:4px}
+#audioStatus{margin-bottom:0;color:#a8d8bb}
+@media(max-width:550px){.audioPanel{right:4px;top:52px;width:min(290px,calc(100% - 8px));max-height:calc(100% - 60px);overflow:auto}
+ #audioSettings{font-size:0;min-width:34px}#audioSettings::first-letter{font-size:15px}}

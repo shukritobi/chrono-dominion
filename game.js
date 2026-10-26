@@ -207,6 +207,42 @@
         if(this.audio?.enabled)this.audio.play('build');
       };
       this.updateSoundToggle();
+      const updateMixer=()=>{
+        $('sfxVolume').value=String(Math.round((this.audio?.sfxVolume??.8)*100));
+        $('musicVolume').value=String(Math.round((this.audio?.musicVolume??.35)*100));
+        $('sfxLevel').textContent=$('sfxVolume').value+'%';
+        $('musicLevel').textContent=$('musicVolume').value+'%';
+        $('musicEnabled').checked=!!this.audio?.musicEnabled;
+      };
+      updateMixer();
+      const closeAudio=()=>{$('audioPanel').classList.add('hidden');$('audioSettings').setAttribute('aria-expanded','false');};
+      $('audioSettings').onclick=()=>{
+        const opening=$('audioPanel').classList.contains('hidden');
+        $('audioPanel').classList.toggle('hidden',!opening);
+        $('audioSettings').setAttribute('aria-expanded',String(opening));
+        if(opening)updateMixer();
+      };
+      $('audioClose').onclick=closeAudio;
+      $('sfxVolume').oninput=e=>{this.audio?.setSfxVolume(Number(e.target.value)/100);$('sfxLevel').textContent=e.target.value+'%';};
+      $('musicVolume').oninput=e=>{this.audio?.setMusicVolume(Number(e.target.value)/100);$('musicLevel').textContent=e.target.value+'%';};
+      $('musicEnabled').onchange=e=>{this.audio?.setMusicEnabled(e.target.checked);};
+      $('audioImport').onclick=()=>{
+        if(!this.audio?.enabled){this.audio?.setEnabled(true);this.updateSoundToggle();}
+        this.audio?.unlock();$('audioFiles').click();
+      };
+      $('audioFiles').onchange=async e=>{
+        if(!e.target.files?.length)return;
+        $('audioStatus').textContent='Reading local audio filenames…';
+        try{
+          const result=await this.audio?.importFiles(e.target.files);
+          $('audioStatus').textContent=result
+            ?result.loaded+' files found · '+result.matched+' assigned · '+result.tracks+' music groups. No files uploaded.'
+            :'Audio engine unavailable.';
+          if(result?.matched)this.audio?.play('ready');
+        }catch(err){$('audioStatus').textContent='Could not read this folder. Try WAV, OGG or MP3 files.';}
+        e.target.value='';
+      };
+      $('audioClear').onclick=()=>{this.audio?.clearLocalPack();$('audioStatus').textContent='Local sound pack cleared. Original soundscape active.';};
       $('zoomIn').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom*1.15,.65,1.8);};
       $('zoomOut').onclick=()=>{this.camera.zoom=clamp(this.camera.zoom/1.15,.65,1.8);};
       $('restart').onclick=()=>this.newMatch(this.settings);
@@ -247,11 +283,11 @@
       control.textContent=on?'♪ ON':'♪ OFF';
       control.setAttribute?.('aria-pressed',String(on));
       control.setAttribute?.('aria-label',on?'Disable battle sound effects':'Enable battle sound effects');
-      control.title=on?'Mute synthesized effects':'Enable synthesized effects (off by default)';
+      control.title=on?'Mute game sounds and soundtrack':'Enable game sounds and soundtrack (off by default)';
     }
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
-    returnMenu(){this.state='menu';this.resetTouch();this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
-    pause(){if(this.state==='playing'){this.resetTouch();this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';$('overlay').classList.add('hidden');}}
+    returnMenu(){this.audio?.setScene('menu');this.state='menu';this.resetTouch();this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
+    pause(){if(this.state==='playing'){this.audio?.setScene('pause');this.resetTouch();this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';this.audio?.setScene('battle');$('overlay').classList.add('hidden');}}
     hasSave(){
       try{return typeof localStorage!=='undefined'&&!!localStorage.getItem(SAVE_KEY);}
       catch(err){return false;}
@@ -356,7 +392,7 @@
       this.fog=saved.fog.map(row=>row.map(seen=>({seen:!!seen,visible:false})));
       this.placing=null;this.attackMoveArmed=false;this.abilityArmedId=null;this.resetTouch();
       this.keys.clear();this.nextUi=0;this.nextFog=0;
-      this.state='playing';
+      this.state='playing';this.audio?.setScene('battle');
       for(const [id,key] of [['playerFaction','playerFaction'],['enemyFaction','enemyFaction'],['mapSelect','map'],['difficulty','difficulty']])$(id).value=this.settings[key];
       $('startingCredits').value=String(this.settings.startingCredits||5000);
       this.drawMapPreview();
@@ -428,7 +464,7 @@
         this.add(side,'tank',a.x+4*sign,a.y+5*sign);
         const h=this.add(side,'harvester',a.x+2*sign,a.y+5*sign);h.order={type:'harvest'};
       }
-      this.updateFog();this.updateAISurvey();this.updateIntel(0);$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
+      this.audio?.setScene('battle');this.updateFog();this.updateAISurvey();this.updateIntel(0);$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
     }
     initMap(){
       const oreSites=(MAPS[this.settings.map]||MAPS.verdant).ore;
@@ -492,7 +528,7 @@
       if(!def||!this.prereq(side,key)){this.notify('Required technology or production building missing');return;}
       if(this.players[0].credits<def.cost){this.notify('Insufficient credits');return;}
       if(BUILD[key]){if(key==='hq')return;this.placing=key;this.notify('Choose a clear location near your base. Tap CANCEL or right-click to abort.');}
-      else{if(this.queues.some(q=>q.side===0&&q.key===key)){this.notify('Already producing '+this.name({owner:0,kind:key}));return;}this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;this.queues.push({side:0,key,elapsed:0,total:Math.max(2,def.cost/250)});this.notify('Training '+this.name({owner:0,kind:key}));}
+      else{if(this.queues.some(q=>q.side===0&&q.key===key)){this.notify('Already producing '+this.name({owner:0,kind:key}));return;}this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;this.queues.push({side:0,key,elapsed:0,total:Math.max(2,def.cost/250)});this.audio?.play('queue',{kind:key});this.notify('Training '+this.name({owner:0,kind:key}));}
       this.updateUI(true);
     }
     cancelProduction(key){
@@ -654,7 +690,7 @@
         if(this.placing)this.placeBuilding(p.gx,p.gy);
         else{
           const hit=this.pick(p.gx,p.gy);
-          if(hit&&hit.owner===0)this.selected=[hit.id];
+          if(hit&&hit.owner===0){this.selected=[hit.id];this.audio?.play('select',{kind:hit.kind,faction:this.players[0]?.faction});}
           else if(this.selected.some(id=>{const u=this.entityById(id);return u&&u.owner===0&&u.type==='unit';}))this.command(p,e);
           else this.selected=hit?[hit.id]:[];
         }
@@ -665,7 +701,7 @@
       if(Math.hypot(a.x-b.x,a.y-b.y)>12&&!this.placing){
         this.selected=this.entities.filter(t=>t.owner===0&&t.type==='unit'&&t.hp>0).filter(t=>{const p=this.screen(t.x,t.y);return p.x>=Math.min(a.x,b.x)&&p.x<=Math.max(a.x,b.x)&&p.y>=Math.min(a.y,b.y)&&p.y<=Math.max(a.y,b.y);}).map(t=>t.id);
       }else if(this.placing){this.placeBuilding(b.gx,b.gy);}
-      else{const hit=this.pick(b.gx,b.gy);if(hit){if(e.shiftKey&&hit.owner===0)this.selected=[...new Set([...this.selected,hit.id])];else this.selected=[hit.id];}else this.selected=[];}
+      else{const hit=this.pick(b.gx,b.gy);if(hit){if(e.shiftKey&&hit.owner===0)this.selected=[...new Set([...this.selected,hit.id])];else this.selected=[hit.id];if(hit.owner===0)this.audio?.play('select',{kind:hit.kind,faction:this.players[0]?.faction});}else this.selected=[];}
       this.updateSelection();
     }
     screen(x,y){const p=iso(x,y);return{x:this.w/2+(p.x-this.camera.x)*this.camera.zoom,y:this.h/2+(p.y-this.camera.y)*this.camera.zoom};}
@@ -699,6 +735,7 @@
           unit.order=null;unit.yieldOrder=null;unit.yieldRetryAt=0;unit.laneWaiting=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.trafficWait=0;unit.trafficRepath=false;
         }
       }
+      this.audio?.play(target?'attack':'move',{kind:chosen[0]?.kind,faction:this.players[0]?.faction});
       this.attackMoveArmed=false;
       this.particles.push({x:p.gx,y:p.gy,life:.65,color:target?'#ff7c7c':'#80dbee',type:'marker'});
       this.updateUI(true);
@@ -1190,7 +1227,7 @@
       const bonus=source.kind==='specialist'&&faction==='federation'?1.3:1;
       const psychic=source.kind==='specialist'&&faction==='psionic';
       // A shot is now a moving projectile. Damage is resolved on impact, not firing.
-      if(source.owner===0||this.sideCanSee(0,source))this.audio?.play('shot');
+      if(source.owner===0||this.sideCanSee(0,source))this.audio?.play('shot.'+source.kind,{kind:source.kind,faction});
       this.projectiles.push({
         x:source.x,y:source.y,prevX:source.x,prevY:source.y,
         targetId:target.id,owner:source.owner,sourceId:source.id,
@@ -1230,8 +1267,9 @@
         }
         if(this.stats[shot.owner])this.stats[shot.owner].damageDealt+=Math.max(0,Math.min(shot.damage,target.hp+shot.damage));
         this.particles.push({x:target.x,y:target.y,life:.38,color:shot.color,type:'hit'});
-        if(this.sideCanSee(0,target))this.audio?.play('impact');
+        if(this.sideCanSee(0,target))this.audio?.play('impact.'+target.kind,{kind:target.kind});
         if(target.hp<=0){
+          if(this.sideCanSee(0,target))this.audio?.play('explosion',{kind:target.kind});
           this.recordLoss(target,shot.owner);
           const killer=this.entityById(shot.sourceId);
           if(killer&&killer.owner===shot.owner)this.awardKill(killer);
@@ -1318,7 +1356,7 @@
         const spawned=this.add(q.side,q.key,spot.x,spot.y);
         if(q.key==='harvester')spawned.order={type:'harvest'};
         this.queues.splice(i,1);
-        if(q.side===0)this.notify(this.name(spawned)+' deployed');
+        if(q.side===0){this.audio?.play('ready',{kind:q.key,faction:this.players[0]?.faction});this.notify(this.name(spawned)+' deployed');}
       }
     }
     chooseHarvestDeposit(e){
@@ -2502,7 +2540,7 @@
     }
     finish(win){
       if(this.state==='finished')return;
-      this.state='finished';
+      this.state='finished';this.audio?.setScene(win?'victory':'defeat');
       this.audio?.play(win?'win':'defeat');
       const battle=this.battleSummary(win);this.lastBattleSummary=battle;
       const label=(key)=>({oreHarvested:'ORE DELIVERED',enemyUnitsDestroyed:'UNITS DESTROYED',enemyBuildingsDestroyed:'STRUCTURES DESTROYED',unitsLost:'UNITS LOST',buildingsLost:'STRUCTURES LOST',unitsDeployed:'UNITS DEPLOYED',creditsSpent:'CREDITS SPENT'})[key];
@@ -2764,6 +2802,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.20.0',build:'rally-order-recovery'};
+  window.ChronoDominion={version:'2.21.0',build:'tactical-audio'};
   new Game();
 })();
