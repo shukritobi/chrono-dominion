@@ -19,6 +19,7 @@ The playable Strike Aircraft existed in v2.21 and mixed player-controlled flight
 ## Verification
 
 - Added `tests/ai-air-wing-v225.test.mjs` to both npm test commands and the Pages verification gate.
+- The nine-scenario balance lab now reports AI airfield construction, aircraft recruitment and aircraft losses without changing the existing scenario matrix.
 - A focused JavaScript runtime check passed airfield construction, paid aircraft queueing, two-aircraft cap, unseen-target safety, last-known-coordinate targeting, visible base defense, platoon separation and legacy save/load.
 - The complete GitHub Actions suite, nine-scenario balance matrix and Pages deployment require separate verification against the final main commit. This document does not claim those have passed.
 
