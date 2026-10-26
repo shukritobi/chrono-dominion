@@ -1,0 +1,53 @@
+name: Bake original game audio
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/bake-audio.yml
+      - tools/audio/build_builtin.py
+      - audio/voices.js
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: chrono-original-audio-release
+  cancel-in-progress: false
+
+jobs:
+  bake-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original audio generation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak ffmpeg
+      - name: Render and validate the 473-file sound library
+        run: |
+          python3 tools/audio/build_builtin.py --check
+          python3 tools/audio/build_builtin.py
+          test "$(find audio/builtin -type f -name '*.mp3' | wc -l)" -eq 473
+          test -f audio/builtin/audio-map.json
+      - name: Commit MP3 assets to main branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/builtin/
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(audio): publish 473 original built-in MP3s"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
