@@ -2418,6 +2418,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.9.0',build:'compact-touch-controls'};
+  window.ChronoDominion={version:'2.10.0',build:'scout-safety'};
   new Game();
 })();
