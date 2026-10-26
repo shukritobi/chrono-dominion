@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.4.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.5.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.5 Traffic-Aware Navigation
+
+- **Faster pathfinding:** A* now uses a binary min-heap for route expansion, reducing the pathfinder's queue-search overhead when many units receive orders.
+- **Dynamic traffic replanning:** units monitor actual forward progress, and after being delayed by other troops, request a path that assigns extra cost to crowded cells. This encourages safe short detours around parked vehicles.
+- **Order stability:** newly issued commands clear stale congestion timers, and arrival clears the detour state.
+- **Regression tests:** shortest path, diagonal corner collision, blocked-heavy detours, actual congestion replan triggering, and saved game compatibility.
+- Still not a full synchronized flow-field planner or a guarantee of deadlock-free single-tile passage.
+- [v1.5 release notes](docs/RELEASE-1.5.md) | [Navigation tests](tests/navigation-v15.test.mjs).
 
 ## v1.4 Large-Battle Collision Optimisation
 
