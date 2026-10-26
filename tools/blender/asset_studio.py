@@ -61,6 +61,13 @@ def inspect(stage: Path, faction: str, kind: str):
                                    (facing + 1) * FRAME_SIZE, (row + 1) * FRAME_SIZE))
                 if crop.getbbox() is None:
                     raise ValueError(f"Empty animation frame: facing={facing} row={row}")
+        if kind in BUILDINGS:
+            first_idle = img.crop((0, 0, FRAME_SIZE, FRAME_SIZE))
+            second_idle = img.crop((0, FRAME_SIZE, FRAME_SIZE * 2))
+            # Compare full RGBA bytes. ImageChops.getbbox() alone checks
+            # the alpha channel and misses genuine emissive color pulses.
+            if first_idle.tobytes() == second_idle.tobytes():
+                raise ValueError("Two building idle frames are pixel-identical")
         copied = img.copy()
     return manifest, spec, copied, sheet_path, source_path
 
