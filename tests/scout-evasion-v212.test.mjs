@@ -56,7 +56,11 @@ assert.equal(g.saveGame(),true);
 assert.equal(g.loadGame(),true,'evasion metadata uses existing save schema');
 g.newMatch(settings);
 const live=g.add(1,'recon',17,16);
-g.intel[1]=[{...report,time:g.time}];
+// Keep the observed defense present: updateIntel correctly removes disproven
+// contacts when the AI has clear line-of-sight to their old position.
+const observedTurret=g.add(0,'turret',16,16);
+g.intel[1]=[{id:observedTurret.id,x:16,y:16,time:g.time,
+  type:'building',kind:'turret'}];
 g.runAI();
 assert.ok(live.order?.type==='move'&&live.retreatUntil>g.time,
   'AI loop invokes emergency escape before choosing its normal patrol');
