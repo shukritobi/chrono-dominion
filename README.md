@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.32.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.33.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.33 Safer multi-airfield recovery
+
+- Returning aircraft now weigh flight distance against their own faction's last-known anti-air defenses. A safer alternative Air Command can beat the nearest exposed pad; without reports, the nearest remains preferred.
+- Aircraft keep their selected pad throughout the return flight and switch only if it is lost. If no pad survives, the previous mission resumes. The optional saved assignment is compatible with older saves.
+- [v2.33 release notes](docs/RELEASE-2.33.md) · [regression tests](tests/airfield-choice-v233.test.mjs).
 
 ### v2.32 Dedicated Skyguard anti-air defenses
 
