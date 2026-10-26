@@ -1,0 +1,158 @@
+name: Blender Asset Studio
+
+# Preview is safe and read-only. Only a deliberate manual PUBLISH selection
+# with the exact approval word can update production game art.
+on:
+  workflow_dispatch:
+    inputs:
+      faction:
+        description: "Faction for this individual asset"
+        type: choice
+        required: true
+        default: coalition
+        options:
+          - coalition
+          - federation
+          - psionic
+      kind:
+        description: "Single model to generate (no full-roster rebake)"
+        type: choice
+        required: true
+        default: generator
+        options:
+          - hq
+          - generator
+          - refinery
+          - barracks
+          - factory
+          - radar
+          - tech
+          - turret
+          - beam
+          - airfield
+          - soldier
+          - specialist
+          - tank
+          - heavy
+          - recon
+          - harvester
+          - aircraft
+      action:
+        description: "Preview only, or deliberately publish this specific model"
+        type: choice
+        required: true
+        default: preview
+        options:
+          - preview
+          - publish
+      publish_confirmation:
+        description: "For publish only, type PUBLISH exactly. Leave blank for preview."
+        type: string
+        required: false
+        default: ""
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/blender-asset-studio.yml"
+      - "tools/blender/asset_studio.py"
+      - "tests/blender-asset-studio.test.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blender-studio-${{ github.event.inputs.faction || 'coalition' }}-${{ github.event.inputs.kind || 'generator' }}
+  cancel-in-progress: false
+
+jobs:
+  studio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    if: github.ref == 'refs/heads/main'
+    env:
+      TARGET_FACTION: ${{ github.event.inputs.faction || 'coalition' }}
+      TARGET_KIND: ${{ github.event.inputs.kind || 'generator' }}
+      TARGET_ACTION: ${{ github.event.inputs.action || 'preview' }}
+      APPROVAL: ${{ github.event.inputs.publish_confirmation || '' }}
+      STUDIO: generated/chrono-studio
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require approval before production changes
+        shell: bash
+        run: |
+          if [[ "$TARGET_ACTION" != "preview" && "$TARGET_ACTION" != "publish" ]]; then
+            echo "::error::Invalid studio action"
+            exit 1
+          fi
+          if [[ "$TARGET_ACTION" == "publish" && "$APPROVAL" != "PUBLISH" ]]; then
+            echo "::error::To publish, enter PUBLISH as the manual confirmation"
+            exit 1
+          fi
+          echo "Asset Studio selection: $TARGET_FACTION / $TARGET_KIND / $TARGET_ACTION"
+
+      - name: Validate studio tool scripts
+        run: |
+          python3 -m py_compile tools/blender/asset_studio.py \
+            tools/blender/animated_assets.py tools/blender/building_architecture.py \
+            tools/blender/pack_animated.py
+
+      - name: Install headless Blender and Pillow
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-pil
+          blender --version | head -2
+
+      - name: Test single-asset stage, validation and approval protections
+        run: python3 -m unittest discover -s tests -p 'blender-asset-studio.test.py' -v
+
+      - name: Build ONE editable model and real Blender animation frames
+        shell: bash
+        run: |
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/animated_assets.py -- \
+            --output "$STUDIO" --kinds "$TARGET_KIND" \
+            --factions "$TARGET_FACTION" --size 160
+
+      - name: Pack just the selected sprite atlas
+        run: |
+          python3 tools/blender/pack_animated.py \
+            --input "$STUDIO" --output "$STUDIO/packed" --size 160
+
+      - name: Validate and render review sheet
+        run: |
+          python3 tools/blender/asset_studio.py validate \
+            --stage "$STUDIO" --faction "$TARGET_FACTION" --kind "$TARGET_KIND"
+          python3 tools/blender/asset_studio.py preview \
+            --stage "$STUDIO" --faction "$TARGET_FACTION" --kind "$TARGET_KIND"
+
+      - name: Upload editable model, sprite sheet and preview for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-${{ env.TARGET_FACTION }}-${{ env.TARGET_KIND }}-${{ github.run_number }}
+          path: |
+            generated/chrono-studio/preview.png
+            generated/chrono-studio/packed/
+            generated/chrono-studio/sources/
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Publish only after explicit approval
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'publish'
+        shell: bash
+        run: |
+          python3 tools/blender/asset_studio.py publish \
+            --stage "$STUDIO" --repo . \
+            --faction "$TARGET_FACTION" --kind "$TARGET_KIND" \
+            --approve "$APPROVAL"
+          git config user.name "Chrono Dominion Art Studio"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/baked-v1 art/sources/blender
+          if git diff --cached --quiet; then
+            echo "No change to production art"
+            exit 0
+          fi
+          git commit -m "Publish approved Blender sprite: $TARGET_FACTION/$TARGET_KIND"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "Published approved sprite to the playable game"
