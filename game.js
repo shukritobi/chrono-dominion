@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.11 — route-aware AI reconnaissance. */
+/* Chrono Dominion v2.13 — safe reconnaissance detours. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1102,16 +1102,12 @@
       if(d<.24){e.path=[];e.pathGoal=null;e.trafficWait=0;e.trafficRepath=false;return true;}
       const old=e.pathTarget;
       if(!old||!e.path||Math.hypot(old.x-tx,old.y-ty)>1.2||e.pathRecheck<=0){
-        const scoutPatrol=e.owner===1&&e.kind==='recon'&&
-          e.order?.type==='move'&&(e.retreatUntil||0)<=this.time;
-        const riskCache=scoutPatrol?new Map():null;
-        const risk=point=>{
-          const k=point.x+','+point.y;
-          if(!riskCache.has(k))riskCache.set(k,this.scoutThreatPenalty(point));
-          return riskCache.get(k);
-        };
-        e.path=this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null,
-          scoutPatrol?point=>risk(point)/25:null);
+        const scoutPatrol=e.owner===1&&e.kind==='recon'&&e.order?.type==='move';
+        // Follow the same safe route chosen by patrol planning, including
+        // emergency escape orders issued during retreat cooldowns.
+        e.path=scoutPatrol?
+          (this.scoutPath(e,{x:tx,y:ty},new Map(),e.trafficRepath?e:null)?.path||[]):
+          this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null);
         e.trafficRepath=false;
         e.pathTarget={x:tx,y:ty};e.pathGoal=e.path.length?e.path[e.path.length-1]:null;
         e.pathRecheck=1.6;
@@ -1762,7 +1758,7 @@
       }
       return penalty;
     }
-    scoutPath(scout,point,cache=new Map()){
+    scoutPath(scout,point,cache=new Map(),avoidUnit=null){
       // Path and movement A* use the same sensor-only risk weights.
       const risk=p=>{
         const k=p.x+','+p.y;
@@ -1770,9 +1766,18 @@
         return cache.get(k);
       };
       const startRisk=risk(scout);
-      const path=this.findPath(scout.x,scout.y,point.x,point.y,null,
+      let path=this.findPath(scout.x,scout.y,point.x,point.y,avoidUnit,
         p=>risk(p)/25);
       if(!path.length||dist(path.at(-1),point)>1)return null;
+      // A cheap weighted route may cross a known defended tile despite a
+      // longer safe detour. Retry once with a prohibitive hazard cost.
+      if(startRisk<200&&path.some(p=>risk(p)>=200)){
+        const safe=this.findPath(scout.x,scout.y,point.x,point.y,avoidUnit,
+          p=>risk(p)>=200?10000:risk(p)/25);
+        if(!safe.length||dist(safe.at(-1),point)>1||
+           safe.some(p=>risk(p)>=200))return null;
+        path=safe;
+      }
       let exposure=0,worst=0;
       for(const p of path){
         const value=risk(p);
@@ -2495,6 +2500,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.12.0',build:'recon-evasive-routing'};
+  window.ChronoDominion={version:'2.13.0',build:'safe-scout-detours'};
   new Game();
 })();
