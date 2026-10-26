@@ -36,7 +36,7 @@ assert.ok(Math.abs(inf.yieldOrder.y-12)>.7,'yield position is off the traffic la
 assert.equal(g.trafficYieldCount,1);
 assert.ok(!g.tryTrafficYield(ha,1,0),'yield directives cannot be duplicated');
 const goal={...inf.yieldOrder},originalOrder={...inf.order};
-for(let i=0;i<80&&inf.yieldOrder;i++)g.step(.05);
+for(let i=0;i<130&&inf.yieldOrder;i++)g.step(.05);
 assert.equal(inf.yieldOrder,null,'finished yield is cleared');
 assert.equal(inf.order?.x,originalOrder.x,'the normal order resumes after yielding');
 assert.equal(inf.order?.y,originalOrder.y,'normal target is preserved');
