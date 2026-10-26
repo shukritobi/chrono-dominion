@@ -2671,7 +2671,13 @@
       const c=this.ctx,pal=COLORS[this.players[e.owner].faction],p=iso(e.x,e.y),h=(e.kind==='hq'?44:e.kind==='radar'?36:e.kind==='generator'?27:24)*Math.max(.25,e.construction);
       const shape=(pts,color)=>{c.beginPath();c.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)c.lineTo(...pts[i]);c.closePath();c.fillStyle=color;c.fill();};
       c.save();c.translate(p.x,p.y);
-      // Version 2.21: detailed, live-animated faction structures supersede static pilot icons.
+      // Prefer packed Blender sprites once validated and decoded; never hide the procedural fallback.
+      const baked=window.ChronoBakedArt;
+      if(baked?.drawBuilding(c,e,{faction:this.players[e.owner].faction,time:this.time})){
+        if(this.selected.includes(e.id))this.drawRing(0,2,53,pal.color);
+        this.drawBuildingCondition(e,103,66);
+        this.health(e,0,-114,64);c.restore();return;
+      }
       const animated=window.ChronoAnimatedArt;
       if(animated?.drawBuilding(c,e,{faction:this.players[e.owner].faction,time:this.time})){
         if(this.selected.includes(e.id))this.drawRing(0,2,53,pal.color);
@@ -2723,7 +2729,15 @@
       if((e.stunnedUntil||0)>this.time){this.drawRing(0,-8,26,'#bd93e8');}
       if(e.yieldOrder&&e.owner===0)this.drawRing(0,0,21,'#eac278');
       else if(e.laneWaiting&&e.owner===0)this.drawRing(0,0,23,'#75bafa');
-      const animated=window.ChronoAnimatedArt,artFaction=this.players[e.owner].faction;
+      const artFaction=this.players[e.owner].faction;
+      const baked=window.ChronoBakedArt;
+      if(baked?.drawUnit(c,e,{faction:artFaction,time:this.time})){
+        if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='aircraft'?33:e.kind==='heavy'?29:24,pal.color);
+        const offset=e.kind==='aircraft'?-103:(e.kind==='soldier'||e.kind==='specialist'?-58:-73);
+        this.health(e,0,offset,e.kind==='heavy'?47:36);
+        this.drawRankBadge(e,23,offset-12);c.restore();return;
+      }
+      const animated=window.ChronoAnimatedArt;
       if(animated?.drawUnit(c,e,{faction:artFaction,time:this.time})){
         if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='aircraft'?33:e.kind==='heavy'?29:24,pal.color);
         const offset=e.kind==='aircraft'?-104:(e.kind==='soldier'||e.kind==='specialist'?-58:-73);
