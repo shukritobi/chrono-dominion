@@ -313,7 +313,21 @@ def animate(kind,state,frame,frames):
     elif state=="attack":
         ROOT.location.x=-.07 if frame==0 else .0
     if "radar" in PARTS:
+        # True hardware movement: all rotor mesh geometry shares the
+        # object's local pivot, not a fixed glowing texture.
         PARTS["radar"].rotation_euler.z=phase
+        if kind in ("radar","tech") and state=="damaged":
+            PARTS["radar"].rotation_euler.y=.32
+        else:
+            PARTS["radar"].rotation_euler.y=0
+    if "radar_aux" in PARTS:
+        # Independently counter-rotate the second scanner / gyroscope.
+        # Preserve the deliberately angled vertical torus plane.
+        PARTS["radar_aux"].rotation_euler.z=-phase*1.4
+        if kind in ("radar","tech") and state=="damaged":
+            PARTS["radar_aux"].hide_render=True
+        else:
+            PARTS["radar_aux"].hide_render=False
     if "muzzle" in PARTS:
         PARTS["muzzle"].hide_render=state!="attack"
     if "construction_structures" in PARTS:
