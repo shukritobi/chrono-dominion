@@ -242,22 +242,24 @@ def base_building(kind,faction):
     return build_faction_architecture(faction,kind,box,cyl,sphere,mesh,PARTS,MATS,ROOT)
 
 def animate(kind,state,frame,frames):
-    phase=(frame/max(1,frames))*math.tau
+    # Two-frame poses are opposite, not sin(0) and sin(pi) (which are identical).
+    pose=1 if frame % 2 else -1
+    phase=(frame/max(1,frames))*math.pi*.68
     ROOT.scale=(1,1,1)
     ROOT.location=(0,0,0)
-    ROOT.rotation_euler.z=0
+    ROOT.rotation_euler=(0,0,0)
     for part,o in PARTS.items():
         if part.startswith(("leg","arm")):o.rotation_euler.y=0
     if state=="move":
         if kind in ("soldier","specialist"):
             for side in (-1,1):
-                PARTS["leg"+str(side)].rotation_euler.y=side*math.sin(phase)*.48
-                PARTS["arm"+str(side)].rotation_euler.y=-side*math.sin(phase)*.25
-            ROOT.location.z=.06*math.sin(phase)
-        elif kind=="aircraft":ROOT.rotation_euler.x=.09*math.sin(phase)
-        else:ROOT.location.z=.028*math.sin(phase)
+                PARTS["leg"+str(side)].rotation_euler.y=side*pose*.48
+                PARTS["arm"+str(side)].rotation_euler.y=-side*pose*.27
+            ROOT.location.z=.035 if frame % 2 else 0
+        elif kind=="aircraft":ROOT.rotation_euler.x=.08*pose
+        else:ROOT.location.z=.035 if frame % 2 else 0
     elif state=="attack":
-        ROOT.location.x=-.05 if frame==0 else 0
+        ROOT.location.x=-.07 if frame==0 else .0
     if "radar" in PARTS:
         PARTS["radar"].rotation_euler.z=phase
     if "muzzle" in PARTS:
@@ -265,7 +267,14 @@ def animate(kind,state,frame,frames):
     if state=="construct":
         ROOT.scale=(.48+frame/max(1,frames-1)*.52,)*3
     elif state=="damaged":
-        ROOT.rotation_euler.x=.07
+        ROOT.rotation_euler.x=.08
+    # Building idle frames actually pulse; otherwise symmetric toroids render static.
+    glow=MATS.get("glow")
+    if glow and glow.use_nodes:
+        bsdf=glow.node_tree.nodes.get("Principled BSDF")
+        if bsdf:
+            strength=bsdf.inputs.get("Emission Strength")
+            if strength:strength.default_value=1.1 if state=="damaged" else (3.8 if frame % 2 else 2.1)
     bpy.context.view_layer.update()
 
 def clear_models():
