@@ -17,6 +17,7 @@ from mathutils import Vector
 # Blender --python does not always include the source script directory in sys.path.
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from building_architecture import build as build_faction_architecture
+from radar_tech_wreckage import add_wreckage as add_radar_tech_wreckage
 
 FACTIONS = {
     "coalition": {"armor": (.18,.35,.53,1), "light": (.43,.72,.83,1), "dark": (.055,.12,.20,1), "glow": (.12,.85,1,1)},
@@ -418,6 +419,10 @@ def base_building(kind,faction):
                    (1.12,1.14,.17),"dark",.018)
         breach.hide_render=True
         PARTS["damage_only_psionic_breach"]=breach
+    # Original radar/technology-lab damage: visibly missing upper hardware,
+    # fallen mechanical assemblies and faction-specific fractured wreckage.
+    # Source meshes are preserved; only render visibility changes by state.
+    add_radar_tech_wreckage(faction,kind,box,cyl,sphere,mesh,PARTS,ROOT)
     return model
 
 def animate(kind,state,frame,frames):
