@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.3.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.4.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v2.4 Adaptive Reconnaissance
+
+- **AI map survey memory:** the opposing commander tracks which terrain its own units and structures have explored. This memory is separate from your fog of war and never reveals hidden enemy positions.
+- **Better reconnaissance priorities:** AI scouts favour reachable map sectors that would expose the most currently unexplored ground, rather than revisiting a fixed loop in order.
+- **Multiple scouts cooperate:** active scout movement destinations are reserved so another recon vehicle chooses a different sector, reducing duplicated scouting.
+- **Save-compatible exploration:** surveyed cells persist in the existing local skirmish save, older saves reconstruct current sight, invalid survey coordinates are discarded, and a new match clears previous survey history.
+- **Automated tests:** new [survey regression suite](tests/survey-v24.test.mjs) joins the gameplay and nine-scenario balance tests. [v2.4 release notes](docs/RELEASE-2.4.md).
+- This is not full strategic territory allocation, omniscient target tracking or a campaign AI. Animations and additional original assets remain in progress.
 
 ## v2.3 Sector Reconnaissance and Balance Lab
 
