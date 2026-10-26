@@ -31,6 +31,9 @@
         <label>SOUND EFFECTS <span id="sfxLevel">80%</span><input id="sfxVolume" type="range" min="0" max="100" value="80" aria-label="Sound effects volume"></label>
         <label>MUSIC <span id="musicLevel">35%</span><input id="musicVolume" type="range" min="0" max="100" value="35" aria-label="Music volume"></label>
         <label class="audioCheck"><input id="musicEnabled" type="checkbox" checked> ENABLE BACKGROUND MUSIC</label>
+        <label class="audioCheck"><input id="voiceEnabled" type="checkbox" checked> ENABLE UNIT VOICES & ANNOUNCER</label>
+        <button id="voicePreview" type="button">PREVIEW IRON FEDERATION VOICE</button>
+        <p>Original scripted tactical voices use the voices installed on your device; quality varies by browser.</p>
         <p>Original synthesized soundtrack and effects, or load sounds from files on your device.</p>
         <button id="audioImport" type="button">IMPORT LOCAL SOUND FOLDER</button>
         <input id="audioFiles" class="hidden" type="file" webkitdirectory directory multiple accept=".wav,.ogg,.mp3,.m4a,.webm,.json">
@@ -116,6 +119,7 @@
   <script src="./art/baked-atlas-loader.js" defer></script>
   <script src="./maps/catalog.js" defer></script>
   <script src="./maps/map-core.js" defer></script>
+  <script src="./audio/voices.js" defer></script>
   <script src="./audio/sfx.js" defer></script>
   <script src="./game.js" defer></script>
 </body>
