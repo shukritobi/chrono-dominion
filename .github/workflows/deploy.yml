@@ -45,6 +45,7 @@ jobs:
           node tests/match-lifecycle-v22.test.mjs
           node tests/ore-reachability-v22.test.mjs
           node tests/recon-v23.test.mjs
+          node tests/survey-v24.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
@@ -95,6 +96,7 @@ jobs:
           test -f tools/simulate-matches.mjs
           test -f tests/ore-reachability-v22.test.mjs
           test -f tests/recon-v23.test.mjs
+          test -f tests/survey-v24.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
