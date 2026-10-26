@@ -19,6 +19,11 @@ SIGNATURES={
     ("coalition","tech"):(
         "Reinforced science roof","Research pod cap","Quantum probe"),
     ("federation","tech"):(
+        # The MK-II silhouette failure: the intact 2.04m furnace tower
+        # remained vertical even after the crown and clamp were broken.
+        # Remove its whole upper shaft in the damaged pose, and retain the
+        # separately editable fallen cylinder on the visible near side.
+        "Industrial experimental furnace",
         "Furnace hazard rim","Furnace plasma aperture",
         "Test ram bearing"),
     ("psionic","tech"):(
