@@ -185,6 +185,7 @@ jobs:
           print("Created 2 rendered + validated physically open factory preview assets")
           PY
       - name: Upload preview sheets, editable Blender models and RGBA atlases
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: chrono-two-open-factory-mk4-review
