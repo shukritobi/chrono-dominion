@@ -56,8 +56,9 @@ const report=g.intel[1].find(k=>k.id===playerHQ.id);
 assert.ok(report&&report.type==='building','actual reconnaissance records enemy HQ');
 assert.ok(g.aiPlatoon&&['rally','assault'].includes(g.aiPlatoon.phase),
   'scouted structure unlocks an ordinary AI platoon plan');
-assert.equal(g.aiPlatoon.targetId,playerHQ.id);
-assert.ok(g.aiPlatoon.target.x===report.x&&g.aiPlatoon.target.y===report.y,
+const chosenReport=g.intel[1].find(k=>k.id===g.aiPlatoon.targetId&&k.type==='building');
+assert.ok(chosenReport,'platoon target must be an actually scouted building');
+assert.ok(g.aiPlatoon.target.x===chosenReport.x&&g.aiPlatoon.target.y===chosenReport.y,
   'platoon uses observed coordinates');
 
 // Recon is not commandeered by routine tactical fire allocation; its
@@ -77,5 +78,5 @@ const restored=g.entityById(scout.id);
 assert.equal(restored.patrolIndex,6);
 assert.equal(restored.order.type,'move');
 assert.equal(restored.order.x,26);
-assert.equal(g.aiPlatoon.targetId,playerHQ.id);
+assert.equal(g.aiPlatoon.targetId,chosenReport.id);
 console.log('PASS: sector exploration, blocked routes, honest building discovery, platoon launch and scout save/load');
