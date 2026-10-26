@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.11.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.12.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
+
+### Recon evasive routing (v2.12)
+
+- Recon units now attempt safe escape routes when standing within danger zones they have identified in sensor reports, instead of waiting under fire.
+- Exit selection samples up to 48 locations and path-checks at most 12 through the existing threat-weighted navigator. Short recovery time prevents immediately turning back.
+- No hidden enemy positions are used. Escapes are not guaranteed against unknown threats or inaccessible terrain. See [v2.12 notes](docs/RELEASE-2.12.md).
 
 ### Threat-aware scout routes (v2.11)
 

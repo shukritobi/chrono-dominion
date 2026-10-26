@@ -1785,6 +1785,46 @@
         risk(path.at(-1))>=startRisk))return null;
       return {path,exposure,worst};
     }
+    scoutEscape(scout){
+      // Retreat only from threats in AI-owned sensor reports.
+      const danger=this.scoutThreatPenalty(scout);
+      if(danger<200)return false;
+      if(scout.order?.type==='move'&&this.scoutThreatPenalty(scout.order)<danger&&
+         this.scoutPath(scout,scout.order))return true;
+      const hq=this.entities.find(e=>e.owner===1&&e.kind==='hq'&&e.hp>0);
+      const seen=new Set(),possibilities=[];
+      // Bound radial escape sampling and path computations.
+      for(const radius of [4,7,10,13])for(let bearing=0;bearing<12;bearing++){
+        const theta=bearing*Math.PI/6;
+        const x=Math.round(scout.x+Math.cos(theta)*radius);
+        const y=Math.round(scout.y+Math.sin(theta)*radius);
+        const key=x+','+y;
+        if(seen.has(key)||!this.walkable(x,y))continue;
+        seen.add(key);
+        const point={x,y},risk=this.scoutThreatPenalty(point);
+        if(risk>=danger-35)continue;
+        possibilities.push({point,risk,
+          guess:risk*2+dist(point,scout)*2+(hq?dist(point,hq)*.2:0)});
+      }
+      possibilities.sort((a,b)=>a.guess-b.guess||
+        a.point.x-b.point.x||a.point.y-b.point.y);
+      let best=null,bestScore=-Infinity;
+      const cache=new Map();
+      for(const option of possibilities.slice(0,12)){
+        const route=this.scoutPath(scout,option.point,cache);
+        if(!route)continue;
+        const score=(danger-option.risk)*1.5-route.path.length*2-
+          route.exposure-(hq?dist(option.point,hq)*.2:0);
+        if(score>bestScore){best=option.point;bestScore=score;}
+      }
+      if(!best)return false;
+      scout.order={type:'move',x:best.x,y:best.y};
+      scout.path=[];scout.pathTarget=null;scout.pathGoal=null;
+      scout.pathRecheck=0;scout.yieldOrder=null;scout.laneWaiting=null;
+      scout.retreatUntil=Math.max(scout.retreatUntil||0,this.time+8);
+      scout.retreatCooldownAt=Math.max(scout.retreatCooldownAt||0,this.time+14);
+      return true;
+    }
     scoutFrontiers(scout,reservations=[]){
       // Generate potential survey positions from this AI's own explored cells,
       // not static mission waypoints or hidden player entity coordinates.
@@ -1913,6 +1953,7 @@
         // existing retreat / recovery cooldown is still active.
         if((scout.retreatUntil||0)>this.time||
            (scout.retreatCooldownAt||0)>this.time)continue;
+        if(this.scoutEscape(scout))continue;
         const endangered=this.entities.filter(u=>u.owner===side&&u.kind==='harvester'&&u.hp>0)
           .map(h=>({h,threat:this.nearest(h,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),5.5)}))
           .find(pair=>pair.threat);
@@ -2453,6 +2494,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.11.0',build:'threat-aware-scout-routes'};
+  window.ChronoDominion={version:'2.12.0',build:'recon-evasive-routing'};
   new Game();
 })();
