@@ -25,7 +25,7 @@ const g=window.__game;
 const settings={playerFaction:'coalition',enemyFaction:'federation',
   map:'verdant',difficulty:'standard',startingCredits:5000};
 g.newMatch(settings);
-const scout=g.add(1,'recon',27,26);
+const scout=g.add(1,'recon',30,20); // passable starting tile outside all buildings
 const playerHQ=g.entities.find(e=>e.owner===0&&e.kind==='hq');
 const enemyHQ=g.entities.find(e=>e.owner===1&&e.kind==='hq');
 assert.equal(g.sideCanSee(1,playerHQ),false,'enemy HQ not revealed by default');
