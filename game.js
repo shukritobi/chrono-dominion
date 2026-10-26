@@ -570,10 +570,10 @@
           const unit=remaining.splice(best,1)[0];
           if(!unit)break;
           unit.order={type:this.attackMoveArmed||event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
-          unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.pathRecheck=0;
+          unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.pathRecheck=0;unit.trafficWait=0;unit.trafficRepath=false;
         }
         for(const unit of remaining){
-          unit.order=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;
+          unit.order=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.trafficWait=0;unit.trafficRepath=false;
         }
       }
       this.attackMoveArmed=false;
@@ -850,7 +850,7 @@
     }
     move(e,tx,ty,dt){
       let d=Math.hypot(tx-e.x,ty-e.y);
-      if(d<.24){e.path=[];e.pathGoal=null;return true;}
+      if(d<.24){e.path=[];e.pathGoal=null;e.trafficWait=0;e.trafficRepath=false;return true;}
       const old=e.pathTarget;
       if(!old||!e.path||Math.hypot(old.x-tx,old.y-ty)>1.2||e.pathRecheck<=0){
         e.path=this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null);
