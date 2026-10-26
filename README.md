@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.14.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.15.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
+
+### Resilient AI platoons (v2.15)
+
+- Primary and support squads preserve surviving members and assigned rally positions after a casualty or wounded retreat, instead of restarting every time.
+- Two surviving fighters can finish an existing rally. Fresh squads retain their original recruitment minimums; wounded troops remain in reserve until their cooldown ends.
+- Added [v2.15 regression tests](tests/platoon-attrition-v215.test.mjs) and [release notes](docs/RELEASE-2.15.md). Scripted battle-balance and deployment checks still need confirmation.
 
 ### Safe scout detours (v2.13)
 
