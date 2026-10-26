@@ -1294,6 +1294,47 @@
       d=Math.hypot(tx-e.x,ty-e.y);
       return d<.24;
     }
+    airReturnExposure(side,from,to){
+      // Navigation uses only this faction's timestamped sensor reports.
+      const reports=(this.intel?.[side]||[]).filter(r=>
+        r.type==='building'&&['turret','beam'].includes(r.kind)&&
+        Number.isFinite(r.x)&&Number.isFinite(r.y)&&Number.isFinite(r.time)&&
+        this.time>=r.time&&this.time-r.time<=180);
+      if(!reports.length)return 0;
+      const length=dist(from,to),samples=Math.max(2,Math.ceil(length));
+      let exposure=0;
+      for(let i=1;i<=samples;i++){
+        const t=i/samples,point={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
+        for(const report of reports){
+          const reach=report.kind==='beam'?7.4:6,gap=dist(point,report);
+          if(gap<reach)exposure+=1+(reach-gap)/reach;
+        }
+      }
+      return exposure/samples;
+    }
+    airReturnDetour(plane,pad){
+      const length=dist(plane,pad);
+      if(length<4)return null;
+      const direct=this.airReturnExposure(plane.owner,plane,pad);
+      if(direct<.16)return null;
+      const vx=(pad.x-plane.x)/length,vy=(pad.y-plane.y)/length;
+      const midpoint={x:(plane.x+pad.x)/2,y:(plane.y+pad.y)/2};
+      let best=null,bestScore=Infinity;
+      // Bounded lateral candidates, no ground pathfinding for aircraft.
+      for(const offset of [5,8,11,14])for(const sign of [-1,1]){
+        const point={x:clamp(midpoint.x-vy*offset*sign,1,WORLD_SIZE-1),
+          y:clamp(midpoint.y+vx*offset*sign,1,WORLD_SIZE-1)};
+        const first=dist(plane,point),second=dist(point,pad),total=first+second;
+        if(first<2||second<2||total>length*1.85)continue;
+        const exposure=(this.airReturnExposure(plane.owner,plane,point)*first+
+          this.airReturnExposure(plane.owner,point,pad)*second)/total;
+        const score=exposure+Math.max(0,total-length)*.012;
+        if(exposure<direct*.65&&score<bestScore){
+          best={x:point.x,y:point.y,padId:pad.id};bestScore=score;
+        }
+      }
+      return best;
+    }
     serviceAircraft(e,dt){
       if(e.kind!=='aircraft')return false;
       const capacity=UNITS.aircraft.ammo;
@@ -1305,15 +1346,29 @@
       if(!pad){
         // Losing the airfield must not permanently immobilize an aircraft.
         if(e.rearming){e.rearming=false;e.order=e.rearmResume||null;e.rearmResume=null;e.rearmProgress=0;}
+        e.rearmDetour=null;e.rearmDetourDoneFor=null;
         return false;
       }
       if(!e.rearming){
         e.rearming=true;
         e.rearmResume=e.order?{...e.order}:null;
         e.rearmProgress=0;
+        e.rearmDetour=null;e.rearmDetourDoneFor=null;
         e.order=null;
       }
+      if(e.rearmDetour?.padId!==pad.id||
+         (e.rearmDetour&&(!Number.isFinite(e.rearmDetour.x)||!Number.isFinite(e.rearmDetour.y))))
+        e.rearmDetour=null;
       if(dist(e,pad)>1.7){
+        if(!e.rearmDetour&&e.rearmDetourDoneFor!==pad.id)
+          e.rearmDetour=this.airReturnDetour(e,pad);
+        if(e.rearmDetour){
+          if(dist(e,e.rearmDetour)>.55){
+            this.move(e,e.rearmDetour.x,e.rearmDetour.y,dt);
+            return true;
+          }
+          e.rearmDetour=null;e.rearmDetourDoneFor=pad.id;
+        }
         this.move(e,pad.x,pad.y,dt);
         return true;
       }
@@ -1327,6 +1382,7 @@
         if(e.ammo>=capacity){
           e.rearming=false;
           e.rearmProgress=0;
+          e.rearmDetour=null;e.rearmDetourDoneFor=null;
           e.order=e.rearmResume||null;
           e.rearmResume=null;
         }
@@ -2150,9 +2206,9 @@
         if(!Number.isFinite(report.time)||!Number.isFinite(report.x)||!Number.isFinite(report.y))continue;
         const age=this.time-report.time;
         if(age<0||age>(report.type==='building'?180:12))continue;
-        if(report.type==='building'&&report.kind!=='turret')continue;
+        if(report.type==='building'&&!['turret','beam'].includes(report.kind))continue;
         if(report.type==='unit'&&['harvester','recon'].includes(report.kind))continue;
-        const radius=report.type==='building'?7:5;
+        const radius=report.type==='building'?(report.kind==='beam'?8:7):5;
         const separation=dist(point,report);
         if(separation<radius)penalty+=200+(radius-separation)*25;
         else if(separation<radius+2)penalty+=(radius+2-separation)*20;
@@ -3030,6 +3086,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.27.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.28.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();

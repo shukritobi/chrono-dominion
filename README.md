@@ -4,8 +4,15 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.27.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.28.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.28 Safer air return routes and reconnaissance
+
+- Empty aircraft now check their own faction's observed turrets and Energy Towers before flying home. When significantly safer, they take a bounded lateral detour, then reload and resume their original mission.
+- Player and AI aircraft use separate sensor reports. Hidden or expired tower contacts do not affect navigation, and losing an airfield still releases its aircraft.
+- Scouts now correctly avoid observed Energy Towers. Browser saves and original assets are unchanged.
+- [v2.28 release notes](docs/RELEASE-2.28.md) · [regression tests](tests/air-return-safety-v228.test.mjs).
 
 ### v2.27 Air defense targeting
 
