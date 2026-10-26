@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.10 — intelligence-aware scout routing and safety. */
+/* Chrono Dominion v2.11 — route-aware AI reconnaissance. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -835,7 +835,7 @@
       }
       return heat;
     }
-    findPath(sx,sy,tx,ty,avoidUnit=null){
+    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
       // open list. During congestion replans it also prices nearby unit traffic.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
@@ -890,7 +890,8 @@
           const x=node.x+dx,y=node.y+dy,k=key(x,y);
           if(closed.has(k)||!this.walkable(x,y))continue;
           if(dx&&dy&&(!this.walkable(node.x+dx,node.y)||!this.walkable(node.x,node.y+dy)))continue;
-          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0);
+          const hazard=extraCost?Math.max(0,Number(extraCost({x,y}))||0):0;
+          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0)+hazard;
           const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
@@ -1101,7 +1102,16 @@
       if(d<.24){e.path=[];e.pathGoal=null;e.trafficWait=0;e.trafficRepath=false;return true;}
       const old=e.pathTarget;
       if(!old||!e.path||Math.hypot(old.x-tx,old.y-ty)>1.2||e.pathRecheck<=0){
-        e.path=this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null);
+        const scoutPatrol=e.owner===1&&e.kind==='recon'&&
+          e.order?.type==='move'&&(e.retreatUntil||0)<=this.time;
+        const riskCache=scoutPatrol?new Map():null;
+        const risk=point=>{
+          const k=point.x+','+point.y;
+          if(!riskCache.has(k))riskCache.set(k,this.scoutThreatPenalty(point));
+          return riskCache.get(k);
+        };
+        e.path=this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null,
+          scoutPatrol?point=>risk(point)/25:null);
         e.trafficRepath=false;
         e.pathTarget={x:tx,y:ty};e.pathGoal=e.path.length?e.path[e.path.length-1]:null;
         e.pathRecheck=1.6;
@@ -1752,6 +1762,29 @@
       }
       return penalty;
     }
+    scoutPath(scout,point,cache=new Map()){
+      // Path and movement A* use the same sensor-only risk weights.
+      const risk=p=>{
+        const k=p.x+','+p.y;
+        if(!cache.has(k))cache.set(k,this.scoutThreatPenalty(p));
+        return cache.get(k);
+      };
+      const startRisk=risk(scout);
+      const path=this.findPath(scout.x,scout.y,point.x,point.y,null,
+        p=>risk(p)/25);
+      if(!path.length||dist(path.at(-1),point)>1)return null;
+      let exposure=0,worst=0;
+      for(const p of path){
+        const value=risk(p);
+        exposure+=value/25;
+        worst=Math.max(worst,value);
+      }
+      // Avoid known defended corridors, but permit escape from danger.
+      if(startRisk<200&&worst>=200)return null;
+      if(startRisk>=200&&(worst>startRisk+40||
+        risk(path.at(-1))>=startRisk))return null;
+      return {path,exposure,worst};
+    }
     scoutFrontiers(scout,reservations=[]){
       // Generate potential survey positions from this AI's own explored cells,
       // not static mission waypoints or hidden player entity coordinates.
@@ -1778,7 +1811,7 @@
         ((scout.patrolIndex||0)%waypoints.length+waypoints.length)%waypoints.length:0;
       const reservations=this.entities.filter(u=>u.id!==scout.id&&u.owner===1&&
         u.kind==='recon'&&u.hp>0&&u.order?.type==='move').map(u=>u.order);
-      const options=[];
+      const options=[],riskCache=new Map();
       for(let offset=0;offset<waypoints.length;offset++){
         const index=(preferred+offset)%waypoints.length,point=waypoints[index];
         if(!this.walkable(point.x,point.y))continue;
@@ -1786,18 +1819,18 @@
         if(reservations.some(goal=>dist(goal,point)<4.1))continue;
         const risk=this.scoutThreatPenalty(point);
         if(risk>=200)continue;
-        const path=this.findPath(scout.x,scout.y,point.x,point.y);
-        if(!path.length||dist(path.at(-1),point)>1)continue;
+        const route=this.scoutPath(scout,point,riskCache);
+        if(!route)continue;
         const unseen=this.scoutSurveyValue(point);
-        const score=unseen*1.5-path.length*.95-offset*.08-risk;
+        const score=unseen*1.5-route.path.length*.95-offset*.08-risk-route.exposure;
         options.push({index,point,score,unseen});
       }
       for(const frontier of this.scoutFrontiers(scout,reservations)){
-        const path=this.findPath(scout.x,scout.y,frontier.point.x,frontier.point.y);
-        if(!path.length||dist(path.at(-1),frontier.point)>1)continue;
+        const route=this.scoutPath(scout,frontier.point,riskCache);
+        if(!route)continue;
         options.push({index:null,point:frontier.point,unseen:frontier.unseen,
-          score:frontier.unseen*1.7-path.length*.9+1-
-            this.scoutThreatPenalty(frontier.point)});
+          score:frontier.unseen*1.7-route.path.length*.9+1-
+            this.scoutThreatPenalty(frontier.point)-route.exposure});
       }
       if(!options.length){scout.order=null;return false;}
       options.sort((a,b)=>b.score-a.score||b.unseen-a.unseen||
@@ -1893,8 +1926,10 @@
         if(scout.order?.type==='move'&&dist(scout,scout.order)>1.5){
           // New sensor contacts can invalidate a once-safe destination.
           // Preserve orders only when the endpoint is still reasonably safe.
-          if(this.scoutThreatPenalty(scout.order)<200)continue;
-          scout.order=null;
+          if(this.scoutThreatPenalty(scout.order)<200&&
+            this.scoutPath(scout,scout.order))continue;
+          scout.order=null;scout.path=[];scout.pathTarget=null;
+          scout.pathRecheck=0;
         }
         this.assignScoutPatrol(scout);
         // Contact is recorded only after actual line-of-sight discovery.
