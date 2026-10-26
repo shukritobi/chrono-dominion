@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.13 — safe reconnaissance detours. */
+/* Chrono Dominion v2.15 — resilient AI assault platoons. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -2535,6 +2535,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.14.0',build:'forward-recon-scoring'};
+  window.ChronoDominion={version:'2.15.0',build:'platoon-attrition'};
   new Game();
 })();
