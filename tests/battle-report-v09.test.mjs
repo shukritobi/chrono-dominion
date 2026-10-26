@@ -28,7 +28,8 @@ const navigator={clipboard:{writeText(text){copiedReport=text;return Promise.res
 const globals={window:win,document,localStorage,navigator,console,performance:{now:()=>0},
   requestAnimationFrame(){},devicePixelRatio:1,setTimeout:()=>1,clearTimeout(){}};
 runInNewContext(scriptMaps,globals,{timeout:2500});
-assert.equal(Object.keys(win.ChronoMapCatalog).length,3);
+assert.equal(Object.keys(win.ChronoMapCatalog).length,4,'catalog now includes Frontier Expanse XL');
+assert.equal(win.ChronoMapCatalog.expanse.size,48);
 runInNewContext(script,globals,{timeout:3500});
 const g=win.__v09Game;
 for(const map of ['verdant','desert','snow']){
