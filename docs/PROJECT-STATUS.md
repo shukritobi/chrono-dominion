@@ -1,7 +1,7 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.22.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
+**Current prototype:** v2.23.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
@@ -10,6 +10,8 @@ v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoo
 v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. The [verified main-branch CI and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed. The nine scripted matches recorded 5/9 actual assault-launch scenarios, 1 stalled-attacker reroute, 6/9 discovered objectives, 10 scouts lost and 74.8% mean survey coverage. These do not establish human win rates.
 
 v2.19 adds observed-only AI building focus fire, damage-aware target spread, reserved siege flanks and original tracer/shockwave drawing. The [v2.19 PR suite](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed, including nine scripted matches, with 32 changed siege orders, 294 confirmed building hits, 5/9 assault launches, 12 recon losses and 74.8% mean survey coverage. Gameplay balance and real-device performance remain unverified.
+
+v2.23 flight-layer formation commands now split aircraft and ground selections, preserving connected terrain slots for ground units while aircraft can receive over-water orders. Regression coverage is in `tests/air-formations-v223.test.mjs`; CI and real-device verification must be checked independently.
 
 v2.22 adds the selectable 48×48 Frontier XL battlefield, size-aware fog/navigation and mouse-drag/touch camera controls. CI and Pages results require independent verification.
 
