@@ -1,34 +1,47 @@
-# Project status — 25 October 2026
+# Chrono Dominion — verified project status
 
-## Delivered
-- Browser skirmish prototype: `index.html`, `style.css`, `game.js`.
-- Three factions with original procedural placeholder graphics and distinct colour palettes.
-- Basic buildings, prerequisites, power, resource economy, unit production, infantry, tanks, defenses.
-- PvE AI, right-click commands, fog of war, radar, camera, menu and match flow.
-- Full initial game design blueprint and original asset-production plan.
-- Asset register of **308 planned asset families** (not 308 finished images).
-- GitHub Actions syntax/asset-register checks and Pages deployment configuration.
+**Last source audit:** 26 October 2026  
+**Current prototype:** v2.3.0 (see `package.json`, `game.js` and [v2.3 release notes](RELEASE-2.3.md)).
 
-## Not implemented / known limitations
-- Browser gameplay has been checked by syntax compilation and a 20-second simulation smoke test, not by a full real-user playtest.
-- No final sprite-sheet artwork, Blender models, sound or soundtrack yet.
-- No accurate Yuri's Revenge balance or original game code/assets.
-- AI is basic, pathing is greedy avoidance rather than production-grade A*.
-- Basic psychic conversion only; no full mind-control chains, overload or immunities.
-- No aircraft, naval units, advanced special powers, garrisoning, veteran ranks, superweapons, country variants or campaign missions.
-- No multiplayer, saved games, replays, map editor, sound, settings or advanced accessibility.
-- Current combat and building rules are provisional and may change drastically.
-- GitHub Pages workflow is committed but requires the repo owner to enable Pages deployment using GitHub Actions.
+This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
-## Next milestone: Asset pilot
-1. Approve the original 3-faction visual style and three main-tank silhouettes.
-2. Create editable source models, lock a camera and lighting rig, batch render turnarounds.
-3. Export transparency, masks, atlases and JSON per asset.
-4. Swap procedural drawing with an actual atlas renderer, with procedural fallbacks.
-5. Validate at normal gameplay zoom before mass production.
+## Implemented in the repository
 
-## Definition of done for the first art pilot
-Every pilot asset must have provenance, a source file, a transparent production sprite, dimensions/pivot, direction/frame metadata, a team-colour mask where applicable, a preview and in-browser scale validation.
+- Static HTML/CSS/JavaScript browser skirmish with three playable faction palettes and three maps (Verdant Front, Ashen Basin, Frostline).
+- Building construction, prerequisites, power, harvesting, unit queues, repair, sales, combat, specialist abilities, fog of war, radar, match results and copyable battle report.
+- Unit selection, control groups, formations, stances, attack-move, navigation around terrain, traffic avoidance and narrow-lane yielding.
+- Two-stage AI squad coordination, tactical target allocation, scouting, saved intelligence, wounded-unit retreats and map-wide reconnaissance patrols.
+- Save/load through browser local storage with the original `chrono-dominion-skirmish-v1` key.
+- Original SVG art pilots, procedural isometric tank and turret renderers, directional rendering metadata and synthesized sound effects.
+- A Map Forge editor, built-in custom map support and source map catalog.
+- GitHub Actions verification and Pages deployment, with automated regression tests and a nine-scenario, three-map/three-difficulty headless balance lab.
 
-## Release policy
-Describe delivered features accurately. An entry marked 'Planned' in the asset register does not count as an implemented game asset.
+## Verified by automated checks
+
+- Syntax checks and regression tests cover basic play, economy, abilities, saving, navigation, traffic, queues, AI platoons, tactical visibility, map editing and scouting.
+- v2.2 includes fresh fog on new matches, harvester recovery when ore is blocked or unreachable, and a balance-lab JSON report.
+- v2.3 tests scout waypoints, blocked paths, honest sensor-based intelligence, resulting platoon plans and save compatibility.
+- A successful GitHub Actions run is the authoritative confirmation that the current commit passed CI. A Pages deploy job confirms publication; it is not proof of all-browser or mobile behavior.
+
+## Planned, incomplete or placeholder
+
+- The **308-family asset register** is a plan, not 308 completed sprites. `art/rendered/manifest.json` currently has no packed PNG atlases and explicitly enables fallback artwork.
+- Most final 3D source models, animation frames, infantry animation sets, building destruction effects, environment variations and soundtrack remain unfinished.
+- Aircraft, naval warfare, garrisons, advanced mind-control chains, veterancy, country-specific units, superweapons, campaign missions, multiplayer and replay support remain unimplemented.
+- AI has static sector exploration, not adaptive multi-scout fog coverage. Battle balance remains provisional; the headless player is scripted and not a human substitute.
+- Mobile touch usability, low-end device performance, accessibility and long-session browser testing require hands-on verification.
+- No third-party proprietary game artwork, audio or code is included. The project's redistribution license is still undecided.
+
+## Next development priorities
+
+1. Review full-simulation reports and improve AI scouting survival, combat initiative and realistic victory rates without hidden-state cheating.
+2. Add a measurable objective-discovery benchmark and tune AI squad staging on difficult maps.
+3. Produce and integrate original rendered unit/structure atlases with animation and proper art provenance.
+4. Improve touch-first selection, camera movement, responsive controls and browser accessibility.
+5. Expand the original factions and their gameplay systems before campaign or multiplayer scope.
+
+## Developer commands
+
+`npm test` runs regression checks. `npm run balance` runs nine scripted 240-second scenarios. `npm run balance:full` runs a longer diagnostic matrix. The source of truth for active CI commands is `.github/workflows/deploy.yml`.
+
+See [release history](RELEASE-2.3.md), [full blueprint](game-design/FULL-BLUEPRINT.md), and [asset production plan](asset-production/ASSET-PRODUCTION-PLAN.md).
