@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.8 — fair narrow-lane reservations and bounded queues. */
+/* Chrono Dominion v1.9 — coordinated intelligence-limited AI platoons. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -99,7 +99,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -266,7 +266,7 @@
         time:this.time,nextAI:this.nextAI,nextId:this.nextId,
         selected:this.selected,groups:this.groups,camera:this.camera,stats:this.stats,
         customMap:this.settings.map==='custom'?MAPS.custom:null,
-        intel:this.intel,
+        intel:this.intel,aiPlatoon:this.aiPlatoon,
         fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
       };
       try{
@@ -310,6 +310,7 @@
           v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
           Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
         ).map(v=>({...v})):[]):[[],[]];
+      this.aiPlatoon=this.restoreAIPlatoon(saved.aiPlatoon,saved.entities);
       this.entities=saved.entities.map(e=>({...e,lanePass:null,laneWaiting:null}));this.unitBuckets=null;this.laneReservations=new Map();
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
@@ -384,7 +385,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.trafficYieldCount=0;this.laneReservations=new Map();
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -1308,6 +1309,94 @@
       }
       return null;
     }
+    restoreAIPlatoon(saved,entities){
+      if(!saved||!['rally','assault'].includes(saved.phase)||!Array.isArray(saved.ids)||
+         saved.ids.length<2||saved.ids.length>8||!Number.isFinite(saved.startedAt)||
+         !Number.isFinite(saved.targetTime)||!Number.isInteger(saved.targetId)||
+         !saved.target||!Number.isFinite(saved.target.x)||!Number.isFinite(saved.target.y)||
+         saved.target.x<0||saved.target.x>WORLD_SIZE||saved.target.y<0||saved.target.y>WORLD_SIZE||
+         !Array.isArray(saved.slots)||saved.slots.length!==saved.ids.length)return null;
+      const ids=new Set(),slots=[];
+      for(let i=0;i<saved.ids.length;i++){
+        const id=saved.ids[i],slot=saved.slots[i];
+        if(!Number.isInteger(id)||ids.has(id)||!entities.some(e=>e.id===id&&e.owner===1&&e.type==='unit')||
+           !slot||!Number.isFinite(slot.x)||!Number.isFinite(slot.y)||
+           slot.x<1||slot.y<1||slot.x>32||slot.y>32)return null;
+        ids.add(id);slots.push({x:slot.x,y:slot.y});
+      }
+      return {phase:saved.phase,ids:[...ids],slots,startedAt:saved.startedAt,
+        targetId:saved.targetId,targetTime:saved.targetTime,
+        target:{x:saved.target.x,y:saved.target.y}};
+    }
+    coordinateAIPlatoon(fighters,knowledge,base,threatened){
+      // All targets are previously scouted *reports*, never invisible live
+      // enemy objects. A platoon is a bounded, persistent squad of up to 5.
+      if(threatened){this.aiPlatoon=null;return new Set();}
+      const report=knowledge.filter(k=>k.type==='building'&&this.time-k.time<=180)
+        .sort((a,b)=>b.time-a.time||Math.hypot(a.x-base.x,a.y-base.y)-
+          Math.hypot(b.x-base.x,b.y-base.y))[0];
+      if(!report){this.aiPlatoon=null;return new Set();}
+      const soldiers=fighters.filter(u=>u.kind!=='recon'&&u.hp>0&&u.built);
+      const minimum=this.settings.difficulty==='recruit'?5:
+        this.settings.difficulty==='veteran'?2:3;
+      const earliest=this.settings.difficulty==='recruit'?85:
+        this.settings.difficulty==='veteran'?38:57;
+      if(soldiers.length<minimum||this.time<earliest){this.aiPlatoon=null;return new Set();}
+      let plan=this.aiPlatoon;
+      if(plan&&(!plan.ids.every(id=>soldiers.some(u=>u.id===id))||
+         this.time-plan.startedAt>125||
+         plan.targetId!==report.id&&this.time-plan.targetTime>50))plan=null;
+      if(!plan){
+        const units=[...soldiers].sort((a,b)=>
+          Math.hypot(a.x-base.x,a.y-base.y)-Math.hypot(b.x-base.x,b.y-base.y)||a.id-b.id)
+          .slice(0,Math.min(5,soldiers.length));
+        const origin={x:units.reduce((sum,u)=>sum+u.x,0)/units.length,
+          y:units.reduce((sum,u)=>sum+u.y,0)/units.length};
+        const dx=report.x-origin.x,dy=report.y-origin.y;
+        const length=Math.max(1,Math.hypot(dx,dy)),advance=Math.min(5,length*.35);
+        const rally={x:origin.x+dx/length*advance,y:origin.y+dy/length*advance};
+        const available=this.formationSlots(rally.x,rally.y,units.length,origin);
+        if(available.length<units.length)return new Set();
+        const slots=[];
+        const remaining=[...units];
+        for(const unit of units){
+          let best=-1,bestDist=Infinity;
+          for(let i=0;i<available.length;i++){
+            if(slots.some(p=>p.x===available[i].x&&p.y===available[i].y))continue;
+            const d=Math.hypot(unit.x-available[i].x,unit.y-available[i].y);
+            if(d<bestDist){bestDist=d;best=i;}
+          }
+          if(best<0)return new Set();
+          slots.push({...available[best]});
+        }
+        plan={phase:'rally',ids:units.map(u=>u.id),slots,
+          targetId:report.id,targetTime:report.time,
+          target:{x:report.x,y:report.y},startedAt:this.time};
+        this.aiPlatoon=plan;
+        units.forEach((unit,i)=>{
+          unit.order={type:'move',x:slots[i].x,y:slots[i].y};
+        });
+      }
+      const members=plan.ids.map(id=>soldiers.find(u=>u.id===id)).filter(Boolean);
+      if(plan.phase==='rally'){
+        const ready=members.filter((unit,i)=>{
+          const index=plan.ids.indexOf(unit.id),spot=plan.slots[index];
+          return Math.hypot(unit.x-spot.x,unit.y-spot.y)<=1.8;
+        }).length;
+        // Do not send isolated first arrivals alone; allow a limited timeout
+        // only when at least half the squad is already at the rally.
+        if(ready>=Math.ceil(members.length*.7)||
+          (this.time-plan.startedAt>22&&ready>=Math.ceil(members.length*.5))){
+          plan.phase='assault';
+          members.forEach((unit,i)=>{
+            const flank=this.chooseFlank(unit,plan.target,i);
+            const destination=flank||plan.target;
+            unit.order={type:'attackMove',x:destination.x,y:destination.y};
+          });
+        }
+      }
+      return new Set(plan.ids);
+    }
     runAI(){
       const side=1,me=this.players[side],base=this.entities.find(e=>e.owner===side&&e.kind==='hq'&&e.hp>0);
       if(!base)return;
@@ -1400,31 +1489,25 @@
         const spotted=this.nearest(scout,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),8);
         if(spotted)scout.lastContact={x:spotted.x,y:spotted.y,time:this.time,kind:spotted.kind};
       }
-      // Local base defense always takes precedence over an offensive order.
+      // Local defense takes precedence; only platoons that have assembled
+      // receive an offensive order. Scouts continue their own ore patrols.
       const fighters=this.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0&&e.kind!=='harvester');
+      const platoonIds=this.coordinateAIPlatoon(fighters,knowledge,base,threatened);
+      const responders=[...fighters].filter(e=>e.kind!=='recon').sort((a,b)=>a.id-b.id);
+      if(threatened){
+        for(const invader of invaders){
+          const defenders=[...responders].sort((a,b)=>dist(a,invader)-dist(b,invader)).slice(0,2);
+          for(const defender of defenders)defender.order={type:'attack',id:invader.id};
+        }
+      }
       for(const fighter of fighters){
         const attacker=this.nearest(fighter,e=>e.owner===0&&e.type==='unit'&&e.hp>0&&this.sideCanSee(side,e),6.5);
         if(attacker){fighter.order={type:'attack',id:attacker.id};continue;}
         if(fighter.kind==='recon'&&fighter.order?.type==='attackMove')continue;
+        if(platoonIds.has(fighter.id))continue;
         if(fighter.order?.type==='attack'&&this.entityById(fighter.order.id))continue;
-        // Attack in groups; novices wait longer before committing.
-        const minimum=this.settings.difficulty==='recruit'?5:this.settings.difficulty==='veteran'?2:3;
-        if(fighters.length<minimum||this.time<(this.settings.difficulty==='recruit'?85:this.settings.difficulty==='veteran'?38:57))continue;
-        const target=this.nearest(fighter,e=>e.owner===0&&e.type==='building'&&e.hp>0&&this.sideCanSee(side,e));
-        if(target)fighter.order={type:'attack',id:target.id};
-        else {
-          // Only pursue last-seen positions, never omniscient live coordinates.
-          const reports=knowledge.filter(k=>k.type==='building'&&this.time-k.time<=180)
-            .sort((a,b)=>Math.hypot(a.x-fighter.x,a.y-fighter.y)-Math.hypot(b.x-fighter.x,b.y-fighter.y));
-          if(reports.length){
-            const report=reports[0];
-            // Retain the active waypoint until reached, rather than switching
-            // flanks every AI tick and oscillating in place.
-            if(fighter.order?.type==='attackMove'&&dist(fighter,fighter.order)>1.2)continue;
-            const flank=this.chooseFlank(fighter,report,fighter.id);
-            fighter.order={type:'attackMove',x:flank?.x??report.x,y:flank?.y??report.y};
-          }
-        }
+        // Non-platoon units stay in reserve until more units are ready
+        // or a visible threat requires a local defense response.
       }
     }
     updateFog(){
