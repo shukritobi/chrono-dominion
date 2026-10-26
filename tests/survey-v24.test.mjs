@@ -75,7 +75,10 @@ assert.ok(saved.aiExplored.length>0);
 const expectedSize=g.aiExplored.size;
 g.aiExplored.clear();
 assert.ok(g.loadGame());
-assert.equal(g.aiExplored.size,expectedSize,'survey memory survives a local save');
+assert.ok(g.aiExplored.size>=expectedSize,
+  'survey memory survives a local save and current observers may uncover more terrain');
+assert.ok(saved.aiExplored.every(cell=>g.aiExplored.has(cell)),
+  'every saved surveyed tile remains surveyed after reloading');
 const legacy={...saved};delete legacy.aiExplored;
 storage.set('chrono-dominion-skirmish-v1',JSON.stringify(legacy));
 assert.ok(g.loadGame());
