@@ -13,6 +13,17 @@
 
 Objectives still derive from *observed AI sensor reports*; no unseen enemy location is used to invent targets. Ground connectivity is a physical navigation check and may change when structures are placed or destroyed. AI squads may still fail against unknown defenses or changing terrain; realistic human match balance is unverified.
 
-## Release verification
+## Verified release
 
-CI syntax, gameplay regressions and the nine-scenario 240-second simulator must pass before merging. Compare results to v2.17 (6/9 objective discoveries, 3/9 platoon formations, 11 scouts lost, 76.1% AI coverage). The new assault metrics have no previous version baseline.
+The [v2.18 pull-request verification](https://github.com/shukritobi/chrono-dominion/actions/runs/40301946738) passed all automated regressions and nine scripted 240-second matches. The [merged main-branch workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) also completed both verification and GitHub Pages deployment successfully.
+
+| AI measure | v2.17 | v2.18 |
+|---|---:|---:|
+| Objective discovery scenarios | 6/9 | 6/9 |
+| Platoon creation scenarios | 3/9 | 3/9 |
+| Recon vehicles lost | 11 | 10 |
+| Mean surveyed terrain | 76.1% | 74.8% |
+| Actual assault-launch scenarios | Not measured | 5/9 |
+| Attack-move recovery reroutes | Not measured | 1 |
+
+All nine matches generated income and combat, while v2.18 recorded 40,751 combined points of combat damage. The baseline comparison is deterministic scripted-player coverage, not a human win rate, and the new assault metrics have no v2.17 measurement. Lower survey coverage means the release has not improved all recorded metrics.

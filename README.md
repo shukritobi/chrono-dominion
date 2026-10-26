@@ -13,6 +13,7 @@
 - **Approach selection:** Offensive units survey up to 36 walkable perimeter positions around a *reported* building, replacing the previous three-flank fallback that could order attacks into blocked building tiles.
 - **Stall recovery:** Active platoon members stuck more than 18 seconds can try another reachable flank. Navigation caches are cleared only when the route changes.
 - The nine-scenario simulation now reports assault launches and actual reroute events, not just platoon creation. See [v2.18 notes](docs/RELEASE-2.18.md) and [pathing tests](tests/assault-pathing-v218.test.mjs).
+- **Verified:** [v2.18 GitHub Actions](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed checks and deployed the website. In nine simulated matches, 5 launched at least one platoon assault, 1 stalled attacker rerouted and 10 reconnaissance units were lost.
 
 ### Strategic AI attack objectives (v2.17)
 

@@ -7,7 +7,7 @@ v2.16 introduces two original unit combat-experience ranks, kill-based promotion
 
 v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoon post-retreat cooldown gap. Full GitHub Actions and balance results must be checked independently.
 
-v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. A verified CI run is needed before claiming balance improvements.
+v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. The [verified main-branch CI and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed. The nine scripted matches recorded 5/9 actual assault-launch scenarios, 1 stalled-attacker reroute, 6/9 discovered objectives, 10 scouts lost and 74.8% mean survey coverage. These do not establish human win rates.
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
