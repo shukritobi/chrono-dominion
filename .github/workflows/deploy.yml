@@ -68,6 +68,7 @@ jobs:
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
+          node tests/audio-soundscape-v221.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
