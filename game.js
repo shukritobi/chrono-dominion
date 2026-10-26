@@ -1870,7 +1870,7 @@
           const score=b=>{
             const pending=(planned.get(b.id)||0)+(incoming.get(b.id)||0);
             const waste=Math.max(0,pending+this.stat(unit,'damage')-b.hp);
-            const priority=['turret','beam'].includes(b.kind)?35:
+            const priority=['turret','beam'].includes(b.kind)?48:
               b.id===squad.targetId?30:
               ['factory','refinery','tech'].includes(b.kind)?22:15;
             return priority+(b.id===squad.targetId?10:0)-
