@@ -425,15 +425,37 @@ to the existing five-frame atlas:
 and [independent review workflow](../../.github/workflows/psionic-factory-extra-states-review.yml).
 They load the already validated MK-V source without rerendering the
 five-frame atlas and stage critical, destroyed and power-out PNGs plus a
-second editable .blend. Treat their QA as **pending until the workflow
-reports a passing result**.
+second editable .blend.
+
+- [Successful targeted three-extra-state Blender review](https://github.com/shukritobi/chrono-dominion/actions/runs/40417852307).
+  The job downloaded the previously verified MK-V .blend and five-frame
+  atlas, rather than generating either again. A second **editable
+  129 KB .blend** source was saved with three hidden, separate wreckage
+  meshes; it was reopened in Blender and all three were verified editable
+  and hidden in the intact state.
+- At **160px**, critical changes **539 alpha pixels**, destroyed
+  **1,334**, and power-out **0** (intact geometry). At **80px**, the
+  corresponding alpha differences are **138 / 342 / 0**.
+- At **80px**, changed RGBA pixels are **1,322 critical**, **1,420
+  destroyed** and **1,349 power-out**. The power-out frame removes
+  emissive lighting without moving or destroying the structure.
+- Downloaded the actual 160px and 80px contact sheets and inspected all
+  four poses. Critical removes one tall horn and introduces damaged
+  fragments; destroyed collapses both tall horns and the upper portal
+  while leaving a lower wreck; power-out preserves the architecture but
+  visibly extinguishes the cyan/mint illumination.
+- The existing five-frame **160×800 RGBA atlas SHA-256 remained exactly
+  `9a52394ab1bc421971b30593819d5687d0d15bd4777006fa3abcbfb441aae7af`**
+  before and after rendering. The three new images are **separate
+  160×160 PNGs**, not a modification of the game atlas. This is a
+  successful preview-only pilot, **not approved for publication**.
 
 ## Ordered next tasks for hourly agent
 
-1. **Critical / destroyed / power-out:** extend the current five-frame
-   building preview contract with separate geometry and validation for
-   structural collapse, powerless machinery and late destruction. Stage
-   separately; do not alter the published game atlas format prematurely.
+1. **Extend extra states to other buildings:** reuse the validated
+   Psionic Factory critical/destroyed/power-out preview approach for the
+   other faction buildings, starting with defenses and airfields. Keep
+   three separate state PNGs and editable Blender geometry, not live atlases.
 2. **Damage polish:** add bright fracture edges and more visible displaced
    mechanical wreckage where 80px inspection shows subtle fragments.
 3. **Remaining assets:** finish defenses, airfields, unmodeled vehicle types,
