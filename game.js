@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.30 — AI emergency aircraft withdrawal and servicing. */
+/* Chrono Dominion v2.31 — power-outage aircraft service recovery. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -548,7 +548,7 @@
       if(def.from&&!this.count(side,def.from))return false;
       return (def.requires||[]).every(k=>this.count(side,k)>0);
     }
-    power(side){let make=0,use=0;for(const e of this.entities){if(e.owner!==side||e.type!=='building'||!e.built)continue;const n=BUILD[e.kind].power||0;if(n>0)make+=n;else use-=n;}return {make,use,low:use>make};}
+    power(side){let make=0,use=0;for(const e of this.entities){if(e.owner!==side||e.type!=='building'||!e.built||e.hp<=0)continue;const n=BUILD[e.kind].power||0;if(n>0)make+=n;else use-=n;}return {make,use,low:use>make};}
     cancelCurrentMode(){
       if(this.state!=='playing'||!(this.placing||this.abilityArmedId||this.attackMoveArmed))return false;
       this.placing=null;this.abilityArmedId=null;this.attackMoveArmed=false;
@@ -1344,6 +1344,10 @@
       // The decision uses its own hull and friendly airfields, not enemy fog data.
       const critical=e.owner===1&&e.hp>0&&e.hp/e.maxHp<=.30&&
         (e.retreatCooldownAt||0)<=this.time;
+      // After a prolonged outage, avoid sending the plane back to the same
+      // unpowered pad every frame. A restored power grid cancels this holdoff.
+      if(!e.rearming&&this.power(e.owner).low&&
+         Number.isFinite(e.rearmRetryAt)&&e.rearmRetryAt>this.time)return false;
       if(e.ammo>=capacity&&!e.rearming&&!critical)return false;
       if(e.ammo>0&&!e.rearming&&!critical)return false;
       const pad=this.nearest(e,b=>b.owner===e.owner&&b.kind==='airfield'&&b.built&&b.hp>0);
@@ -1354,6 +1358,7 @@
           if(e.repairRetreat)e.retreatCooldownAt=this.time+40;
         }
         e.repairRetreat=false;
+        e.rearmPowerOutage=0;
         e.rearmDetour=null;e.rearmDetourDoneFor=null;
         return false;
       }
@@ -1362,6 +1367,7 @@
         e.repairRetreat=critical;
         e.rearmResume=e.order?{...e.order}:null;
         e.rearmProgress=0;
+        e.rearmPowerOutage=0;e.rearmRetryAt=0;
         e.rearmDetour=null;e.rearmDetourDoneFor=null;
         e.order=null;
       }
@@ -1381,7 +1387,26 @@
         this.move(e,pad.x,pad.y,dt);
         return true;
       }
-      // A powerless airfield can shelter aircraft but cannot reload or repair them.
+      // Count outages only after arrival. A plane in flight is not trapped.
+      // Long outages release its previous mission and postpone another visit.
+      if(this.power(e.owner).low){
+        e.rearmPowerOutage=(Number.isFinite(e.rearmPowerOutage)&&e.rearmPowerOutage>=0?
+          e.rearmPowerOutage:0)+dt;
+        if(e.rearmPowerOutage>=15){
+          e.rearming=false;
+          e.order=e.rearmResume||null;e.rearmResume=null;
+          e.rearmProgress=0;
+          e.rearmDetour=null;e.rearmDetourDoneFor=null;
+          if(e.repairRetreat)e.retreatCooldownAt=this.time+40;
+          e.repairRetreat=false;
+          e.rearmPowerOutage=0;
+          e.rearmRetryAt=this.time+25;
+          return false;
+        }
+        return true;
+      }
+      e.rearmPowerOutage=0;
+      // Powered airfields retain existing paid repairs and ammunition timing.
       if(!this.power(e.owner).low){
         // Paid hull servicing happens only during the existing rearm visit.
         // This adds no save fields and never forces a full-ammo plane to return.
@@ -3109,6 +3134,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.30.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.31.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();

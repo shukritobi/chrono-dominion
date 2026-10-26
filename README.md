@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.30.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.31.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.31 Airfield power-outage recovery
+
+- Aircraft waiting at an unpowered Air Command now stop waiting after 15 game seconds. Their previous mission is restored without free ammunition or hull repairs; a 25-second retry holdoff prevents immediately returning to the same unpowered pad.
+- Power restoration permits immediate rearm retries. Emergency AI withdrawals also retain their 40-second retreat cooldown after a timed-out service visit.
+- Destroyed generators and other destroyed buildings no longer contribute to power production or consumption during the current simulation tick. Existing save key, schema, and original art remain unchanged. [v2.31 release notes](docs/RELEASE-2.31.md) · [outage regression](tests/airfield-outage-v231.test.mjs).
 
 ### v2.30 Emergency AI aircraft withdrawals
 
