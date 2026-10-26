@@ -145,7 +145,8 @@ function runScenario(map,difficulty,mi,di){
   let nextAction=5,iteration=0,peak=0,samples=0,platoonSeen=false,supportSeen=false,assaultLaunched=false,
     damageEvents=0,firstDamage=0,oreEvents=0,firstHarvest=0,
     firstObjectiveDiscovery=null,firstPlatoonAt=null;
-  const observedRecon=new Set();
+  const observedRecon=new Set(),observedAircraft=new Set();
+  let airfieldSeen=false;
   const maxSteps=Math.ceil(seconds/frame);
   let previousDamage=0,previousOre=0;
   for(let i=0;i<maxSteps&&g.state==='playing';i++){
@@ -164,8 +165,12 @@ function runScenario(map,difficulty,mi,di){
     if(firstObjectiveDiscovery===null&&g.intel[1].some(report=>
       report.type==='building'&&g.time-report.time<=180))
       firstObjectiveDiscovery=g.time;
-    for(const unit of g.entities)
-      if(unit.owner===1&&unit.kind==='recon')observedRecon.add(unit.id);
+    for(const unit of g.entities){
+      if(unit.owner!==1)continue;
+      if(unit.kind==='recon')observedRecon.add(unit.id);
+      if(unit.kind==='aircraft')observedAircraft.add(unit.id);
+      if(unit.kind==='airfield')airfieldSeen=true;
+    }
     if(i%Math.max(1,Math.round(12/frame))===0){
       checkIntegrity(g,map+'/'+difficulty+' @'+g.time.toFixed(1));
       samples++;
@@ -181,6 +186,7 @@ function runScenario(map,difficulty,mi,di){
   const buildings=side=>g.entities.filter(e=>e.owner===side&&e.type==='building'&&e.hp>0).length;
   const outcome=g.state==='finished'?g.lastBattleSummary?.outcome||'ended':'time limit';
   const reconAlive=g.entities.filter(e=>e.owner===1&&e.kind==='recon'&&e.hp>0).length;
+  const aircraftAlive=g.entities.filter(e=>e.owner===1&&e.kind==='aircraft'&&e.hp>0).length;
   const aiSurveyPercent=Math.round(g.aiExplored.size/(34*34)*1000)/10;
   return {map,difficulty,playerFaction,enemyFaction,seconds:Math.round(g.time),outcome,
     credits:[...g.players.map(p=>Math.floor(p.credits))],
@@ -196,7 +202,9 @@ function runScenario(map,difficulty,mi,di){
     firstObjectiveDiscovery:firstObjectiveDiscovery===null?null:Math.round(firstObjectiveDiscovery),
     firstPlatoonAt:firstPlatoonAt===null?null:Math.round(firstPlatoonAt),
     aiSurveyPercent,reconBuilt:observedRecon.size,
-    reconAlive,reconLost:Math.max(0,observedRecon.size-reconAlive)};
+    reconAlive,reconLost:Math.max(0,observedRecon.size-reconAlive),
+    airfieldSeen,aircraftBuilt:observedAircraft.size,aircraftAlive,
+    aircraftLost:Math.max(0,observedAircraft.size-aircraftAlive)};
 }
 const results=[];
 for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
@@ -231,6 +239,9 @@ const report={
     casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
+    casesWithAirfields:results.filter(r=>r.airfieldSeen).length,
+    casesWithAircraft:results.filter(r=>r.aircraftBuilt>0).length,
+    totalAircraftLost:results.reduce((n,r)=>n+r.aircraftLost,0),
     meanAISurveyPercent:Number((results.reduce((n,r)=>n+r.aiSurveyPercent,0)/results.length).toFixed(1)),
     peakEntities:Math.max(...results.map(r=>r.peakEntities)),
     mapEconomy:Object.fromEntries(MAPS.map(map=>{
@@ -254,6 +265,7 @@ assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
   r.reconLost>=0&&r.reconLost<=r.reconBuilt&&
+  r.aircraftLost>=0&&r.aircraftLost<=r.aircraftBuilt&&
   Number.isInteger(r.assaultReroutes)&&r.assaultReroutes>=0&&
   Number.isInteger(r.siegeFocusOrders)&&r.siegeFocusOrders>=0&&
   Number.isInteger(r.aiStructureHits)&&r.aiStructureHits>=0&&
