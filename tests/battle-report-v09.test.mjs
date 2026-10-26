@@ -69,10 +69,14 @@ assert.ok(copiedReport.includes('\n'),'copied report is genuinely multiline');
 g.newMatch({playerFaction:'coalition',enemyFaction:'federation',map:'verdant',difficulty:'recruit'});
 const recon=g.add(1,'recon',30,20);g.runAI(); // clear of AI base structures
 assert.ok(recon.order?.type==='move'||recon.order?.type==='attack');
-const firstIndex=recon.patrolIndex||0;
 if(recon.order?.type==='move'){
-  recon.x=recon.order.x;recon.y=recon.order.y;recon.order=null;
+  const previous={x:recon.order.x,y:recon.order.y};
+  recon.x=previous.x;recon.y=previous.y;recon.order=null;
+  // Simulate actual arrival: the normal game tick refreshes AI exploration.
+  g.updateAISurvey();
   g.runAI();
-  assert.notEqual(recon.patrolIndex,firstIndex,'AI recon moves to next patrol waypoint');
+  assert.equal(recon.order?.type,'move','AI scout resumes patrol after arriving');
+  assert.ok(Math.hypot(recon.order.x-previous.x,recon.order.y-previous.y)>1.5,
+    'AI recon selects a distinct next destination, regardless of waypoint index');
 }
 console.log('PASS: external JSON maps, score accounting, victory report, save compatibility and AI patrol routes');
