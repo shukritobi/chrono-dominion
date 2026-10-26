@@ -66,7 +66,7 @@
     if(name.includes('.'))choices.push(name.split('.')[0]);
     // The player's imported pack overrides the shipped sounds, even for a generic event.
     for(const source of [loaded,builtin])for(const key of choices){
-      const entries=source.get(key);
+      const entries=source.get(key.toLowerCase());
       if(entries?.length)return entries[Math.floor(Math.random()*entries.length)];
     }
     return null;
