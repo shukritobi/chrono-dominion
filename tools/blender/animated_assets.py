@@ -14,6 +14,7 @@ from pathlib import Path
 
 import bpy
 from mathutils import Vector
+from building_architecture import build as build_faction_architecture
 
 FACTIONS = {
     "coalition": {"armor": (.18,.35,.53,1), "light": (.43,.72,.83,1), "dark": (.055,.12,.20,1), "glow": (.12,.85,1,1)},
@@ -236,54 +237,9 @@ def base_aircraft():
             (-.67,side*.47,1.0)],[(0,1,2)],"armor")
     PARTS["wing"]=ROOT
 
-def base_building(kind):
-    box("Three tile foundation",(0,0,.2),(3.2,3.2,.40),"dark",.12)
-    box("Foundation rim",(0,0,.49),(2.95,3.0,.19),"armor",.08)
-    if kind=="generator":
-        box("Magnetic engine block",(0,0,1.15),(1.8,1.45,1.5),"armor",.18)
-        for side in (-1,1):
-            cyl("Plasma confinement tower",(0,side*.66,2.35),.31,1.85,"light")
-            sphere("Contained plasma",(0,side*.66,3.28),(.26,.26,.34),"glow")
-            for i in range(3):cyl("Flux coil",(0,side*.66,1.95+i*.36),.45,.07,"glow")
-        PARTS["radar"]=cyl("Generator rotor",(0,0,2.38),.64,.21,"dark")
-    elif kind in ("factory","barracks","refinery","airfield"):
-        box("Industrial reinforced hall",(-.34,0,1.2),(2.24,2.18,1.6),"armor",.18)
-        box("Roof machinery",(-.34,0,2.09),(2.50,2.3,.30),"light",.10)
-        box("Large access door",(1.04,-.12,1.0),(.09,1.12,1.16),"dark",.04)
-        for i in range(5):
-            box("Industrial security shutter",(1.10,-.65+i*.26,1.12),(.05,.1,.91),"light",.02)
-        cyl("Roof vent",(-.95,.56,2.55),.30,.73,"dark")
-        if kind=="factory":
-            PARTS["radar"]=box("Automated bridge crane",(.0,0,2.75),(.21,2.46,.17),"glow",.04)
-        elif kind=="refinery":
-            for i in (-1,0,1):
-                cyl("Ore reactor",(i*.55,-.63,2.51),.22,.69,"bronze")
-        elif kind=="airfield":
-            box("Landing apron",(1.32,0,.49),(1.08,2.64,.11),"dark",.02)
-            for i in range(3):box("Runway lights",(1.62,-.74+i*.73,.59),(.18,.1,.06),"glow",.01)
-        else:
-            box("Soldier barracks communications mast",(-.75,.5,2.77),(.1,.1,1.0),"light")
-    elif kind=="radar":
-        box("Comms array tower",(0,0,1.50),(1.5,1.4,2.5),"armor",.14)
-        cyl("Antenna shaft",(0,0,3.32),.09,1.0,"light")
-        PARTS["radar"]=sphere("Rotating scanner dish",(0,0,3.75),(.91,.22,.33),"light")
-        sphere("Scanner core",(0,-.27,3.83),(.15,.16,.14),"glow")
-    elif kind in ("beam","turret","tech"):
-        box("Defence generator",(0,0,1.3),(1.5,1.54,1.7),"armor",.16)
-        for side in (-1,1):
-            box("Sentry plating",(0,side*.75,1.37),(1.5,.12,1.02),"light",.08)
-        cyl("Capacitor",(0,0,2.45),.37,.65,"dark")
-        sphere("Charged weapon core",(0,0,3.0),(.48,.48,.48),"glow")
-        if kind=="tech":
-            for i in range(3):cyl("Neural ring",(0,0,2.10+i*.33),.67,.09,"light")
-        if kind=="turret":
-            cyl("Twin auto-cannon",(0,-.31,2.85),.16,1.4,"light",axis="X")
-    else:
-        box("Command citadel base",(0,0,1.35),(2.5,2.46,1.7),"armor",.20)
-        box("Command observation tower",(-.28,0,2.65),(1.5,1.58,1.72),"light",.18)
-        sphere("Citadel command beacon",(-.28,0,3.69),(.35,.35,.35),"glow")
-        for x in (-.90,.4):
-            box("Observation glazing",(x,-1.22,2.4),(.38,.08,.39),"glass",.035)
+def base_building(kind,faction):
+    # Faction and kind each select a unique 3D silhouette; authored from the design bible.
+    return build_faction_architecture(faction,kind,box,cyl,sphere,mesh,PARTS,MATS,ROOT)
 
 def animate(kind,state,frame,frames):
     phase=(frame/max(1,frames))*math.tau
@@ -331,7 +287,7 @@ def run(output,kinds,factions,size):
             if kind in ("soldier","specialist"):base_infantry(kind)
             elif kind=="aircraft":base_aircraft()
             elif kind in UNITS:base_vehicle(kind)
-            else:base_building(kind)
+            else:base_building(kind,faction)
             set_camera(kind)
             source=output/"sources"/f"{faction}-{kind}.blend"
             source.parent.mkdir(parents=True,exist_ok=True)
