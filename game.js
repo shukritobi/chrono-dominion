@@ -1332,6 +1332,10 @@
           continue;
         }
         target.hp-=shot.damage;
+        if(target.owner===0&&target.type==='unit'&&this.time-(target.lastHurtVoiceAt??-100)>7){
+          target.lastHurtVoiceAt=this.time;
+          this.audio?.play('underFire',{kind:target.kind,faction:this.players[0]?.faction});
+        }
         this.noteBuildingDamage(target,shot.owner);
         if(shot.owner===1&&target.type==='building')this.aiSiegeHits++;
         if(target.type==='building'&&
