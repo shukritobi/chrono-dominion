@@ -71,6 +71,7 @@ jobs:
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
           node tests/audio-soundscape-v221.test.mjs
+          node tests/expanse-camera-v222.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
@@ -111,6 +112,7 @@ jobs:
           test -f maps/verdant.json
           test -f maps/desert.json
           test -f maps/snow.json
+          test -f maps/expanse.json
           test -f maps/catalog.js
           test -f maps/map-core.js
           test -f maps/map-editor.js
@@ -138,6 +140,7 @@ jobs:
           test -f tests/assault-pathing-v218.test.mjs
           test -f tests/siege-focus-v219.test.mjs
           test -f tests/rally-recovery-v220.test.mjs
+          test -f tests/expanse-camera-v222.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
