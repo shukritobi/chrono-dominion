@@ -56,7 +56,9 @@ assert.ok(g.scoutThreatPenalty({x:21,y:21})>=200,
   'previously observed static defenses remain dangerous');
 // A newly discovered defense invalidates a previous move destination.
 scout.order={type:'move',x:21,y:21};
+g.entities.push(hostile); // Observed by the AI, not secretly inferred.
 g.runAI();
+g.entities=g.entities.filter(e=>e.id!==hostile.id);
 assert.ok(!scout.order||scout.order.x!==21||scout.order.y!==21,
   'AI must replan a patrol whose destination becomes dangerous');
 // A retreating scout must not receive a fresh patrol or harvester-defense order.
