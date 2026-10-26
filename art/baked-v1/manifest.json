@@ -1,0 +1,373 @@
+{
+  "format": "chrono-blender-v1",
+  "renderer": "Blender procedural PBR",
+  "frameSize": 160,
+  "atlasRoot": "art/baked-v1",
+  "entries": {
+    "coalition": {
+      "soldier": {
+        "file": "coalition-soldier.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "specialist": {
+        "file": "coalition-specialist.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "heavy": {
+        "file": "coalition-heavy.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "aircraft": {
+        "file": "coalition-aircraft.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "generator": {
+        "file": "coalition-generator.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "factory": {
+        "file": "coalition-factory.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "radar": {
+        "file": "coalition-radar.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      }
+    },
+    "federation": {
+      "soldier": {
+        "file": "federation-soldier.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "specialist": {
+        "file": "federation-specialist.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "heavy": {
+        "file": "federation-heavy.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "aircraft": {
+        "file": "federation-aircraft.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "generator": {
+        "file": "federation-generator.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "factory": {
+        "file": "federation-factory.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "radar": {
+        "file": "federation-radar.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      }
+    },
+    "psionic": {
+      "soldier": {
+        "file": "psionic-soldier.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "specialist": {
+        "file": "psionic-specialist.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "heavy": {
+        "file": "psionic-heavy.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "aircraft": {
+        "file": "psionic-aircraft.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "generator": {
+        "file": "psionic-generator.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "factory": {
+        "file": "psionic-factory.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      },
+      "radar": {
+        "file": "psionic-radar.png",
+        "directions": 1,
+        "states": {
+          "idle": 2,
+          "construct": 2,
+          "damaged": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          160,
+          800
+        ]
+      }
+    }
+  },
+  "source": "original editable Blender models",
+  "fallback": "procedural-live-art"
+}
