@@ -1,9 +1,11 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.8.0 (see `package.json`, `game.js` and [v2.8 release notes](RELEASE-2.8.md)).
+**Current prototype:** v2.9.0 (see `package.json`, `game.js` and [v2.8 release notes](RELEASE-2.9.md)).
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
+
+v2.9 adds coarse-pointer command targets and compact sidebar CSS, with automated stylesheet assertions; real-device verification remains outstanding.
 
 ## Implemented in the repository
 
