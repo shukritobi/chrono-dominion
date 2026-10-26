@@ -143,7 +143,9 @@ function runScenario(map,difficulty,mi,di){
   assert.equal(base.length,2);
   assert.ok(!g.fog[28]?.[27]?.seen,'fresh map must not expose the opposing command base');
   let nextAction=5,iteration=0,peak=0,samples=0,platoonSeen=false,supportSeen=false,
-    damageEvents=0,firstDamage=0,oreEvents=0,firstHarvest=0;
+    damageEvents=0,firstDamage=0,oreEvents=0,firstHarvest=0,
+    firstObjectiveDiscovery=null,firstPlatoonAt=null;
+  const observedRecon=new Set();
   const maxSteps=Math.ceil(seconds/frame);
   let previousDamage=0,previousOre=0;
   for(let i=0;i<maxSteps&&g.state==='playing';i++){
@@ -153,8 +155,16 @@ function runScenario(map,difficulty,mi,di){
     }
     g.step(frame);
     peak=Math.max(peak,g.entities.length);
-    if(g.aiPlatoon)platoonSeen=true;
+    if(g.aiPlatoon){
+      platoonSeen=true;
+      if(firstPlatoonAt===null)firstPlatoonAt=g.time;
+    }
     if(g.aiSupportPlatoon)supportSeen=true;
+    if(firstObjectiveDiscovery===null&&g.intel[1].some(report=>
+      report.type==='building'&&g.time-report.time<=180))
+      firstObjectiveDiscovery=g.time;
+    for(const unit of g.entities)
+      if(unit.owner===1&&unit.kind==='recon')observedRecon.add(unit.id);
     if(i%Math.max(1,Math.round(12/frame))===0){
       checkIntegrity(g,map+'/'+difficulty+' @'+g.time.toFixed(1));
       samples++;
@@ -169,6 +179,8 @@ function runScenario(map,difficulty,mi,di){
   const units=side=>g.entities.filter(e=>e.owner===side&&e.type==='unit'&&e.hp>0).length;
   const buildings=side=>g.entities.filter(e=>e.owner===side&&e.type==='building'&&e.hp>0).length;
   const outcome=g.state==='finished'?g.lastBattleSummary?.outcome||'ended':'time limit';
+  const reconAlive=g.entities.filter(e=>e.owner===1&&e.kind==='recon'&&e.hp>0).length;
+  const aiSurveyPercent=Math.round(g.aiExplored.size/(34*34)*1000)/10;
   return {map,difficulty,playerFaction,enemyFaction,seconds:Math.round(g.time),outcome,
     credits:[...g.players.map(p=>Math.floor(p.credits))],
     harvest:[...g.stats.map(s=>Math.round(s.oreHarvested))],
@@ -177,7 +189,11 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,platoonSeen,supportSeen,firstDamage:Math.round(firstDamage),
-    firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples};
+    firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples,
+    firstObjectiveDiscovery:firstObjectiveDiscovery===null?null:Math.round(firstObjectiveDiscovery),
+    firstPlatoonAt:firstPlatoonAt===null?null:Math.round(firstPlatoonAt),
+    aiSurveyPercent,reconBuilt:observedRecon.size,
+    reconAlive,reconLost:Math.max(0,observedRecon.size-reconAlive)};
 }
 const results=[];
 for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
@@ -193,7 +209,7 @@ for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
      result.outcome].join(' | '));
 }
 const report={
-  schema:'chrono-dominion-balance-lab-v1',version:'2.2.0',
+  schema:'chrono-dominion-balance-lab-v1',version:'2.10.0',
   simulationSeconds:seconds,simulationStep:frame,
   disclaimer:'Scripted-player scenario coverage, not real human win rates or a verified fair multiplayer balance benchmark.',
   scenarios:results.length,results,
@@ -203,6 +219,10 @@ const report={
     casesWithIncome:results.filter(r=>r.harvest[0]+r.harvest[1]>0).length,
     casesWithCombat:results.filter(r=>r.damage[0]+r.damage[1]>0).length,
     casesWithPlatoons:results.filter(r=>r.platoonSeen).length,
+    casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
+    casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
+    totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
+    meanAISurveyPercent:Number((results.reduce((n,r)=>n+r.aiSurveyPercent,0)/results.length).toFixed(1)),
     peakEntities:Math.max(...results.map(r=>r.peakEntities)),
     mapEconomy:Object.fromEntries(MAPS.map(map=>{
       const cases=results.filter(r=>r.map===map);
@@ -223,6 +243,11 @@ else console.log('BALANCE LAB SUMMARY:',JSON.stringify(report.summary));
 assert.equal(results.length,9,'complete three-map/three-difficulty matrix');
 assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
+assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
+  r.reconLost>=0&&r.reconLost<=r.reconBuilt&&
+  (r.firstObjectiveDiscovery===null||r.firstObjectiveDiscovery>=0&&
+    r.firstObjectiveDiscovery<=r.seconds+1)),
+  'recon survival and objective-discovery telemetry must be internally consistent');
 assert.equal(report.summary.casesWithIncome,9,
   'all scripted map/difficulty scenarios must generate some delivered income');
 assert.ok(report.summary.casesWithCombat>=6,
@@ -232,4 +257,4 @@ if(seconds>=220){
     assert.ok(match.harvest[1]>=3000,
       'Ashen Basin AI economic regression: inaccessible ore or failed deliveries');
 }
-console.log('PASS: 9 deterministic headless skirmish scenarios, resource/economy integrity, fog and production safety');
+console.log('PASS: 9 deterministic headless skirmish scenarios, resource/economy integrity, fog, recon telemetry and production safety');
