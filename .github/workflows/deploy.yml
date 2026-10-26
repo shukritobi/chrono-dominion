@@ -35,6 +35,7 @@ jobs:
           node tests/map-library-v11.test.mjs
           node tests/gameplay-v12.test.mjs
           node tests/tactics-v13.test.mjs
+          node tests/traffic-v14.test.mjs
           node --check audio/sfx.js
           node --check maps/map-core.js
           node --check maps/map-editor.js
