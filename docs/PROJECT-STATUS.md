@@ -1,11 +1,11 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.12.0 (see `package.json`, `game.js` and [v2.12 release notes](RELEASE-2.12.md)).
+**Current prototype:** v2.13.0 (see `package.json`, `game.js` and [v2.13 release notes](RELEASE-2.13.md)).
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
-v2.12 adds bounded sensor-only emergency scout evasion when remembered defenses intercept a scout; escape is not guaranteed. v2.11 adds sensor-only whole-route danger weights for AI scouts, rejects known defended chokepoints, and adds movement/path regression tests. The V8 headless 240-second matrix completed, but CI and real-device verification must be checked independently.
+v2.13 aligns scout movement with safe A* detours, adding a fallback search for longer routes around known defended tiles. Automated route and save tests were added, but CI and full-balance improvements must be independently verified.\n\nv2.12 adds bounded sensor-only emergency scout evasion when remembered defenses intercept a scout; escape is not guaranteed. v2.11 adds sensor-only whole-route danger weights for AI scouts, rejects known defended chokepoints, and adds movement/path regression tests. The V8 headless 240-second matrix completed, but CI and real-device verification must be checked independently.
 
 v2.10 adds sensor-report-based scout threat avoidance, mid-patrol replanning, retreat-cooldown protection, and reconnaissance telemetry in the nine-scenario balance lab. Its regression test is included in CI; v2.11 extends route safety using remembered threats.
 
@@ -40,7 +40,7 @@ v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible canc
 
 ## Next development priorities
 
-1. Compare v2.10/v2.11 scout survival and objective discovery on identical settings; profile threat-aware path costs and improve scouting on Verdant Front and Frostline.
+1. Confirm v2.13 CI/deployment and compare scout survival, objective discovery and route-planning cost under identical nine-scenario settings.
 2. Add a measurable objective-discovery benchmark and tune AI squad staging on difficult maps.
 3. Produce and integrate original rendered unit/structure atlases with animation and proper art provenance.
 4. Improve touch-first selection feedback, responsive sidebar controls and browser accessibility.
