@@ -101,4 +101,19 @@ assert.ok(!('laneReservations' in save),'live lane queues are not stored as brit
 assert.ok(game.loadGame());
 assert.equal(game.laneReservations.size,0);
 assert.equal(game.entityById(player.id).lanePass,null);
+// Direct player commands remove obsolete waiting tickets so a cancelled
+// assault cannot keep an opposing corridor queue blocked.
+reset();
+const incumbent=game.add(0,'soldier',10.8,12),waiting=game.add(0,'soldier',17.8,12);
+game.checkLaneEntry(incumbent,11,12);
+game.setUnitPosition(incumbent,11,12);
+assert.equal(game.checkLaneEntry(waiting,17,12),false);
+assert.equal(waiting.laneWaiting,lane.id);
+game.selected=[waiting.id];
+game.command({gx:21,gy:15},{shiftKey:false});
+assert.equal(waiting.laneWaiting,null,'fresh move cancels lane queue');
+game.advanceLaneReservations();
+assert.equal(game.laneReservations.get(lane.id).waiting.length,0,
+  'cancelled waiting ticket removed from lane reservation state');
+
 console.log('PASS: corridor detection, opposite-direction queues, bounded batches, lane handoff, integrated movement and save recovery');
