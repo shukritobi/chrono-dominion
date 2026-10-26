@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.7 — safe production exits and reliable queued deployment. */
+/* Chrono Dominion v1.8 — fair narrow-lane reservations and bounded queues. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -310,7 +310,7 @@
           v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
           Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
         ).map(v=>({...v})):[]):[[],[]];
-      this.entities=saved.entities.map(e=>({...e}));this.unitBuckets=null;
+      this.entities=saved.entities.map(e=>({...e,lanePass:null,laneWaiting:null}));this.unitBuckets=null;this.laneReservations=new Map();
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
       this.projectiles=Array.isArray(saved.projectiles)?saved.projectiles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
@@ -384,7 +384,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.trafficYieldCount=0;
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -850,6 +850,84 @@
       }
       if(ownGrid)this.unitBuckets=null;
     }
+    narrowLaneAt(x,y){
+      // A lane has one walkable tile width, with walls or water on both
+      // shoulders. Only straight corridors of two or more cells are reserved.
+      const ix=Math.round(x),iy=Math.round(y);
+      if(!this.walkable(ix,iy))return null;
+      const h=!this.walkable(ix,iy-1)&&!this.walkable(ix,iy+1);
+      const v=!this.walkable(ix-1,iy)&&!this.walkable(ix+1,iy);
+      if(h===v)return null;
+      const axis=h?'h':'v',coord=h?iy:ix,index=h?ix:iy;
+      const narrow=n=>h?
+        this.walkable(n,coord)&&!this.walkable(n,coord-1)&&!this.walkable(n,coord+1):
+        this.walkable(coord,n)&&!this.walkable(coord-1,n)&&!this.walkable(coord+1,n);
+      let low=index,high=index;
+      while(low>1&&index-low<15&&narrow(low-1))low--;
+      while(high<32&&high-index<15&&narrow(high+1))high++;
+      if(high-low<1)return null;
+      return {id:axis+':'+coord+':'+low+':'+high,axis,coord,low,high};
+    }
+    laneOccupied(lane){
+      return this.entities.some(u=>u.hp>0&&u.type==='unit'&&u.lanePass?.id===lane.id&&
+        (lane.axis==='h'?u.x>=lane.low-.65&&u.x<=lane.high+.65&&Math.abs(u.y-lane.coord)<.75:
+          u.y>=lane.low-.65&&u.y<=lane.high+.65&&Math.abs(u.x-lane.coord)<.75));
+    }
+    checkLaneEntry(unit,x,y){
+      if(!this.laneReservations)this.laneReservations=new Map();
+      const lane=this.narrowLaneAt(x,y);
+      if(!lane||unit.type!=='unit')return true;
+      const inside=this.narrowLaneAt(unit.x,unit.y)?.id===lane.id;
+      if(inside&&unit.lanePass?.id===lane.id)return true;
+      const dir=Math.sign(lane.axis==='h'?x-unit.x:y-unit.y);
+      if(!dir)return true;
+      let state=this.laneReservations.get(lane.id);
+      if(!state){
+        state={dir,admitted:0,waiting:[],lastActive:this.time};
+        this.laneReservations.set(lane.id,state);
+      }
+      state.waiting=state.waiting.filter(w=>
+        this.entities.some(u=>u.id===w.id&&u.hp>0&&u.type==='unit'&&u.laneWaiting===lane.id));
+      const occupied=this.laneOccupied(lane);
+      if(!occupied&&state.waiting.length){
+        state.dir=state.waiting[0].dir;state.admitted=0;
+      }else if(!occupied&&this.time-state.lastActive>2){
+        state.dir=dir;state.admitted=0;
+      }
+      const oppositeQueued=state.waiting.some(w=>w.dir!==state.dir);
+      const canEnter=dir===state.dir&&!(oppositeQueued&&state.admitted>=3);
+      if(!canEnter){
+        if(!state.waiting.some(w=>w.id===unit.id))
+          state.waiting.push({id:unit.id,dir,at:this.time});
+        unit.laneWaiting=lane.id;
+        return false;
+      }
+      state.waiting=state.waiting.filter(w=>w.id!==unit.id);
+      unit.laneWaiting=null;
+      unit.lanePass={id:lane.id,dir};
+      state.admitted++;state.lastActive=this.time;
+      return true;
+    }
+    advanceLaneReservations(){
+      if(!this.laneReservations)return;
+      for(const e of this.entities){
+        if(!e.lanePass)continue;
+        if(this.narrowLaneAt(e.x,e.y)?.id!==e.lanePass.id)e.lanePass=null;
+      }
+      for(const [id,state] of this.laneReservations){
+        state.waiting=state.waiting.filter(w=>{
+          const unit=this.entities.find(e=>e.id===w.id&&e.hp>0&&e.type==='unit');
+          return !!unit&&unit.laneWaiting===id;
+        });
+        const occupied=this.entities.some(e=>e.hp>0&&e.lanePass?.id===id);
+        if(!occupied&&state.waiting.length){
+          state.dir=state.waiting[0].dir;state.admitted=0;
+          state.lastActive=this.time;
+        }else if(!occupied&&this.time-state.lastActive>3){
+          this.laneReservations.delete(id);
+        }
+      }
+    }
     trafficPriority(e){
       // The loaded harvester keeps right of way to prevent resource starvation.
       // Explicit Hold-position units never voluntarily yield.
@@ -944,7 +1022,7 @@
       if(len<.001)return false;
       const beforeProgress=len;
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
-      const clear=(x,y)=>this.canOccupyUnit(e,x,y);
+      const clear=(x,y)=>this.canOccupyUnit(e,x,y)&&this.checkLaneEntry(e,x,y);
       if(clear(e.x+vx,e.y+vy)){this.setUnitPosition(e,e.x+vx,e.y+vy);e.stuck=0;}
       else if(clear(e.x+vx,e.y)){this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;}
       else if(clear(e.x,e.y+vy)){this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;}
@@ -1171,6 +1249,7 @@
         e.turretHeading=turnToward(e.turretHeading,e.desiredTurretHeading??e.worldHeading,(e.kind==='tank'||e.kind==='heavy'?4.3:7)*dt);
       }
       this.separateUnits();
+      this.advanceLaneReservations();
       this.unitBuckets=null;
       this.updateProjectiles(dt);
       this.repairBuildings(dt);
