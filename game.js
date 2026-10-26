@@ -58,12 +58,46 @@
     desert:['#786c4d','#807351','#897952','#7f714b','#92805a'],
     snow:['#9baeb1','#a3b4b7','#adbdbe','#97a9ad','#b6c2c3']
   };
+  // Spatial buckets keep local collision checks proportional to nearby units,
+  // rather than comparing every moving vehicle with every unit every frame.
+  class UnitBuckets {
+    constructor(size=2){this.size=size;this.cells=new Map();this.positions=new Map();}
+    key(x,y){return Math.floor(x/this.size)+','+Math.floor(y/this.size);}
+    insert(e){
+      if(e.hp<=0||e.type!=='unit')return;
+      const k=this.key(e.x,e.y),set=this.cells.get(k)||new Set();
+      set.add(e);this.cells.set(k,set);this.positions.set(e.id,k);
+    }
+    remove(e){
+      const k=this.positions.get(e.id);
+      if(k!==undefined){const set=this.cells.get(k);set?.delete(e);if(set?.size===0)this.cells.delete(k);}
+      this.positions.delete(e.id);
+    }
+    move(e,x,y){
+      const next=this.key(x,y),prev=this.positions.get(e.id);
+      if(prev!==next){this.remove(e);e.x=x;e.y=y;this.insert(e);}
+      else {e.x=x;e.y=y;}
+    }
+    rebuild(entities){
+      this.cells.clear();this.positions.clear();
+      for(const e of entities)this.insert(e);
+      return this;
+    }
+    nearby(x,y){
+      const bx=Math.floor(x/this.size),by=Math.floor(y/this.size),result=[];
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+        const set=this.cells.get((bx+dx)+','+(by+dy));
+        if(set)for(const e of set)result.push(e);
+      }
+      return result;
+    }
+  }
   class Game {
     constructor(){
       this.canvas=$('world');this.ctx=this.canvas.getContext('2d');
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
@@ -275,7 +309,7 @@
           v&&Number.isInteger(v.id)&&Number.isFinite(v.x)&&Number.isFinite(v.y)&&
           Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
         ).map(v=>({...v})):[]):[[],[]];
-      this.entities=saved.entities.map(e=>({...e}));
+      this.entities=saved.entities.map(e=>({...e}));this.unitBuckets=null;
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
       this.projectiles=Array.isArray(saved.projectiles)?saved.projectiles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
@@ -316,7 +350,7 @@
       const hitPoints=Math.round(def.hp*(modifier.hp||1));
       const e={id:this.nextId++,owner,kind,type:BUILD[kind]?'building':'unit',x,y,hp:hitPoints,maxHp:hitPoints,built,construction:built?1:0,ready:0,heading:0,order:null,load:0,work:0,kills:0,abilityReadyAt:0,stunnedUntil:0};
       if(e.type==='unit'){e.stance='guard';e.guardX=x;e.guardY=y;e.worldHeading=owner===0?0:Math.PI;e.turretHeading=e.worldHeading;e.desiredHeading=e.worldHeading;e.desiredTurretHeading=e.worldHeading;}
-      this.entities.push(e);
+      this.entities.push(e);this.unitBuckets?.insert(e);
       if(this.stats[owner]){if(e.type==='unit')this.stats[owner].unitsDeployed++;else this.stats[owner].buildingsConstructed++;}
       return e;
     }
@@ -347,7 +381,7 @@
     newMatch(s){
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
@@ -727,30 +761,49 @@
       const r=this.unitRadius(e);
       if(x<.8||y<.8||x>WORLD_SIZE-.8||y>WORLD_SIZE-.8||this.water(x,y))return false;
       for(const b of this.entities){
-        if(b.hp<=0||b.id===e.id)continue;
-        if(b.type==='building'&&Math.abs(b.x-x)<1.27+r*.14&&Math.abs(b.y-y)<1.27+r*.14)return false;
-        if(!ignoreUnits&&b.type==='unit'){
+        if(b.hp<=0||b.id===e.id||b.type!=='building')continue;
+        if(Math.abs(b.x-x)<1.27+r*.14&&Math.abs(b.y-y)<1.27+r*.14)return false;
+      }
+      if(!ignoreUnits){
+        const nearby=this.unitBuckets?.nearby(x,y)||
+          this.entities.filter(unit=>unit.type==='unit');
+        for(const b of nearby){
+          if(b.hp<=0||b.id===e.id||b.type!=='unit')continue;
           const margin=r+this.unitRadius(b);
           if((b.x-x)**2+(b.y-y)**2<margin*margin*.84)return false;
         }
       }
       return true;
     }
+    setUnitPosition(e,x,y){
+      if(this.unitBuckets)this.unitBuckets.move(e,x,y);
+      else {e.x=x;e.y=y;}
+    }
     separateUnits(){
-      // Resolve leftover overlaps after spawns and group movement. Preserve
-      // occupancy rules; use stable id ordering for reproducible results.
-      const units=this.entities.filter(e=>e.type==='unit'&&e.hp>0).sort((a,b)=>a.id-b.id);
-      for(let pass=0;pass<2;pass++)for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
-        const a=units[i],b=units[j],minimum=(this.unitRadius(a)+this.unitRadius(b))*.95;
-        let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
-        if(d>=minimum)continue;
-        if(d<.001){const angle=(a.id*13+b.id*7)%360*Math.PI/180;dx=Math.cos(angle);dy=Math.sin(angle);d=1;}
-        const push=Math.min(.36,(minimum-d)*.5),ux=dx/d,uy=dy/d;
-        const aNext={x:a.x-ux*push,y:a.y-uy*push},bNext={x:b.x+ux*push,y:b.y+uy*push};
-        const okA=this.canOccupyUnit(a,aNext.x,aNext.y,true),okB=this.canOccupyUnit(b,bNext.x,bNext.y,true);
-        if(okA){a.x=aNext.x;a.y=aNext.y;}
-        if(okB){b.x=bNext.x;b.y=bNext.y;}
+      // Only investigate adjacent spatial buckets, even in 100+ unit battles.
+      // Reindex once per pass, including movements from the first pass.
+      const ownGrid=!this.unitBuckets;
+      if(ownGrid)this.unitBuckets=new UnitBuckets().rebuild(this.entities);
+      for(let pass=0;pass<2;pass++){
+        if(pass)this.unitBuckets.rebuild(this.entities);
+        const units=this.entities.filter(e=>e.type==='unit'&&e.hp>0).sort((a,b)=>a.id-b.id);
+        for(const a of units)for(const b of this.unitBuckets.nearby(a.x,a.y)){
+          if(b.id<=a.id||b.hp<=0||b.type!=='unit')continue;
+          const minimum=(this.unitRadius(a)+this.unitRadius(b))*.95;
+          let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+          if(d>=minimum)continue;
+          if(d<.001){
+            const angle=((a.id*13+b.id*7)%360)*Math.PI/180;
+            dx=Math.cos(angle);dy=Math.sin(angle);d=1;
+          }
+          const push=Math.min(.36,(minimum-d)*.5),ux=dx/d,uy=dy/d;
+          const ax=a.x-ux*push,ay=a.y-uy*push,bx=b.x+ux*push,by=b.y+uy*push;
+          const okA=this.canOccupyUnit(a,ax,ay,true),okB=this.canOccupyUnit(b,bx,by,true);
+          if(okA)this.setUnitPosition(a,ax,ay);
+          if(okB)this.setUnitPosition(b,bx,by);
+        }
       }
+      if(ownGrid)this.unitBuckets=null;
     }
     move(e,tx,ty,dt){
       let d=Math.hypot(tx-e.x,ty-e.y);
@@ -774,16 +827,16 @@
       if(len<.001)return false;
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
       const clear=(x,y)=>this.canOccupyUnit(e,x,y);
-      if(clear(e.x+vx,e.y+vy)){e.x+=vx;e.y+=vy;e.stuck=0;}
-      else if(clear(e.x+vx,e.y)){e.x+=vx;e.stuck=0;}
-      else if(clear(e.x,e.y+vy)){e.y+=vy;e.stuck=0;}
+      if(clear(e.x+vx,e.y+vy)){this.setUnitPosition(e,e.x+vx,e.y+vy);e.stuck=0;}
+      else if(clear(e.x+vx,e.y)){this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;}
+      else if(clear(e.x,e.y+vy)){this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;}
       else {
         // Symmetric short sidesteps avoid simple head-on jams. No teleporting.
         const sign=e.id%2===0?1:-1;
         const sidestep=[[-vy*sign,vx*sign],[vy*sign,-vx*sign]];
         let moved=false;
         for(const [sx,sy] of sidestep)if(clear(e.x+sx,e.y+sy)){
-          e.x+=sx;e.y+=sy;e.stuck=0;moved=true;break;
+          this.setUnitPosition(e,e.x+sx,e.y+sy);e.stuck=0;moved=true;break;
         }
         if(!moved){e.stuck=(e.stuck||0)+dt;if(e.stuck>.7){e.pathRecheck=0;e.stuck=0;}}
       }
@@ -868,6 +921,7 @@
     }
     step(dt){
       this.time+=dt;
+      this.unitBuckets=new UnitBuckets().rebuild(this.entities);
       const pan=380*dt/this.camera.zoom;
       if(this.keys.has('w')||this.keys.has('arrowup'))this.camera.y-=pan;
       if(this.keys.has('s')||this.keys.has('arrowdown'))this.camera.y+=pan;
@@ -916,6 +970,7 @@
         e.turretHeading=turnToward(e.turretHeading,e.desiredTurretHeading??e.worldHeading,(e.kind==='tank'||e.kind==='heavy'?4.3:7)*dt);
       }
       this.separateUnits();
+      this.unitBuckets=null;
       this.updateProjectiles(dt);
       this.repairBuildings(dt);
       for(let i=this.queues.length-1;i>=0;i--){const q=this.queues[i],slow=this.power(q.side).low?.55:1;q.elapsed+=dt*slow;if(q.elapsed>=q.total){const origin=this.nearest({x:q.side===0?6:28,y:q.side===0?6:28},b=>b.owner===q.side&&b.kind===UNITS[q.key].from&&b.built);
