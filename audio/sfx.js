@@ -6,6 +6,7 @@
   const SFX_KEY='chrono-dominion-sfx-volume-v1';
   const MUSIC_KEY='chrono-dominion-music-volume-v1';
   const MUSIC_ON_KEY='chrono-dominion-music-enabled-v1';
+  const VOICE_KEY='chrono-dominion-voice-enabled-v1';
   const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,Number(v)||0));
   const read=(k,f)=>{try{return root.localStorage?.getItem(k)??f;}catch(e){return f;}};
   const write=(k,v)=>{try{root.localStorage?.setItem(k,String(v));}catch(e){}};
@@ -32,6 +33,7 @@
   let sfxVolume=clamp(read(SFX_KEY,'.8'));
   let musicVolume=clamp(read(MUSIC_KEY,'.35'));
   let musicEnabled=read(MUSIC_ON_KEY,'true')!=='false';
+  let voiceEnabled=read(VOICE_KEY,'true')!=='false';
   let context=null,scene='menu',musicTimer=null,musicElement=null,nextBeat=0,step=0;
   const last=new Map(),urls=new Map(),loaded=new Map(),active=[];
   let lastImport={loaded:0,matched:0,tracks:0,unmapped:0};
@@ -131,6 +133,7 @@
   const api={
     get enabled(){return enabled;},
     get musicEnabled(){return musicEnabled;},
+    get voiceEnabled(){return voiceEnabled;},
     get sfxVolume(){return sfxVolume;},
     get musicVolume(){return musicVolume;},
     get imported(){return {...lastImport};},
@@ -151,10 +154,31 @@
     setEnabled(next){
       enabled=!!next;write(KEY,enabled);
       if(enabled)this.unlock();
-      else{stopMusic();for(const a of active.splice(0)){try{a.pause();}catch(e){}}}
+      else{stopMusic();root.ChronoVoices?.stop?.();for(const a of active.splice(0)){try{a.pause();}catch(e){}}}
       return enabled;
     },
     setSfxVolume(value){sfxVolume=clamp(value);write(SFX_KEY,sfxVolume);return sfxVolume;},
+    setVoiceEnabled(value){
+      voiceEnabled=!!value;write(VOICE_KEY,voiceEnabled);
+      if(!voiceEnabled)root.ChronoVoices?.stop?.();
+      return voiceEnabled;
+    },
+    previewVoice(faction='federation',kind='soldier'){
+      if(!enabled)this.setEnabled(true);
+      return voiceEnabled&&!!root.ChronoVoices?.speak?.('ready',{faction,kind},sfxVolume,true);
+    },
+    announce(event,meta={}){
+      if(!enabled)return false;
+      const key='announce.'+String(event);
+      const now=typeof root.performance?.now==='function'?root.performance.now()/1000:Date.now()/1000;
+      // Keep strategic warnings audible without a flood of repeated alerts.
+      if(now-(last.get(key)??-Infinity)<(event==='unitLost'?3:5))return false;
+      last.set(key,now);
+      const clip=find(key,meta);
+      if(clip&&startClip(clip,sfxVolume*.92))return true;
+      if(voiceEnabled&&root.ChronoVoices?.speak?.(key,meta,sfxVolume,true))return true;
+      return this.play('alert');
+    },
     setMusicVolume(value){
       musicVolume=clamp(value);write(MUSIC_KEY,musicVolume);
       if(musicElement)musicElement.volume=clamp(musicVolume*.48);
@@ -170,7 +194,7 @@
       const name=['menu','battle','victory','defeat','pause'].includes(next)?next:'menu';
       if(name===scene)return scene;
       scene=name;
-      if(name==='pause'||name==='victory'||name==='defeat')stopMusic();
+      if(name==='pause'||name==='victory'||name==='defeat'){stopMusic();root.ChronoVoices?.stop?.();}
       else if(enabled&&context?.state==='running')resumeMusic();
       return scene;
     },
@@ -184,6 +208,8 @@
       last.set(base,now);
       const f=find(String(name),meta);
       if(f&&startClip(f,sfxVolume*.88))return true;
+      if(voiceEnabled&&['select','move','attack','ready'].includes(base)&&
+         root.ChronoVoices?.speak?.(base,meta,sfxVolume))return true;
       if(!context||context.state!=='running'||sfxVolume<=0)return false;
       try{return osc(spec.frequency,spec.end,spec.duration,spec.type,spec.gain*sfxVolume,context.currentTime);}
       catch(e){return false;}
