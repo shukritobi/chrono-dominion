@@ -127,3 +127,20 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .reconContactJump:focus-visible{outline:2px solid #a3e9e0;outline-offset:1px}
 .reconQuiet{display:block;margin-top:6px;font-size:9px;color:#8199a9}
 @media(max-width:550px){.reconPanel{padding:4px;font-size:9px}.reconContacts{font-size:8px}.reconContactJump{font-size:9px;min-height:32px}}
+
+/* v2.6 compact tactical event history. Collapsed by default on touch screens. */
+.battleEventsPanel{margin-top:5px;background:#0e1c2b;border:1px solid #39566b;border-radius:4px;color:#a6c5d5}
+.battleEventsPanel>summary{cursor:pointer;list-style-position:inside;padding:6px 5px;font:700 10px Consolas,monospace;letter-spacing:.5px;user-select:none}
+.battleEventsPanel>summary:focus-visible{outline:2px solid #8ce4d9;outline-offset:1px}
+.battleEventsPanel>summary span{float:right;margin-right:5px;color:#f0c995}
+.battleEventList{max-height:130px;overflow-y:auto;overscroll-behavior:contain;border-top:1px solid #334f64}
+.battleEventRow{display:flex;align-items:center;width:100%;gap:6px;padding:6px 5px;border:0;border-bottom:1px solid #273e52;background:#142638;text-align:left;font:10px Consolas,monospace;color:#bed2dc}
+.battleEventRow:hover,.battleEventRow:focus-visible{background:#25445b;outline-color:#91e4d6}
+.battleEventRow time{flex-shrink:0;color:#7d9eae;font-size:9px}
+.battleEventRow span{min-width:0;flex:1;overflow-wrap:anywhere}
+.battleEventRow b{font-size:14px;color:#95d9dc}
+.battleEventRow.alert{border-left:3px solid #f1b36d}
+.battleEventRow.damage{border-left:3px solid #e5a45c}
+.battleEventRow.critical,.battleEventRow.loss{border-left:3px solid #f17674;color:#ffd5c5}
+.battleEventQuiet{padding:7px;margin:0;font:10px Consolas,monospace;color:#7e98a9}
+@media(max-width:550px){.battleEventsPanel>summary{font-size:9px;padding:6px 3px}.battleEventRow{font-size:9px;padding:7px 3px;gap:3px}.battleEventRow time{font-size:8px}.battleEventList{max-height:96px}}
