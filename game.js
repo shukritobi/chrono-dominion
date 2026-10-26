@@ -1538,7 +1538,7 @@
           const future=already+this.stat(fighter,'damage');
           const excess=Math.max(0,future-enemy.hp);
           const baseThreat=structures.some(b=>dist(b,enemy)<7)?2.8:0;
-          return baseThreat+Math.min(2.5,enemy.damage?this.stat(enemy,'damage')/15:0)+
+          return baseThreat+Math.min(2.5,this.stat(enemy,'damage')/15)+
             (1-enemy.hp/enemy.maxHp)*2.0-dist(fighter,enemy)*.32-
             excess/Math.max(25,enemy.maxHp)*5.0-
             Math.max(0,already-enemy.hp*.75)/Math.max(25,enemy.maxHp)*4.0;
