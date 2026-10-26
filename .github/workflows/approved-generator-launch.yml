@@ -1,0 +1,89 @@
+name: Approved Generator Launch
+
+# This scoped release is explicitly for the user-approved Coalition MK-II
+# generator, plus read-only Federation/Psionic studio previews. Do not reuse
+# for subsequent assets without a new approval.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/approved-generator-launch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chrono-generator-launch
+  cancel-in-progress: false
+
+jobs:
+  render-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout latest source
+        uses: actions/checkout@v4
+      - name: Static syntax checks
+        run: |
+          python3 -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py tools/blender/pack_animated.py \
+            tools/blender/asset_studio.py
+      - name: Install Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-pil
+          blender --version | head -2
+      - name: Run packaging/publishing safety tests
+        run: python3 -m unittest discover -s tests -p test_blender_asset_studio.py -v
+      - name: Render each faction power generator and inspect all frames
+        run: |
+          set -euo pipefail
+          for faction in coalition federation psionic; do
+            stage="generated/generator-review/$faction"
+            blender --background --threads 4 --python-exit-code 1 \
+              --python tools/blender/animated_assets.py -- \
+              --output "$stage" --kinds generator --factions "$faction" --size 160
+            python3 tools/blender/pack_animated.py \
+              --input "$stage" --output "$stage/packed" --size 160
+            python3 tools/blender/asset_studio.py validate \
+              --stage "$stage" --faction "$faction" --kind generator
+            python3 tools/blender/asset_studio.py preview \
+              --stage "$stage" --faction "$faction" --kind generator
+            test -s "$stage/preview.png"
+            test -s "$stage/sources/$faction-generator.blend"
+          done
+      - name: Upload all three editable models, review sheets and atlases
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-generator-faction-previews
+          path: generated/generator-review/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish only the approved Coalition generator
+        run: |
+          set -euo pipefail
+          python3 tools/blender/asset_studio.py publish \
+            --stage generated/generator-review/coalition \
+            --repo . --faction coalition --kind generator --approve PUBLISH
+          # This workflow is intentionally allowed to replace exactly the
+          # approved sprite, its matching .blend source, and manifest metadata.
+          changed="$(git status --short -- art/baked-v1/ art/sources/blender/)"
+          printf 'Changed art files:\n%s\n' "$changed"
+          git add art/baked-v1/coalition-generator.png \
+            art/sources/blender/coalition-generator.blend art/baked-v1/manifest.json
+          if git diff --cached --quiet; then
+            echo "Coalition generator is already identical; no publication required."
+            exit 0
+          fi
+          git config user.name "Chrono Dominion Blender Art Studio"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Publish approved Coalition MK-II Blender power generator"
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo "Approved Coalition generator deployed via main branch."
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
