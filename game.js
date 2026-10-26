@@ -1572,6 +1572,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'1.4.0',build:'spatial-traffic'};
+  window.ChronoDominion={version:'1.5.0',build:'traffic-aware-pathfinding'};
   new Game();
 })();
