@@ -78,4 +78,10 @@ assert.ok(!('unitBuckets' in save));
 assert.ok(game.loadGame());
 assert.equal(game.unitBuckets,null);
 game.draw();
+// The visible diagnostic is updated no more than once per second.
+game.state='paused';
+game.frame(1000);game.frame(2200);
+assert.match(elements.get('perfStatus').textContent,/\\d+ FPS · \\d+ UNITS/,
+  'rendered frame-rate and army size are visible in the HUD');
+console.log('PASS: frame-rate monitor and unit counter');
 console.log('PASS: 130-unit spatial collision stress, occupied terrain, index cleanup and save compatibility');
