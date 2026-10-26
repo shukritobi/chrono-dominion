@@ -43,13 +43,22 @@ jobs:
           node tests/multi-platoon-v20.test.mjs
           node tests/targeting-v21.test.mjs
           node tests/match-lifecycle-v22.test.mjs
-          node tools/simulate-matches.mjs --duration=240
+          node tests/ore-reachability-v22.test.mjs
+          node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
           python3 -m py_compile tools/blender/generate_tanks.py tools/blender/pack_atlas.py
+      - name: Archive nine-scenario balance metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balance-lab-${{ github.run_number }}
+          path: balance-report.json
+          if-no-files-found: warn
+          retention-days: 21
       - name: Verify required files
         run: |
           test -f index.html
@@ -83,6 +92,7 @@ jobs:
           test -f audio/sfx.js
           test -f tools/maps/build.mjs
           test -f tools/simulate-matches.mjs
+          test -f tests/ore-reachability-v22.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
