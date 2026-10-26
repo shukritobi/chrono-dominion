@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.16.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.17.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
+
+### Strategic AI attack objectives (v2.17)
+
+- Primary platoons rank **discovered** enemy buildings by strategic importance, distance, age of sensor reports and observed defensive danger rather than attacking whatever was seen most recently.
+- Support platoons may choose a distinct valuable objective; recovering fighters cannot join before their cooldown finishes.
+- Tested for fog-honest decisions and save compatibility. See [v2.17 release notes](docs/RELEASE-2.17.md) and [regression test](tests/objective-ranking-v217.test.mjs).
 
 ### Resilient AI platoons (v2.15)
 

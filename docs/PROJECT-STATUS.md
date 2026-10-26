@@ -1,9 +1,11 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.16.0 (see `package.json`, `game.js` and [v2.16 release notes](RELEASE-2.16.md)).
+**Current prototype:** v2.17.0 (see `package.json`, `game.js` and [v2.17 release notes](RELEASE-2.17.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
+
+v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoon post-retreat cooldown gap. Full GitHub Actions and balance results must be checked independently.
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
@@ -56,4 +58,4 @@ v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible canc
 
 `npm test` runs regression checks. `npm run balance` runs nine scripted 240-second scenarios. `npm run balance:full` runs a longer diagnostic matrix. The source of truth for active CI commands is `.github/workflows/deploy.yml`.
 
-See [latest release notes](RELEASE-2.12.md), [full blueprint](game-design/FULL-BLUEPRINT.md), and [asset production plan](asset-production/ASSET-PRODUCTION-PLAN.md).
+See [latest release notes](RELEASE-2.17.md), [full blueprint](game-design/FULL-BLUEPRINT.md), and [asset production plan](asset-production/ASSET-PRODUCTION-PLAN.md).

@@ -2,6 +2,8 @@ name: Check and deploy browser prototype
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -59,6 +61,7 @@ jobs:
           node tests/scout-progress-v214.test.mjs
           node tests/platoon-attrition-v215.test.mjs
           node tests/veterancy-v216.test.mjs
+          node tests/objective-ranking-v217.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
@@ -123,6 +126,7 @@ jobs:
           test -f tests/scout-progress-v214.test.mjs
           test -f tests/platoon-attrition-v215.test.mjs
           test -f tests/veterancy-v216.test.mjs
+          test -f tests/objective-ranking-v217.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
@@ -144,6 +148,7 @@ jobs:
 
   deploy:
     needs: verify
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
