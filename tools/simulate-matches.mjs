@@ -190,7 +190,7 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,platoonSeen,supportSeen,assaultLaunched,
-    assaultReroutes:g.aiAssaultReroutes||0,
+    assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
     siegeFocusOrders:g.aiSiegeOrders||0,aiStructureHits:g.aiSiegeHits||0,firstDamage:Math.round(firstDamage),
     firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples,
     firstObjectiveDiscovery:firstObjectiveDiscovery===null?null:Math.round(firstObjectiveDiscovery),
@@ -212,7 +212,7 @@ for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
      result.outcome].join(' | '));
 }
 const report={
-  schema:'chrono-dominion-balance-lab-v1',version:'2.19.0',
+  schema:'chrono-dominion-balance-lab-v1',version:'2.20.0',
   simulationSeconds:seconds,simulationStep:frame,
   disclaimer:'Scripted-player scenario coverage, not real human win rates or a verified fair multiplayer balance benchmark.',
   scenarios:results.length,results,
@@ -224,6 +224,7 @@ const report={
     casesWithPlatoons:results.filter(r=>r.platoonSeen).length,
     casesWithAssaultLaunches:results.filter(r=>r.assaultLaunched).length,
     totalAssaultReroutes:results.reduce((n,r)=>n+r.assaultReroutes,0),
+    totalRallyResumes:results.reduce((n,r)=>n+r.rallyResumes,0),
     casesWithSiegeFocus:results.filter(r=>r.siegeFocusOrders>0).length,
     totalSiegeFocusOrders:results.reduce((n,r)=>n+r.siegeFocusOrders,0),
     totalAIStructureHits:results.reduce((n,r)=>n+r.aiStructureHits,0),
