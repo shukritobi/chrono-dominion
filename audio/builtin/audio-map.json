@@ -1,0 +1,873 @@
+{
+  "schema": "chrono-dominion-builtin-audio-v1",
+  "description": "Original Chrono Dominion procedural voice and sound library; no third-party recordings.",
+  "events": {
+    "voice.ready.coalition.soldier": [
+      "voices/coalition/soldier/ready/01.mp3",
+      "voices/coalition/soldier/ready/02.mp3",
+      "voices/coalition/soldier/ready/03.mp3"
+    ],
+    "voice.select.coalition.soldier": [
+      "voices/coalition/soldier/select/01.mp3",
+      "voices/coalition/soldier/select/02.mp3",
+      "voices/coalition/soldier/select/03.mp3"
+    ],
+    "voice.move.coalition.soldier": [
+      "voices/coalition/soldier/move/01.mp3",
+      "voices/coalition/soldier/move/02.mp3",
+      "voices/coalition/soldier/move/03.mp3"
+    ],
+    "voice.attack.coalition.soldier": [
+      "voices/coalition/soldier/attack/01.mp3",
+      "voices/coalition/soldier/attack/02.mp3",
+      "voices/coalition/soldier/attack/03.mp3"
+    ],
+    "voice.underFire.coalition.soldier": [
+      "voices/coalition/soldier/underFire/01.mp3",
+      "voices/coalition/soldier/underFire/02.mp3",
+      "voices/coalition/soldier/underFire/03.mp3"
+    ],
+    "voice.ready.coalition.specialist": [
+      "voices/coalition/specialist/ready/01.mp3",
+      "voices/coalition/specialist/ready/02.mp3",
+      "voices/coalition/specialist/ready/03.mp3"
+    ],
+    "voice.select.coalition.specialist": [
+      "voices/coalition/specialist/select/01.mp3",
+      "voices/coalition/specialist/select/02.mp3",
+      "voices/coalition/specialist/select/03.mp3"
+    ],
+    "voice.move.coalition.specialist": [
+      "voices/coalition/specialist/move/01.mp3",
+      "voices/coalition/specialist/move/02.mp3",
+      "voices/coalition/specialist/move/03.mp3"
+    ],
+    "voice.attack.coalition.specialist": [
+      "voices/coalition/specialist/attack/01.mp3",
+      "voices/coalition/specialist/attack/02.mp3",
+      "voices/coalition/specialist/attack/03.mp3"
+    ],
+    "voice.underFire.coalition.specialist": [
+      "voices/coalition/specialist/underFire/01.mp3",
+      "voices/coalition/specialist/underFire/02.mp3",
+      "voices/coalition/specialist/underFire/03.mp3"
+    ],
+    "voice.ready.coalition.tank": [
+      "voices/coalition/tank/ready/01.mp3",
+      "voices/coalition/tank/ready/02.mp3",
+      "voices/coalition/tank/ready/03.mp3"
+    ],
+    "voice.select.coalition.tank": [
+      "voices/coalition/tank/select/01.mp3",
+      "voices/coalition/tank/select/02.mp3",
+      "voices/coalition/tank/select/03.mp3"
+    ],
+    "voice.move.coalition.tank": [
+      "voices/coalition/tank/move/01.mp3",
+      "voices/coalition/tank/move/02.mp3",
+      "voices/coalition/tank/move/03.mp3"
+    ],
+    "voice.attack.coalition.tank": [
+      "voices/coalition/tank/attack/01.mp3",
+      "voices/coalition/tank/attack/02.mp3",
+      "voices/coalition/tank/attack/03.mp3"
+    ],
+    "voice.underFire.coalition.tank": [
+      "voices/coalition/tank/underFire/01.mp3",
+      "voices/coalition/tank/underFire/02.mp3",
+      "voices/coalition/tank/underFire/03.mp3"
+    ],
+    "voice.ready.coalition.heavy": [
+      "voices/coalition/heavy/ready/01.mp3",
+      "voices/coalition/heavy/ready/02.mp3",
+      "voices/coalition/heavy/ready/03.mp3"
+    ],
+    "voice.select.coalition.heavy": [
+      "voices/coalition/heavy/select/01.mp3",
+      "voices/coalition/heavy/select/02.mp3",
+      "voices/coalition/heavy/select/03.mp3"
+    ],
+    "voice.move.coalition.heavy": [
+      "voices/coalition/heavy/move/01.mp3",
+      "voices/coalition/heavy/move/02.mp3",
+      "voices/coalition/heavy/move/03.mp3"
+    ],
+    "voice.attack.coalition.heavy": [
+      "voices/coalition/heavy/attack/01.mp3",
+      "voices/coalition/heavy/attack/02.mp3",
+      "voices/coalition/heavy/attack/03.mp3"
+    ],
+    "voice.underFire.coalition.heavy": [
+      "voices/coalition/heavy/underFire/01.mp3",
+      "voices/coalition/heavy/underFire/02.mp3",
+      "voices/coalition/heavy/underFire/03.mp3"
+    ],
+    "voice.ready.coalition.harvester": [
+      "voices/coalition/harvester/ready/01.mp3",
+      "voices/coalition/harvester/ready/02.mp3",
+      "voices/coalition/harvester/ready/03.mp3"
+    ],
+    "voice.select.coalition.harvester": [
+      "voices/coalition/harvester/select/01.mp3",
+      "voices/coalition/harvester/select/02.mp3",
+      "voices/coalition/harvester/select/03.mp3"
+    ],
+    "voice.move.coalition.harvester": [
+      "voices/coalition/harvester/move/01.mp3",
+      "voices/coalition/harvester/move/02.mp3",
+      "voices/coalition/harvester/move/03.mp3"
+    ],
+    "voice.attack.coalition.harvester": [
+      "voices/coalition/harvester/attack/01.mp3",
+      "voices/coalition/harvester/attack/02.mp3",
+      "voices/coalition/harvester/attack/03.mp3"
+    ],
+    "voice.underFire.coalition.harvester": [
+      "voices/coalition/harvester/underFire/01.mp3",
+      "voices/coalition/harvester/underFire/02.mp3",
+      "voices/coalition/harvester/underFire/03.mp3"
+    ],
+    "voice.ready.coalition.recon": [
+      "voices/coalition/recon/ready/01.mp3",
+      "voices/coalition/recon/ready/02.mp3",
+      "voices/coalition/recon/ready/03.mp3"
+    ],
+    "voice.select.coalition.recon": [
+      "voices/coalition/recon/select/01.mp3",
+      "voices/coalition/recon/select/02.mp3",
+      "voices/coalition/recon/select/03.mp3"
+    ],
+    "voice.move.coalition.recon": [
+      "voices/coalition/recon/move/01.mp3",
+      "voices/coalition/recon/move/02.mp3",
+      "voices/coalition/recon/move/03.mp3"
+    ],
+    "voice.attack.coalition.recon": [
+      "voices/coalition/recon/attack/01.mp3",
+      "voices/coalition/recon/attack/02.mp3",
+      "voices/coalition/recon/attack/03.mp3"
+    ],
+    "voice.underFire.coalition.recon": [
+      "voices/coalition/recon/underFire/01.mp3",
+      "voices/coalition/recon/underFire/02.mp3",
+      "voices/coalition/recon/underFire/03.mp3"
+    ],
+    "voice.ready.coalition.airship": [
+      "voices/coalition/airship/ready/01.mp3",
+      "voices/coalition/airship/ready/02.mp3"
+    ],
+    "voice.select.coalition.airship": [
+      "voices/coalition/airship/select/01.mp3"
+    ],
+    "voice.move.coalition.airship": [
+      "voices/coalition/airship/move/01.mp3",
+      "voices/coalition/airship/move/02.mp3"
+    ],
+    "voice.attack.coalition.airship": [
+      "voices/coalition/airship/attack/01.mp3"
+    ],
+    "voice.ready.federation.soldier": [
+      "voices/federation/soldier/ready/01.mp3",
+      "voices/federation/soldier/ready/02.mp3",
+      "voices/federation/soldier/ready/03.mp3"
+    ],
+    "voice.select.federation.soldier": [
+      "voices/federation/soldier/select/01.mp3",
+      "voices/federation/soldier/select/02.mp3",
+      "voices/federation/soldier/select/03.mp3"
+    ],
+    "voice.move.federation.soldier": [
+      "voices/federation/soldier/move/01.mp3",
+      "voices/federation/soldier/move/02.mp3",
+      "voices/federation/soldier/move/03.mp3"
+    ],
+    "voice.attack.federation.soldier": [
+      "voices/federation/soldier/attack/01.mp3",
+      "voices/federation/soldier/attack/02.mp3",
+      "voices/federation/soldier/attack/03.mp3"
+    ],
+    "voice.underFire.federation.soldier": [
+      "voices/federation/soldier/underFire/01.mp3",
+      "voices/federation/soldier/underFire/02.mp3",
+      "voices/federation/soldier/underFire/03.mp3"
+    ],
+    "voice.ready.federation.specialist": [
+      "voices/federation/specialist/ready/01.mp3",
+      "voices/federation/specialist/ready/02.mp3",
+      "voices/federation/specialist/ready/03.mp3"
+    ],
+    "voice.select.federation.specialist": [
+      "voices/federation/specialist/select/01.mp3",
+      "voices/federation/specialist/select/02.mp3",
+      "voices/federation/specialist/select/03.mp3"
+    ],
+    "voice.move.federation.specialist": [
+      "voices/federation/specialist/move/01.mp3",
+      "voices/federation/specialist/move/02.mp3",
+      "voices/federation/specialist/move/03.mp3"
+    ],
+    "voice.attack.federation.specialist": [
+      "voices/federation/specialist/attack/01.mp3",
+      "voices/federation/specialist/attack/02.mp3",
+      "voices/federation/specialist/attack/03.mp3"
+    ],
+    "voice.underFire.federation.specialist": [
+      "voices/federation/specialist/underFire/01.mp3",
+      "voices/federation/specialist/underFire/02.mp3",
+      "voices/federation/specialist/underFire/03.mp3"
+    ],
+    "voice.ready.federation.tank": [
+      "voices/federation/tank/ready/01.mp3",
+      "voices/federation/tank/ready/02.mp3",
+      "voices/federation/tank/ready/03.mp3"
+    ],
+    "voice.select.federation.tank": [
+      "voices/federation/tank/select/01.mp3",
+      "voices/federation/tank/select/02.mp3",
+      "voices/federation/tank/select/03.mp3"
+    ],
+    "voice.move.federation.tank": [
+      "voices/federation/tank/move/01.mp3",
+      "voices/federation/tank/move/02.mp3",
+      "voices/federation/tank/move/03.mp3"
+    ],
+    "voice.attack.federation.tank": [
+      "voices/federation/tank/attack/01.mp3",
+      "voices/federation/tank/attack/02.mp3",
+      "voices/federation/tank/attack/03.mp3"
+    ],
+    "voice.underFire.federation.tank": [
+      "voices/federation/tank/underFire/01.mp3",
+      "voices/federation/tank/underFire/02.mp3",
+      "voices/federation/tank/underFire/03.mp3"
+    ],
+    "voice.ready.federation.heavy": [
+      "voices/federation/heavy/ready/01.mp3",
+      "voices/federation/heavy/ready/02.mp3",
+      "voices/federation/heavy/ready/03.mp3"
+    ],
+    "voice.select.federation.heavy": [
+      "voices/federation/heavy/select/01.mp3",
+      "voices/federation/heavy/select/02.mp3",
+      "voices/federation/heavy/select/03.mp3"
+    ],
+    "voice.move.federation.heavy": [
+      "voices/federation/heavy/move/01.mp3",
+      "voices/federation/heavy/move/02.mp3",
+      "voices/federation/heavy/move/03.mp3"
+    ],
+    "voice.attack.federation.heavy": [
+      "voices/federation/heavy/attack/01.mp3",
+      "voices/federation/heavy/attack/02.mp3",
+      "voices/federation/heavy/attack/03.mp3"
+    ],
+    "voice.underFire.federation.heavy": [
+      "voices/federation/heavy/underFire/01.mp3",
+      "voices/federation/heavy/underFire/02.mp3",
+      "voices/federation/heavy/underFire/03.mp3"
+    ],
+    "voice.ready.federation.harvester": [
+      "voices/federation/harvester/ready/01.mp3",
+      "voices/federation/harvester/ready/02.mp3",
+      "voices/federation/harvester/ready/03.mp3"
+    ],
+    "voice.select.federation.harvester": [
+      "voices/federation/harvester/select/01.mp3",
+      "voices/federation/harvester/select/02.mp3",
+      "voices/federation/harvester/select/03.mp3"
+    ],
+    "voice.move.federation.harvester": [
+      "voices/federation/harvester/move/01.mp3",
+      "voices/federation/harvester/move/02.mp3",
+      "voices/federation/harvester/move/03.mp3"
+    ],
+    "voice.attack.federation.harvester": [
+      "voices/federation/harvester/attack/01.mp3",
+      "voices/federation/harvester/attack/02.mp3",
+      "voices/federation/harvester/attack/03.mp3"
+    ],
+    "voice.underFire.federation.harvester": [
+      "voices/federation/harvester/underFire/01.mp3",
+      "voices/federation/harvester/underFire/02.mp3",
+      "voices/federation/harvester/underFire/03.mp3"
+    ],
+    "voice.ready.federation.recon": [
+      "voices/federation/recon/ready/01.mp3",
+      "voices/federation/recon/ready/02.mp3",
+      "voices/federation/recon/ready/03.mp3"
+    ],
+    "voice.select.federation.recon": [
+      "voices/federation/recon/select/01.mp3",
+      "voices/federation/recon/select/02.mp3",
+      "voices/federation/recon/select/03.mp3"
+    ],
+    "voice.move.federation.recon": [
+      "voices/federation/recon/move/01.mp3",
+      "voices/federation/recon/move/02.mp3",
+      "voices/federation/recon/move/03.mp3"
+    ],
+    "voice.attack.federation.recon": [
+      "voices/federation/recon/attack/01.mp3",
+      "voices/federation/recon/attack/02.mp3",
+      "voices/federation/recon/attack/03.mp3"
+    ],
+    "voice.underFire.federation.recon": [
+      "voices/federation/recon/underFire/01.mp3",
+      "voices/federation/recon/underFire/02.mp3",
+      "voices/federation/recon/underFire/03.mp3"
+    ],
+    "voice.ready.federation.airship": [
+      "voices/federation/airship/ready/01.mp3",
+      "voices/federation/airship/ready/02.mp3"
+    ],
+    "voice.select.federation.airship": [
+      "voices/federation/airship/select/01.mp3"
+    ],
+    "voice.move.federation.airship": [
+      "voices/federation/airship/move/01.mp3",
+      "voices/federation/airship/move/02.mp3"
+    ],
+    "voice.attack.federation.airship": [
+      "voices/federation/airship/attack/01.mp3"
+    ],
+    "voice.ready.psionic.soldier": [
+      "voices/psionic/soldier/ready/01.mp3",
+      "voices/psionic/soldier/ready/02.mp3",
+      "voices/psionic/soldier/ready/03.mp3"
+    ],
+    "voice.select.psionic.soldier": [
+      "voices/psionic/soldier/select/01.mp3",
+      "voices/psionic/soldier/select/02.mp3",
+      "voices/psionic/soldier/select/03.mp3"
+    ],
+    "voice.move.psionic.soldier": [
+      "voices/psionic/soldier/move/01.mp3",
+      "voices/psionic/soldier/move/02.mp3",
+      "voices/psionic/soldier/move/03.mp3"
+    ],
+    "voice.attack.psionic.soldier": [
+      "voices/psionic/soldier/attack/01.mp3",
+      "voices/psionic/soldier/attack/02.mp3",
+      "voices/psionic/soldier/attack/03.mp3"
+    ],
+    "voice.underFire.psionic.soldier": [
+      "voices/psionic/soldier/underFire/01.mp3",
+      "voices/psionic/soldier/underFire/02.mp3",
+      "voices/psionic/soldier/underFire/03.mp3"
+    ],
+    "voice.ready.psionic.specialist": [
+      "voices/psionic/specialist/ready/01.mp3",
+      "voices/psionic/specialist/ready/02.mp3",
+      "voices/psionic/specialist/ready/03.mp3"
+    ],
+    "voice.select.psionic.specialist": [
+      "voices/psionic/specialist/select/01.mp3",
+      "voices/psionic/specialist/select/02.mp3",
+      "voices/psionic/specialist/select/03.mp3"
+    ],
+    "voice.move.psionic.specialist": [
+      "voices/psionic/specialist/move/01.mp3",
+      "voices/psionic/specialist/move/02.mp3",
+      "voices/psionic/specialist/move/03.mp3"
+    ],
+    "voice.attack.psionic.specialist": [
+      "voices/psionic/specialist/attack/01.mp3",
+      "voices/psionic/specialist/attack/02.mp3",
+      "voices/psionic/specialist/attack/03.mp3"
+    ],
+    "voice.underFire.psionic.specialist": [
+      "voices/psionic/specialist/underFire/01.mp3",
+      "voices/psionic/specialist/underFire/02.mp3",
+      "voices/psionic/specialist/underFire/03.mp3"
+    ],
+    "voice.ready.psionic.tank": [
+      "voices/psionic/tank/ready/01.mp3",
+      "voices/psionic/tank/ready/02.mp3",
+      "voices/psionic/tank/ready/03.mp3"
+    ],
+    "voice.select.psionic.tank": [
+      "voices/psionic/tank/select/01.mp3",
+      "voices/psionic/tank/select/02.mp3",
+      "voices/psionic/tank/select/03.mp3"
+    ],
+    "voice.move.psionic.tank": [
+      "voices/psionic/tank/move/01.mp3",
+      "voices/psionic/tank/move/02.mp3",
+      "voices/psionic/tank/move/03.mp3"
+    ],
+    "voice.attack.psionic.tank": [
+      "voices/psionic/tank/attack/01.mp3",
+      "voices/psionic/tank/attack/02.mp3",
+      "voices/psionic/tank/attack/03.mp3"
+    ],
+    "voice.underFire.psionic.tank": [
+      "voices/psionic/tank/underFire/01.mp3",
+      "voices/psionic/tank/underFire/02.mp3",
+      "voices/psionic/tank/underFire/03.mp3"
+    ],
+    "voice.ready.psionic.heavy": [
+      "voices/psionic/heavy/ready/01.mp3",
+      "voices/psionic/heavy/ready/02.mp3",
+      "voices/psionic/heavy/ready/03.mp3"
+    ],
+    "voice.select.psionic.heavy": [
+      "voices/psionic/heavy/select/01.mp3",
+      "voices/psionic/heavy/select/02.mp3",
+      "voices/psionic/heavy/select/03.mp3"
+    ],
+    "voice.move.psionic.heavy": [
+      "voices/psionic/heavy/move/01.mp3",
+      "voices/psionic/heavy/move/02.mp3",
+      "voices/psionic/heavy/move/03.mp3"
+    ],
+    "voice.attack.psionic.heavy": [
+      "voices/psionic/heavy/attack/01.mp3",
+      "voices/psionic/heavy/attack/02.mp3",
+      "voices/psionic/heavy/attack/03.mp3"
+    ],
+    "voice.underFire.psionic.heavy": [
+      "voices/psionic/heavy/underFire/01.mp3",
+      "voices/psionic/heavy/underFire/02.mp3",
+      "voices/psionic/heavy/underFire/03.mp3"
+    ],
+    "voice.ready.psionic.harvester": [
+      "voices/psionic/harvester/ready/01.mp3",
+      "voices/psionic/harvester/ready/02.mp3",
+      "voices/psionic/harvester/ready/03.mp3"
+    ],
+    "voice.select.psionic.harvester": [
+      "voices/psionic/harvester/select/01.mp3",
+      "voices/psionic/harvester/select/02.mp3",
+      "voices/psionic/harvester/select/03.mp3"
+    ],
+    "voice.move.psionic.harvester": [
+      "voices/psionic/harvester/move/01.mp3",
+      "voices/psionic/harvester/move/02.mp3",
+      "voices/psionic/harvester/move/03.mp3"
+    ],
+    "voice.attack.psionic.harvester": [
+      "voices/psionic/harvester/attack/01.mp3",
+      "voices/psionic/harvester/attack/02.mp3",
+      "voices/psionic/harvester/attack/03.mp3"
+    ],
+    "voice.underFire.psionic.harvester": [
+      "voices/psionic/harvester/underFire/01.mp3",
+      "voices/psionic/harvester/underFire/02.mp3",
+      "voices/psionic/harvester/underFire/03.mp3"
+    ],
+    "voice.ready.psionic.recon": [
+      "voices/psionic/recon/ready/01.mp3",
+      "voices/psionic/recon/ready/02.mp3",
+      "voices/psionic/recon/ready/03.mp3"
+    ],
+    "voice.select.psionic.recon": [
+      "voices/psionic/recon/select/01.mp3",
+      "voices/psionic/recon/select/02.mp3",
+      "voices/psionic/recon/select/03.mp3"
+    ],
+    "voice.move.psionic.recon": [
+      "voices/psionic/recon/move/01.mp3",
+      "voices/psionic/recon/move/02.mp3",
+      "voices/psionic/recon/move/03.mp3"
+    ],
+    "voice.attack.psionic.recon": [
+      "voices/psionic/recon/attack/01.mp3",
+      "voices/psionic/recon/attack/02.mp3",
+      "voices/psionic/recon/attack/03.mp3"
+    ],
+    "voice.underFire.psionic.recon": [
+      "voices/psionic/recon/underFire/01.mp3",
+      "voices/psionic/recon/underFire/02.mp3",
+      "voices/psionic/recon/underFire/03.mp3"
+    ],
+    "voice.ready.psionic.airship": [
+      "voices/psionic/airship/ready/01.mp3",
+      "voices/psionic/airship/ready/02.mp3"
+    ],
+    "voice.select.psionic.airship": [
+      "voices/psionic/airship/select/01.mp3"
+    ],
+    "voice.move.psionic.airship": [
+      "voices/psionic/airship/move/01.mp3",
+      "voices/psionic/airship/move/02.mp3"
+    ],
+    "voice.attack.psionic.airship": [
+      "voices/psionic/airship/attack/01.mp3"
+    ],
+    "announce.commandOnline": [
+      "announcer/commandOnline/01.mp3",
+      "announcer/commandOnline/02.mp3"
+    ],
+    "announce.unitReady": [
+      "announcer/unitReady/01.mp3",
+      "announcer/unitReady/02.mp3"
+    ],
+    "announce.unitLost": [
+      "announcer/unitLost/01.mp3",
+      "announcer/unitLost/02.mp3"
+    ],
+    "announce.squadLost": [
+      "announcer/squadLost/01.mp3",
+      "announcer/squadLost/02.mp3"
+    ],
+    "announce.constructionStarted": [
+      "announcer/constructionStarted/01.mp3",
+      "announcer/constructionStarted/02.mp3"
+    ],
+    "announce.constructionComplete": [
+      "announcer/constructionComplete/01.mp3",
+      "announcer/constructionComplete/02.mp3"
+    ],
+    "announce.structureUnderAttack": [
+      "announcer/structureUnderAttack/01.mp3",
+      "announcer/structureUnderAttack/02.mp3"
+    ],
+    "announce.structureLost": [
+      "announcer/structureLost/01.mp3",
+      "announcer/structureLost/02.mp3"
+    ],
+    "announce.baseUnderAttack": [
+      "announcer/baseUnderAttack/01.mp3",
+      "announcer/baseUnderAttack/02.mp3"
+    ],
+    "announce.powerLow": [
+      "announcer/powerLow/01.mp3",
+      "announcer/powerLow/02.mp3"
+    ],
+    "announce.powerRestored": [
+      "announcer/powerRestored/01.mp3",
+      "announcer/powerRestored/02.mp3"
+    ],
+    "announce.creditsLow": [
+      "announcer/creditsLow/01.mp3",
+      "announcer/creditsLow/02.mp3"
+    ],
+    "announce.creditsReceived": [
+      "announcer/creditsReceived/01.mp3",
+      "announcer/creditsReceived/02.mp3"
+    ],
+    "announce.oreDepleted": [
+      "announcer/oreDepleted/01.mp3",
+      "announcer/oreDepleted/02.mp3"
+    ],
+    "announce.harvesterLost": [
+      "announcer/harvesterLost/01.mp3",
+      "announcer/harvesterLost/02.mp3"
+    ],
+    "announce.harvesterIdle": [
+      "announcer/harvesterIdle/01.mp3",
+      "announcer/harvesterIdle/02.mp3"
+    ],
+    "announce.refineryReady": [
+      "announcer/refineryReady/01.mp3",
+      "announcer/refineryReady/02.mp3"
+    ],
+    "announce.barracksReady": [
+      "announcer/barracksReady/01.mp3",
+      "announcer/barracksReady/02.mp3"
+    ],
+    "announce.factoryReady": [
+      "announcer/factoryReady/01.mp3",
+      "announcer/factoryReady/02.mp3"
+    ],
+    "announce.radarOnline": [
+      "announcer/radarOnline/01.mp3",
+      "announcer/radarOnline/02.mp3"
+    ],
+    "announce.radarOffline": [
+      "announcer/radarOffline/01.mp3",
+      "announcer/radarOffline/02.mp3"
+    ],
+    "announce.technologyReady": [
+      "announcer/technologyReady/01.mp3",
+      "announcer/technologyReady/02.mp3"
+    ],
+    "announce.researchComplete": [
+      "announcer/researchComplete/01.mp3",
+      "announcer/researchComplete/02.mp3"
+    ],
+    "announce.enemySpotted": [
+      "announcer/enemySpotted/01.mp3",
+      "announcer/enemySpotted/02.mp3"
+    ],
+    "announce.enemyInfantry": [
+      "announcer/enemyInfantry/01.mp3",
+      "announcer/enemyInfantry/02.mp3"
+    ],
+    "announce.enemyArmor": [
+      "announcer/enemyArmor/01.mp3",
+      "announcer/enemyArmor/02.mp3"
+    ],
+    "announce.enemyAir": [
+      "announcer/enemyAir/01.mp3",
+      "announcer/enemyAir/02.mp3"
+    ],
+    "announce.enemyPsionic": [
+      "announcer/enemyPsionic/01.mp3",
+      "announcer/enemyPsionic/02.mp3"
+    ],
+    "announce.defensesReady": [
+      "announcer/defensesReady/01.mp3",
+      "announcer/defensesReady/02.mp3"
+    ],
+    "announce.defensesDisabled": [
+      "announcer/defensesDisabled/01.mp3",
+      "announcer/defensesDisabled/02.mp3"
+    ],
+    "announce.repairStarted": [
+      "announcer/repairStarted/01.mp3",
+      "announcer/repairStarted/02.mp3"
+    ],
+    "announce.repairComplete": [
+      "announcer/repairComplete/01.mp3",
+      "announcer/repairComplete/02.mp3"
+    ],
+    "announce.repairUnavailable": [
+      "announcer/repairUnavailable/01.mp3",
+      "announcer/repairUnavailable/02.mp3"
+    ],
+    "announce.productionStarted": [
+      "announcer/productionStarted/01.mp3",
+      "announcer/productionStarted/02.mp3"
+    ],
+    "announce.productionCancelled": [
+      "announcer/productionCancelled/01.mp3",
+      "announcer/productionCancelled/02.mp3"
+    ],
+    "announce.productionPaused": [
+      "announcer/productionPaused/01.mp3",
+      "announcer/productionPaused/02.mp3"
+    ],
+    "announce.abilityReady": [
+      "announcer/abilityReady/01.mp3",
+      "announcer/abilityReady/02.mp3"
+    ],
+    "announce.abilityActivated": [
+      "announcer/abilityActivated/01.mp3",
+      "announcer/abilityActivated/02.mp3"
+    ],
+    "announce.abilityUnavailable": [
+      "announcer/abilityUnavailable/01.mp3",
+      "announcer/abilityUnavailable/02.mp3"
+    ],
+    "announce.reinforcementArrived": [
+      "announcer/reinforcementArrived/01.mp3",
+      "announcer/reinforcementArrived/02.mp3"
+    ],
+    "announce.objectiveCompleted": [
+      "announcer/objectiveCompleted/01.mp3",
+      "announcer/objectiveCompleted/02.mp3"
+    ],
+    "announce.objectiveFailed": [
+      "announcer/objectiveFailed/01.mp3",
+      "announcer/objectiveFailed/02.mp3"
+    ],
+    "announce.enemyCommander": [
+      "announcer/enemyCommander/01.mp3",
+      "announcer/enemyCommander/02.mp3"
+    ],
+    "announce.missileIncoming": [
+      "announcer/missileIncoming/01.mp3",
+      "announcer/missileIncoming/02.mp3"
+    ],
+    "announce.airstrikeIncoming": [
+      "announcer/airstrikeIncoming/01.mp3",
+      "announcer/airstrikeIncoming/02.mp3"
+    ],
+    "announce.navalContact": [
+      "announcer/navalContact/01.mp3",
+      "announcer/navalContact/02.mp3"
+    ],
+    "announce.superweaponReady": [
+      "announcer/superweaponReady/01.mp3",
+      "announcer/superweaponReady/02.mp3"
+    ],
+    "announce.superweaponLaunched": [
+      "announcer/superweaponLaunched/01.mp3",
+      "announcer/superweaponLaunched/02.mp3"
+    ],
+    "announce.victory": [
+      "announcer/victory/01.mp3",
+      "announcer/victory/02.mp3"
+    ],
+    "announce.defeat": [
+      "announcer/defeat/01.mp3",
+      "announcer/defeat/02.mp3"
+    ],
+    "shot.soldier": [
+      "sfx/shot.soldier/01.mp3",
+      "sfx/shot.soldier/02.mp3"
+    ],
+    "shot.tank": [
+      "sfx/shot.tank/01.mp3",
+      "sfx/shot.tank/02.mp3"
+    ],
+    "shot.heavy": [
+      "sfx/shot.heavy/01.mp3",
+      "sfx/shot.heavy/02.mp3"
+    ],
+    "shot.recon": [
+      "sfx/shot.recon/01.mp3",
+      "sfx/shot.recon/02.mp3"
+    ],
+    "shot.specialist": [
+      "sfx/shot.specialist/01.mp3",
+      "sfx/shot.specialist/02.mp3"
+    ],
+    "impact": [
+      "sfx/impact/01.mp3",
+      "sfx/impact/02.mp3"
+    ],
+    "impact.soldier": [
+      "sfx/impact.soldier/01.mp3",
+      "sfx/impact.soldier/02.mp3"
+    ],
+    "impact.tank": [
+      "sfx/impact.tank/01.mp3",
+      "sfx/impact.tank/02.mp3"
+    ],
+    "impact.heavy": [
+      "sfx/impact.heavy/01.mp3",
+      "sfx/impact.heavy/02.mp3"
+    ],
+    "explosion": [
+      "sfx/explosion/01.mp3",
+      "sfx/explosion/02.mp3"
+    ],
+    "build": [
+      "sfx/build/01.mp3",
+      "sfx/build/02.mp3"
+    ],
+    "queue": [
+      "sfx/queue/01.mp3",
+      "sfx/queue/02.mp3"
+    ],
+    "ready": [
+      "sfx/ready/01.mp3",
+      "sfx/ready/02.mp3"
+    ],
+    "ability": [
+      "sfx/ability/01.mp3",
+      "sfx/ability/02.mp3"
+    ],
+    "alert": [
+      "sfx/alert/01.mp3",
+      "sfx/alert/02.mp3"
+    ],
+    "select": [
+      "sfx/select/01.mp3",
+      "sfx/select/02.mp3"
+    ],
+    "move": [
+      "sfx/move/01.mp3",
+      "sfx/move/02.mp3"
+    ],
+    "attack": [
+      "sfx/attack/01.mp3",
+      "sfx/attack/02.mp3"
+    ],
+    "ui": [
+      "sfx/ui/01.mp3",
+      "sfx/ui/02.mp3"
+    ],
+    "win": [
+      "sfx/win/01.mp3",
+      "sfx/win/02.mp3"
+    ],
+    "defeat": [
+      "sfx/defeat/01.mp3",
+      "sfx/defeat/02.mp3"
+    ],
+    "shot.aircraft": [
+      "sfx/shot.aircraft/01.mp3",
+      "sfx/shot.aircraft/02.mp3"
+    ],
+    "shot.turret": [
+      "sfx/shot.turret/01.mp3",
+      "sfx/shot.turret/02.mp3"
+    ],
+    "shot.beam": [
+      "sfx/shot.beam/01.mp3",
+      "sfx/shot.beam/02.mp3"
+    ],
+    "impact.structure": [
+      "sfx/impact.structure/01.mp3",
+      "sfx/impact.structure/02.mp3"
+    ],
+    "explosion.structure": [
+      "sfx/explosion.structure/01.mp3",
+      "sfx/explosion.structure/02.mp3"
+    ],
+    "explosion.vehicle": [
+      "sfx/explosion.vehicle/01.mp3",
+      "sfx/explosion.vehicle/02.mp3"
+    ],
+    "radar.ping": [
+      "sfx/radar.ping/01.mp3",
+      "sfx/radar.ping/02.mp3"
+    ],
+    "power.down": [
+      "sfx/power.down/01.mp3",
+      "sfx/power.down/02.mp3"
+    ],
+    "power.up": [
+      "sfx/power.up/01.mp3",
+      "sfx/power.up/02.mp3"
+    ],
+    "cash.deposit": [
+      "sfx/cash.deposit/01.mp3",
+      "sfx/cash.deposit/02.mp3"
+    ],
+    "harvest.loop": [
+      "sfx/harvest.loop/01.mp3",
+      "sfx/harvest.loop/02.mp3"
+    ],
+    "repair.loop": [
+      "sfx/repair.loop/01.mp3",
+      "sfx/repair.loop/02.mp3"
+    ],
+    "missile.launch": [
+      "sfx/missile.launch/01.mp3",
+      "sfx/missile.launch/02.mp3"
+    ],
+    "shield.hit": [
+      "sfx/shield.hit/01.mp3",
+      "sfx/shield.hit/02.mp3"
+    ],
+    "chrono.jump": [
+      "sfx/chrono.jump/01.mp3",
+      "sfx/chrono.jump/02.mp3"
+    ],
+    "psi.pulse": [
+      "sfx/psi.pulse/01.mp3",
+      "sfx/psi.pulse/02.mp3"
+    ],
+    "airship.engine": [
+      "sfx/airship.engine/01.mp3",
+      "sfx/airship.engine/02.mp3"
+    ],
+    "aircraft.flyby": [
+      "sfx/aircraft.flyby/01.mp3",
+      "sfx/aircraft.flyby/02.mp3"
+    ],
+    "tank.tread": [
+      "sfx/tank.tread/01.mp3",
+      "sfx/tank.tread/02.mp3"
+    ],
+    "infantry.steps": [
+      "sfx/infantry.steps/01.mp3",
+      "sfx/infantry.steps/02.mp3"
+    ]
+  },
+  "music": {
+    "music.menu": [
+      "music/music-menu.mp3"
+    ],
+    "music.battle": [
+      "music/music-battle.mp3"
+    ],
+    "music.victory": [
+      "music/music-victory.mp3"
+    ]
+  }
+}
