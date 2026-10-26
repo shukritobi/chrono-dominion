@@ -1,0 +1,154 @@
+name: Open War Factory Blender Review
+
+# Original hand-authored procedural meshes. Preview-only by design:
+# this job never modifies production art or the live game.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/open-factory-review.yml"
+      - "tools/blender/building_architecture.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-open-factory-review
+  cancel-in-progress: true
+
+jobs:
+  render-two:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout model source
+        uses: actions/checkout@v4
+      - name: Verify Python syntax and asset lists
+        run: |
+          python3 -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/pack_animated.py tools/blender/asset_studio.py
+          python3 tools/blender/check_geometry_calls.py
+      - name: Install Blender and Pillow
+        run: |
+          # The hosted Ubuntu image normally has apt package lists already.
+          # Avoid an unbounded apt-get update, which has stalled earlier runs.
+          export DEBIAN_FRONTEND=noninteractive
+          if ! command -v blender >/dev/null || ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            timeout 540s sudo apt-get install -y -qq --no-install-recommends \
+              -o Acquire::Retries=2 -o Acquire::http::Timeout=30 \
+              -o Acquire::https::Timeout=30 blender python3-pil || {
+                echo "::warning::Cached apt install unavailable; refreshing package metadata with a timeout"
+                timeout 180s sudo apt-get update -qq \
+                  -o Acquire::Retries=1 -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30
+                timeout 540s sudo apt-get install -y -qq --no-install-recommends \
+                  -o Acquire::Retries=2 -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30 blender python3-pil
+              }
+          fi
+          blender --version | head -2
+          python3 -c 'from PIL import Image; print("Pillow ready")'
+      - name: Test production isolation and sprite validation
+        run: python3 -m unittest discover -s tests -p 'test_blender_asset_studio.py' -v
+      - name: Render and validate 2 independent editable Blender models
+        shell: bash
+        run: |
+          set -euo pipefail
+          for faction in coalition federation; do
+            for kind in factory; do
+              echo "::group::Blender $faction / $kind"
+              stage="generated/open-factory/$faction/$kind"
+              blender --background --threads 4 --python-exit-code 1 \
+                --python tools/blender/animated_assets.py -- \
+                --output "$stage" --kinds "$kind" \
+                --factions "$faction" --size 160
+              python3 tools/blender/pack_animated.py \
+                --input "$stage" --output "$stage/packed" --size 160
+              python3 tools/blender/asset_studio.py validate \
+                --stage "$stage" --faction "$faction" --kind "$kind"
+              python3 tools/blender/asset_studio.py preview \
+                --stage "$stage" --faction "$faction" --kind "$kind"
+              test -s "$stage/sources/$faction-$kind.blend"
+              # The facade must be physically hollow, not merely painted black.
+              # Test front/near-side line of sight in the actual saved .blend.
+              blender --background --threads 2 \
+                "$stage/sources/$faction-$kind.blend" \
+                --python-exit-code 1 --python tools/blender/verify_factory_open_bays.py
+              # Reopen the actual compressed .blend source in Blender and
+              # verify geometry survives serialization, not merely file size.
+              blender --background --threads 2 \
+                "$stage/sources/$faction-$kind.blend" \
+                --python-exit-code 1 --python-expr \
+                'import bpy; assert len([o for o in bpy.data.objects if o.type=="MESH"]) >= 10, "Missing editable source meshes"'
+              test -s "$stage/packed/$faction-$kind.png"
+              test -s "$stage/preview.png"
+              echo "::endgroup::"
+            done
+          done
+      - name: Prepare comparative faction contact sheet
+        run: |
+          python3 - <<'PY'
+          import hashlib, json
+          from PIL import Image, ImageDraw
+          from pathlib import Path
+          root=Path("generated/open-factory")
+          cols=("coalition","federation")
+          kinds=("factory",)
+          w,h=1000,860
+          out=Image.new("RGB",(w,h),(13,20,33))
+          draw=ImageDraw.Draw(out)
+          draw.text((24,12),"CHRONO DOMINION / OPEN-BAY WAR FACTORY MK-IV REVIEW",fill=(132,221,240))
+          for ix,faction in enumerate(cols):
+              draw.text((ix*486+18,39),faction.upper(),fill=(233,240,249))
+          summary=[]
+          for iy,kind in enumerate(kinds):
+              for ix,faction in enumerate(cols):
+                  stage=root/faction/kind
+                  with Image.open(stage/"preview.png") as p:
+                      p=p.convert("RGB")
+                      p.thumbnail((472,790),Image.Resampling.LANCZOS)
+                      out.paste(p,(ix*486+12,iy*817+65))
+                  blend=stage/"sources"/(faction+"-"+kind+".blend")
+                  atlas=stage/"packed"/(faction+"-"+kind+".png")
+                  entry={"faction":faction,"kind":kind,"model_bytes":blend.stat().st_size,
+                         "atlas_bytes":atlas.stat().st_size,
+                         "atlas_sha256":hashlib.sha256(atlas.read_bytes()).hexdigest()}
+                  summary.append(entry)
+          # Verify real state geometry changes, and count visible pixels.
+          for faction in cols:
+              with Image.open(root/faction/"factory"/"packed"/(faction+"-factory.png")) as im:
+                  assert im.mode=="RGBA" and im.size==(160,800)
+                  alpha=im.getchannel("A")
+                  masks=[alpha.crop((0,row*160,160,(row+1)*160))
+                         for row in range(5)]
+                  arrays=[list(m.getdata()) for m in masks]
+                  count=sum(p>=32 for p in arrays[0])
+                  build_diff=sum((a>=32)!=(b>=32) for a,b in zip(arrays[0],arrays[2]))
+                  damage_diff=sum((a>=32)!=(b>=32) for a,b in zip(arrays[0],arrays[4]))
+                  idle_distinct=im.crop((0,0,160,160)).tobytes()!=im.crop((0,160,160,320)).tobytes()
+                  entry=next(x for x in summary if x["faction"]==faction)
+                  entry.update(idle_opaque_pixels=count,
+                               construction_alpha_changed_pixels=build_diff,
+                               damaged_alpha_changed_pixels=damage_diff,
+                               pixel_distinct_idle=idle_distinct)
+                  print(faction,"opaque",count,"construction alpha delta",build_diff,
+                        "damage alpha delta",damage_diff,"idle distinct",idle_distinct)
+                  assert count>=1000, "Factory silhouette is unexpectedly small"
+                  assert build_diff>=300, "Construction state must alter geometry"
+                  assert damage_diff>=50, "Damage state must alter geometry"
+                  assert idle_distinct, "Idle animation has identical frames"
+          target=root/"two-open-factory-review.png"
+          out.save(target,optimize=True)
+          (root/"review-manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
+          assert len(summary)==2
+          print("Created 2 rendered + validated physically open factory preview assets")
+          PY
+      - name: Upload preview sheets, editable Blender models and RGBA atlases
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-two-open-factory-mk4-review
+          path: generated/open-factory/
+          retention-days: 30
+          if-no-files-found: error
