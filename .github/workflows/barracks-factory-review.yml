@@ -1,0 +1,103 @@
+name: Barracks and War Factory Blender Review
+
+# Original hand-authored procedural meshes. Preview-only by design:
+# this job never modifies production art or the live game.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/barracks-factory-review.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-barracks-factory-review
+  cancel-in-progress: true
+
+jobs:
+  render-six:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout model source
+        uses: actions/checkout@v4
+      - name: Verify Python syntax and asset lists
+        run: |
+          python3 -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/pack_animated.py tools/blender/asset_studio.py
+      - name: Install Blender and Pillow
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-pil
+          blender --version | head -2
+      - name: Test production isolation and sprite validation
+        run: python3 -m unittest discover -s tests -p 'test_blender_asset_studio.py' -v
+      - name: Render and validate 6 independent editable Blender models
+        shell: bash
+        run: |
+          set -euo pipefail
+          for faction in coalition federation psionic; do
+            for kind in barracks factory; do
+              echo "::group::Blender $faction / $kind"
+              stage="generated/barracks-factory/$faction/$kind"
+              blender --background --threads 4 --python-exit-code 1 \
+                --python tools/blender/animated_assets.py -- \
+                --output "$stage" --kinds "$kind" \
+                --factions "$faction" --size 160
+              python3 tools/blender/pack_animated.py \
+                --input "$stage" --output "$stage/packed" --size 160
+              python3 tools/blender/asset_studio.py validate \
+                --stage "$stage" --faction "$faction" --kind "$kind"
+              python3 tools/blender/asset_studio.py preview \
+                --stage "$stage" --faction "$faction" --kind "$kind"
+              test -s "$stage/sources/$faction-$kind.blend"
+              test -s "$stage/packed/$faction-$kind.png"
+              test -s "$stage/preview.png"
+              echo "::endgroup::"
+            done
+          done
+      - name: Prepare comparative faction contact sheet
+        run: |
+          python3 - <<'PY'
+          import hashlib, json
+          from PIL import Image, ImageDraw
+          from pathlib import Path
+          root=Path("generated/barracks-factory")
+          cols=("coalition","federation","psionic")
+          kinds=("barracks","factory")
+          w,h=1480,1690
+          out=Image.new("RGB",(w,h),(13,20,33))
+          draw=ImageDraw.Draw(out)
+          draw.text((24,12),"CHRONO DOMINION / BARRACKS + WAR FACTORY BLENDER MODEL REVIEW",fill=(132,221,240))
+          for ix,faction in enumerate(cols):
+              draw.text((ix*486+18,39),faction.upper(),fill=(233,240,249))
+          summary=[]
+          for iy,kind in enumerate(kinds):
+              for ix,faction in enumerate(cols):
+                  stage=root/faction/kind
+                  with Image.open(stage/"preview.png") as p:
+                      p=p.convert("RGB")
+                      p.thumbnail((472,790),Image.Resampling.LANCZOS)
+                      out.paste(p,(ix*486+12,iy*817+65))
+                  blend=stage/"sources"/(faction+"-"+kind+".blend")
+                  atlas=stage/"packed"/(faction+"-"+kind+".png")
+                  entry={"faction":faction,"kind":kind,"model_bytes":blend.stat().st_size,
+                         "atlas_bytes":atlas.stat().st_size,
+                         "atlas_sha256":hashlib.sha256(atlas.read_bytes()).hexdigest()}
+                  summary.append(entry)
+          target=root/"all-six-buildings.png"
+          out.save(target,optimize=True)
+          (root/"review-manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
+          assert len(summary)==6
+          print("Created 6 rendered + validated Blender preview assets")
+          PY
+      - name: Upload preview sheets, editable Blender models and RGBA atlases
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-barracks-factory-six-faction-blender-models
+          path: generated/barracks-factory/
+          retention-days: 30
+          if-no-files-found: error
