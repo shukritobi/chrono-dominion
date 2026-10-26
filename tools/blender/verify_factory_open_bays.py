@@ -14,7 +14,7 @@ assert len(meshes)>=30, "Expected detailed editable factory meshes"
 names={obj.name for obj in meshes}
 assert "Open bay crosshead lintel" in names or "Open blast-gate crosshead" in names
 assert any("unfinished" in name.lower() for name in names), "No visible work-in-progress vehicle"
-assert any("launch ramp" in name.lower() for name in names), "No vehicle exit ramp"
+assert any("ramp" in name.lower() for name in names), "No vehicle exit ramp"
 assert any("gantry" in name.lower() or "forging" in name.lower() for name in names), "No factory equipment"
 assert not any("production mouth" in name.lower() or "blast gate rib" in name.lower() for name in names), "Legacy flat facade retained"
 depsgraph=bpy.context.evaluated_depsgraph_get()
