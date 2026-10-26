@@ -25,7 +25,9 @@ jobs:
           node --check game.js
           node tests/smoke.test.mjs
           node --check art/vehicle-renderer.js
+          node --check art/animated-entities.js
           node tests/vehicle-art.test.mjs
+          node tests/animated-art-v221.test.mjs
           node tests/combat-economy.test.mjs
           node tests/save-formation.test.mjs
           node tests/tactics.test.mjs
@@ -87,6 +89,8 @@ jobs:
           test -f style.css
           test -f game.js
           test -f art/vehicle-renderer.js
+          test -f art/animated-entities.js
+          test -f tests/animated-art-v221.test.mjs
           test -f art/pilot/coalition-power.svg
           test -f art/pilot/federation-power.svg
           test -f art/pilot/psionic-power.svg
