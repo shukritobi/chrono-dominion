@@ -1,11 +1,11 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 26 October 2026  
-**Current prototype:** v2.10.0 (see `package.json`, `game.js` and [v2.10 release notes](RELEASE-2.10.md)).
+**Current prototype:** v2.11.0 (see `package.json`, `game.js` and [v2.10 release notes](RELEASE-2.11.md)).
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 
-v2.10 adds sensor-report-based scout threat avoidance, mid-patrol replanning, retreat-cooldown protection, and reconnaissance telemetry in the nine-scenario balance lab. Its regression test is included in CI; full-route safety remains incomplete.
+v2.11 adds sensor-only whole-route danger weights for AI scouts, rejects known defended chokepoints, and adds movement/path regression tests. The V8 headless 240-second matrix completed, but CI and real-device verification must be checked independently.\n\nv2.10 adds sensor-report-based scout threat avoidance, mid-patrol replanning, retreat-cooldown protection, and reconnaissance telemetry in the nine-scenario balance lab. Its regression test is included in CI; full-route safety remains incomplete.
 
 v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible cancel button for pending build/attack-move/Chrono Jump orders, with automated stylesheet and behavior tests; real-device verification remains outstanding.
 
@@ -32,13 +32,13 @@ v2.9 adds coarse-pointer command targets, compact sidebar CSS and a visible canc
 - The **308-family asset register** is a plan, not 308 completed sprites. `art/rendered/manifest.json` currently has no packed PNG atlases and explicitly enables fallback artwork.
 - Most final 3D source models, animation frames, infantry animation sets, building destruction effects, environment variations and soundtrack remain unfinished.
 - Aircraft, naval warfare, garrisons, advanced mind-control chains, veterancy, country-specific units, superweapons, campaign missions, multiplayer and replay support remain unimplemented.
-- AI reconnaissance samples explored tiles near uncharted territory while retaining landmark patrol fallback. v2.10 rejects destinations near known threats, but does not assess entire paths, optimize long-term territory ownership or guarantee scout safety. Battle balance remains provisional; the headless player is scripted and not a human substitute.
+- AI reconnaissance samples explored tiles near uncharted territory while retaining landmark patrol fallback. v2.11 prices whole scout routes using last-known threats, but cannot predict unknown enemy ambushes, optimize long-term territory ownership or guarantee scout safety. Battle balance remains provisional; the headless player is scripted and not a human substitute.
 - Two-finger pinch and camera pan are implemented, but mobile UI layout, low-end device performance, accessibility and long-session browser testing require hands-on verification.
 - No third-party proprietary game artwork, audio or code is included. The project's redistribution license is still undecided.
 
 ## Next development priorities
 
-1. Review new v2.10 scout survival, objective discovery and platoon metrics; improve path-segment safety without hidden-state cheating.
+1. Compare v2.10/v2.11 scout survival and objective discovery on identical settings; profile threat-aware path costs and improve scouting on Verdant Front and Frostline.
 2. Add a measurable objective-discovery benchmark and tune AI squad staging on difficult maps.
 3. Produce and integrate original rendered unit/structure atlases with animation and proper art provenance.
 4. Improve touch-first selection feedback, responsive sidebar controls and browser accessibility.
