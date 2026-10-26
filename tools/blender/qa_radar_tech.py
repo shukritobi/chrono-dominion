@@ -34,6 +34,7 @@ def metrics(atlas):
         "idle_alpha_change_160":changed(states[0],states[1]),
         "idle_rgba_distinct":states[0].tobytes()!=states[1].tobytes(),
         "construct_alpha_change_160":changed(states[0],states[2]),
+        "construct_alpha_change_80":changed(reduced[0],reduced[2]),
         "damaged_alpha_change_160":changed(states[0],states[4]),
         "damaged_alpha_change_80":changed(reduced[0],reduced[4]),
         "opaque_idle_160":sum(a>=32 for a in states[0].getchannel("A").tobytes()),
@@ -84,6 +85,7 @@ def main():
             m=metrics(atlas)
             assert m["idle_rgba_distinct"],(faction,kind,"identical idle")
             assert m["construct_alpha_change_160"]>=250,(faction,kind,"weak construction",m)
+            assert m["construct_alpha_change_80"]>=60,(faction,kind,"construction unreadable at 80px",m)
             assert m["damaged_alpha_change_160"]>=25,(faction,kind,"weak damage",m)
             record={"faction":faction,"kind":kind,"source_bytes":source.stat().st_size,
                     **m}
