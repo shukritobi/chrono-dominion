@@ -894,10 +894,18 @@
       // It enumerates only walkable cells connected to the selected army.
       const start={x:clamp(Math.round(origin.x),1,WORLD_SIZE-2),
                    y:clamp(Math.round(origin.y),1,WORLD_SIZE-2)};
+      // Reuse passability probes only during this synchronous query.
+      // A later order must see newly constructed or destroyed buildings.
+      const passable=new Map();
+      const walk=(x,y)=>{
+        const k=x+','+y;
+        if(!passable.has(k))passable.set(k,this.walkable(x,y));
+        return passable.get(k);
+      };
       const nearby=[];
       for(let radius=0;radius<7&&!nearby.length;radius++)for(let dx=-radius;dx<=radius;dx++)for(let dy=-radius;dy<=radius;dy++){
         const x=start.x+dx,y=start.y+dy;
-        if(Math.max(Math.abs(dx),Math.abs(dy))===radius&&this.walkable(x,y))nearby.push({x,y});
+        if(Math.max(Math.abs(dx),Math.abs(dy))===radius&&walk(x,y))nearby.push({x,y});
       }
       const cell=nearby[0];
       if(!cell)return new Set();
@@ -907,8 +915,8 @@
         const at=queue[i];
         for(const [dx,dy] of directions){
           const x=at.x+dx,y=at.y+dy,k=key(x,y);
-          if(seen.has(k)||!this.walkable(x,y))continue;
-          if(dx&&dy&&(!this.walkable(at.x+dx,at.y)||!this.walkable(at.x,at.y+dy)))continue;
+          if(seen.has(k)||!walk(x,y))continue;
+          if(dx&&dy&&(!walk(at.x+dx,at.y)||!walk(at.x,at.y+dy)))continue;
           seen.add(k);queue.push({x,y});
         }
       }
@@ -967,6 +975,14 @@
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
       const goal={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
       const key=(x,y)=>x+','+y,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
+      // Reuse passability probes only during this synchronous query.
+      // A later order must see newly constructed or destroyed buildings.
+      const passable=new Map();
+      const walk=(x,y)=>{
+        const k=x+','+y;
+        if(!passable.has(k))passable.set(k,this.walkable(x,y));
+        return passable.get(k);
+      };
       const open=[],push=node=>{
         open.push(node);let i=open.length-1;
         while(i>0){
@@ -1020,8 +1036,8 @@
         if(node.key===finish)return trace(finish);
         for(const [dx,dy] of moves){
           const x=node.x+dx,y=node.y+dy,k=key(x,y);
-          if(closed.has(k)||!this.walkable(x,y))continue;
-          if(dx&&dy&&(!this.walkable(node.x+dx,node.y)||!this.walkable(node.x,node.y+dy)))continue;
+          if(closed.has(k)||!walk(x,y))continue;
+          if(dx&&dy&&(!walk(node.x+dx,node.y)||!walk(node.x,node.y+dy)))continue;
           const hazard=extraCost?Math.max(0,Number(extraCost({x,y}))||0):0;
           const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0)+hazard;
           const candidate=travelled+step;
@@ -3177,6 +3193,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.35.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.36.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
