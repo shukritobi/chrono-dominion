@@ -291,6 +291,47 @@ def base_building(kind,faction):
         ],[(0,1,2),(0,2,3)],"armor" if index==0 else "dark")
         fragment.hide_render=True
         PARTS["damage_rubble_"+str(index)]=fragment
+    if kind in ("hq","refinery","barracks"):
+        # Explicit roof fracture for the nine non-factory structures. Choose
+        # an authored top assembly to remove in the damaged pose, preserving
+        # all original intact geometry in idle and construction.
+        roof_name={
+            "coalition":{"hq":"Upper citadel armor roof",
+                         "refinery":"Office reinforced canopy",
+                         "barracks":"Stepped corridor roof"},
+            "federation":{"hq":"Top command shell",
+                          "refinery":"Riveted cast-iron roof",
+                          "barracks":"Recessed barracks thermal roof"},
+            "psionic":{"hq":"Ascending neural command obelisk",
+                       "refinery":"Crystalline storage pod",
+                       "barracks":"Low faceted sanctuary wing roof"},
+        }[faction][kind]
+        if "damage_breakable" not in PARTS:
+            matching=[o for o in ROOT.children if o.name.startswith(roof_name)]
+            if not matching:
+                raise ValueError("Missing breakable roof for "+faction+"/"+kind+": "+roof_name)
+            PARTS["damage_breakable"]=matching[0]
+        # Debris is fully editable, and is only shown in the damaged frame.
+        z={"hq":2.00,"refinery":1.68,"barracks":1.48}[kind]
+        collapsed=box("Damage-only fallen roof plate",
+                      (.74,-.91,z),(1.49,.78,.19),"dark",.012)
+        collapsed.rotation_euler.x=.26
+        collapsed.rotation_euler.y=-.35
+        collapsed.hide_render=True
+        PARTS["damage_only_fallen_roof"]=collapsed
+        for i,(dx,dy) in enumerate(((-.38,-.13),(.16,.13),(.53,-.18))):
+            slab=mesh("Damage-only snapped upper facade fragment",[
+                (.63+dx,-1.34+dy,.83),
+                (1.31+dx,-1.34+dy,.74),
+                (1.05+dx,-1.20+dy,1.67),
+                (.81+dx,-1.19+dy,1.39),
+            ],[(0,1,2),(0,2,3)],"armor" if i==0 else "dark")
+            slab.hide_render=True
+            PARTS["damage_only_facade_shard_"+str(i)]=slab
+        spark=sphere("Damage-only exposed sparking roof conductor",
+                     (1.10,-1.09,z+.19),(.18,.18,.19),"glow")
+        spark.hide_render=True
+        PARTS["damage_only_spark"]=spark
     return model
 
 def animate(kind,state,frame,frames):
