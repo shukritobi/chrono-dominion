@@ -100,7 +100,7 @@ g.add(0,'factory',12,12);
 g.water=()=>true;
 g.chooseProduction('tank');
 const balance=g.players[0].credits;
-g.advanceProduction(5);
+g.advanceProduction(9);
 assert.equal(g.queues.length,1);
 assert.equal(g.queues[0].blockedReason,'exit');
 assert.equal(g.cancelProduction('tank'),true);
