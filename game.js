@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.6 — friendly right-of-way and safe yielding in crowded lanes. */
+/* Chrono Dominion v1.7 — safe production exits and reliable queued deployment. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1036,6 +1036,69 @@
         c.beginPath();c.arc(p.x,p.y-12,3.3,0,Math.PI*2);c.fill();c.restore();
       }
     }
+    productionBuilding(side,unitKind){
+      const producerKind=UNITS[unitKind]?.from;
+      if(!producerKind)return null;
+      const home=side===0?{x:6,y:6}:{x:28,y:28};
+      return this.nearest(home,b=>b.owner===side&&b.type==='building'&&
+        b.kind===producerKind&&b.built);
+    }
+    findProductionExit(producer,unitKind,side){
+      // Search the producer's surroundings rather than placing units at a
+      // fixed offset that might be a lake, another building, or a parked tank.
+      const probe={id:-1,kind:unitKind,type:'unit',hp:1};
+      const sign=side===0?1:-1;
+      const radius=this.unitRadius(probe);
+      for(let ring=2;ring<=9;ring++){
+        const choices=[];
+        for(let dx=-ring;dx<=ring;dx++)for(let dy=-ring;dy<=ring;dy++){
+          if(Math.max(Math.abs(dx),Math.abs(dy))!==ring)continue;
+          const x=producer.x+dx,y=producer.y+dy;
+          const forward=(dx+dy)*sign;
+          choices.push({x,y,score:-forward*2+Math.abs(dx-dy)*.15});
+        }
+        choices.sort((a,b)=>a.score-b.score||a.x-b.x||a.y-b.y);
+        for(const spot of choices){
+          if(!this.canOccupyUnit(probe,spot.x,spot.y))continue;
+          // Test the unit's actual footprint, not just its center tile.
+          const edge=radius*.8;
+          if([[edge,0],[-edge,0],[0,edge],[0,-edge]].some(([dx,dy])=>
+              this.water(spot.x+dx,spot.y+dy)))continue;
+          // Reject isolated pockets with no adjacent step to move out of.
+          const exits=[[.75,0],[-.75,0],[0,.75],[0,-.75]];
+          if(!exits.some(([dx,dy])=>this.canOccupyUnit(probe,
+              spot.x+dx,spot.y+dy)))continue;
+          return {x:spot.x,y:spot.y};
+        }
+      }
+      return null;
+    }
+    advanceProduction(dt){
+      // Finished queues wait safely at 100% until an actual clear exit is
+      // available. A destroyed producer pauses progress instead of eating
+      // credits and silently deleting the queued unit.
+      for(let i=this.queues.length-1;i>=0;i--){
+        const q=this.queues[i],unit=UNITS[q.key];
+        if(!unit)continue;
+        const producer=this.productionBuilding(q.side,q.key);
+        if(!producer){q.blockedReason='producer';continue;}
+        if(q.elapsed<q.total){
+          q.elapsed=Math.min(q.total,q.elapsed+dt*(this.power(q.side).low?.55:1));
+        }
+        if(q.elapsed<q.total){q.blockedReason=null;continue;}
+        if((q.nextDeployAt||0)>this.time)continue;
+        const spot=this.findProductionExit(producer,q.key,q.side);
+        if(!spot){
+          q.blockedReason='exit';
+          q.nextDeployAt=this.time+.8;
+          continue;
+        }
+        const spawned=this.add(q.side,q.key,spot.x,spot.y);
+        if(q.key==='harvester')spawned.order={type:'harvest'};
+        this.queues.splice(i,1);
+        if(q.side===0)this.notify(this.name(spawned)+' deployed');
+      }
+    }
     processHarvester(e,dt){
       e.work-=dt;
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&b.kind==='refinery'&&b.built);
@@ -1111,9 +1174,7 @@
       this.unitBuckets=null;
       this.updateProjectiles(dt);
       this.repairBuildings(dt);
-      for(let i=this.queues.length-1;i>=0;i--){const q=this.queues[i],slow=this.power(q.side).low?.55:1;q.elapsed+=dt*slow;if(q.elapsed>=q.total){const origin=this.nearest({x:q.side===0?6:28,y:q.side===0?6:28},b=>b.owner===q.side&&b.kind===UNITS[q.key].from&&b.built);
-          if(origin){const u=this.add(q.side,q.key,clamp(origin.x+(q.side===0?2:-2),1,33),clamp(origin.y+(q.side===0?2:-2),1,33));if(q.key==='harvester')u.order={type:'harvest'};}
-          this.queues.splice(i,1);}}
+      this.advanceProduction(dt);
       if(this.time>=this.nextAI){this.runAI();this.nextAI=this.time+(this.settings.difficulty==='veteran'?5:this.settings.difficulty==='recruit'?13:8);}
       this.particles=this.particles.filter(p=>(p.life-=dt)>0);
       if(this.time>this.nextFog){this.updateFog();this.nextFog=this.time+.3;}
@@ -1349,7 +1410,8 @@
       }).join('');
       $('queueList').innerHTML='<div class="queueHeader">ACTIVE PRODUCTION</div>'+this.queues.filter(q=>q.side===0).slice(0,6).map(q=>{
         const pct=Math.min(100,Math.max(0,Math.round(q.elapsed/q.total*100)));const name=this.escape(this.name({owner:0,kind:q.key}));
-        return '<div class="queueEntry"><span class="name">'+name+'</span><span class="percent">'+pct+'%</span><button data-cancel-key="'+q.key+'" title="Cancel and refund full production cost">×</button><div class="track"><div class="bar" style="width:'+pct+'%"></div></div></div>';
+        const label=q.blockedReason==='producer'?' · PRODUCER OFFLINE':q.blockedReason==='exit'?' · EXIT BLOCKED':'';
+        return '<div class="queueEntry"><span class="name">'+name+label+'</span><span class="percent">'+pct+'%</span><button data-cancel-key="'+q.key+'" title="Cancel and refund full production cost">×</button><div class="track"><div class="bar" style="width:'+pct+'%"></div></div></div>';
       }).join('')+(this.queues.some(q=>q.side===0)?'':'<div class="queueEmpty">No units in production</div>');
       this.updateSelection();
     }
@@ -1659,6 +1721,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'1.6.0',build:'friendly-right-of-way'};
+  window.ChronoDominion={version:'1.7.0',build:'safe-production-deployment'};
   new Game();
 })();
