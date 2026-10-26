@@ -65,11 +65,11 @@ assert.ok(nodes.get('production').innerHTML.includes('coalition-recon.svg'),'rec
 assert.ok(g.cancelProduction('recon'));
 assert.equal(g.players[0].credits,credits,'recon refund works');
 
-// AI scouts a resource route when a recon vehicle is available.
+// AI explores reachable sectors when a recon vehicle is available.
 newGame('desert',5000,'coalition','federation');
 const aiScout=g.add(1,'recon',25,24);
 g.runAI();
-assert.ok(aiScout.order?.type==='attackMove'||aiScout.order?.type==='attack','recon AI starts a scouting or defensive order');
+assert.ok(aiScout.order?.type==='move'||aiScout.order?.type==='attack','recon AI starts a scouting or defensive order');
 // Threats near the AI harvester override scouting with protection.
 const enemyHarvester=g.entities.find(e=>e.owner===1&&e.kind==='harvester');
 const raider=g.add(0,'soldier',enemyHarvester.x+1,enemyHarvester.y+1);
