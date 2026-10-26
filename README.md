@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.3.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.4.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,15 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.4 Large-Battle Collision Optimisation
+
+- **Spatial bucket collision:** units now query nearby neighbours instead of scanning all other units for each attempted movement, and the overlap-correction pass considers only local pairs.
+- **Transitory per-frame index:** updated as units move and discarded after each tick. Existing save/load, specialist movement and collision rules are preserved.
+- **Live battlefield performance display:** approximate frames per second plus current living unit count, refreshed about once per second.
+- **New 130-unit stress test** covers movement, terrain boundaries, occupancy, transient-state cleanup and saved-game compatibility.
+- This improves simulation efficiency but **does not implement full multi-squad traffic reservation or synchronized flow-field pathfinding**.
+- [v1.4 release notes](docs/RELEASE-1.4.md) | [Late-game traffic tests](tests/traffic-v14.test.mjs).
 
 ## v1.3 Connected Squads, AI Flanking & Optional Sound
 
