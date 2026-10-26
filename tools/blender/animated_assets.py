@@ -331,7 +331,9 @@ def animate(kind,state,frame,frames):
         for part,o in PARTS.items():
             if part.startswith("scaffold_"):
                 o.hide_render=not early_build
-            elif part.startswith("damage_rubble_"):
+            elif part.startswith(("damage_rubble_","damage_only_")):
+                # Architecture-authored collapsed steel and debris remain
+                # invisible in idle/construct, including after a damaged pose.
                 o.hide_render=state!="damaged"
         if state=="damaged":
             for part in ("damage_breakable","damage_secondary","damage_tertiary","damage_quaternary"):
