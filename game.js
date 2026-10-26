@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.26 — strike aircraft ordnance and airfield servicing. */
+/* Chrono Dominion v2.27 — sensor-honest anti-air defense targeting. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -35,7 +35,7 @@
     radar:{name:'Radar Array',icon:'◎',cost:900,hp:450,power:-40,requires:['refinery']},
     tech:{name:'Technology Lab',icon:'✧',cost:2200,hp:550,power:-90,requires:['factory','radar']},
     turret:{name:'Sentry Turret',icon:'♜',cost:600,hp:420,power:-20,requires:['generator'],range:5.1,damage:15,rate:1.1},
-    beam:{name:'Energy Tower',icon:'◉',cost:1200,hp:470,power:-75,requires:['barracks','radar'],range:6.5,damage:26,rate:1.65},
+    beam:{name:'Energy Tower',icon:'◉',cost:1200,hp:470,power:-75,requires:['barracks','radar'],range:6.5,damage:26,rate:1.65,antiAirBonus:1.5},
     airfield:{name:'Air Command',icon:'✈',cost:1750,hp:700,power:-55,requires:['factory','radar']}
   };
   const UNITS = {
@@ -1333,6 +1333,15 @@
       }
       return true;
     }
+    defenseTarget(defender){
+      // Towers prioritise detected aircraft but never fire through fog of war.
+      // Allied sensors can spot aircraft beyond a tower's own sight radius.
+      const range=this.stat(defender,'range');
+      const visible=b=>b.owner!==defender.owner&&b.type==='unit'&&b.built&&
+        b.hp>0&&this.sideCanSee(defender.owner,b);
+      return this.nearest(defender,b=>visible(b)&&b.kind==='aircraft',range)||
+        this.nearest(defender,b=>visible(b)&&b.kind!=='aircraft',range);
+    }
     shoot(source,target){
       const def=this.getDef(source),damage=this.stat(source,'damage');
       if(!damage||!target||source.hp<=0||target.hp<=0||source.owner===target.owner)return;
@@ -1342,12 +1351,13 @@
       const faction=this.players[source.owner].faction;
       const bonus=source.kind==='specialist'&&faction==='federation'?1.3:1;
       const psychic=source.kind==='specialist'&&faction==='psionic';
+      const antiAir=source.type==='building'&&target.kind==='aircraft'?(def.antiAirBonus||1):1;
       // A shot is now a moving projectile. Damage is resolved on impact, not firing.
       if(source.owner===0||this.sideCanSee(0,source))this.audio?.play('shot.'+source.kind,{kind:source.kind,faction});
       this.projectiles.push({
         x:source.x,y:source.y,prevX:source.x,prevY:source.y,
         targetId:target.id,owner:source.owner,sourceId:source.id,
-        sourceKind:source.kind,damage:damage*bonus,psychic,age:0,
+        sourceKind:source.kind,damage:damage*bonus*antiAir,psychic,age:0,
         speed:source.kind==='soldier'?8.5:source.kind==='tank'?6.8:source.kind==='heavy'?5:psychic?7:10,
         color:psychic?'#bb78ff':faction==='psionic'?'#a3f5c8':source.type==='building'?'#77d9ff':'#f4b36c'
       });
@@ -1598,7 +1608,7 @@
             this.move(e,e.guardX,e.guardY,dt);
           // Enemy units hold their assigned position until strategic AI orders them.
         }else if(BUILD[e.kind].damage&&!this.power(e.owner).low){
-          const def=BUILD[e.kind];const target=this.nearest(e,b=>b.owner!==e.owner&&b.type==='unit'&&b.built,def.range);
+          const target=this.defenseTarget(e);
           if(target&&e.ready<=0)this.shoot(e,target);
         }
       }
