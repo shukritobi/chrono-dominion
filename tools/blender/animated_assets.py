@@ -48,26 +48,33 @@ def mat(name, rgba, metallic=.3, roughness=.43, glow=0, rough_texture=False):
             if strength: strength.default_value = glow
         if rough_texture:
             noise = nodes.new("ShaderNodeTexNoise")
-            noise.inputs["Scale"].default_value = 22
-            noise.inputs["Roughness"].default_value = .67
+            noise.inputs["Scale"].default_value = 12
+            noise.inputs["Roughness"].default_value = .45
             bump = nodes.new("ShaderNodeBump")
-            bump.inputs["Strength"].default_value = .13
-            bump.inputs["Distance"].default_value = .027
+            bump.inputs["Strength"].default_value = .045
+            bump.inputs["Distance"].default_value = .012
             m.node_tree.links.new(noise.outputs["Fac"], bump.inputs["Height"])
             m.node_tree.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     return m
 
 def create_materials(faction):
     p = FACTIONS[faction]
-    return {
+    result = {
         "armor": mat(faction+"_painted_metal",p["armor"],.67,.43,rough_texture=True),
-        "light": mat(faction+"_beveled_steel",p["light"],.75,.30,rough_texture=True),
+        "light": mat(faction+"_beveled_steel",(.63,.68,.74,1) if faction=="coalition" else p["light"],.52,.36,rough_texture=True),
         "dark": mat(faction+"_black_titanium",p["dark"],.5,.52,rough_texture=True),
-        "glow": mat(faction+"_emissive",p["glow"],.0,.20,glow=3),
+        "glow": mat(faction+"_emissive",p["glow"],.0,.26,glow=1.1),
         "glass": mat(faction+"_glass",tuple(min(1,v*.7+.15) for v in p["glow"][:3])+(1,),.14,.12),
         "rubber": mat(faction+"_rubber",(.055,.062,.073,1),.0,.85),
         "bronze": mat(faction+"_ore",(.76,.43,.18,1),.50,.36,rough_texture=True)
     }
+    glass_bsdf=result["glass"].node_tree.nodes.get("Principled BSDF")
+    if glass_bsdf:
+        transmission=glass_bsdf.inputs.get("Transmission Weight")
+        if transmission:transmission.default_value=.68
+        ior=glass_bsdf.inputs.get("IOR")
+        if ior:ior.default_value=1.45
+    return result
 
 def parent(obj):
     obj.parent = ROOT
@@ -120,8 +127,8 @@ def reset_scene():
     # Cycles software mode is stable on headless Linux CI runners without EGL / X11.
     sc.render.engine="CYCLES"
     sc.cycles.device="CPU"
-    sc.cycles.samples=6
-    sc.cycles.use_denoising=False
+    sc.cycles.samples=32
+    sc.cycles.use_denoising=True
     sc.render.resolution_percentage=100
     sc.render.film_transparent=True
     sc.render.image_settings.file_format="PNG"
@@ -135,13 +142,13 @@ def reset_scene():
     bpy.ops.object.light_add(type="AREA",location=(-4,-5,9))
     sun=bpy.context.object
     sun.name="Large studio softbox"
-    sun.data.energy=1100
+    sun.data.energy=900
     sun.data.shape="DISK"
     sun.data.size=7
     bpy.ops.object.light_add(type="AREA",location=(3,4,5))
     fill=bpy.context.object
     fill.name="Rim softbox"
-    fill.data.energy=280
+    fill.data.energy=360
     fill.data.size=5
     bpy.ops.object.camera_add(location=(6,-8,7))
     sc.camera=bpy.context.object
@@ -276,7 +283,7 @@ def animate(kind,state,frame,frames):
         bsdf=glow.node_tree.nodes.get("Principled BSDF")
         if bsdf:
             strength=bsdf.inputs.get("Emission Strength")
-            if strength:strength.default_value=1.1 if state=="damaged" else (3.8 if frame % 2 else 2.1)
+            if strength:strength.default_value=.45 if state=="damaged" else (1.35 if frame % 2 else .75)
     bpy.context.view_layer.update()
 
 def clear_models():
