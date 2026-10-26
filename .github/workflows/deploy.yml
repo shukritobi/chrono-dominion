@@ -77,6 +77,7 @@ jobs:
           node --check audio/sfx.js
           node --check audio/voices.js
           python3 tools/audio/build_builtin.py --check
+          node tests/builtin-audio-v224.test.mjs
           node tests/original-voice-library-v222.test.mjs
           node --check tools/audio/export-register.mjs
           node tests/audio-soundscape-v221.test.mjs
