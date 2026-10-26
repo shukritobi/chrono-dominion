@@ -1496,16 +1496,30 @@
         .sort((a,b)=>b.time-a.time||Math.hypot(a.x-base.x,a.y-base.y)-
           Math.hypot(b.x-base.x,b.y-base.y))[0];
       if(!report){this.aiPlatoon=null;return new Set();}
-      const soldiers=fighters.filter(u=>u.kind!=='recon'&&u.hp>0&&u.built);
+      const soldiers=fighters.filter(u=>u.kind!=='recon'&&u.hp>0&&u.built&&
+        u.hp/u.maxHp>=.36&&(u.retreatUntil||0)<=this.time&&
+        (u.retreatCooldownAt||0)<=this.time&&
+        !this.aiSupportPlatoon?.ids.includes(u.id));
       const minimum=this.settings.difficulty==='recruit'?5:
         this.settings.difficulty==='veteran'?2:3;
       const earliest=this.settings.difficulty==='recruit'?85:
         this.settings.difficulty==='veteran'?38:57;
-      if(soldiers.length<minimum||this.time<earliest){this.aiPlatoon=null;return new Set();}
       let plan=this.aiPlatoon;
-      if(plan&&(!plan.ids.every(id=>soldiers.some(u=>u.id===id))||
-         this.time-plan.startedAt>125||
+      if(plan){
+        // A casualty must not reset the survivors' staging or assault orders.
+        const survivors=plan.ids.map((id,i)=>({id,slot:plan.slots[i]}))
+          .filter(member=>soldiers.some(u=>u.id===member.id));
+        if(survivors.length>=2){
+          plan.ids=survivors.map(member=>member.id);
+          plan.slots=survivors.map(member=>member.slot);
+        }else plan=null;
+      }
+      if(plan&&(this.time-plan.startedAt>125||
          plan.targetId!==report.id&&this.time-plan.targetTime>50))plan=null;
+      if(this.time<earliest||(!plan&&soldiers.length<minimum)){
+        this.aiPlatoon=null;return new Set();
+      }
+      this.aiPlatoon=plan;
       if(!plan){
         const units=[...soldiers].sort((a,b)=>
           Math.hypot(a.x-base.x,a.y-base.y)-Math.hypot(b.x-base.x,b.y-base.y)||a.id-b.id)
@@ -1568,8 +1582,16 @@
         !committed.has(u.id)&&u.hp/u.maxHp>=.36&&(u.retreatUntil||0)<=this.time)
         .sort((a,b)=>a.id-b.id);
       let plan=this.aiSupportPlatoon;
-      if(plan&&(plan.ids.some(id=>!ready.some(u=>u.id===id))||
-        this.time-plan.startedAt>105))plan=null;
+      if(plan){
+        const survivors=plan.ids.map((id,i)=>({id,slot:plan.slots[i]}))
+          .filter(member=>ready.some(u=>u.id===member.id));
+        if(survivors.length>=2){
+          plan.ids=survivors.map(member=>member.id);
+          plan.slots=survivors.map(member=>member.slot);
+        }else plan=null;
+      }
+      if(plan&&this.time-plan.startedAt>105)plan=null;
+      this.aiSupportPlatoon=plan;
       if(!plan){
         if(ready.length<minimum){this.aiSupportPlatoon=null;return new Set();}
         const units=ready.slice(0,Math.min(4,ready.length));
