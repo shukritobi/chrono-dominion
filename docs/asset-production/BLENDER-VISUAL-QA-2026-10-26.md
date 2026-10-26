@@ -80,20 +80,62 @@ editable Blender geometry, not image-generation output.
   more like a fabrication screen than a hollow bay.
 - The game-facing baked manifest and all approved textures remain unchanged.
 
+## 2026-10-27 verified MK-IV hollow war factories
+
+**Preview-only.** Coalition and Federation War Factories now have genuine
+camera-facing open vehicle assembly bays instead of black painted facades or
+sealed front walls. Both are U-shaped shells with a solid rear wall, a full
+far-side wall, a cut-away near-side wall and a structurally open front portal.
+The Coalition facility has a suspended welding gantry, crawler chassis and
+blue guidance rails; the Federation facility has a hot rear furnace, asymmetric
+chimneys, exposed tracked hull and suspended forging hammer.
+
+- [Successful two-factory MK-IV Blender preview render and QA artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40365994835)
+- [Hollow factory geometry source](../../tools/blender/building_architecture.py)
+- [Saved-Blender-source open-aperture raycast verification](../../tools/blender/verify_factory_open_bays.py)
+- [Preview-only rendering, geometry checks and pixel QA](../../.github/workflows/open-factory-review.yml)
+- Both independent compressed editable `.blend` files were reopened by
+  headless Blender and passed the raycast checks. A +X front-aperture ray at
+  z=1.59 must reach x<0.95 before hitting a mesh; the exposed -Y side ray
+  must reach y>-1.02. These checks prevent painted black doors from passing
+  as genuinely open bays.
+- Both transparent atlases are **160×800 RGBA**, with 5 populated frames
+  (2 idle, 2 construction, 1 damaged) and pixel-distinct idle poses.
+- **Coalition:** idle opaque pixels 6,113; first construction vs idle alpha
+  change **2,178 pixels**; damaged vs idle **283 pixels**.
+- **Federation:** idle opaque pixels 7,200; first construction vs idle alpha
+  change **3,809 pixels**; damaged vs idle **327 pixels**.
+- Relative to the older closed-facade render, the Coalition factory idle
+  alpha silhouette changes at **679 pixels** (IoU 0.8933); the Federation
+  changes at **201 pixels** (IoU 0.9723). The larger difference is in the
+  *interior visibility*, not outer silhouette: this is intentional because
+  both preserve their faction-specific building footprints.
+- Actual rendered comparison at both enlarged and 80px game-scale confirms
+  the Coalition bay now exposes blue machinery and the Federation bay exposes
+  a warm open forge. At 80px, the heavy vehicle chassis details are still
+  subtle; the bay openings are readable.
+- Damage geometry passes pixel QA but the visual damaged state remains too
+  restrained at 80px. Add displaced roof steel, broken portal posts and
+  brighter localized sparks in the next damage-art pass.
+- The production art manifest and all existing published textures are
+  unchanged. The asset roster remains Planned for full gameplay state coverage
+  because the preview pipeline does not yet include critical/destroyed states.
+
 ## Ordered next tasks for hourly agent
 
-1. **Coalition + Federation War Factories:** replace visually closed facade
-   panels with true open assembly bays; render all three factory previews
-   before considering a production promotion.
-2. **Damage state QA across all buildings:** the common renderer now supports
-   scaffold-first construction and fractured facade geometry, but only the
-   Psionic Barracks and Factory have undergone detailed pixel/Blender-source
-   revalidation with the new implementation.
-3. **Radar Arrays and Technology Labs:** upgrade the six unique faction
-   silhouettes to MK-II, render editable sources and compare at 100% and 50%
-   sprite scale.
-4. **Animation polish:** add more mechanical idle movement, exposed
-   production equipment and readable damage breakage beyond five base frames.
+1. **Damage/construction QA for remaining building classes:** inspect
+   Headquarters, Refinery, Barracks and War Factory across all three factions
+   with the common full-size scaffold and fractured-damage renderer. Increase
+   damaged silhouette change and 80px legibility for Coalition/Federation
+   factories before proposing production promotion.
+2. **Radar Arrays and Technology Labs:** author six original faction-distinct
+   MK-II structures, with physical moving radar hardware and readable
+   laboratory silhouettes; render editable sources, 160×800 atlases and
+   compare at 100% and 50% sprite scale.
+3. **Psionic Factory:** consider deepening the physical front fabrication
+   portal; it currently reads as a glowing materialization screen.
+4. **Animation polish:** implement mechanical movement and stronger damaged
+   silhouettes without losing the established faction design language.
 5. Continue defenses, airfields, missing 3D vehicles and atlas manifests.
 
 **Never overwrite approved game textures without explicit approval.**
