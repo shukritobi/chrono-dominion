@@ -594,8 +594,11 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 if side==1:
                     parts["damage_breakable"]=fork
                     parts["damage_secondary"]=tip
-                box("Fork internal reactor slit",(-.09,side*1.17,2.48),
-                    (.055,.13,.97),"glow",.009)
+                fork_slit=box("Fork internal reactor slit",
+                              (-.09,side*1.17,2.48),
+                              (.055,.13,.97),"glow",.009)
+                if side==1:
+                    parts["damage_quaternary"]=fork_slit
                 top_light=sphere("Matter-stabilizer light",
                                  (-.43,side*1.17,3.82),
                                  (.13,.14,.16),"glow")
