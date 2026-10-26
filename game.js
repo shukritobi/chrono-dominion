@@ -176,7 +176,7 @@
         }
         if(this.state==='playing'&&k==='h'){this.centerHQ();return;}
         if(this.state==='playing'&&k===' '){e.preventDefault();this.centerSelection();return;}
-        this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(this.placing){this.placing=null;this.updateUI(true);}else if(this.abilityArmedId){this.abilityArmedId=null;this.notify('Ability cancelled');this.updateSelection();}else if(this.state==='playing'||this.state==='paused')this.pause();}});
+        this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(!this.cancelCurrentMode()&&(this.state==='playing'||this.state==='paused'))this.pause();}});
       window.addEventListener('keyup',e=>this.keys.delete(e.key.toLowerCase()));
       this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
       this.canvas.addEventListener('pointerdown',e=>this.pointerDown(e));
@@ -199,6 +199,7 @@
       $('openHow').onclick=()=>this.showMenu('howMenu');
       $('backHow').onclick=()=>this.showMenu('mainMenu');
       $('start').onclick=()=>{const get=id=>$(id).value;this.audio?.unlock();this.newMatch({playerFaction:get('playerFaction'),enemyFaction:get('enemyFaction'),map:get('mapSelect'),difficulty:get('difficulty'),startingCredits:Number(get('startingCredits'))});};
+      $('cancelMode').onclick=()=>this.cancelCurrentMode();
       $('pauseBtn').onclick=()=>this.pause();$('resume').onclick=()=>this.pause();
       $('soundToggle').onclick=()=>{
         this.audio?.setEnabled(!this.audio.enabled);
@@ -452,6 +453,12 @@
       return (def.requires||[]).every(k=>this.count(side,k)>0);
     }
     power(side){let make=0,use=0;for(const e of this.entities){if(e.owner!==side||e.type!=='building'||!e.built)continue;const n=BUILD[e.kind].power||0;if(n>0)make+=n;else use-=n;}return {make,use,low:use>make};}
+    cancelCurrentMode(){
+      if(this.state!=='playing'||!(this.placing||this.abilityArmedId||this.attackMoveArmed))return false;
+      this.placing=null;this.abilityArmedId=null;this.attackMoveArmed=false;
+      this.resetTouch();this.notify('Command cancelled');this.updateUI(true);
+      return true;
+    }
     chooseProduction(key){
       if(this.state!=='playing')return;
       const def=BUILD[key]||UNITS[key],side=0;
@@ -667,6 +674,7 @@
       }
       this.attackMoveArmed=false;
       this.particles.push({x:p.gx,y:p.gy,life:.65,color:target?'#ff7c7c':'#80dbee',type:'marker'});
+      this.updateUI(true);
     }
     specialistAbilityInfo(e){
       return e?.kind==='specialist'?ABILITIES[this.players[e.owner]?.faction]:null;
@@ -680,8 +688,8 @@
       if(remaining>0){this.notify(ability.name+' ready in '+Math.ceil(remaining)+'s');return false;}
       if(this.players[e.owner].faction==='coalition'){
         this.abilityArmedId=e.id;this.attackMoveArmed=false;this.placing=null;
-        this.notify('Chrono Jump: right-click clear terrain within 6 tiles');
-        this.updateSelection();return true;
+        this.notify('Chrono Jump: tap clear terrain within 6 tiles');
+        this.updateUI(true);return true;
       }
       return this.activateAbility(e);
     }
@@ -732,8 +740,8 @@
       if(!units.length)return false;
       if(action==='attackMove'){
         this.attackMoveArmed=true;
-        this.notify('Attack-move armed: right-click a destination');
-        this.updateSelection();return true;
+        this.notify('Attack-move armed: tap a destination');
+        this.updateUI(true);return true;
       }
       if(!['stop','guard','hold','aggressive'].includes(action))return false;
       this.attackMoveArmed=false;this.abilityArmedId=null;
@@ -2038,6 +2046,7 @@
     }
     escape(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
     updateUI(force=false){
+      $('cancelMode').classList.toggle('hidden',this.state!=='playing'||!(this.placing||this.abilityArmedId||this.attackMoveArmed));
       if(!this.players.length)return;
       const me=this.players[0],power=this.power(0);
       $('money').textContent='¤ '+Math.floor(me.credits).toLocaleString();
