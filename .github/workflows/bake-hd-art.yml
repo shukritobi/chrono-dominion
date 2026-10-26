@@ -1,0 +1,83 @@
+name: Bake original Blender art
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/blender/animated_assets.py"
+      - "tools/blender/pack_animated.py"
+      - ".github/workflows/bake-hd-art.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chrono-hd-bake
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and Pillow
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-pil
+          blender --version | head -2
+      - name: Author editable 3D models and animated frames
+        run: |
+          blender --background --threads 4 --python tools/blender/animated_assets.py -- \
+            --output generated/chrono-hd \
+            --kinds soldier,specialist,heavy,aircraft,generator,factory,radar \
+            --factions coalition,federation,psionic --size 160
+      - name: Assemble production transparency atlases
+        run: |
+          python3 tools/blender/pack_animated.py \
+            --input generated/chrono-hd --output art/baked-v1 --size 160
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path("art/baked-v1/manifest.json").read_text())
+          expected={"soldier","specialist","heavy","aircraft","generator","factory","radar"}
+          for faction in ("coalition","federation","psionic"):
+              assert set(manifest["entries"][faction])==expected
+          assert len(list(Path("generated/chrono-hd/sources").glob("*.blend")))==21
+          assert len(list(Path("art/baked-v1").glob("*.png")))==21
+          print("Verified all 21 rendered model atlases and editable Blender sources")
+          PY
+      - name: Preserve editable Blender models
+        run: |
+          mkdir -p art/sources/blender
+          cp generated/chrono-hd/sources/*.blend art/sources/blender/
+      - name: Upload models and sheets for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-dominion-original-hd-art
+          path: |
+            art/baked-v1/
+            art/sources/blender/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Commit rendered originals into playable game
+        run: |
+          git config user.name "Chrono Dominion Art Pipeline"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/baked-v1 art/sources/blender
+          if git diff --cached --quiet; then
+            echo "All animation atlases are current"
+            exit 0
+          fi
+          git commit -m "Bake original Blender 3D models and animated sprite sheets"
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo "Pushed rendered models and atlases"
+              exit 0
+            fi
+            echo "Retrying art push, attempt $attempt"
+            sleep 5
+          done
+          exit 1
