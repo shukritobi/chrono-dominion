@@ -9,7 +9,7 @@ v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoo
 
 v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. The [verified main-branch CI and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed. The nine scripted matches recorded 5/9 actual assault-launch scenarios, 1 stalled-attacker reroute, 6/9 discovered objectives, 10 scouts lost and 74.8% mean survey coverage. These do not establish human win rates.
 
-v2.19 adds observed-only AI building focus fire, damage-aware target spread, reserved siege flanks and original tracer/shockwave drawing. CI and match results must be verified before claiming deployment or balance gains.
+v2.19 adds observed-only AI building focus fire, damage-aware target spread, reserved siege flanks and original tracer/shockwave drawing. The [v2.19 PR suite](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed, including nine scripted matches, with 32 changed siege orders, 294 confirmed building hits, 5/9 assault launches, 12 recon losses and 74.8% mean survey coverage. Gameplay balance and real-device performance remain unverified.
 
 This status describes committed code and automated coverage. It does **not** imply comprehensive manual browser playtesting.
 

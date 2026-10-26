@@ -16,9 +16,24 @@
 - Focus and damage metrics are transient, reset on game start/load and never modify the existing v1 local-storage save schema. Old projectiles with no previous-position fields draw safely.
 - These headless tests are not real-browser GPU profiling or human game win-rate measurements.
 
-## Verification
+## Verified scripted test results
 
-Full pull-request CI, nine 240-second scripted battles and Pages deployment are required before claiming a live verified release. Compare findings to verified v2.18 (6/9 enemy objectives found, 3/9 platoon creation, 5/9 assault launches, 10 scouts lost, 74.8% mean AI survey). New siege counters have no v2.18 baseline.
+The [v2.19 pull-request workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed the complete gameplay regression suite and nine 240-second scripted skirmishes. This includes the new siege focus, tracer, formation, fog-honesty and save-compatibility test. The merged code is commit `53420c4`; verify its [production deployment workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40304789108) independently.
+
+| Metric | v2.18 | v2.19 |
+|---|---:|---:|
+| Total scripted-match combat damage | 40,751 | 44,588 |
+| Enemy objectives discovered | 6/9 | 6/9 |
+| Platoon staging | 3/9 | 3/9 |
+| Assault launches | 5/9 | 5/9 |
+| Recon vehicles lost | 10 | 12 |
+| Mean surveyed terrain | 74.8% | 74.8% |
+| Cases with observed siege focus | Not measured | 1/9 |
+| Changed siege-focus orders | Not measured | 32 |
+| Confirmed AI building projectile hits | Not measured | 294 |
+| Recovered assault reroutes | 1 | 2 |
+
+All nine matches generated mining income and combat. Improvements in aggregate damage do **not** demonstrate better win rates, and recon losses increased. A separate baseline for focus orders and AI hits was not recorded before v2.19.
 
 ## Next priorities
 

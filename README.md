@@ -14,6 +14,7 @@
 - **Less crowded attacks:** AI platoon members reserve nearby perimeter slots to spread out when attacking known objectives; stalled units avoid repeating their previous blocked destination.
 - **Clearer combat visuals:** Projectiles use movement-based tracer strokes and vehicle strikes create original fading shockwave rings. All effects respect the player's fog and existing save schema.
 - **Measured combat:** Nine-scenario lab now reports siege focus orders and confirmed AI hits on structures. See [v2.19 release notes](docs/RELEASE-2.19.md).
+- [Full v2.19 PR verification](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed. Recorded 44,588 combined combat damage, 32 changed siege orders and 294 confirmed AI hits on buildings in scripted simulations; scout losses rose to 12.
 
 ### Reachable AI assaults and recovery (v2.18)
 
