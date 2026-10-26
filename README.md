@@ -4,7 +4,15 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.6.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.8.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+
+
+### Touch camera controls (v2.8)
+
+- One-finger tap selects a friendly unit, or commands selected units when tapping terrain; drag pans the camera.
+- Two fingers drag to pan and pinch to zoom (0.65× to 1.8×), keeping the terrain beneath the gesture midpoint in place.
+- Pinching does not place a queued structure or issue accidental orders. Cancelled gestures are discarded. Mouse and keyboard controls remain supported.
+- Gesture transitions are covered by `tests/touch-v28.test.mjs`; physical phones and tablets still require manual testing.
 
 ## Get playing
 
