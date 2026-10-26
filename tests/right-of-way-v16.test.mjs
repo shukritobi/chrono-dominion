@@ -81,5 +81,15 @@ const restored=g.entityById(follower.id);
 assert.ok(restored?.yieldOrder);
 assert.equal(restored.order?.x,5);
 assert.equal(g.unitBuckets,null);
+// Fresh player orders override the temporary courtesy manoeuvre immediately.
+g.selected=[restored.id];
+g.command({gx:19,gy:19},{shiftKey:false});
+assert.equal(restored.yieldOrder,null,'new direct destination overrides temporary yield');
+assert.equal(restored.order?.type,'move');
+assert.equal(restored.yieldRetryAt,0);
+restored.yieldOrder={x:9,y:9,expires:g.time+3};
+assert.equal(g.unitAction('stop'),true);
+assert.equal(restored.yieldOrder,null,'stop stance immediately cancels yielding');
+assert.equal(restored.order,null);
 g.draw();
 console.log('PASS: harvester priority, ally yielding, hold and hostile exclusions, no-pocket safety and save resume');
