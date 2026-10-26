@@ -9,6 +9,9 @@
 - Short landscape screens reduce radar height and constrain selection and queue panels.
 - Sidebar scrolling is contained to avoid unintended page gestures. Mouse and keyboard styles remain unchanged.
 - Added CSS regression checks to npm scripts and GitHub Actions.
+- Added a touch-accessible CANCEL button while placing structures, choosing attack-move destinations or targeting Coalition Chrono Jump. Escape uses the same cancellation path and leaves credits, selections and cooldowns untouched.
+- Added behavioral regression coverage in `tests/mobile-cancel-v29.test.mjs`.
+- Corrected the runtime version metadata and home-screen banner to 2.9 after CI exposed a version mismatch.
 
 ## Limits
 
