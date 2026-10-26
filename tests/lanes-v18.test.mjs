@@ -79,9 +79,10 @@ const left=game.add(0,'soldier',10.8,12);
 const opposed=game.add(0,'soldier',17.8,12);
 assert.equal(game.move(left,17,12,.05),false);
 assert.equal(left.lanePass?.dir,1);
-const before=opposed.x;
-game.move(opposed,10,12,.05);
-assert.ok(opposed.x>=before-.001,'opponent cannot enter while first direction owns passage');
+// Approaching the threshold is legal. Only crossing into the reserved
+// corridor is forbidden; wait until the opponent actually reaches its mouth.
+for(let i=0;i<45;i++)game.move(opposed,10,12,.05);
+assert.ok(opposed.x>=17.49,'opponent remains outside while first direction owns passage');
 assert.equal(opposed.laneWaiting,lane.id);
 
 // No reservations on open maps or in corridors too short to manage.
