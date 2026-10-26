@@ -189,7 +189,7 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 .veterancyInfo { color:#f2d99c; font-size:12px; letter-spacing:.045em; font-weight:700; }
 
 /* v2.21 soundscape mixer, local-only audio import */
-.audioPanel{position:absolute;right:14px;top:60px;width:min(320px,calc(100% - 20px));z-index:9;
+.audioPanel{position:absolute;right:14px;top:60px;width:min(320px,calc(100% - 20px));z-index:12;
   padding:15px;background:#0b1b2cf5;border:1px solid #7299ad;border-radius:7px;color:#d8edf5;
   box-shadow:0 14px 36px #0009;touch-action:auto;user-select:text}
 .audioPanelHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
