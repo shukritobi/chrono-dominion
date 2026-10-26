@@ -1,0 +1,141 @@
+name: Psionic Silhouette Blender Review
+
+# Original hand-authored procedural meshes. Preview-only by design:
+# this job never modifies production art or the live game.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/psionic-silhouette-review.yml"
+      - "tools/blender/building_architecture.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-psionic-silhouette-review
+  cancel-in-progress: true
+
+jobs:
+  render-two:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout model source
+        uses: actions/checkout@v4
+      - name: Verify Python syntax and asset lists
+        run: |
+          python3 -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/pack_animated.py tools/blender/asset_studio.py
+          python3 tools/blender/check_geometry_calls.py
+      - name: Install Blender and Pillow
+        run: |
+          # The hosted Ubuntu image normally has apt package lists already.
+          # Avoid an unbounded apt-get update, which has stalled earlier runs.
+          export DEBIAN_FRONTEND=noninteractive
+          if ! command -v blender >/dev/null || ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            timeout 540s sudo apt-get install -y -qq --no-install-recommends \
+              -o Acquire::Retries=2 -o Acquire::http::Timeout=30 \
+              -o Acquire::https::Timeout=30 blender python3-pil || {
+                echo "::warning::Cached apt install unavailable; refreshing package metadata with a timeout"
+                timeout 180s sudo apt-get update -qq \
+                  -o Acquire::Retries=1 -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30
+                timeout 540s sudo apt-get install -y -qq --no-install-recommends \
+                  -o Acquire::Retries=2 -o Acquire::http::Timeout=30 \
+                  -o Acquire::https::Timeout=30 blender python3-pil
+              }
+          fi
+          blender --version | head -2
+          python3 -c 'from PIL import Image; print("Pillow ready")'
+      - name: Test production isolation and sprite validation
+        run: python3 -m unittest discover -s tests -p 'test_blender_asset_studio.py' -v
+      - name: Render and validate 6 independent editable Blender models
+        shell: bash
+        run: |
+          set -euo pipefail
+          for faction in psionic; do
+            for kind in barracks factory; do
+              echo "::group::Blender $faction / $kind"
+              stage="generated/psionic-silhouettes/$faction/$kind"
+              blender --background --threads 4 --python-exit-code 1 \
+                --python tools/blender/animated_assets.py -- \
+                --output "$stage" --kinds "$kind" \
+                --factions "$faction" --size 160
+              python3 tools/blender/pack_animated.py \
+                --input "$stage" --output "$stage/packed" --size 160
+              python3 tools/blender/asset_studio.py validate \
+                --stage "$stage" --faction "$faction" --kind "$kind"
+              python3 tools/blender/asset_studio.py preview \
+                --stage "$stage" --faction "$faction" --kind "$kind"
+              test -s "$stage/sources/$faction-$kind.blend"
+              test -s "$stage/packed/$faction-$kind.png"
+              test -s "$stage/preview.png"
+              echo "::endgroup::"
+            done
+          done
+      - name: Prepare comparative faction contact sheet
+        run: |
+          python3 - <<'PY'
+          import hashlib, json
+          from PIL import Image, ImageDraw
+          from pathlib import Path
+          root=Path("generated/psionic-silhouettes")
+          cols=("psionic",)
+          kinds=("barracks","factory")
+          w,h=520,1690
+          out=Image.new("RGB",(w,h),(13,20,33))
+          draw=ImageDraw.Draw(out)
+          draw.text((24,12),"CHRONO DOMINION / PSIONIC SILHOUETTE MK-III REVIEW",fill=(132,221,240))
+          for ix,faction in enumerate(cols):
+              draw.text((ix*486+18,39),faction.upper(),fill=(233,240,249))
+          summary=[]
+          for iy,kind in enumerate(kinds):
+              for ix,faction in enumerate(cols):
+                  stage=root/faction/kind
+                  with Image.open(stage/"preview.png") as p:
+                      p=p.convert("RGB")
+                      p.thumbnail((472,790),Image.Resampling.LANCZOS)
+                      out.paste(p,(ix*486+12,iy*817+65))
+                  blend=stage/"sources"/(faction+"-"+kind+".blend")
+                  atlas=stage/"packed"/(faction+"-"+kind+".png")
+                  entry={"faction":faction,"kind":kind,"model_bytes":blend.stat().st_size,
+                         "atlas_bytes":atlas.stat().st_size,
+                         "atlas_sha256":hashlib.sha256(atlas.read_bytes()).hexdigest()}
+                  summary.append(entry)
+          # Quantify the visual change between the two model classes.
+          from PIL import ImageChops
+          silhouettes={}
+          for kind in kinds:
+              with Image.open(root/"psionic"/kind/"packed"/("psionic-"+kind+".png")) as im:
+                  frame=im.convert("RGBA").crop((0,0,160,160))
+                  alpha=frame.getchannel("A")
+                  silhouette=alpha.point(lambda p: 255 if p>=32 else 0)
+                  silhouettes[kind]=silhouette
+                  summary_entry=next(x for x in summary if x["kind"]==kind)
+                  summary_entry["alpha_bbox"]=list(alpha.getbbox() or ())
+                  summary_entry["opaque_pixels"]=sum(p>=32 for p in alpha.getdata())
+          overlap=sum(a>0 and b>0 for a,b in zip(
+              silhouettes["barracks"].getdata(),silhouettes["factory"].getdata()))
+          union=sum(a>0 or b>0 for a,b in zip(
+              silhouettes["barracks"].getdata(),silhouettes["factory"].getdata()))
+          similarity=round(overlap/max(1,union),4)
+          for item in summary:
+              item["barracks_factory_silhouette_iou"]=similarity
+          print("Barracks/factory silhouette intersection-over-union:",similarity)
+          assert union>1000, "Rendered silhouettes unexpectedly empty"
+          target=root/"psionic-two-building-review.png"
+          out.save(target,optimize=True)
+          (root/"review-manifest.json").write_text(json.dumps(summary,indent=2)+"\n")
+          assert len(summary)==2
+          print("Created 2 rendered + validated Psionic preview assets")
+          PY
+      - name: Upload preview sheets, editable Blender models and RGBA atlases
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-two-silhouette-mk3-review
+          path: generated/psionic-silhouettes/
+          retention-days: 30
+          if-no-files-found: error
