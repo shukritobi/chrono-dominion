@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.32 — dedicated air-only Skyguard defenses. */
+/* Chrono Dominion v2.33 — threat-aware multi-airfield recovery. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1336,6 +1336,21 @@
       }
       return best;
     }
+    chooseAirfield(plane){
+      // Threats come exclusively from this side's timestamped sensor reports.
+      // This selection runs at sortie start or after a pad is destroyed.
+      let best=null,bestScore=Infinity;
+      for(const pad of this.entities){
+        if(pad.owner!==plane.owner||pad.kind!=='airfield'||!pad.built||pad.hp<=0)continue;
+        const flight=dist(plane,pad);
+        const score=flight+Math.min(20,this.airReturnExposure(plane.owner,plane,pad)*5);
+        if(score<bestScore-1e-6||
+           (Math.abs(score-bestScore)<=1e-6&&pad.id<(best?.id??Infinity))){
+          best=pad;bestScore=score;
+        }
+      }
+      return best;
+    }
     serviceAircraft(e,dt){
       if(e.kind!=='aircraft')return false;
       const capacity=UNITS.aircraft.ammo;
@@ -1351,7 +1366,18 @@
          Number.isFinite(e.rearmRetryAt)&&e.rearmRetryAt>this.time)return false;
       if(e.ammo>=capacity&&!e.rearming&&!critical)return false;
       if(e.ammo>0&&!e.rearming&&!critical)return false;
-      const pad=this.nearest(e,b=>b.owner===e.owner&&b.kind==='airfield'&&b.built&&b.hp>0);
+      // Keep a stable airfield assignment during the flight to avoid
+      // bouncing between pads as the aircraft changes position.
+      if(!e.rearming)e.rearmPadId=null;
+      const validPad=b=>b&&b.owner===e.owner&&b.kind==='airfield'&&b.built&&b.hp>0;
+      let pad=this.entities.find(b=>b.id===e.rearmPadId&&validPad(b));
+      if(!pad){
+        pad=this.chooseAirfield(e);
+        if(e.rearming&&e.rearmPadId!==pad?.id){
+          e.rearmDetour=null;e.rearmDetourDoneFor=null;
+        }
+        e.rearmPadId=pad?.id??null;
+      }
       if(!pad){
         // Losing the airfield must not permanently immobilize an aircraft.
         if(e.rearming){
@@ -1360,7 +1386,7 @@
         }
         e.repairRetreat=false;
         e.rearmPowerOutage=0;
-        e.rearmDetour=null;e.rearmDetourDoneFor=null;
+        e.rearmDetour=null;e.rearmDetourDoneFor=null;e.rearmPadId=null;
         return false;
       }
       if(!e.rearming){
@@ -1397,7 +1423,7 @@
           e.rearming=false;
           e.order=e.rearmResume||null;e.rearmResume=null;
           e.rearmProgress=0;
-          e.rearmDetour=null;e.rearmDetourDoneFor=null;
+          e.rearmDetour=null;e.rearmDetourDoneFor=null;e.rearmPadId=null;
           if(e.repairRetreat)e.retreatCooldownAt=this.time+40;
           e.repairRetreat=false;
           e.rearmPowerOutage=0;
@@ -1431,7 +1457,7 @@
           e.repairRetreat=false;
           e.rearming=false;
           e.rearmProgress=0;
-          e.rearmDetour=null;e.rearmDetourDoneFor=null;
+          e.rearmDetour=null;e.rearmDetourDoneFor=null;e.rearmPadId=null;
           e.order=e.rearmResume||null;
           e.rearmResume=null;
         }
@@ -3143,6 +3169,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.32.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.33.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
