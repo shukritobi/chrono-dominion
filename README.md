@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-25):** Early playable browser skirmish prototype `v1.6.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v1.7.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. New 32-direction isometric tank atlases, independently rotating turret sprites, and three original reactor sprites are integrated. Detailed production sprites and other artwork remain in progress.
 
 ## Get playing
 
@@ -12,6 +12,14 @@ The prototype is static HTML/CSS/JS. No installation, account, server or depende
 
 - Online, once GitHub Pages has been enabled: **https://shukritobi.github.io/chrono-dominion/**
 - Locally: download this repository and open `index.html` in your browser, or use `python -m http.server 8080` and open `http://localhost:8080`.
+
+## v1.7 Reliable Production Deployment
+
+- **Safe exits:** completed units now search for a clear nearby deployment point instead of spawning at a fixed offset inside water, buildings or parked units.
+- **Blocked queues are retained:** a finished order waits at 100% for a free exit; destroyed production buildings pause paid orders until rebuilt.
+- **Clear feedback:** the production queue shows **EXIT BLOCKED** or **PRODUCER OFFLINE**, and the full refund option remains available.
+- **Existing saves:** no schema migration; queued orders survive browser save/load and both sides use the same exit rules.
+- [v1.7 release notes](docs/RELEASE-1.7.md) | [Safe deployment regression tests](tests/production-v17.test.mjs).
 
 ## v1.6 Squad Right-of-Way
 
