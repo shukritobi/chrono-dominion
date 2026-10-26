@@ -73,6 +73,17 @@
       ],
       "directions": 1,
       "sourceType": "original SVG recon vehicle pilot; animation planned"
+    },
+    "antiAirDefense": {
+      "renderer": "art/animated-entities.js",
+      "kind": "flak",
+      "states": [
+        "idle",
+        "construction",
+        "damaged"
+      ],
+      "sourceType": "original procedural vector geometry; faction-coloured tracking array",
+      "packedAtlasStatus": "not yet rendered"
     }
   },
   "assets": [

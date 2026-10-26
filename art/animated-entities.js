@@ -351,6 +351,21 @@
         glow(c,p[0],p[1],21,t.accent,.2+.2*pulse);
         ellipse(c,p[0],p[1],6,6,t.glass,t.accent);
       }
+    }else if(kind==='flak'){
+      // Faction-coloured rotating twin-barrel anti-air array.
+      modelBox(c,P,0,0,.73,.88,.88,1.32,t);
+      modelBox(c,P,0,0,2.05,.71,.7,.25,{...t,light:t.side});
+      const swivel=projectFactory(time*.62+e.id*.13,20);
+      modelBox(c,swivel,0,0,2.45,.77,.56,.27,t);
+      for(const sign of [-1,1]){
+        modelBox(c,swivel,.14,sign*.46,2.77,.68,.2,.22,{...t,light:t.metal});
+        strokeModel(c,swivel,[[.18,sign*.46,2.82],[1.18,sign*.46,3.10]],t.light,3.4);
+        const muzzle=swivel(1.18,sign*.46,3.10);
+        ellipse(c,muzzle[0],muzzle[1],3.6,2.5,t.accent);
+      }
+      const sensor=P(0,0,3.20);
+      glow(c,sensor[0],sensor[1],15,t.accent,.11+.11*pulse);
+      ellipse(c,sensor[0],sensor[1],5,3,t.glass,t.accent);
     }else if(kind==='airfield'){
       // Wide landing pad with animated approach beacon and hangar roof.
       modelBox(c,P,-.46,.33,.73,.98,.91,1.4,t);
