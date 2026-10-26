@@ -89,8 +89,8 @@ assert.equal(g.queues.length,1,'reserved credits and order survive destruction')
 g.updateUI(true);
 assert.ok(elements.get('queueList').innerHTML.includes('PRODUCER OFFLINE'));
 const replacement=g.add(0,'factory',13,13);
-g.advanceProduction(2);
-assert.equal(unitCount(0,'tank'),1,'rebuilt factory finishes old order');
+g.advanceProduction(3);
+assert.equal(unitCount(0,'tank'),1,'rebuilt factory finishes old order, even under low power');
 assert.equal(g.queues.length,0);
 assert.ok(replacement.hp>0);
 
