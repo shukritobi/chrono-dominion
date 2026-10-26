@@ -4,7 +4,7 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.15.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
+> **Project status (2026-10-26):** Early playable browser skirmish prototype `v2.16.0`. The simulated skirmish engine is functional but is not a finished clone of any commercial game. Procedural 32-direction isometric tank rendering, independently rotating turrets and original reactor SVGs are integrated. The packed PNG atlas manifest is still empty, and detailed production animation remains unfinished.
 
 
 ### Resilient AI platoons (v2.15)
@@ -26,6 +26,13 @@
 - The bonus never uses hidden enemy coordinates or the human player's fog, and expires when the AI has a recent building sighting.
 - See [v2.14 notes](docs/RELEASE-2.14.md).
 - The [verified v2.14 balance check](https://github.com/shukritobi/chrono-dominion/actions/runs/40295190424) found enemy buildings in 6/9 simulated cases, formed platoons in 4/9 and lost 11 scouts; actual player testing remains necessary.
+
+### Unit veterancy (v2.16)
+
+- Combat units gain **Veteran** after two confirmed kills and **Elite** after five. Promotions give incremental damage, movement speed and fire-rate bonuses, with no automatic healing.
+- The selection panel displays rank and confirmed kills, and a star or double-star badge appears over ranked units on the battlefield.
+- Ordinary projectiles and damage-dealing specialist abilities credit confirmed kills; the old local save schema already holds the kill count, and older saves start at Recruit.
+- See [v2.16 notes](docs/RELEASE-2.16.md) and [rank tests](tests/veterancy-v216.test.mjs).
 
 ### Recon evasive routing (v2.12)
 

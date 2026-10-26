@@ -336,7 +336,9 @@
       this.aiPlatoon=this.restoreAIPlatoon(saved.aiPlatoon,saved.entities);
       this.aiSupportPlatoon=this.restoreAIPlatoon(saved.aiSupportPlatoon,saved.entities);
       if(this.aiSupportPlatoon&&this.aiPlatoon&&this.aiSupportPlatoon.ids.some(id=>this.aiPlatoon.ids.includes(id)))this.aiSupportPlatoon=null;
-      this.entities=saved.entities.map(e=>({...e,lanePass:null,laneWaiting:null}));this.unitBuckets=null;this.laneReservations=new Map();
+      this.entities=saved.entities.map(e=>({...e,
+        kills:Number.isInteger(e.kills)&&e.kills>=0?Math.min(9999,e.kills):0,
+        lanePass:null,laneWaiting:null}));this.unitBuckets=null;this.laneReservations=new Map();
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
       this.projectiles=Array.isArray(saved.projectiles)?saved.projectiles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
@@ -444,7 +446,30 @@
       return this.entities.some(e=>e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
     }
     getDef(e){return BUILD[e.kind]||UNITS[e.kind];}
-    stat(e,key){const base=this.getDef(e)[key]||0,mods=FACTION_BALANCE[this.players[e.owner]?.faction]?.[e.kind];return base*(mods?.[key]??1);}
+    veterancyRank(e){
+      if(!e||e.type!=='unit'||e.kind==='harvester')return 0;
+      const kills=Number.isInteger(e.kills)&&e.kills>=0?e.kills:0;
+      return kills>=5?2:kills>=2?1:0;
+    }
+    veterancyName(e){return ['RECRUIT','VETERAN','ELITE'][this.veterancyRank(e)];}
+    awardKill(source){
+      if(!source||source.hp<=0)return;
+      const before=this.veterancyRank(source);
+      source.kills=Math.min(9999,(Number.isInteger(source.kills)&&source.kills>=0?source.kills:0)+1);
+      const after=this.veterancyRank(source);
+      if(after<=before)return;
+      this.particles.push({x:source.x,y:source.y,life:1,color:'#f4cf78',type:'marker'});
+      if(source.owner===0)this.notify(this.name(source)+' promoted: '+this.veterancyName(source));
+      if(this.selected.includes(source.id))this.updateSelection();
+    }
+    stat(e,key){
+      const base=this.getDef(e)[key]||0;
+      const mods=FACTION_BALANCE[this.players[e.owner]?.faction]?.[e.kind];
+      const rank=this.veterancyRank(e);
+      const bonus=key==='damage'?[1,1.12,1.25][rank]:
+        key==='speed'?[1,1.06,1.12][rank]:1;
+      return base*(mods?.[key]??1)*bonus;
+    }
     unitRadius(e){return e.kind==='soldier'||e.kind==='specialist'?.23:e.kind==='heavy'?.56:e.kind==='harvester'?.47:e.kind==='recon'?.33:.39;}
     name(e){return NAMES[this.players[e.owner].faction][e.kind]||this.getDef(e).name;}
     count(side,kind){return this.entities.filter(e=>e.owner===side&&e.kind===kind&&e.hp>0&&e.built).length;}
@@ -719,7 +744,7 @@
             const beforeHp=u.hp;u.hp-=amount;
             this.noteBuildingDamage(u,e.owner);
             if(this.stats[e.owner])this.stats[e.owner].damageDealt+=Math.min(amount,beforeHp);
-            if(u.hp<=0){this.recordLoss(u,e.owner);e.kills++;this.selected=this.selected.filter(id=>id!==u.id);
+            if(u.hp<=0){this.recordLoss(u,e.owner);this.awardKill(e);this.selected=this.selected.filter(id=>id!==u.id);
               this.particles.push({x:u.x,y:u.y,life:1,color:'#ffa95e',type:'boom'});}
           }else if(faction==='psionic'){
             u.stunnedUntil=Math.max(u.stunnedUntil||0,this.time+3.8);
@@ -1158,7 +1183,7 @@
     shoot(source,target){
       const def=this.getDef(source),damage=this.stat(source,'damage');
       if(!damage||!target||source.hp<=0||target.hp<=0||source.owner===target.owner)return;
-      source.ready=def.rate||1.2;
+      source.ready=Math.max(.2,(def.rate||1.2)*[1,.93,.85][this.veterancyRank(source)]);
       const faction=this.players[source.owner].faction;
       const bonus=source.kind==='specialist'&&faction==='federation'?1.3:1;
       const psychic=source.kind==='specialist'&&faction==='psionic';
@@ -1199,7 +1224,7 @@
         if(target.hp<=0){
           this.recordLoss(target,shot.owner);
           const killer=this.entityById(shot.sourceId);
-          if(killer)killer.kills++;
+          if(killer&&killer.owner===shot.owner)this.awardKill(killer);
           this.particles.push({x:target.x,y:target.y,life:1,color:'#ffa05a',type:'boom'});
           this.selected=this.selected.filter(id=>id!==target.id);
         }
@@ -2173,6 +2198,9 @@
       }
       const e=targets[0];
       let html='<strong>'+this.escape(this.name(e)).toUpperCase()+'</strong><p>'+Math.max(0,Math.ceil(e.hp))+' / '+e.maxHp+' HP · '+(e.owner===0?'FRIENDLY':'HOSTILE')+(e.built?'':' · CONSTRUCTING '+Math.round(e.construction*100)+'%')+'</p>';
+      if(e.type==='unit'&&e.kind!=='harvester')
+        html+='<p class="veterancyInfo">'+this.veterancyName(e)+' · '+(e.kills||0)+
+          ' KILLS'+(this.veterancyRank(e)?' · COMBAT BONUSES ACTIVE':'')+'</p>';
       if(e.kind==='recon')html+='<p class="scoutInfo">RECON · extended vision · fast scouting</p>';
       if(e.owner===0&&e.type==='building'){
         const canRepair=e.built&&e.hp<e.maxHp;
@@ -2401,6 +2429,15 @@
     }
     drawRing(x,y,r,color){const c=this.ctx;c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.ellipse(x,y,r,r*.44,0,0,Math.PI*2);c.stroke();}
     health(e,x,y,width){if(e.hp>=e.maxHp*.99)return;const c=this.ctx;c.fillStyle='#0e1622';c.fillRect(x-width/2,y,width,5);c.fillStyle=e.hp/e.maxHp>.4?'#77d381':'#e7776a';c.fillRect(x-width/2+1,y+1,(width-2)*Math.max(0,e.hp/e.maxHp),3);}
+    drawRankBadge(e,x,y){
+      const rank=this.veterancyRank(e);
+      if(!rank)return;
+      const c=this.ctx;
+      c.save();c.textAlign='center';c.font='bold 13px sans-serif';
+      c.lineWidth=2.8;c.strokeStyle='#15222c';c.fillStyle=rank===2?'#ffd47c':'#a8e7ef';
+      const mark=rank===2?'★★':'★';
+      c.strokeText(mark,x,y);c.fillText(mark,x,y);c.restore();
+    }
     drawUnit(e){
       const c=this.ctx,p=iso(e.x,e.y),pal=COLORS[this.players[e.owner].faction];c.save();c.translate(p.x,p.y);
       if((e.stunnedUntil||0)>this.time){this.drawRing(0,-8,26,'#bd93e8');}
@@ -2413,23 +2450,23 @@
         const drawLayer=(sheet,frame)=>c.drawImage(sheet,(frame%cols)*srcSize,Math.floor(frame/cols)*srcSize,srcSize,srcSize,-49,-63,98,98);
         if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
         drawLayer(atlas.hull,hullFrame);drawLayer(atlas.turret,turretFrame);
-        this.health(e,0,-59,43);c.restore();return;
+        this.health(e,0,-59,43);this.drawRankBadge(e,24,-69);c.restore();return;
       }
       const inf=e.kind==='soldier'?this.infantrySprites[this.players[e.owner].faction]:e.kind==='specialist'?this.specialistSprites[this.players[e.owner].faction]:null;
       if(inf&&inf.complete&&inf.naturalWidth>0){
         if(this.selected.includes(e.id))this.drawRing(0,1,22,pal.color);
-        c.drawImage(inf,-24,-48,48,48);this.health(e,0,-51,27);c.restore();return;
+        c.drawImage(inf,-24,-48,48,48);this.health(e,0,-51,27);this.drawRankBadge(e,19,-55);c.restore();return;
       }
       const recon=e.kind==='recon'?this.reconSprites[this.players[e.owner].faction]:null;
       if(recon&&recon.complete&&recon.naturalWidth>0){
         if(this.selected.includes(e.id))this.drawRing(0,0,24,pal.color);
-        c.drawImage(recon,-42,-73,84,84);this.health(e,0,-66,38);c.restore();return;
+        c.drawImage(recon,-42,-73,84,84);this.health(e,0,-66,38);this.drawRankBadge(e,27,-77);c.restore();return;
       }
       const pilot=e.kind==='tank'?this.sprites[this.players[e.owner].faction]:null;
       if(pilot&&pilot.complete&&pilot.naturalWidth>0){
         if(this.selected.includes(e.id))this.drawRing(0,0,28,pal.color);
         c.drawImage(pilot,-47,-78,94,94);
-        this.health(e,0,-76,43);c.restore();return;
+        this.health(e,0,-76,43);this.drawRankBadge(e,25,-83);c.restore();return;
       }
       c.fillStyle='#050b11a6';c.beginPath();c.ellipse(2,3,e.kind==='heavy'?23:17,7,0,0,Math.PI*2);c.fill();
       if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='heavy'?27:21,pal.color);
@@ -2454,6 +2491,7 @@
         else{c.fillStyle='#293849';c.beginPath();c.arc(1,0,8,0,7);c.fill();c.strokeStyle=pal.trim;c.lineWidth=big?6:4;c.beginPath();c.moveTo(5,0);c.lineTo(big?29:25,0);c.stroke();c.fillStyle=pal.color;c.fillRect(-2,-3,7,6);}
         c.restore();this.health(e,0,-27,big?43:35);
       }
+      this.drawRankBadge(e,20,e.kind==='soldier'||e.kind==='specialist'?-38:-35);
       c.restore();
     }
     drawEffects(){
@@ -2535,6 +2573,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.15.0',build:'platoon-attrition'};
+  window.ChronoDominion={version:'2.16.0',build:'unit-veterancy'};
   new Game();
 })();

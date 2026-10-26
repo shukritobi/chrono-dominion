@@ -184,3 +184,6 @@ button:hover:not(:disabled){border-color:#87c9e8;background:linear-gradient(#274
 @media (max-width:700px){
   .cancelMode:not(.hidden){position:absolute;top:95px;right:8px;z-index:5;box-shadow:0 3px 12px #07111daa}
 }
+
+/* v2.16: combat-experience progress in the unit inspection panel. */
+.veterancyInfo { color:#f2d99c; font-size:12px; letter-spacing:.045em; font-weight:700; }
