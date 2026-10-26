@@ -49,7 +49,7 @@ assert.equal(g.sideCanSee(0,hq),false);
 brief=g.playerReconSummary();
 assert.ok(brief.tracked>0,'last contact persists after scouts withdraw');
 assert.ok(g.centerIntelContact(hq.id),'jump to previously verified last contact');
-const point={x:(last.x-last.y)*24,y:(last.x+last.y)*12};
+const point={x:(last.x-last.y)*32,y:(last.x+last.y)*16};
 assert.ok(Math.abs(g.camera.x-point.x)<.001&&Math.abs(g.camera.y-point.y)<.001,
   'map jump goes to historical coordinates');
 assert.equal(g.centerIntelContact(-42),false);
