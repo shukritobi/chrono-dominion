@@ -2160,6 +2160,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.3.0',build:'sector-reconnaissance'};
+  window.ChronoDominion={version:'2.4.0',build:'surveyed-sector-scouting'};
   new Game();
 })();
