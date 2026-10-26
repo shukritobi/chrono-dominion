@@ -102,7 +102,7 @@ def main():
     for size in (160,80):
         contact_sheet(entries,size).save(ROOT/f"psionic-crystal-damage-contact-{size}.png")
     (ROOT/"psionic-crystal-damage-qa.json").write_text(
-        json.dumps(measurements,indent=2,sort_keys=True)+"\\n")
+        json.dumps(measurements,indent=2,sort_keys=True)+chr(10))
     print("PASS: all three Psionic damaged poses visibly differ at 80px",flush=True)
 
 
