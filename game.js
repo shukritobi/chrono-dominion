@@ -464,7 +464,7 @@
       const def=BUILD[key]||UNITS[key],side=0;
       if(!def||!this.prereq(side,key)){this.notify('Required technology or production building missing');return;}
       if(this.players[0].credits<def.cost){this.notify('Insufficient credits');return;}
-      if(BUILD[key]){if(key==='hq')return;this.placing=key;this.notify('Choose a clear location near your base. Right-click to cancel.');}
+      if(BUILD[key]){if(key==='hq')return;this.placing=key;this.notify('Choose a clear location near your base. Tap CANCEL or right-click to abort.');}
       else{if(this.queues.some(q=>q.side===0&&q.key===key)){this.notify('Already producing '+this.name({owner:0,kind:key}));return;}this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;this.queues.push({side:0,key,elapsed:0,total:Math.max(2,def.cost/250)});this.notify('Training '+this.name({owner:0,kind:key}));}
       this.updateUI(true);
     }
