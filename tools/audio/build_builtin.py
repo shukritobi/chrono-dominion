@@ -53,7 +53,7 @@ def scripted_events():
             key=f'voice.{cue}.{faction}.airship'
             chosen[key]=groups[key][:2 if cue in ('ready','move') else 1]
     for key,lines in groups.items():
-        if key.startswith('announce.'):chosen[key]=lines[:2]
+        if key.startswith('announce.') and key!='announce.outpostCaptured':chosen[key]=lines[:2]
     return chosen
 def encode_wav(wav,dest,filters=None):
     args=['ffmpeg','-nostdin','-loglevel','error','-y','-i',str(wav)]
