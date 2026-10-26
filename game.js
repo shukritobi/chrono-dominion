@@ -2378,6 +2378,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.7.0',build:'dynamic-frontier-scouting'};
+  window.ChronoDominion={version:'2.8.0',build:'anchored-touch-camera'};
   new Game();
 })();
