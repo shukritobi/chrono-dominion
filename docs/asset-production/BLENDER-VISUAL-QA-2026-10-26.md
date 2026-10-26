@@ -121,13 +121,43 @@ chimneys, exposed tracked hull and suspended forging hammer.
   unchanged. The asset roster remains Planned for full gameplay state coverage
   because the preview pipeline does not yet include critical/destroyed states.
 
+## 2026-10-27 MK-V damaged-state inspection, Coalition and Federation
+
+**Preview-only.** The two MK-IV physically hollow War Factories now have a
+separate MK-V destruction pose. The actual damaged mesh hides the roof canopy,
+near-side portal support, open-bay crosshead and crane hood, replacing them
+with displaced, tilted roof steel, bent portal girder and three visible
+armor/forge shards. The debris meshes are independently editable in the
+saved Blender files and hidden in idle/construct states.
+
+- [MK-V factory render and strict QA workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40376236530).
+- [MK-V architecture and damage geometry](../../tools/blender/building_architecture.py).
+- [Damage-only state isolation](../../tools/blender/animated_assets.py).
+- The comparison used the actual MK-IV artifact and the new MK-V artifact,
+  including 160px atlases and a separately downsampled 80px game-scale view.
+- Coalition damaged-versus-idle alpha-mask change: **283 → 375 pixels at 160px**
+  and **65 → 84 pixels at 80px**.
+- Federation damaged-versus-idle alpha-mask change: **327 → 353 pixels at 160px**
+  and **69 → 75 pixels at 80px**.
+- Both new atlases remain transparent 160×800 RGBA with five populated frames,
+  and the original first-construction alpha changes remain 2,178 and 3,809.
+- The damaged visual now reads as a missing roof and collapsed front portal
+  at both 160px and 80px. Federation's numerical alpha improvement is modest,
+  but displaced foreground wreckage is visibly stronger in the RGB render.
+- New QA explicitly checks damage at both 160px (>=350 changed alpha pixels)
+  and 80px (>=70), requires at least two hidden editable damage meshes
+  after reopening the saved Blender source, and retains artifacts on failures.
+- A previous strict 400-pixel alpha threshold rejected otherwise visibly
+  improved renders; the 80px view and human inspection justified 350/70.
+- Existing game-art manifests were compared with the pre-MK-V commit:
+  their Git blob hashes are unchanged. **No preview art was published.**
+
 ## Ordered next tasks for hourly agent
 
-1. **Damage/construction QA for remaining building classes:** inspect
-   Headquarters, Refinery, Barracks and War Factory across all three factions
-   with the common full-size scaffold and fractured-damage renderer. Increase
-   damaged silhouette change and 80px legibility for Coalition/Federation
-   factories before proposing production promotion.
+1. **Remaining building-class construction/damage QA:** validate Headquarters,
+   Refinery and Barracks across all three factions with the full-size scaffold
+   and fractured-damage renderer. Factory MK-V is modeled and pixel-inspected,
+   but do not promote to production without artistic approval.
 2. **Radar Arrays and Technology Labs:** author six original faction-distinct
    MK-II structures, with physical moving radar hardware and readable
    laboratory silhouettes; render editable sources, 160×800 atlases and
