@@ -37,6 +37,7 @@ jobs:
           node tests/tactics-v13.test.mjs
           node tests/traffic-v14.test.mjs
           node tests/navigation-v15.test.mjs
+          node tests/right-of-way-v16.test.mjs
           node --check audio/sfx.js
           node --check maps/map-core.js
           node --check maps/map-editor.js
