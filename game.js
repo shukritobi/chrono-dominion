@@ -312,7 +312,7 @@
         ).map(v=>({...v})):[]):[[],[]];
       this.aiExplored=new Set(Array.isArray(saved.aiExplored)?
         saved.aiExplored.slice(0,WORLD_SIZE*WORLD_SIZE).filter(key=>{
-          if(typeof key!=='string'||!/^\\d{1,2},\\d{1,2}$/.test(key))return false;
+          if(typeof key!=='string'||!/^\d{1,2},\d{1,2}$/.test(key))return false;
           const [x,y]=key.split(',').map(Number);
           return x>=0&&x<WORLD_SIZE&&y>=0&&y<WORLD_SIZE;
         }):[]);
