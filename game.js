@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.4 — surveyed terrain and distributed scout objectives. */
+/* Chrono Dominion v2.6 — tactical event history and structure alerts. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -99,7 +99,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -186,6 +186,7 @@
       this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.camera.zoom=clamp(this.camera.zoom*(e.deltaY<0?1.09:.91),.65,1.8);},{passive:false});
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
       $('reconStatus').addEventListener('click',e=>{const b=e.target.closest?.('button[data-contact-id]');if(b)this.centerIntelContact(Number(b.dataset.contactId));});
+      $('battleEventList').addEventListener('click',e=>{const b=e.target.closest?.('button[data-event-id]');if(b)this.centerBattleEvent(Number(b.dataset.eventId));});
       $('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){this.tab=b.dataset.tab;this.updateUI(true);}});
       $('production').addEventListener('click',e=>{const b=e.target.closest('button[data-key]');if(b)this.chooseProduction(b.dataset.key);});
       $('queueList').addEventListener('click',e=>{const b=e.target.closest?.('button[data-cancel-key]');if(b)this.cancelProduction(b.dataset.cancelKey);});
@@ -267,7 +268,7 @@
         time:this.time,nextAI:this.nextAI,nextId:this.nextId,
         selected:this.selected,groups:this.groups,camera:this.camera,stats:this.stats,
         customMap:this.settings.map==='custom'?MAPS.custom:null,
-        intel:this.intel,aiExplored:[...this.aiExplored],aiPlatoon:this.aiPlatoon,aiSupportPlatoon:this.aiSupportPlatoon,
+        intel:this.intel,aiExplored:[...this.aiExplored],battleEvents:this.battleEvents,aiPlatoon:this.aiPlatoon,aiSupportPlatoon:this.aiSupportPlatoon,
         fog:this.fog.map(row=>row.map(cell=>!!cell.seen))
       };
       try{
@@ -312,6 +313,19 @@
           Number.isFinite(v.time)&&['unit','building'].includes(v.type)&&v.x>=0&&v.x<=34&&v.y>=0&&v.y<=34
         ).map(v=>({...v})):[]):[[],[]];
       this.reconAlerts=new Map();
+      // Treat local saves as untrusted input. Older snapshots omit this field.
+      this.battleEvents=Array.isArray(saved.battleEvents)?saved.battleEvents.slice(0,12).filter(v=>
+        v&&Number.isInteger(v.id)&&v.id>0&&Number.isFinite(v.time)&&v.time>=0&&v.time<=1e8&&
+        Number.isFinite(v.x)&&Number.isFinite(v.y)&&v.x>=0&&v.x<=WORLD_SIZE&&v.y>=0&&v.y<=WORLD_SIZE&&
+        typeof v.text==='string'&&v.text.length<=100&&['alert','damage','critical','loss'].includes(v.kind)&&
+        (v.refId===null||Number.isInteger(v.refId)&&v.refId>0)
+      ).map(v=>({id:v.id,time:v.time,x:v.x,y:v.y,text:v.text,kind:v.kind,refId:v.refId})): [];
+      this.nextBattleEventId=Math.max(0,...this.battleEvents.map(v=>v.id))+1;
+      this.damageAlerts=new Map();
+      for(const event of this.battleEvents){
+        if(['damage','critical'].includes(event.kind)&&event.refId&&!this.damageAlerts.has(event.refId))
+          this.damageAlerts.set(event.refId,{time:event.time,critical:event.kind==='critical'});
+      }
       this.aiExplored=new Set(Array.isArray(saved.aiExplored)?
         saved.aiExplored.slice(0,WORLD_SIZE*WORLD_SIZE).filter(key=>{
           if(typeof key!=='string'||!/^\d{1,2},\d{1,2}$/.test(key))return false;
@@ -395,7 +409,7 @@
       this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
-      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
+      this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
       this.initMap();
       for(const side of [0,1]){
@@ -632,6 +646,7 @@
           if(faction==='federation'){
             const amount=u.type==='building'?25:38;
             const beforeHp=u.hp;u.hp-=amount;
+            this.noteBuildingDamage(u,e.owner);
             if(this.stats[e.owner])this.stats[e.owner].damageDealt+=Math.min(amount,beforeHp);
             if(u.hp<=0){this.recordLoss(u,e.owner);e.kills++;this.selected=this.selected.filter(id=>id!==u.id);
               this.particles.push({x:u.x,y:u.y,life:1,color:'#ffa95e',type:'boom'});}
@@ -1100,6 +1115,7 @@
           continue;
         }
         target.hp-=shot.damage;
+        this.noteBuildingDamage(target,shot.owner);
         if(this.stats[shot.owner])this.stats[shot.owner].damageDealt+=Math.max(0,Math.min(shot.damage,target.hp+shot.damage));
         this.particles.push({x:target.x,y:target.y,life:.38,color:shot.color,type:'hit'});
         if(this.sideCanSee(0,target))this.audio?.play('impact');
@@ -1829,12 +1845,63 @@
       for(const threat of threats){
         if(this.time-(this.reconAlerts.get(threat.id)??-999)<18)continue;
         this.reconAlerts.set(threat.id,this.time);
+        this.pushBattleEvent('alert','Hostile unit spotted near headquarters',threat.x,threat.y,threat.id);
         this.notify('BASE ALERT: hostile unit spotted near headquarters');
         break;
       }
       if(this.reconAlerts.size>40)for(const [id,at] of this.reconAlerts){
         if(this.time-at>60)this.reconAlerts.delete(id);
       }
+    }
+    pushBattleEvent(kind,message,x,y,refId=null){
+      if(!['alert','damage','critical','loss'].includes(kind)||
+         !Number.isFinite(x)||!Number.isFinite(y))return false;
+      if(!this.battleEvents)this.battleEvents=[];
+      const event={id:this.nextBattleEventId++,time:Math.max(0,this.time||0),
+        kind,text:String(message).slice(0,100),x:clamp(x,0,WORLD_SIZE),y:clamp(y,0,WORLD_SIZE),
+        refId:Number.isInteger(refId)&&refId>0?refId:null};
+      this.battleEvents.unshift(event);
+      this.battleEvents.length=Math.min(this.battleEvents.length,12);
+      return true;
+    }
+    noteBuildingDamage(building,attackerOwner){
+      // Friendly structures are always known. Never reveal the attacker's
+      // position or hidden units through a damage notification.
+      if(building.owner!==0||building.type!=='building'||attackerOwner===0||building.hp<=0)return;
+      if(!this.damageAlerts)this.damageAlerts=new Map();
+      const critical=building.hp/building.maxHp<=.3;
+      const previous=this.damageAlerts.get(building.id);
+      if(previous&&this.time-previous.time<18&&(!critical||previous.critical))return;
+      this.damageAlerts.set(building.id,{time:this.time,critical});
+      const label=this.name(building);
+      this.pushBattleEvent(critical?'critical':'damage',
+        label+(critical?' critically damaged':' under attack'),building.x,building.y,building.id);
+      this.notify((critical?'CRITICAL: ':'UNDER ATTACK: ')+label);
+      if(this.damageAlerts.size>120)for(const [id,entry] of this.damageAlerts){
+        if(this.time-entry.time>60)this.damageAlerts.delete(id);
+      }
+    }
+    centerBattleEvent(id){
+      const event=this.battleEvents?.find(e=>e.id===id);
+      if(!event||this.state!=='playing')return false;
+      const p=iso(event.x,event.y);
+      this.camera.x=clamp(p.x,-1020,1020);this.camera.y=clamp(p.y,50,1080);
+      return true;
+    }
+    updateBattleEvents(){
+      const list=$('battleEventList'),count=$('battleEventCount');
+      if(!list||!count)return;
+      count.textContent=String(this.battleEvents?.length||0);
+      if(!this.battleEvents?.length){
+        list.innerHTML='<p class="battleEventQuiet">No tactical events yet.</p>';return;
+      }
+      list.innerHTML=this.battleEvents.slice(0,8).map(event=>{
+        const t=Math.max(0,Math.floor(event.time));
+        const clock=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+        return '<button type="button" class="battleEventRow '+event.kind+
+          '" data-event-id="'+event.id+'" title="Center camera on recorded event position">'+
+          '<time>'+clock+'</time><span>'+this.escape(event.text)+'</span><b>⌖</b></button>';
+      }).join('');
     }
     updateReconPanel(){
       const panel=$('reconStatus');
@@ -1894,7 +1961,7 @@
       $('factionBadge').textContent=COLORS[me.faction].badge;
       $('factionBadge').style.color=COLORS[me.faction].color;
       $('factionInfo').textContent=power.low?'LOW POWER':'COMMAND SYSTEMS ONLINE';
-      this.updateReconPanel();
+      this.updateReconPanel();this.updateBattleEvents();
       for(const b of $('tabs').querySelectorAll('button'))b.classList.toggle('active',b.dataset.tab===this.tab);
       let keys=this.tab==='structures'?['generator','refinery','barracks','factory','radar','tech']:this.tab==='defenses'?['turret','beam']:this.tab==='infantry'?['soldier','specialist']:['tank','heavy','recon','harvester'];
       $('production').innerHTML=keys.map(key=>{const d=BUILD[key]||UNITS[key],ready=this.prereq(0,key),rich=me.credits>=d.cost,q=this.queues.find(q=>q.side===0&&q.key===key);
@@ -1916,6 +1983,11 @@
     recordLoss(entity,attackerOwner=null,sold=false){
       if(!entity||entity.lossRecorded)return;
       entity.lossRecorded=true;
+      if(entity.owner===0&&entity.type==='building'&&!sold){
+        this.pushBattleEvent('loss',this.name(entity)+' destroyed',entity.x,entity.y,entity.id);
+        this.damageAlerts?.delete(entity.id);
+        this.notify('STRUCTURE LOST: '+this.name(entity));
+      }
       if(entity.type==='building'&&!sold){
         const palette=COLORS[this.players[entity.owner]?.faction]?.top||'#7e8790';
         for(let i=0;i<7;i++){
