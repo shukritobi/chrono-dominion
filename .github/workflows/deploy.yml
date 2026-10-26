@@ -75,6 +75,9 @@ jobs:
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
+          node --check audio/builtin-loader.js
+          node tests/builtin-audio-v224.test.mjs
+          python3 tools/audio/build_builtin.py --check
           node --check audio/voices.js
           node tests/original-voice-library-v222.test.mjs
           node --check tools/audio/export-register.mjs
@@ -183,6 +186,25 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install original audio synthesis dependencies
+        run: |
+          if ! command -v espeak >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq espeak; fi
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; fi
+      - name: Build bundled Chrono Dominion voice, SFX and music bank
+        run: python3 tools/audio/build_builtin.py
+      - name: Verify all 473 built-in audio files and their manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          folder=Path("audio/builtin")
+          manifest=json.loads((folder/"audio-map.json").read_text())
+          paths=[p for items in (manifest["events"],manifest["music"]) for files in items.values() for p in files]
+          assert len(paths)==473, len(paths)
+          assert len(paths)==len(set(paths)), "duplicate output path"
+          assert all((folder/p).is_file() and (folder/p).stat().st_size>250 for p in paths)
+          print("Verified",len(paths),"original built-in MP3 tracks.")
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
