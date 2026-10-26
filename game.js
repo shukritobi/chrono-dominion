@@ -569,11 +569,12 @@
           for(let i=1;i<remaining.length;i++)if(dist(remaining[i],slot)<dist(remaining[best],slot))best=i;
           const unit=remaining.splice(best,1)[0];
           if(!unit)break;
+          unit.yieldOrder=null;unit.yieldRetryAt=0;
           unit.order={type:this.attackMoveArmed||event?.shiftKey?'attackMove':'move',x:slot.x,y:slot.y};
           unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.pathRecheck=0;unit.trafficWait=0;unit.trafficRepath=false;
         }
         for(const unit of remaining){
-          unit.order=null;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.trafficWait=0;unit.trafficRepath=false;
+          unit.order=null;unit.yieldOrder=null;unit.yieldRetryAt=0;unit.path=[];unit.pathTarget=null;unit.pathGoal=null;unit.trafficWait=0;unit.trafficRepath=false;
         }
       }
       this.attackMoveArmed=false;
@@ -648,6 +649,7 @@
       if(!['stop','guard','hold','aggressive'].includes(action))return false;
       this.attackMoveArmed=false;this.abilityArmedId=null;
       for(const e of units){
+        e.yieldOrder=null;e.yieldRetryAt=0;
         if(action==='stop'){
           e.order=null;e.path=[];e.pathTarget=null;e.stance='guard';e.guardX=e.x;e.guardY=e.y;
         }else{
@@ -1528,6 +1530,7 @@
     drawUnit(e){
       const c=this.ctx,p=iso(e.x,e.y),pal=COLORS[this.players[e.owner].faction];c.save();c.translate(p.x,p.y);
       if((e.stunnedUntil||0)>this.time){this.drawRing(0,-8,26,'#bd93e8');}
+      if(e.yieldOrder&&e.owner===0)this.drawRing(0,0,21,'#eac278');
       const atlas=(e.kind==='tank')?this.vehicleAtlases?.[this.players[e.owner].faction]:null;
       if(atlas?.hull&&atlas?.turret){
         const art=window.ChronoVehicleArt,srcSize=art.frameSize,cols=art.columns;
@@ -1649,13 +1652,13 @@
       if(now-this.lastPerfAt>=1100){
         const fps=Math.round(this.perfFrames*1000/Math.max(1,now-this.lastPerfAt));
         const units=this.entities.filter(e=>e.hp>0&&e.type==='unit').length;
-        $('perfStatus').textContent=fps+' FPS · '+units+' UNITS';
+        $('perfStatus').textContent=fps+' FPS · '+units+' UNITS'+(this.trafficYieldCount?' · '+this.trafficYieldCount+' YIELDS':'');
         $('perfStatus').title='Approximate rendered frames per second and living units on both teams';
         this.lastPerfAt=now;this.perfFrames=0;
       }
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'1.5.0',build:'traffic-aware-pathfinding'};
+  window.ChronoDominion={version:'1.6.0',build:'friendly-right-of-way'};
   new Game();
 })();
