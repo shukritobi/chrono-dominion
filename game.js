@@ -1885,6 +1885,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'1.8.0',build:'fair-chokepoint-queues'};
+  window.ChronoDominion={version:'1.9.0',build:'coordinated-ai-platoons'};
   new Game();
 })();
