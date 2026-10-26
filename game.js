@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.33 — threat-aware multi-airfield recovery. */
+/* Chrono Dominion v2.34 — fog-honest automatic target acquisition. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -1720,8 +1720,10 @@
           }
           if(!target&&command?.type!=='move'){
             const detection=stance==='aggressive'?range+4.0:stance==='hold'?range:range+1.5;
+            // Automatic targeting needs a live friendly sensor contact for BOTH
+            // sides. Player-issued direct attack orders remain manually controlled.
             target=this.nearest(e,b=>b.owner!==e.owner&&b.built&&
-              (e.owner!==1||this.sideCanSee(1,b)),detection);
+              this.sideCanSee(e.owner,b),detection);
           }
           e.engaging=!!target;
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);

@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.33.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.34.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.34 Fog-honest automatic combat acquisition
+
+- Player and AI units now require current shared friendly sensor coverage before **automatically** acquiring enemy units or structures. Aggressive stance and attack-move no longer reveal or chase hidden live positions.
+- Friendly scouts can spot for distant artillery and aircraft. Existing player-issued direct attack orders remain unchanged; no save migration or new assets.
+- [v2.34 release notes](docs/RELEASE-2.34.md) · [regression tests](tests/target-acquisition-v234.test.mjs).
 
 ### v2.33 Safer multi-airfield recovery
 
