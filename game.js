@@ -1180,16 +1180,63 @@
         if(q.side===0)this.notify(this.name(spawned)+' deployed');
       }
     }
+    chooseHarvestDeposit(e){
+      // Deposits can overlap a newly constructed refinery or sit beyond a
+      // lake. Never select a shiny but physically unreachable ore pile.
+      const excluded=(e.oreSkipUntil||0)>this.time?e.oreSkipIndex:-1;
+      const candidates=this.ores.map((ore,index)=>({ore,index,d:dist(e,ore)}))
+        .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
+          this.canOccupyUnit(e,ore.x,ore.y,true))
+        .sort((a,b)=>a.d-b.d||a.index-b.index);
+      for(const {ore,index} of candidates){
+        const path=this.findPath(e.x,e.y,ore.x,ore.y);
+        const landing=path.at(-1)||{x:e.x,y:e.y};
+        if(Math.hypot(landing.x-ore.x,landing.y-ore.y)<=1.05)return index;
+      }
+      return -1;
+    }
     processHarvester(e,dt){
       e.work-=dt;
-      const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&b.kind==='refinery'&&b.built);
+      const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
+        b.kind==='refinery'&&b.built);
       if(!refinery)return;
-      if(e.load>=360){if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
-        else if(e.work<=0){this.players[e.owner].credits+=e.load;if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;e.load=0;e.work=.6;if(e.owner===0)this.particles.push({x:refinery.x,y:refinery.y,life:1,color:'#9fe29d',type:'cash'});}return;}
-      let closest=null,d=Infinity;for(const o of this.ores){if(o.amount<=0)continue;const r=dist(e,o);if(r<d){d=r;closest=o;}}
-      if(!closest)return;
-      if(d>.8)this.move(e,closest.x,closest.y,dt);
-      else if(e.work<=0){const amount=Math.min(80,closest.amount,360-e.load);e.load+=amount;closest.amount-=amount;e.work=.8;}
+      if(e.load>=360){
+        if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
+        else if(e.work<=0){
+          this.players[e.owner].credits+=e.load;
+          if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
+          e.load=0;e.work=.6;
+          e.oreScanAt=0;e.oreLastDistance=null;
+          if(e.owner===0)this.particles.push({x:refinery.x,y:refinery.y,life:1,color:'#9fe29d',type:'cash'});
+        }
+        return;
+      }
+      let ore=this.ores[e.oreIndex];
+      if(!ore||ore.amount<=0||(e.oreScanAt||0)<=this.time){
+        const selected=this.chooseHarvestDeposit(e);
+        e.oreIndex=selected;
+        e.oreScanAt=this.time+6;
+        e.oreLastDistance=null;
+        ore=selected>=0?this.ores[selected]:null;
+      }
+      if(!ore)return;
+      const d=dist(e,ore);
+      if(d>.85){
+        this.move(e,ore.x,ore.y,dt);
+        if((e.oreProgressAt||0)<=this.time){
+          if(Number.isFinite(e.oreLastDistance)&&d>=e.oreLastDistance-.18){
+            // The landing may be almost accessible but obstructed by moving
+            // vehicles or tight structures. Retry another deposit temporarily.
+            e.oreSkipIndex=e.oreIndex;e.oreSkipUntil=this.time+16;
+            e.oreIndex=-1;e.oreScanAt=0;
+          }else e.oreLastDistance=d;
+          e.oreProgressAt=this.time+7;
+        }
+      }else if(e.work<=0){
+        const amount=Math.min(80,ore.amount,360-e.load);
+        e.load+=amount;ore.amount-=amount;e.work=.8;
+        e.oreLastDistance=null;e.oreProgressAt=this.time+7;
+      }
     }
     step(dt){
       this.time+=dt;
