@@ -62,6 +62,45 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
     def barrel(name,x,y,z,depth=1.4,radius=.16,material="light"):
         return cyl(name,(x,y,z),radius,depth,material,axis="X")
 
+    def scanner_dish(name,location,radius=.94,depth=.31,material="light"):
+        """A real parabolic reflector mesh, not a flattened painted sphere."""
+        n=24
+        vertices=[(0,0,0)]
+        rings=((.30,.045),(.64,.14),(1.0,depth))
+        for scale,offset in rings:
+            vertices.extend((radius*scale*math.cos(i*math.tau/n),
+                             -offset,radius*scale*math.sin(i*math.tau/n))
+                            for i in range(n))
+        faces=[(0,1+i,1+(i+1)%n) for i in range(n)]
+        for j in range(2):
+            start=1+j*n
+            for i in range(n):
+                a=start+i
+                b=start+(i+1)%n
+                faces.append((a,b,b+n,a+n))
+        dish=mesh(name,vertices,faces,material)
+        dish.location=location
+        return dish
+
+    def scanner_array(name,location,segments,material="light"):
+        """One editable rotor mesh containing all beam and tip assemblies."""
+        verts=[]
+        faces=[]
+        for x,y,z,w,d,h in segments:
+            start=len(verts)
+            verts.extend((x+sx*w*.5,y+sy*d*.5,z+sz*h*.5)
+                         for sx,sy,sz in ((-1,-1,-1),(1,-1,-1),
+                                          (1,1,-1),(-1,1,-1),
+                                          (-1,-1,1),(1,-1,1),
+                                          (1,1,1),(-1,1,1)))
+            faces.extend(tuple(start+k for k in face)
+                         for face in ((0,3,2,1),(4,5,6,7),
+                                      (0,1,5,4),(1,2,6,5),
+                                      (2,3,7,6),(3,0,4,7)))
+        rotor=mesh(name,verts,faces,material)
+        rotor.location=location
+        return rotor
+
     # Ground-hugging base skirt: faction's large identifiable footprint.
     if faction=="coalition":
         box("Aegis engineered foundation",(0,0,.23),(3.44,3.42,.46),"dark",.15)
@@ -296,19 +335,44 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Exit alignment marker",(1.58,y,.87),
                     (.53,.065,.04),"glow",.005)
         elif kind=="radar":
-            box("Blue telemetry mast",(0,0,1.77),(1.48,1.52,2.14),"armor",.15)
-            box("Tower receiver collar",(0,0,2.95),(1.76,1.74,.18),"light",.06)
-            cyl("Dish rotor pedestal",(0,0,3.50),.14,.99,"dark")
-            parts["radar"]=sphere("Rotating parabolic sensor",(0,0,3.89),(.98,.30,.31),"light")
-            sphere("Dish transceiver",(0,-.37,3.94),(.23,.11,.18),"glow")
-            for side in (-1,1):tower("Support antenna",side*.77,.60,2.98,.55,"light",.07)
+            # AEGIS SKYSCAN MK-II: horizontal parabolic reflector on a
+            # visibly separate hydraulic yaw turret and three-sided mast.
+            box("SkyScan hardened command pedestal",(0,0,1.28),(1.60,1.54,1.30),"armor",.095)
+            box("High observation cupola",(0,0,2.10),(1.34,1.27,.35),"light",.065)
+            box("Hydraulic telemetry tower",(0,0,2.77),(.68,.69,1.15),"dark",.07)
+            cyl("Dish azimuth turntable",(0,0,3.44),.46,.22,"armor",vertices=16)
+            cyl("Reflector yaw spindle",(0,0,3.65),.21,.38,"light",vertices=12)
+            parts["radar"]=scanner_dish("Rotating real parabolic reflector",
+                                         (0,-.02,3.92),1.02,.37,"light")
+            box("Dish receiver emitter",(0,-.61,3.91),(.25,.28,.26),"glow",.025)
+            for side in (-1,1):
+                box("Telescoping support outrigger",(.13,side*.75,1.73),(.37,.40,1.43),"armor",.03)
+                tower("Aegis vertical backup aerial",-.52,side*.54,2.82,1.15,"light",.07)
+                sphere("Beacon on backup aerial",(-.52,side*.54,4.04),(.10,.10,.11),"glow")
+            for z in (1.05,1.35,1.65):
+                box("Telemetry slit",( .83,0,z),(.055,.88,.12),"glass",.012)
         elif kind=="tech":
-            box("Aegis research laboratories",(0,0,1.17),(2.51,2.23,1.04),"armor",.12)
-            box("Glazed research tower",(-.27,.05,2.35),(1.24,1.30,1.78),"glass",.14)
-            box("Reinforced roof",(-.27,.05,3.29),(1.42,1.45,.21),"light",.06)
-            cyl("Secure science transmitter",(-.27,.05,3.81),.15,.95,"light")
-            sphere("Laboratory light",(-.27,.05,4.34),(.25,.25,.25),"glow")
-            for x in (-1.05,.83):box("Module wing",(x,.38,1.43),(.44,1.45,.71),"light")
+            # AEGIS QUANTUM RESEARCH ANNEX: stepped L-shaped laboratories,
+            # split cleanrooms and an actual oscillating rooftop sensor.
+            box("Quantum cleanroom ground floor",(-.20,0,1.13),(2.55,2.47,1.03),"armor",.10)
+            box("Laboratory glass bridge",(.59,-.37,1.80),(1.25,1.20,.56),"glass",.065)
+            box("Elevated research wing",(-.60,.54,2.14),(1.37,1.52,1.26),"light",.08)
+            box("Reinforced science roof",(-.61,.54,2.85),(1.57,1.68,.22),"dark",.035)
+            for x in (-1.08,-.70,-.32):
+                box("Quantum glass laboratory slit",(x,-.26,2.25),(.19,.07,.53),"glass",.012)
+            for side in (-1,1):
+                cyl("Cryogenic chamber",(.68,side*.71,2.21),.28,.83,"glass",vertices=12)
+                cyl("Research pod cap",(.68,side*.71,2.64),.34,.13,"light",vertices=12)
+                sphere("Quantum probe",(.68,side*.71,2.83),(.15,.15,.17),"glow")
+            cyl("Roof-mounted scanner bearing",(-.58,.52,3.09),.31,.26,"dark")
+            parts["radar"]=scanner_array("Rotating laboratory probe beam",
+                         (-.58,.52,3.38),
+                         ((0,0,0,1.66,.16,.17),
+                          (-.72,0,.08,.29,.34,.34),
+                          (.72,0,.08,.29,.34,.34)),"light")
+            parts["radar_aux"]=torus("Research interferometer",
+                                    (-.58,.52,3.42),.48,.075,"glow",True)
+            box("Airlock entry gate",(1.16,0,1.04),(.06,.62,.65),"dark",.01)
         elif kind=="turret":
             box("Compact tactical fort",(0,0,1.16),(1.78,1.73,1.09),"armor",.16)
             box("Optical turret housing",(0,0,2.02),(1.30,1.23,.68),"light",.18)
@@ -536,23 +600,48 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
                 box("Hazard chevron launch marking",(1.65,y,.89),
                     (.46,.10,.045),"glow",.005)
         elif kind=="radar":
-            box("Electronics blast tower",(0,0,1.52),(1.71,1.82,1.79),"armor",.06)
-            box("Signal bunker top",(0,0,2.59),(2.02,2.11,.40),"dark",.03)
+            # RED BASTION IRONWATCH MK-II: horizontally sweeping steel
+            # phased-array rotor, unlike Coalition's round reflector.
+            box("IronWatch radio command bunker",(0,0,1.22),(2.10,2.04,1.18),"armor",.045)
+            box("Slab armored bunker cap",(0,0,1.98),(2.39,2.31,.33),"dark",.018)
             for side in (-1,1):
-                tower("Comms radio pole",side*.72,0,2.69,1.56,"light",.09)
-            cyl("Heavy scanner rotor",(0,0,3.19),.33,.64,"light")
-            parts["radar"]=box("Sweeping radar crossbar",(0,0,3.57),(2.55,.24,.23),"bronze",.02)
-            for x in (-1.17,1.17):
-                box("Array antenna cap",(x,0,3.61),(.23,.39,.41),"glow",.025)
+                box("Heavy corner relay mast",(-.77,side*.71,2.33),(.39,.41,1.18),"light",.028)
+                tower("Tall communications whip",-.77,side*.71,2.96,.94,"dark",.075)
+                sphere("Relay signal bulb",(-.77,side*.71,3.97),(.13,.13,.13),"glow")
+            cyl("Cast iron scanning base",(.25,0,2.45),.46,.53,"dark",vertices=12)
+            cyl("Phased-array drive shaft",(.25,0,2.82),.25,.31,"bronze",vertices=12)
+            parts["radar"]=scanner_array("Fully rotating double ended phased array",
+                         (.25,0,3.13),
+                         ((0,0,0,2.83,.26,.27),
+                          (-1.23,0,.08,.38,.53,.70),
+                          (1.23,0,.08,.38,.53,.70),
+                          (0,0,.12,.45,.49,.38)),"light")
+            box("Signal plotting control port",(1.08,-.05,1.26),(.07,.98,.55),"dark",.015)
+            for y in (-.33,0,.33):
+                box("Orange plotting telemetry",(1.14,y,1.36),(.055,.14,.12),"glow",.01)
         elif kind=="tech":
-            box("Fortified ballistic science bunker",(0,0,1.27),(2.63,2.47,1.36),"armor",.08)
-            box("Heavy containment roof",(0,0,2.16),(2.88,2.67,.40),"dark",.03)
-            cyl("Unstable furnace stack",(-.53,.35,3.11),.40,1.76,"bronze")
-            cyl("Vent inductor",(-.53,.35,4.00),.35,.11,"glow")
+            # RED BASTION SIEGE SCIENCE INSTITUTE: asymmetrical furnace
+            # and high pressure ballistic test rail, not a generic bunker.
+            box("Armored siege science foundry",(-.18,0,1.26),(2.67,2.70,1.36),"armor",.052)
+            box("Blast-proof research canopy",(-.25,0,2.13),(2.95,2.86,.32),"dark",.023)
+            box("Open ballistic testing track",(.84,-.52,2.28),(.94,.72,.22),"light",.027)
+            for i in range(4):
+                box("Ballistic rail bolt",(.57+i*.23,-.52,2.45),(.09,.42,.08),"bronze",.007)
+            cyl("Industrial experimental furnace",(-.83,.46,2.95),.49,1.48,"dark",vertices=12)
+            cyl("Furnace hazard rim",(-.83,.46,3.72),.44,.12,"bronze",vertices=12)
+            sphere("Furnace plasma aperture",(-.83,.46,3.80),(.27,.27,.10),"glow")
             for side in (-1,1):
-                cyl("Capacitor enclosure",(.68,side*.76,2.62),.32,.89,"light")
-                cyl("Capacitor heat",(.68,side*.76,3.06),.22,.09,"glow")
-            box("Secure reinforced research door",(1.31,-.18,1.2),(.08,.8,.86),"dark",.01)
+                cyl("Siege battery capacitor",(.29,side*.93,2.49),.33,.65,"light",vertices=12)
+                box("Heat regulator fins",(.29,side*.93,2.91),(.69,.16,.15),"bronze",.012)
+            cyl("Test ram bearing",(.71,-.52,2.70),.28,.32,"dark")
+            parts["radar"]=scanner_array("Moving overhead ballistic clamp",
+                         (.71,-.52,2.99),
+                         ((0,0,0,1.31,.23,.27),
+                          (-.51,0,-.12,.25,.38,.39),
+                          (.51,0,-.12,.25,.38,.39)),"bronze")
+            box("Fortified experimental access",(1.21,.54,1.19),(.08,.63,.83),"dark",.013)
+            for z in (.91,1.14,1.37):
+                box("Access warning beacon",(1.29,.54,z),(.06,.40,.09),"glow",.009)
         elif kind=="turret":
             box("Heavy artillery bunker",(0,0,1.25),(2.35,2.23,1.27),"armor",.07)
             box("Armored recoil hood",(.30,0,2.07),(1.90,1.75,.65),"dark",.035)
@@ -757,22 +846,43 @@ def build(faction,kind,box,cyl,sphere,mesh,parts,mats,root):
             sphere("Matter synthesis flash",(.49,0,2.15),
                    (.12,.13,.14),"glow")
         elif kind=="radar":
-            prism("Neural radar plinth",0,0,.92,1.03,1.13,"armor",6)
+            # AETHER SYNOD MNEMONIC ARRAY: opposed crystalline horns
+            # enclosing two independently counter-rotating vertical hoops.
+            prism("Neural scanner hexagonal plinth",0,0,.78,1.30,.89,"armor",6)
+            prism("Raised neural sensor well",0,0,1.63,.88,.25,"dark",6)
             for side in (-1,1):
-                spire("Opposed guide spire",side*1.02,0,1.00,.43,2.75,"light",3)
-                sphere("Scanner guide tip",(side*1.02,0,3.90),(.17,.19,.20),"glow")
-            parts["radar"]=torus("Rotating vertical psychic scanner",(0,0,2.56),1.11,.14,"glow",True)
-            sphere("Psi tracking pupil",(0,0,2.58),(.24,.24,.29),"glass")
+                spire("Tall opposing scanner horn",side*1.05,0,1.22,.35,2.55,"light",3)
+                spire("Inner luminous horn conductor",side*.99,0,1.53,.14,1.77,"glass",3)
+                sphere("Horn tip antenna",(side*1.05,0,3.87),(.15,.16,.17),"glow")
+                box("Scanning glyph",(side*.62,-.71,1.04),(.24,.13,.10),"glow",.009)
+            parts["radar"]=torus("Primary vertical psychic scanning hoop",
+                                 (0,0,2.70),.96,.12,"glow",True)
+            parts["radar_aux"]=torus("Secondary counter rotating psychic hoop",
+                                     (0,0,2.70),.69,.085,"light",True)
+            parts["radar_aux"].rotation_euler.y=.58
+            sphere("Floating neural sensor pupil",(0,0,2.69),(.29,.29,.30),"glass")
+            sphere("Live detection nucleus",(0,-.24,2.69),(.14,.13,.15),"glow")
         elif kind=="tech":
-            prism("Mind science laboratory",0,0,1.03,1.20,1.29,"armor",6)
-            spire("Needle of arcane science",0,0,2.22,.72,2.14,"light",6)
-            sphere("Dimensional research nucleus",(0,0,4.45),(.27,.30,.33),"glow")
-            for h,r in ((2.42,.85),(2.95,.70),(3.45,.52)):
-                torus("Orbital knowledge resonator",(0,0,h),r,.09,"glow",True)
+            # AETHER SYNOD ORACLE LABORATORY: broad hexagonal science
+            # chambers, floating layered rings and tall detached spines.
+            prism("Wide quantum oracle laboratory",0,0,.80,1.56,1.02,"armor",6)
+            prism("Dark sunken dimensional pit",0,0,1.80,1.15,.28,"dark",6)
             for i in range(3):
                 a=i*math.tau/3
-                spire("Research sentry",math.cos(a)*1.18,math.sin(a)*1.18,.95,
-                      .28,1.34,"light",3)
+                x,y=math.cos(a)*1.37,math.sin(a)*1.37
+                prism("Remote oracle research chamber",x,y,1.03,.43,.60,"light",5)
+                spire("Floating knowledge spire",x,y,1.65,.24,1.60,"armor",3)
+                sphere("Oracle data beacon",(x,y,3.32),(.15,.16,.18),"glow")
+            spire("Central dimensional core",0,0,1.90,.42,1.24,"glass",5)
+            sphere("Research knowledge nucleus",(0,0,3.19),(.35,.35,.40),"glow")
+            parts["radar"]=torus("Large rotating knowledge gyre",
+                                (0,0,2.65),1.10,.12,"light",True)
+            parts["radar_aux"]=torus("Opposing quantum cognition orbit",
+                                    (0,0,3.03),.76,.10,"glow",True)
+            parts["radar_aux"].rotation_euler.y=.65
+            for y in (-.51,0,.51):
+                box("Front laboratory portal glyph",(1.32,y,1.22),
+                    (.08,.14,.19),"glow",.01)
         elif kind=="turret":
             prism("Floating cannon emplacement",0,0,1.00,1.13,1.05,"armor",6)
             sphere("Focused siege aperture",(0,0,2.23),(.56,.56,.60),"glow")
