@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.15 — resilient AI assault platoons. */
+/* Chrono Dominion v2.25 — AI air wing and independent ground platoons. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
