@@ -221,6 +221,7 @@
         $('sfxLevel').textContent=$('sfxVolume').value+'%';
         $('musicLevel').textContent=$('musicVolume').value+'%';
         $('musicEnabled').checked=!!this.audio?.musicEnabled;
+        $('voiceEnabled').checked=!!this.audio?.voiceEnabled;
       };
       updateMixer();
       const closeAudio=()=>{$('audioPanel').classList.add('hidden');$('audioSettings').setAttribute('aria-expanded','false');};
@@ -234,6 +235,13 @@
       $('sfxVolume').oninput=e=>{this.audio?.setSfxVolume(Number(e.target.value)/100);$('sfxLevel').textContent=e.target.value+'%';};
       $('musicVolume').oninput=e=>{this.audio?.setMusicVolume(Number(e.target.value)/100);$('musicLevel').textContent=e.target.value+'%';};
       $('musicEnabled').onchange=e=>{this.audio?.setMusicEnabled(e.target.checked);};
+      $('voiceEnabled').onchange=e=>{this.audio?.setVoiceEnabled(e.target.checked);};
+      $('voicePreview').onclick=()=>{
+        this.audio?.setEnabled(true);this.updateSoundToggle();
+        this.audio?.setVoiceEnabled(true);$('voiceEnabled').checked=true;
+        const spoken=this.audio?.previewVoice('federation','soldier');
+        $('audioStatus').textContent=spoken?'Previewing Iron Federation field radio.':'Browser voice synthesis unavailable; synthesized effects still work.';
+      };
       $('audioImport').onclick=()=>{
         if(!this.audio?.enabled){this.audio?.setEnabled(true);this.updateSoundToggle();}
         this.audio?.unlock();$('audioFiles').click();
@@ -408,7 +416,7 @@
       this.drawMapPreview();
       this.updateFog();this.updateAISurvey();this.updateIntel(0);this.updateUI(true);this.updateSaveButtons();
       $('overlay').classList.add('hidden');
-      this.notify('Saved skirmish loaded');return true;
+      this.notify('Saved skirmish loaded');this.audio?.announce('commandOnline');return true;
     }
     get worldSize(){return WORLD_SIZE;}
     clampCamera(){
@@ -481,7 +489,7 @@
         this.add(side,'tank',a.x+4*sign,a.y+5*sign);
         const h=this.add(side,'harvester',a.x+2*sign,a.y+5*sign);h.order={type:'harvest'};
       }
-      this.audio?.setScene('battle');this.updateFog();this.updateAISurvey();this.updateIntel(0);$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');
+      this.audio?.setScene('battle');this.updateFog();this.updateAISurvey();this.updateIntel(0);$('overlay').classList.add('hidden');this.updateUI(true);this.updateSaveButtons();this.notify('Command established. Construct a War Factory to build tanks.');this.audio?.announce('commandOnline');
     }
     initMap(){
       const oreSites=(MAPS[this.settings.map]||MAPS.verdant).ore;
@@ -2388,7 +2396,7 @@
         if(this.time-(this.reconAlerts.get(threat.id)??-999)<18)continue;
         this.reconAlerts.set(threat.id,this.time);
         this.pushBattleEvent('alert','Hostile unit spotted near headquarters',threat.x,threat.y,threat.id);
-        this.notify('BASE ALERT: hostile unit spotted near headquarters');
+        this.notify('BASE ALERT: hostile unit spotted near headquarters');this.audio?.announce('baseUnderAttack');
         break;
       }
       if(this.reconAlerts.size>40)for(const [id,at] of this.reconAlerts){
@@ -2418,7 +2426,7 @@
       const label=this.name(building);
       this.pushBattleEvent(critical?'critical':'damage',
         label+(critical?' critically damaged':' under attack'),building.x,building.y,building.id);
-      this.notify((critical?'CRITICAL: ':'UNDER ATTACK: ')+label);
+      this.notify((critical?'CRITICAL: ':'UNDER ATTACK: ')+label);this.audio?.announce('structureUnderAttack');
       if(this.damageAlerts.size>120)for(const [id,entry] of this.damageAlerts){
         if(this.time-entry.time>60)this.damageAlerts.delete(id);
       }
@@ -2532,7 +2540,7 @@
       if(entity.owner===0&&entity.type==='building'&&!sold){
         this.pushBattleEvent('loss',this.name(entity)+' destroyed',entity.x,entity.y,entity.id);
         this.damageAlerts?.delete(entity.id);
-        this.notify('STRUCTURE LOST: '+this.name(entity));
+        this.notify('STRUCTURE LOST: '+this.name(entity));this.audio?.announce('structureLost');
       }
       if(entity.type==='building'&&!sold){
         const palette=COLORS[this.players[entity.owner]?.faction]?.top||'#7e8790';
@@ -2542,6 +2550,8 @@
             dx:Math.cos(a),dy:Math.sin(a),spin:i%2?1.7:-1.4,color:i%3?'#66717a':palette});
         }
       }
+      if(entity.owner===0&&entity.type==='unit'&&!sold)
+        this.audio?.announce(entity.kind==='harvester'?'harvesterLost':'unitLost');
       const own=this.stats?.[entity.owner];
       if(own){
         if(sold)own.buildingsSold++;
@@ -2592,7 +2602,7 @@
     finish(win){
       if(this.state==='finished')return;
       this.state='finished';this.audio?.setScene(win?'victory':'defeat');
-      this.audio?.play(win?'win':'defeat');
+      this.audio?.play(win?'win':'defeat');this.audio?.announce(win?'victory':'defeat');
       const battle=this.battleSummary(win);this.lastBattleSummary=battle;
       const label=(key)=>({oreHarvested:'ORE DELIVERED',enemyUnitsDestroyed:'UNITS DESTROYED',enemyBuildingsDestroyed:'STRUCTURES DESTROYED',unitsLost:'UNITS LOST',buildingsLost:'STRUCTURES LOST',unitsDeployed:'UNITS DEPLOYED',creditsSpent:'CREDITS SPENT'})[key];
       const format=n=>Math.round(n).toLocaleString();
