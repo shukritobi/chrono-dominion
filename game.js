@@ -1,4 +1,4 @@
-/* Chrono Dominion v1.4 — spatial collision indexing and late-game stress handling. */
+/* Chrono Dominion v1.5 — traffic-aware navigation and efficient pathfinding. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -718,13 +718,56 @@
       if(x<1||y<1||x>WORLD_SIZE-2||y>WORLD_SIZE-2||this.water(x,y))return false;
       return !this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5);
     }
-    findPath(sx,sy,tx,ty){
-      // A* explores reachable ground and gracefully selects the nearest
-      // accessible edge if the click lies across an impassable shoreline.
+    trafficCosts(except){
+      // Create a coarse, per-request heat map only when a moving unit is
+      // genuinely stuck. Other units remain traversable but expensive.
+      const heat=new Map(),key=(x,y)=>x+','+y;
+      for(const other of this.entities){
+        if(other===except||other.hp<=0||other.type!=='unit')continue;
+        const radius=this.unitRadius(other)+this.unitRadius(except);
+        const cx=Math.round(other.x),cy=Math.round(other.y);
+        for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+          const x=cx+dx,y=cy+dy,d=Math.hypot(x-other.x,y-other.y);
+          if(d>radius+1.05)continue;
+          const penalty=d<radius+.14?7:d<radius+.65?2.6:.5;
+          const k=key(x,y);
+          heat.set(k,Math.min(18,(heat.get(k)||0)+penalty));
+        }
+      }
+      return heat;
+    }
+    findPath(sx,sy,tx,ty,avoidUnit=null){
+      // A* uses a binary minimum heap to avoid repeatedly scanning a large
+      // open list. During congestion replans it also prices nearby unit traffic.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
       const goal={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
       const key=(x,y)=>x+','+y,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
-      const open=[{...start,key:begin,f:0}],costs=new Map([[begin,0]]),came=new Map(),closed=new Set();
+      const open=[],push=node=>{
+        open.push(node);let i=open.length-1;
+        while(i>0){
+          const parent=(i-1)>>1;
+          if(open[parent].f<=node.f)break;
+          open[i]=open[parent];i=parent;
+        }
+        open[i]=node;
+      };
+      const pop=()=>{
+        const first=open[0],last=open.pop();
+        if(open.length){
+          let i=0;
+          while(i*2+1<open.length){
+            let child=i*2+1;
+            if(child+1<open.length&&open[child+1].f<open[child].f)child++;
+            if(open[child].f>=last.f)break;
+            open[i]=open[child];i=child;
+          }
+          open[i]=last;
+        }
+        return first;
+      };
+      push({...start,key:begin,f:0});
+      const costs=new Map([[begin,0]]),came=new Map(),closed=new Set();
+      const traffic=avoidUnit?this.trafficCosts(avoidUnit):null;
       const moves=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
       let nearest=begin,nearestDist=Math.hypot(start.x-tx,start.y-ty),nearestCost=0;
       const trace=(end)=>{
@@ -736,8 +779,7 @@
       };
       let expansions=0;
       while(open.length&&expansions++<1450){
-        let best=0;for(let i=1;i<open.length;i++)if(open[i].f<open[best].f)best=i;
-        const node=open.splice(best,1)[0];
+        const node=pop();
         if(closed.has(node.key))continue;
         closed.add(node.key);
         const remaining=Math.hypot(node.x-tx,node.y-ty),travelled=costs.get(node.key);
@@ -748,12 +790,12 @@
         for(const [dx,dy] of moves){
           const x=node.x+dx,y=node.y+dy,k=key(x,y);
           if(closed.has(k)||!this.walkable(x,y))continue;
-          // Don't diagonally slip through touching buildings or water.
           if(dx&&dy&&(!this.walkable(node.x+dx,node.y)||!this.walkable(node.x,node.y+dy)))continue;
-          const candidate=travelled+(dx&&dy?Math.SQRT2:1);
+          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0);
+          const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
-          open.push({x,y,key:k,f:candidate+Math.hypot(goal.x-x,goal.y-y)});
+          push({x,y,key:k,f:candidate+Math.hypot(goal.x-x,goal.y-y)});
         }
       }
       return trace(nearest);
@@ -811,7 +853,8 @@
       if(d<.24){e.path=[];e.pathGoal=null;return true;}
       const old=e.pathTarget;
       if(!old||!e.path||Math.hypot(old.x-tx,old.y-ty)>1.2||e.pathRecheck<=0){
-        e.path=this.findPath(e.x,e.y,tx,ty);
+        e.path=this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null);
+        e.trafficRepath=false;
         e.pathTarget={x:tx,y:ty};e.pathGoal=e.path.length?e.path[e.path.length-1]:null;
         e.pathRecheck=1.6;
       }
@@ -826,6 +869,7 @@
       }
       const dx=point.x-e.x,dy=point.y-e.y,len=Math.hypot(dx,dy);
       if(len<.001)return false;
+      const beforeProgress=len;
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
       const clear=(x,y)=>this.canOccupyUnit(e,x,y);
       if(clear(e.x+vx,e.y+vy)){this.setUnitPosition(e,e.x+vx,e.y+vy);e.stuck=0;}
@@ -840,6 +884,13 @@
           this.setUnitPosition(e,e.x+sx,e.y+sy);e.stuck=0;moved=true;break;
         }
         if(!moved){e.stuck=(e.stuck||0)+dt;if(e.stuck>.7){e.pathRecheck=0;e.stuck=0;}}
+      }
+      // A sideways step can be legal yet accomplish no forward progress.
+      // Accumulate genuine waypoint stalls, then use a traffic-priced A*.
+      const progress=beforeProgress-Math.hypot(point.x-e.x,point.y-e.y);
+      e.trafficWait=progress>.008?Math.max(0,(e.trafficWait||0)-dt*2):(e.trafficWait||0)+dt;
+      if(e.trafficWait>.65){
+        e.trafficWait=0;e.trafficRepath=true;e.pathRecheck=0;
       }
       e.heading=Math.atan2(dy*TH,dx*TW);
       e.desiredHeading=Math.atan2(dy,dx);
