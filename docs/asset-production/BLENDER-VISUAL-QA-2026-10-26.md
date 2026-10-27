@@ -1001,3 +1001,65 @@ upper/lower leg struts, a dorsal injection lance and separate damaged geometry.
   preview PR #60 because its dependency chain contains the common Blender
   geometry helpers. No live game texture, manifest or gameplay file was
   modified. Runtime integration and art approval remain blockers.
+
+## 2026-10-28 Federation Hunter Spider four-beat walking animation — validated
+
+**Preview-only; never published to the game.** The validated original
+`FED-VEH-004` Hunter Spider source from
+[Actions #40556753530](https://github.com/shukritobi/chrono-dominion/actions/runs/40556753530)
+was downloaded and reopened rather than regenerating its 128 baseline sprites.
+Eight new independently editable six-vertex/eight-face ankle rocker meshes were
+authored and parented to the eight original hip rigs. The original 16 upper/lower
+leg struts now move through four true 3D walking beats: **plant, lift, swing,
+settle**. This creates **128 new 160×160 RGBA movement sprites**, one for each
+of 32 directions and four gait phases. No original attack, idle or wreckage
+sprite was rerendered.
+
+- [Successful targeted Blender render, source reopen and strict pixel QA
+  #40566554369](https://github.com/shukritobi/chrono-dominion/actions/runs/40566554369).
+  [Preview artifact #12763152657](https://github.com/shukritobi/chrono-dominion/actions/runs/40566554369/artifacts/12763152657)
+  contains the editable `.blend`, 128 independent PNGs, 5120×640 atlas,
+  real 160px/80px contact sheets and per-facing JSON.
+- [Original four-beat Blender geometry and renderer](../../tools/blender/preview_federation_hunter_spider_gait.py),
+  [strict image QA](../../tools/blender/qa_federation_hunter_spider_gait.py),
+  [isolated render workflow](../../.github/workflows/federation-hunter-spider-gait-review.yml).
+  Modeling commit [289ab365](https://github.com/shukritobi/chrono-dominion/commit/289ab36562b2ebc007f6c832baf243dc92be6a5e);
+  QA fix [7c590724](https://github.com/shukritobi/chrono-dominion/commit/7c590724d3e7c0cc9561de211eca1efd2d5bf0bd);
+  workflow commit [2a242ea0](https://github.com/shukritobi/chrono-dominion/commit/2a242ea0b4d700eecd3a3fd99cb83cc43153ee63).
+- All workflow steps **passed**, including checksum-verified official Blender
+  4.2.23, Python compilation, downloading the existing validated source,
+  rendering exactly 128 new frames, reopening the saved **128,528-byte
+  editable Blender source**, verifying **8 hidden editable faceted rockers,
+  8 original hip rigs, 16 original limb struts and 10 hidden wreckage meshes**,
+  and inspecting every new 160px/80px PNG for transparency and clipping.
+- Original 5120×640 atlas SHA-256 **before and after** is exactly
+  `0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836`.
+  The **new, separate gait preview atlas** SHA-256 is
+  `3f23945fb68a1e7be8b43892e768c2f673a647cf8bd2863b66351d2f7bd34ccd`.
+- The actual downloaded **160px and 80px contact sheets were visually
+  inspected**. At 160px the diagonal support legs distinctly compress,
+  lift and extend between beats. At 80px the leg stance remains perceptible,
+  but individual ankle rocker facets are very subtle. This is a four-beat
+  preview sequence, not yet a polished seamless in-game locomotion cycle.
+
+| Real 80px changed pixels, all 32 directions | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Plant → lift RGBA | **971** | 1,069 | 1,023.0 |
+| Lift → swing RGBA | **938** | 1,056 | 999.4 |
+| Swing → settle RGBA | **892** | 986 | 951.1 |
+| Swing vs archived single-frame move RGBA | **886** | 1,073 | 991.7 |
+| Swing vs archived idle RGBA | **867** | 978 | 938.7 |
+| Swing vs archived idle alpha | **679** | 773 | 722.9 |
+| Adjacent-facing plant RGBA | **895** | 1,065 | 1,004.3 |
+
+Independently recalculated actual downloaded PNG differences for **plant →
+lift at 80px** for facings **00 / 07 / 15 / 23 / 31**: **1,040 / 1,039 /
+1,050 / 1,060 / 1,069** pixels. All five exactly match the automated
+per-facing QA report. The acceptance thresholds were not reduced or bypassed.
+
+**Limitations / blockers:** the new 8-foot rocker facets are difficult to
+distinguish individually at 80px; more knee piston travel and a seamless
+eight-beat gait may be worthwhile. The current game sprite loader does not
+consume these separate 32-facing four-phase movement atlases. Art approval
+and a separately reviewed loader are required before integration. No live
+textures, production manifests, runtime or gameplay files were modified.
