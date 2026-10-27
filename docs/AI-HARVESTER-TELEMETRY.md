@@ -183,14 +183,14 @@ Regression: `node tests/right-of-way-v16.test.mjs` checks a parked friendly Hold
 
 ## Loaded-return right-of-way lane selection (28 October 2026)
 
-When a full-cargo harvester requests friendly traffic yielding, it now ignores
+When a **player-owned** full-cargo harvester requests friendly traffic yielding, it now ignores
 nearby allies whose center lies outside the moving truck's collision-width
 travel corridor. Previously, the nearest friendly could be beside the road;
 that bystander would receive a yield order while an actual Hold-position
 sentry remained in front of the truck. The loaded truck can now use its
 existing safe lateral pocket around the correct Hold sentry. No refinery
 routing, teleportation, unit statistics, save fields or general unit traffic
-priority is changed. Empty/partially loaded trucks keep their existing rules.
+priority is changed. Empty/partially loaded trucks **and all AI harvesters** keep\ntheir existing rules. A broader AI application failed the natural-match\neconomy gate (Ashen Basin 10,440 vs 15,120 baseline; Frostline 6,120 vs\n9,000), so it was withheld rather than deployed.
 
 Regression: `node tests/right-of-way-v16.test.mjs` includes an off-axis
 bystander nearer than the actual blocker and a partial-load compatibility
