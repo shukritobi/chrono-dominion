@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.40.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.41.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.41 Honest fog-of-war visibility
+
+- Unfinished buildings no longer reveal unexplored terrain before construction completes. Finished friendly buildings retain their normal sensor range; destroyed ones stop contributing visibility.
+- Enemy units at the edge of a visible fog tile are rendered, shown on radar, and selectable only if a living friendly sensor actually detects their position. The battlefield and radar share one sensor-verified roster each render frame.
+- Existing explored terrain, manual orders, save format, and original artwork remain unchanged. Automated edge-of-sight and save/load regressions are included.
 
 ### v2.40 Aircraft landing and servicing animations
 

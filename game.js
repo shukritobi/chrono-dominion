@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.40 — animated aircraft landings and airfield service. */
+/* Chrono Dominion v2.41 — consistent fog-of-war scouting and entity visibility. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -759,7 +759,7 @@
       this.updateSelection();
     }
     screen(x,y){const p=iso(x,y);return{x:this.w/2+(p.x-this.camera.x)*this.camera.zoom,y:this.h/2+(p.y-this.camera.y)*this.camera.zoom};}
-    pick(x,y){let best=null,bd=Infinity;for(const e of this.entities){if(e.hp<=0||e.owner===1&&!this.isVisible(e.x,e.y))continue;const d=Math.hypot(x-e.x,y-e.y);const hit=e.type==='building'?1.75:1.07;if(d<hit&&d<bd){best=e;bd=d;}}return best;}
+    pick(x,y){let best=null,bd=Infinity;for(const e of this.entities){if(e.hp<=0||!this.playerCanSeeEntity(e))continue;const d=Math.hypot(x-e.x,y-e.y);const hit=e.type==='building'?1.75:1.07;if(d<hit&&d<bd){best=e;bd=d;}}return best;}
     command(p,event){
       if(this.abilityArmedId){const operative=this.entityById(this.abilityArmedId);this.abilityArmedId=null;
         if(operative)this.activateAbility(operative,{x:p.gx,y:p.gy});this.updateUI(true);return;}
@@ -2683,13 +2683,19 @@
     updateFog(){
       if(!this.fog.length)this.fog=Array.from({length:WORLD_SIZE},()=>Array.from({length:WORLD_SIZE},()=>({seen:false,visible:false})));
       for(const row of this.fog)for(const c of row)c.visible=false;
-      for(const e of this.entities){if(e.owner!==0||e.hp<=0)continue;const radius=e.kind==='recon'?8.1:e.type==='building'?5.8:4.8;
+      for(const e of this.entities){if(e.owner!==0||e.hp<=0||!e.built)continue;const radius=e.kind==='recon'?8.1:e.type==='building'?5.8:4.8;
         const minX=clamp(Math.floor(e.x-radius),0,WORLD_SIZE-1),maxX=clamp(Math.ceil(e.x+radius),0,WORLD_SIZE-1);
         const minY=clamp(Math.floor(e.y-radius),0,WORLD_SIZE-1),maxY=clamp(Math.ceil(e.y+radius),0,WORLD_SIZE-1);
         for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)if(Math.hypot(x-e.x,y-e.y)<=radius){this.fog[x][y].seen=true;this.fog[x][y].visible=true;}
       }
     }
     isVisible(x,y){const ix=clamp(Math.floor(x),0,WORLD_SIZE-1),iy=clamp(Math.floor(y),0,WORLD_SIZE-1);return !!this.fog[ix]?.[iy]?.visible;}
+    playerCanSeeEntity(e){
+      // Fog tiles are sampled on an integer grid. At the edge of sight a
+      // visible tile may contain an enemy outside the actual sensor radius.
+      // Never reveal or allow selection of that hidden enemy.
+      return e.owner===0||(this.isVisible(e.x,e.y)&&this.sideCanSee(0,e));
+    }
     playerReconSummary(){
       // Player reconnaissance only reads their own fog and sensor reports.
       let seen=0,visible=0,total=0;
@@ -3191,11 +3197,11 @@
       const c=this.ctx;if(!this.fog.length)return;
       for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){const cell=this.fog[x][y];if(cell.visible)continue;this.drawDiamond(x+.5,y+.5,cell.seen?'#08131ca8':'#04101af3');}
     }
-    drawRadar(){
+    drawRadar(visibleEnemies=null){
       const c=this.rctx,w=this.radar.width,h=this.radar.height;c.clearRect(0,0,w,h);c.fillStyle='#0b2028';c.fillRect(0,0,w,h);
       for(let x=0;x<WORLD_SIZE;x++)for(let y=0;y<WORLD_SIZE;y++){const cell=this.fog[x]?.[y];c.fillStyle=!cell?.seen?'#061019':this.water(x+.5,y+.5)?'#36617a':cell.visible?'#466449':'#294037';c.fillRect(x*w/WORLD_SIZE,y*h/WORLD_SIZE,Math.ceil(w/WORLD_SIZE),Math.ceil(h/WORLD_SIZE));}
       c.fillStyle='#c0a45b';for(const o of this.ores){if(o.amount>0&&this.fog[Math.floor(o.x)]?.[Math.floor(o.y)]?.seen)c.fillRect(o.x*w/WORLD_SIZE,o.y*h/WORLD_SIZE,3,3);}
-      for(const e of this.entities){if(e.hp<=0||e.owner===1&&!this.isVisible(e.x,e.y))continue;c.fillStyle=e.owner===0?'#6bd7ec':'#ed7e6a';c.fillRect(e.x*w/WORLD_SIZE-2,e.y*h/WORLD_SIZE-2,e.type==='building'?5:3,e.type==='building'?5:3);}
+      for(const e of this.entities){if(e.hp<=0||e.owner===1&&!(visibleEnemies?visibleEnemies.has(e.id):this.playerCanSeeEntity(e)))continue;c.fillStyle=e.owner===0?'#6bd7ec':'#ed7e6a';c.fillRect(e.x*w/WORLD_SIZE-2,e.y*h/WORLD_SIZE-2,e.type==='building'?5:3,e.type==='building'?5:3);}
       const {x:cx,y:cy}=this.worldToGrid(this.camera.x,this.camera.y);c.strokeStyle='#9ddbe99c';c.lineWidth=1;c.strokeRect(clamp(cx-6,0,WORLD_SIZE)*w/WORLD_SIZE,clamp(cy-8,0,WORLD_SIZE)*h/WORLD_SIZE,12*w/WORLD_SIZE,16*h/WORLD_SIZE);
     }
     worldToGrid(wx,wy){return{x:wx/TW+wy/TH,y:wy/TH-wx/TW};}
@@ -3203,7 +3209,11 @@
       const c=this.ctx,d=this.dpr;c.setTransform(d,0,0,d,0,0);c.fillStyle='#081821';c.fillRect(0,0,this.w,this.h);
       c.translate(this.w/2-this.camera.x*this.camera.zoom,this.h/2-this.camera.y*this.camera.zoom);c.scale(this.camera.zoom,this.camera.zoom);
       this.drawTerrain();
-      const entities=this.entities.filter(e=>e.hp>0&&(e.owner===0||this.isVisible(e.x,e.y))).sort((a,b)=>(a.x+a.y)-(b.x+b.y));
+      // Share one sensor-verified enemy roster between battlefield and radar.
+      // Do not mistake a lit fog tile for permission to reveal a hidden unit.
+      const visibleEnemies=new Set(this.entities.filter(e=>e.owner===1&&e.hp>0&&
+        this.playerCanSeeEntity(e)).map(e=>e.id));
+      const entities=this.entities.filter(e=>e.hp>0&&(e.owner===0||visibleEnemies.has(e.id))).sort((a,b)=>(a.x+a.y)-(b.x+b.y));
       for(const e of entities)e.type==='building'?this.drawBuilding(e):this.drawUnit(e);
       this.drawProjectiles();this.drawEffects();this.drawFog();
       if(this.placing&&this.state==='playing'){
@@ -3222,7 +3232,7 @@
       }
       if(this.dragStart&&this.dragEnd&&Math.hypot(this.dragStart.x-this.dragEnd.x,this.dragStart.y-this.dragEnd.y)>12){
         c.setTransform(d,0,0,d,0,0);const a=this.dragStart,b=this.dragEnd;c.fillStyle='#8bceef29';c.strokeStyle='#98d9f2';c.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);}
-      this.drawRadar();
+      this.drawRadar(visibleEnemies);
     }
     frame(now){
       const dt=Math.min(.06,(now-this.last)/1000||0);this.last=now;
@@ -3241,6 +3251,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.40.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.41.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
