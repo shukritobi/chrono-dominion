@@ -1690,7 +1690,7 @@
       let plan=this.harvesterEvadeTargets.get(e);
       // Healthy trucks keep earning income. Retreat only after real damage,
       // avoiding a costly evacuation on every harmless distant sighting.
-      if(!plan&&e.hp/e.maxHp>.65)return false;
+      if(!plan&&e.hp/e.maxHp>.35)return false;
       // After breaking contact, remain at the safe point briefly instead of
       // instantly driving back into the same attacker on the ore route.
       const threat=this.nearest(e,u=>u.owner!==e.owner&&u.type==='unit'&&
@@ -1749,7 +1749,7 @@
           // attacker. Reject paths that first pull the truck into gunfire.
           if(route.some(step=>dist(step,threat)<dist(e,threat)-.25))continue;
           plan={...point,threatId:threat.id,expires:this.time+5,
-            holdUntil:this.time+8};
+            holdUntil:this.time+4};
           break;
         }
         if(!plan){this.harvesterEvadeTargets.delete(e);return false;}
