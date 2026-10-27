@@ -532,3 +532,35 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+
+## 2026-10-27 Federation Bull four-phase electrothermal attack — preview-only
+
+The P0 Federation Bull (FED-VEH-002) already has a verified editable original
+Blender model and 32-facing idle/movement/attack/destroyed sprites from
+[successful baseline run #40501761698](https://github.com/shukritobi/chrono-dominion/actions/runs/40501761698).
+This pass **does not rerender the baseline**. It downloads that artifact's
+saved `.blend`, original atlas and idle/attack PNGs and adds 12 editable
+attack-only meshes: three inductive thermal barrel coils, two expanding
+muzzle shock rings, one condensed plasma bolt and six radial vent shards.
+The original turret and cannon recoil articulate across **charge → focus →
+discharge → recover**, each at 32 directions (128 new RGBA PNGs).
+
+- [Modeling script](../../tools/blender/preview_federation_bull_temporal_attack.py),
+  [strict 160px/80px image QA](../../tools/blender/qa_federation_bull_temporal_attack.py)
+  and [targeted preview workflow](../../.github/workflows/federation-bull-temporal-attack-review.yml).
+- [Targeted Actions run #40527927857](https://github.com/shukritobi/chrono-dominion/actions/runs/40527927857)
+  and [draft review PR #51](https://github.com/shukritobi/chrono-dominion/pull/51).
+- Strict gates require 128 populated, unclipped 160px RGBA frames;
+  >=35 changed RGBA pixels at 80px for **every** adjacent phase pair and
+  facing; >=50 changed RGBA pixels for new discharge vs archived attack;
+  >=20 changed alpha pixels for discharge vs archived idle; and >=20
+  changed pixels for adjacent 32-direction facing pairs.
+- Reopen the saved editable `.blend` and verify all 12 new meshes are hidden
+  in its intact pose, with all eight original wreckage meshes and 14
+  original roadwheel pivots retained. Verify the original atlas checksum
+  is identical before/after. Inspect both generated 160px and 80px sheets.
+
+**Status at commit:** targeted Blender render / pixel verification in progress;
+**do not claim validated until workflow and actual PNG QA pass**. All outputs
+are separate preview artifacts. No approved live sprite or manifest changes.
