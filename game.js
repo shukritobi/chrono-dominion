@@ -2561,6 +2561,8 @@
         Number.isFinite(r.time)&&r.time<=this.time&&this.time-r.time<=28
       ).map(r=>r.id)).size;
       const skyguardGoal=Math.min(2,airThreatCount);
+      const aviationReady=!owned('airfield').length&&built('factory')&&
+        built('radar')&&this.time>130;
       let choice=null;
       if(!owned('generator').length||shortage)choice='generator';
       else if(!owned('refinery').length)choice='refinery';
@@ -2571,10 +2573,11 @@
         me.credits>=BUILD.flak.cost+500)choice='flak';
       // Air Command requires factory + radar, not optional Technology Lab.
       // Keep enough cash for an emergency generator after buying aviation.
-      else if(!owned('airfield').length&&built('factory')&&built('radar')&&
-        me.credits>=BUILD.airfield.cost+BUILD.generator.cost&&this.time>130)choice='airfield';
+      else if(aviationReady&&
+        me.credits>=BUILD.airfield.cost+BUILD.generator.cost)choice='airfield';
       else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
-      else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&me.credits>2200)choice='turret';
+      else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&
+        me.credits>2200&&!aviationReady)choice='turret';
       if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
         const anchor=choice==='turret'&&threatened?
           (this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester'&&this.sideCanSee(side,b))||base):base;
@@ -2594,7 +2597,13 @@
           }
         }
       }
-      if(!this.queues.some(q=>q.side===side)){
+      // Keep a small defensive army, then bank for aviation instead of
+      // spending every income delivery on another tank or optional turret.
+      // Under a visible local attack, unit recruitment resumes immediately.
+      const savingForAirfield=aviationReady&&!threatened&&
+        me.credits<BUILD.airfield.cost+BUILD.generator.cost&&
+        owned('tank').length+owned('heavy').length>=2;
+      if(!this.queues.some(q=>q.side===side)&&!savingForAirfield){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
         else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';
