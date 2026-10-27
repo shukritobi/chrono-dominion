@@ -2618,6 +2618,17 @@
         me.credits<BUILD.airfield.cost+BUILD.generator.cost&&
         owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>=2;
+      // Rebuilding a lost radar is a prerequisite for aviation. While a
+      // powered, defended economy is saving its 900-credit radar cost plus
+      // the 650-credit generator reserve, defer optional unit purchases.
+      // Continue banking through construction; release the reserve when
+      // threatened, short of power, without income or without ground cover.
+      const savingForRadar=!built('radar')&&built('factory')&&built('refinery')&&
+        owned('harvester').length>0&&
+        owned('tank').length+owned('heavy').length>0&&
+        !threatened&&!shortage&&
+        (owned('radar').length>0||
+          me.credits<BUILD.radar.cost+BUILD.generator.cost);
       const savingForAircraft=aviationInvestment&&
         (!built('airfield')||shortage||
           me.credits<UNITS.aircraft.cost+BUILD.generator.cost);
@@ -2630,7 +2641,7 @@
         built('refinery')&&owned('harvester').length===1&&
         me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
       if(!this.queues.some(q=>q.side===side)&&
-        !savingForAirfield&&!savingForAircraft){
+        !savingForAirfield&&!savingForAircraft&&!savingForRadar){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
         else if(expandingOreEconomy)unit='harvester';
