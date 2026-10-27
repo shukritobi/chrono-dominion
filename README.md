@@ -8,6 +8,11 @@
 
 
 
+### Earlier affordable AI aviation investment (post-v2.42)
+
+- With a completed factory and radar, enemy commanders can buy an Air Command for its 1,750-credit cost plus a 650-credit emergency generator reserve, instead of waiting for over 3,500 credits or first buying optional Technology Lab. Brownouts and urgent defenses still take priority.
+- A three-faction regression checks actual construction costs, prerequisites, power and save compatibility. This fixes an AI decision bottleneck, not guaranteed aircraft in every contested match.
+
 ### Natural AI technology progression laboratory (post-v2.42)
 
 - The existing production-engine balance lab now records when enemy generators, refineries, factories, radar, technology labs and Air Commands start construction and become operational, plus first aircraft queue/deployment times. These are **observed events**, not pre-granted tech.
