@@ -8,7 +8,7 @@ The production-engine 720-second progression lab still reports zero naturally de
 
 An AI ore harvester previously followed its ore/refinery route even with a **currently visible armed enemy within 4.5 tiles**. This change makes the truck temporarily seek a reachable point away from the observed threat, preferring the safe side of a friendly operational refinery or HQ. It uses the same navigation, building collision, terrain and sensor rules as other units. It does **not** consult unseen enemy positions, grant resources or alter player harvesting.
 
-A cached escape destination lasts at most five game seconds, avoiding expensive pathfinding on every frame. Once no armed threat remains within range, the transient plan is discarded and normal harvesting resumes. The existing ore-skip cooldown avoids immediately re-entering the ambushed deposit. If no safe reachable escape point exists, the existing harvesting behavior is retained rather than teleporting the unit.
+A cached escape destination is rechecked at most every five game seconds, avoiding expensive pathfinding on every frame. After the truck exits the immediate 4.5-tile danger radius, it holds its safe destination for up to eight game seconds while the same armed attacker remains visible within eight tiles; this prevents an immediate U-turn into the ambush. Once the attacker dies, disappears from friendly sensor coverage or leaves the hold radius, the transient plan is discarded and normal harvesting resumes. The existing ore-skip cooldown avoids immediately re-entering the ambushed deposit. If no safe reachable escape point exists, the existing harvesting behavior is retained rather than teleporting the unit.
 
 ## Verification and limitations
 
