@@ -1124,7 +1124,7 @@ strict PNG QA, targeted workflow, asset register and this document. No
 published textures, manifests, runtime or gameplay files were changed.
 
 
-## 2026-10-28 PSI-VEH-004 original Hallucination Drone — targeted review pending
+## 2026-10-28 PSI-VEH-004 original Hallucination Drone — validated preview
 
 **Preview-only, not integrated.** This new Psionic drone uses original Blender
 geometry rather than copying another faction's tank or spider silhouette:
@@ -1154,3 +1154,45 @@ been confirmed passing. Do not claim pixel QA, saved-source reopen, or 80px
 visual inspection until the actual Actions artifact is reviewed. A failing
 threshold requires physical geometry changes, never a lowered gate. No
 production texture, manifest or runtime path was modified.
+
+
+### Final validated Hallucination Drone review (28 October 2026)
+
+- [First targeted run #40583775258](https://github.com/shukritobi/chrono-dominion/actions/runs/40583775258)
+  successfully rendered **all 128** frames and reopened the saved Blender
+  source, but the QA script itself failed on a **metric dictionary key
+  mismatch** (`move_vs_idle_rgba_80_min` versus the actual
+  `move_vs_idle_rgba_80` field). This was a test-code error, **not** a
+  failing art threshold. [Correction commit `39c3b87a`](https://github.com/shukritobi/chrono-dominion/commit/39c3b87a8fcc056547f50cdd3307dd78e1c4b1b0)
+  strips only the `_min` suffix when looking up a metric; it leaves all
+  four acceptance thresholds unchanged.
+- [Successful targeted Blender 4.2.23 run #40583938655](https://github.com/shukritobi/chrono-dominion/actions/runs/40583938655)
+  **passed every step**, including actual 160px frame clipping, 80px
+  quantitative QA, and Blender source reopen.
+  [Download preview artifact #12769934851](https://github.com/shukritobi/chrono-dominion/actions/runs/40583938655/artifacts/12769934851).
+- The reopened **124,869-byte editable .blend** contains six independent
+  petal rigs, a separate neural iris, five hidden physical attack meshes,
+  and ten hidden, editable eight-vertex wreckage meshes.
+- All **128 RGBA sprites** passed, with a **5120×640** preview atlas,
+  **1280×640** 160px contact sheet and **640×320** 80px contact sheet.
+  Atlas SHA-256:
+  `59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d`.
+- Real 80px pixel counts across **all 32 facings**:
+  movement versus idle **591–643 RGBA** (440–502 alpha), attack versus
+  idle **611–696 RGBA** (476–538 alpha), destroyed versus idle
+  **661–725 RGBA** (**594–666 alpha**), and adjacent idle facings
+  **575–618 RGBA**. These exceed the unchanged 50/50/90/40 QA gates.
+- Downloaded and inspected the actual 160px and 80px contact sheets.
+  Independently recalculated destroyed alpha differences at facings
+  **00/07/15/23/31 = 635/624/644/607/633**; all five match the
+  workflow's JSON report exactly.
+- [Draft preview PR #70](https://github.com/shukritobi/chrono-dominion/pull/70)
+  contains only the new Blender renderer, PNG QA, isolated workflow,
+  AssetRegister entry and this QA documentation. No live art, manifests,
+  runtime, or gameplay files were modified.
+
+**Art limitations:** individual petal hinges and the smaller fracture
+veins are subtle at 80px. The spectral attack flare is visible but partly
+covers the front psychic needles. The original drone has one movement pose
+and one firing pose, not yet a temporal cycle. It remains **preview-only**;
+no art publication or game integration is approved.
