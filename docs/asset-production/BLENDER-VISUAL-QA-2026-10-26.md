@@ -1122,3 +1122,35 @@ atlas; integration needs separate art approval and loader changes.
 **Production safety:** the stacked PR contains only Blender preview modeling,
 strict PNG QA, targeted workflow, asset register and this document. No
 published textures, manifests, runtime or gameplay files were changed.
+
+
+## 2026-10-28 PSI-VEH-004 original Hallucination Drone — targeted review pending
+
+**Preview-only, not integrated.** This new Psionic drone uses original Blender
+geometry rather than copying another faction's tank or spider silhouette:
+a low hovering phase-projector housing, six independently articulated
+amethyst folding petals, a separately moving neural iris, paired forward
+psychic needles and five physical attack-only spectral emitters. Its destroyed
+pose hides the intact chassis and exposes ten separate editable broken
+petals, sheared needles, reactor fractures and neural lens fragments.
+
+- [Original Blender model](../../tools/blender/preview_psionic_hallucination_drone_32.py)
+  builds a saved editable source and **128 new RGBA sprites** (32 directions ×
+  idle/move/attack/destroyed) without touching any existing preview or live art.
+- [Actual PNG acceptance checks](../../tools/blender/qa_psionic_hallucination_drone_32.py)
+  verify all 128 transparent 160px frames, clipping, 80px motion/attack
+  RGBA differences, 80px destroyed alpha differences, and distinct adjacent
+  facings. The 80px gates are 50/50/90/40 changed pixels respectively.
+- [Isolated targeted Blender workflow](../../.github/workflows/psionic-hallucination-drone-32-review.yml)
+  installs checksum-verified Blender 4.2.23, reopens the saved .blend, verifies
+  six independent petal rigs, five hidden attack meshes and ten hidden wrecks,
+  then uploads actual 160px/80px contact sheets, atlas, frames and JSON QA.
+- Modeling commit `f6f2a680604ae97a1f2527ce1ec09aba0aedd095`;
+  QA commit `b29bf0a5125adfea2036589e696fc25798f3e265`;
+  workflow commit `d5f3e36db23679a23ee411d4bc2864564c0873ef`.
+
+**Status at authoring:** implementation committed; targeted render has not yet
+been confirmed passing. Do not claim pixel QA, saved-source reopen, or 80px
+visual inspection until the actual Actions artifact is reviewed. A failing
+threshold requires physical geometry changes, never a lowered gate. No
+production texture, manifest or runtime path was modified.
