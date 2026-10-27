@@ -1,0 +1,106 @@
+name: Federation Hunter Spider Four-Stage Destruction Blender Preview
+
+# PREVIEW ONLY: source and 128 new frames only. Never publish game art.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/federation-hunter-spider-destruction-20261028
+    paths:
+      - .github/workflows/federation-hunter-spider-destruction-review.yml
+      - tools/blender/preview_federation_hunter_spider_destruction.py
+      - tools/blender/qa_federation_hunter_spider_destruction.py
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-federation-hunter-spider-four-stage-destruction
+  cancel-in-progress: true
+
+jobs:
+  destruction-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview-only branch
+        uses: actions/checkout@v4
+
+      - name: Compile modeling and actual PNG QA
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_federation_hunter_spider_destruction.py tools/blender/qa_federation_hunter_spider_destruction.py
+          python -m pip install --quiet Pillow
+
+      - name: Download validated source and original 128 PNGs without rerendering
+        uses: actions/download-artifact@v4
+        with:
+          name: chrono-federation-hunter-spider-drone-32-preview
+          run-id: 40556753530
+          github-token: ${{ github.token }}
+          path: archived-spider-source
+
+      - name: Check immutable baseline atlas and editable source
+        run: |
+          set -euo pipefail
+          test -s archived-spider-source/federation-hunter-spider-drone.blend
+          test -s archived-spider-source/frames/idle/00.png
+          test -s archived-spider-source/frames/destroyed/31.png
+          echo '0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836  archived-spider-source/federation-hunter-spider-32-preview.png' | sha256sum --check
+          sha256sum archived-spider-source/federation-hunter-spider-32-preview.png > "$RUNNER_TEMP/immutable-spider.sha256"
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified official Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-$version-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only 128 NEW physical destruction frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 archived-spider-source/federation-hunter-spider-drone.blend --python-exit-code 1 --python tools/blender/preview_federation_hunter_spider_destruction.py -- --output generated/federation-hunter-spider-destruction
+
+      - name: Reopen saved editable Blender source and verify hidden new meshes
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 generated/federation-hunter-spider-destruction/federation-hunter-spider-four-stage-destruction.blend --python-exit-code 1 --python-expr 'import bpy; d=[o for o in bpy.data.objects if o.get("spider_destruction_only")]; w=[o for o in bpy.data.objects if o.get("wreckage_only")]; hips=[o for o in bpy.data.objects if o.type=="EMPTY" and o.name.startswith("Independent spider leg ")]; assert len(d)==14 and len(w)==10 and len(hips)==8,(len(d),len(w),len(hips)); assert all(o.type=="MESH" and len(o.data.vertices)==8 and len(o.data.polygons)==6 and o.hide_render for o in d); assert all(o.hide_render for o in w); print("PASS REOPEN: 14 HIDDEN ORIGINAL 3D FRAGMENTS, 10 EXISTING WRECKS, 8 HIP RIGS")'
+
+      - name: Verify every 160px/80px PNG and unchanged archived atlas
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_federation_hunter_spider_destruction.py --stage generated/federation-hunter-spider-destruction --baseline archived-spider-source
+          sha256sum --check "$RUNNER_TEMP/immutable-spider.sha256"
+          test -s generated/federation-hunter-spider-destruction/federation-hunter-spider-destruction-contact-160.png
+          test -s generated/federation-hunter-spider-destruction/federation-hunter-spider-destruction-contact-80.png
+          test -s generated/federation-hunter-spider-destruction/pixel-qa.json
+
+      - name: Upload preview-only Blender source, frames, atlas and QA (even if QA fails)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-federation-hunter-spider-four-stage-destruction-preview
+          path: generated/federation-hunter-spider-destruction/
+          if-no-files-found: warn
+          retention-days: 30

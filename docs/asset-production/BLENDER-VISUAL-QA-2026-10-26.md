@@ -1064,3 +1064,61 @@ eight-beat gait may be worthwhile. The current game sprite loader does not
 consume these separate 32-facing four-phase movement atlases. Art approval
 and a separately reviewed loader are required before integration. No live
 textures, production manifests, runtime or gameplay files were modified.
+
+## 2026-10-28 Federation Hunter Spider four-stage physical destruction — validated
+
+**Preview-only, not published or integrated.** The original Hunter Spider
+editable source from [Actions #40556753530](https://github.com/shukritobi/chrono-dominion/actions/runs/40556753530)
+was downloaded rather than regenerated. Four genuinely different physical
+destruction phases (**impact → shear → rupture → settle**) were rendered
+for 32 facings: **128 new transparent 160×160 RGBA sprites**. The existing
+128-frame atlas was neither rerendered nor modified.
+
+- [Successful targeted Blender 4.2.23 workflow #40575580364](https://github.com/shukritobi/chrono-dominion/actions/runs/40575580364)
+  and [preview-only artifact #12766852312](https://github.com/shukritobi/chrono-dominion/actions/runs/40575580364/artifacts/12766852312).
+  [Draft stacked PR #68](https://github.com/shukritobi/chrono-dominion/pull/68)
+  depends on the earlier gait PR #66 and original model PR #62.
+- [Original volumetric Blender destruction modeling](../../tools/blender/preview_federation_hunter_spider_destruction.py),
+  [per-facing actual PNG QA](../../tools/blender/qa_federation_hunter_spider_destruction.py)
+  and [isolated preview workflow](../../.github/workflows/federation-hunter-spider-destruction-review.yml).
+- All workflow steps **passed**: 128 frames rendered, source reopened,
+  **14 new hidden eight-vertex/six-face editable fragments** verified,
+  10 original hidden wreckage meshes and eight original hip rigs preserved,
+  and all 160px/80px alpha clipping and pixel acceptance gates passed.
+  The saved compressed editable .blend is **131,487 bytes**.
+- The baseline atlas SHA-256 remained exactly
+  `0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836`
+  before and after. The separate new four-stage preview atlas SHA-256 is
+  `a2146a40bae4fdbc0f40744a89591d2433ace820a0c54684c0aa4cb45191ae70`.
+- Downloaded the real artifact and inspected **both 160px and 80px contact
+  sheets**. At 160px the drone's front legs shear away, armor separates,
+  glowing core fractures emerge and the remaining chassis collapses. At 80px
+  all four silhouettes remain distinguishable, with visible reductions in
+  height and leg count. **Five independently recalculated 80px impact→shear
+  RGBA pixel counts** for facings 00/07/15/23/31 were
+  **1068 / 1046 / 933 / 968 / 1074**, all exactly matching JSON.
+
+| Actual 80px changed pixels across 32 directions | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Impact → shear RGBA | **877** | 1,074 | 984.9 |
+| Shear → rupture RGBA | **814** | 1,087 | 953.2 |
+| Rupture → settle RGBA | **726** | 929 | 817.6 |
+| Impact → shear alpha | **740** | 888 | 808.9 |
+| Shear → rupture alpha | **673** | 904 | 790.0 |
+| Rupture → settle alpha | **540** | 712 | 630.1 |
+| Settle vs archived destroyed RGBA | **536** | 623 | 589.4 |
+| Settle vs archived destroyed alpha | **327** | 437 | 392.4 |
+| Impact vs archived idle RGBA | **881** | 983 | 931.9 |
+| Adjacent impact facings RGBA | **927** | 1,058 | 979.1 |
+
+**Artistic limitations:** the orange reactor exposure is comparatively bright
+in the rupture phase at 80px, and the settled wreck retains a broad upper
+rectangular silhouette. Future polish should soften the brightest fracture
+patches and make one edge of the final chassis more jagged. These are
+art-direction improvements, not failed pixel acceptance gates. The game
+loader cannot yet consume the separate four-phase 32-facing destruction
+atlas; integration needs separate art approval and loader changes.
+
+**Production safety:** the stacked PR contains only Blender preview modeling,
+strict PNG QA, targeted workflow, asset register and this document. No
+published textures, manifests, runtime or gameplay files were changed.
