@@ -39,7 +39,9 @@ for(const faction of ['coalition','federation','psionic']){
       playerFaction:'coalition',enemyFaction:faction,startingCredits:5000});
     g.add(1,'factory',24,23);g.add(1,'radar',23,25);
     g.add(1,'generator',21,24);g.add(1,'generator',22,20);
-    g.add(1,'airfield',15,15,airfieldBuilt);
+    // Keep the test airfield well outside the starting player's sight line.
+    // A plane emerging beside the enemy legitimately triggers base defense.
+    g.add(1,'airfield',19,16,airfieldBuilt);
     g.add(1,'tank',23,21);
     g.time=260;g.queues=[];
     assert.equal(g.power(1).low,false,'fixture must be powered');
