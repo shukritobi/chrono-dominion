@@ -20,7 +20,7 @@ export function newHarvesterTelemetry(){
   }});
   return metrics;
 }
-export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,time,refineries=[]){
+export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,time,refineries=[],inspectStall=null){
   if(!Number.isFinite(time)||time<0||!Number.isFinite(oreBefore)||
      !Number.isFinite(oreAfter)||oreAfter<oreBefore)
     throw Error('Invalid ore telemetry step');
@@ -76,7 +76,8 @@ export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,tim
               trafficWait:Number.isFinite(current.trafficWait)?
                 Number(current.trafficWait.toFixed(2)):null,
               laneWaiting:current.laneWaiting??null,
-              yielding:!!current.yieldOrder
+              yielding:!!current.yieldOrder,
+              returnAccess:inspectStall?inspectStall(current,refineries):null
             });
           }else metrics.fullCargoStallCasesOmitted++;
         }
