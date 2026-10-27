@@ -95,6 +95,7 @@ jobs:
           node tests/target-acquisition-v234.test.mjs
           node tests/xl-pathfinding-v235.test.mjs
           node tests/path-query-cache-v236.test.mjs
+          node tests/navigation-footprint-v237.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check

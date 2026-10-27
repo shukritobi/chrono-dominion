@@ -4,8 +4,13 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.36.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.37.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.37 Indexed building footprints for XL navigation
+
+- Pathfinding and formation flood-fill now index active building footprints once per request, rather than scanning every building for each distinct tile. The per-query cache still respects changing water, new structures and destroyed buildings on subsequent orders.
+- Original collision footprint boundaries, diagonal restrictions, custom walkability hooks, saves and aircraft are unchanged. [Release notes](docs/RELEASE-2.37.md) · [regression](tests/navigation-footprint-v237.test.mjs).
 
 ### v2.36 Faster XL navigation queries
 

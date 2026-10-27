@@ -894,14 +894,7 @@
       // It enumerates only walkable cells connected to the selected army.
       const start={x:clamp(Math.round(origin.x),1,WORLD_SIZE-2),
                    y:clamp(Math.round(origin.y),1,WORLD_SIZE-2)};
-      // Reuse passability probes only during this synchronous query.
-      // A later order must see newly constructed or destroyed buildings.
-      const passable=new Map();
-      const walk=(x,y)=>{
-        const k=x+','+y;
-        if(!passable.has(k))passable.set(k,this.walkable(x,y));
-        return passable.get(k);
-      };
+      const walk=this.navigationWalk();
       const nearby=[];
       for(let radius=0;radius<7&&!nearby.length;radius++)for(let dx=-radius;dx<=radius;dx++)for(let dy=-radius;dy<=radius;dy++){
         const x=start.x+dx,y=start.y+dy;
@@ -928,9 +921,10 @@
       };
       if(!want)return [];
       const connected=!airborne&&origin?this.reachableTiles(origin):null;
+      const walk=airborne?null:this.navigationWalk();
       const usable=(x,y)=>airborne?
         x>=1&&y>=1&&x<=WORLD_SIZE-2&&y<=WORLD_SIZE-2:
-        this.walkable(x,y)&&(!connected||connected.has(x+','+y));
+        walk(x,y)&&(!connected||connected.has(x+','+y));
       const candidates=[];
       // Rings closest to the ordered destination first. Each cell is unique.
       for(let radius=0;radius<WORLD_SIZE&&candidates.length<want*4;radius++){
@@ -947,6 +941,33 @@
     }
     entityById(id){return this.entities.find(e=>e.id===id&&e.hp>0);}
     nearest(source,predicate,range=Infinity){let result=null,best=range;for(const e of this.entities){if(e===source||e.hp<=0||!predicate(e))continue;const d=dist(source,e);if(d<best){best=d;result=e;}}return result;}
+    navigationWalk(){
+      // Build a compact building-footprint index once per synchronous path or
+      // formation query. The previous tile cache still scanned every entity
+      // once per distinct tile, which scales poorly on crowded XL maps.
+      // Custom walkable implementations (tests/map tools) retain their rules.
+      const standard=this.walkable===Game.prototype.walkable;
+      const blocked=standard?new Set():null;
+      if(standard)for(const b of this.entities){
+        if(b.hp<=0||b.type!=='building')continue;
+        const minX=Math.max(1,Math.floor(b.x-1.5)+1);
+        const maxX=Math.min(WORLD_SIZE-2,Math.ceil(b.x+1.5)-1);
+        const minY=Math.max(1,Math.floor(b.y-1.5)+1);
+        const maxY=Math.min(WORLD_SIZE-2,Math.ceil(b.y+1.5)-1);
+        for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)
+          if(Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5)
+            blocked.add(x+','+y);
+      }
+      const passable=new Map();
+      return (x,y)=>{
+        const k=x+','+y;
+        if(!passable.has(k))passable.set(k,standard?
+          x>=1&&y>=1&&x<=WORLD_SIZE-2&&y<=WORLD_SIZE-2&&
+            !this.water(x,y)&&!blocked.has(k):
+          this.walkable(x,y));
+        return passable.get(k);
+      };
+    }
     walkable(x,y){
       if(x<1||y<1||x>WORLD_SIZE-2||y>WORLD_SIZE-2||this.water(x,y))return false;
       return !this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5);
@@ -975,14 +996,7 @@
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
       const goal={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
       const key=(x,y)=>x+','+y,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
-      // Reuse passability probes only during this synchronous query.
-      // A later order must see newly constructed or destroyed buildings.
-      const passable=new Map();
-      const walk=(x,y)=>{
-        const k=x+','+y;
-        if(!passable.has(k))passable.set(k,this.walkable(x,y));
-        return passable.get(k);
-      };
+      const walk=this.navigationWalk();
       const open=[],push=node=>{
         open.push(node);let i=open.length-1;
         while(i>0){
@@ -3193,6 +3207,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.36.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.37.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();

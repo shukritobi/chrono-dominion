@@ -80,5 +80,5 @@ unique('flood-fill after terrain change');
 delete g.walkable;
 assert.equal(g.saveGame(),true);
 assert.equal(g.loadGame(),true);
-assert.equal(window.ChronoDominion.version,'2.36.0');
+assert.equal(window.ChronoDominion.version,'2.37.0');
 console.log('v2.36 navigation cache, dynamic obstacles, formations and saves passed');
