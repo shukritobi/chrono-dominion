@@ -999,3 +999,47 @@ the new vortex may clip at extreme facings, small helices may not read at
 80px, or GitHub Actions may reject archived cross-run artifact access.
 Fix geometry or workflow instead of lowering visual thresholds.
 No live sprites, game manifests or runtime files were modified.
+
+
+### Final validated temporal Gravitic attack review — 27 October 2026
+
+**PASS; supersedes the pending state above.** [Targeted successful Actions
+run #40486481510](https://github.com/shukritobi/chrono-dominion/actions/runs/40486481510)
+downloaded the existing verified PSI-VEH-005 artifact from run #40478892855,
+**did not rerender any of its 128 original frames**, rendered **128 new
+160×160 RGBA attack-phase frames**, and uploaded
+[artifact #12724493741](https://github.com/shukritobi/chrono-dominion/actions/runs/40486481510/artifacts/12724493741).
+The separate temporal atlas is **5120×640 RGBA**. The new **142,773-byte
+editable Blender source** reopened successfully, verifying **3 independent
+torus meshes, 4 editable curved field filaments and 8 retained hidden
+wreckage meshes**. The original source atlas SHA-256 remained exactly
+`4f5e4c9b8a90262407fd5145e6363e695d3012642509da40c1861e497441c6f2`
+before and after rendering.
+
+| Changed RGBA pixels at 80px across 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → Grip | **1,007** | 1,214 | 1,143.0 |
+| Grip → Discharge | **1,018** | 1,292 | 1,215.0 |
+| Discharge → Release | **1,070** | 1,332 | 1,246.6 |
+| Peak Discharge vs original single attack | **1,030** | 1,314 | 1,228.1 |
+| Peak Discharge vs archived idle | **1,075** | 1,335 | 1,252.0 |
+| Peak Discharge vs idle alpha pixels | **680** | 913 | 814.6 |
+
+The actual 160px and 80px contact sheets from the successful artifact
+were downloaded and visually inspected. The charge phase exposes a single
+ring, grip tightens multiple concentric loops, discharge wraps the lifting
+field in bright helical arcs, and release leaves a smaller expanding swirl.
+At 80px all four phases read distinctly in every sampled facing. Five
+independent Pillow recomputations of **peak vs original attack** at
+facings 00/07/15/23/31 returned **1,273 / 1,288 / 1,270 / 1,223 /
+1,235** changed 80px RGBA pixels, exactly matching the JSON QA report.
+All 128 frames were unclipped and passed the per-facing thresholds.
+
+**Visual limitation:** discharge can be very bright and obscure the
+underlying lifting spindle at 80px; a later artistic review may soften
+the mint emission or taper the helix thickness. The preview remains
+distinctive and passes all acceptance gates. No live textures, published
+manifests or game runtime were modified. This sequence is **not integrated
+into gameplay**; the game loader currently supports 1/8 facings rather
+than these 32-facing temporal previews. Next: additional missing vehicle
+classes, with separate gameplay integration planning only after approval.
