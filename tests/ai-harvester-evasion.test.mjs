@@ -54,6 +54,9 @@ for(const faction of ['coalition','federation','psionic']){
   enemy.hp=1e6;enemy.maxHp=1e6;enemy.ready=1e6;enemy.stance='hold';
   assert.equal(g.sideCanSee(1,enemy),true,faction+': hostile must be visible');
   const before=distance(truck,enemy),credits=g.players[1].credits;
+  assert.equal(g.evadeAIHarvester(truck,.2),false,
+    faction+': a healthy harvester must not abandon income for a sighting');
+  truck.hp=180;
   assert.equal(g.evadeAIHarvester(truck,.2),true,faction+': evade a visible armed enemy');
   assert.ok(g.harvesterEvadeTargets.get(truck),faction+': safe route must be planned');
   assert.equal(truck.oreSkipIndex,0,faction+': avoid the ambushed ore deposit');

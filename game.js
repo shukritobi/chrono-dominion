@@ -1688,6 +1688,9 @@
       // hidden enemy positions or redirect the player's ore trucks.
       if(e.owner!==1)return false;
       let plan=this.harvesterEvadeTargets.get(e);
+      // Healthy trucks keep earning income. Retreat only after real damage,
+      // avoiding a costly evacuation on every harmless distant sighting.
+      if(!plan&&e.hp/e.maxHp>.65)return false;
       // After breaking contact, remain at the safe point briefly instead of
       // instantly driving back into the same attacker on the ore route.
       const threat=this.nearest(e,u=>u.owner!==e.owner&&u.type==='unit'&&

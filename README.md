@@ -10,7 +10,7 @@
 
 ### AI ore-harvester survival (post-v2.42)
 
-- AI harvesters now evade **currently visible armed attackers within 4.5 tiles**, using reachable fallback positions near friendly refineries/HQ rather than continuing into gunfire. Escape plans are transient, ore ambushes are skipped temporarily, and trucks resume ordinary harvesting when contact ends. Player trucks, fog-of-war rules, unit costs and v1 saves are unchanged. This is a survival safeguard, **not yet a proven natural aviation progression fix**. [Regression](tests/ai-harvester-evasion.test.mjs) · [notes](docs/AI-HARVESTER-SAFETY.md).
+- AI harvesters below 65% health now evade **currently visible armed attackers within 4.5 tiles**, using reachable fallback positions near friendly refineries/HQ rather than continuing into gunfire. Escape plans are transient, ore ambushes are skipped temporarily, and trucks resume ordinary harvesting when contact ends. Player trucks, fog-of-war rules, unit costs and v1 saves are unchanged. This is a survival safeguard, **not yet a proven natural aviation progression fix**. [Regression](tests/ai-harvester-evasion.test.mjs) · [notes](docs/AI-HARVESTER-SAFETY.md).
 
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
