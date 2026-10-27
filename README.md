@@ -8,6 +8,10 @@
 
 
 
+### Sensor-aware AI ore deposit selection (post-v2.42)
+
+- AI harvesters now prefer reachable ore away from **currently visible** hostile fighters and armed defenses, using a bounded risk penalty rather than automatic retreats or long detours. Unseen threats cannot influence selection; contested ore remains available if alternatives are too distant or unreachable. Player mining, delivery timing, saves and assets are unchanged. [Three-faction regression](tests/ai-harvester-ore-safety.test.mjs) · [methodology](docs/AI-HARVESTER-ORE-SAFETY.md). Natural-match economic gains are not yet established.
+
 ### AI harvester survival and income telemetry (post-v2.42)
 
 - The real-engine balance and 720-second natural-progression reports now measure AI harvester losses, damage observations, last-seen cargo at destruction, ore delivery ticks, longest income gaps and sensor-visible threats near workers. The simulation remains **observation-only**: no unit behavior, credits, saves or assets changed.
