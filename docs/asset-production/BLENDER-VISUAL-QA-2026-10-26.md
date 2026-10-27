@@ -1132,3 +1132,36 @@ textures, sprite manifests, runtime, or gameplay files changed.
 The 32-facing renderer is **not integrated** with the current game loader.
 [Draft review PR #43](https://github.com/shukritobi/chrono-dominion/pull/43)
 is stacked on unmerged [Psionic temporal preview PR #41](https://github.com/shukritobi/chrono-dominion/pull/41).
+
+
+## 2026-10-27 Federation Bull Heavy Tank — original P0 art-pilot (verification pending)
+
+**PREVIEW ONLY; do not integrate or overwrite production artwork.**
+FED-VEH-002 is a new original Federation siege-oriented heavy tank, distinct
+from the Coalition Lynx and Federation Hailstorm. Original authored Blender
+geometry includes a low slab-armoured chassis, separate heavy battering-ram
+prow, 14 individually articulated roadwheel pivots, 24 track cleats, two
+exposed vertical exhaust stacks, an independent block turret, one short
+oversized electrothermal gun and a movable recoil mount. The destroyed pose
+hides intact turret/gun/stack hardware and reveals eight independently
+editable displaced wreckage meshes, including exposed orange fractures.
+
+- [Bull Blender modeling source](../../tools/blender/preview_federation_bull_32.py)
+  renders **only this new asset**: 32 directions × idle/move/attack/destroyed,
+  producing 128 independent 160×160 transparent RGBA frames and a compressed
+  editable .blend source.
+- [Strict 160px/80px PNG QA](../../tools/blender/qa_federation_bull_32.py)
+  checks alpha clipping, movement/attack RGB differences, destruction
+  silhouette and adjacent-direction uniqueness, generating a 5120×640
+  preview atlas, both contact sheets and a per-direction JSON report.
+- [Isolated Actions workflow](../../.github/workflows/federation-bull-32-review.yml)
+  uses checksum-verified Blender 4.2.23 and reopens the .blend to verify
+  **8 hidden wreckage meshes, 14 wheel pivots, 24 cleats and 1 cannon**.
+
+**Status:** Blender modeling and QA code committed; targeted rendering,
+source reopening and real 80px inspection are **not yet verified**.
+Do not claim success or invent pixel metrics until Actions finishes and
+actual PNGs are inspected. Correct physical geometry rather than weakening
+visual acceptance thresholds if any pose fails. This branch is stacked on
+unmerged Coalition Lynx PR #43 to retain the shared preview-only Blender
+helpers. No production atlas, manifest or game runtime is changed.
