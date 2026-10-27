@@ -2622,6 +2622,11 @@
           me.credits>=UNITS.aircraft.cost+BUILD.generator.cost)unit='aircraft';
         else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';
         else if(built('radar')&&built('barracks')&&!owned('specialist').length&&me.credits>=1400)unit='specialist';
+        // Retain the older late-game purchase path for depleted ground armies:
+        // those bases cannot bank safely, but may still buy a plane once rich.
+        else if(built('airfield')&&owned('aircraft').length<2&&
+          me.credits>=UNITS.aircraft.cost+BUILD.generator.cost&&
+          this.time>240&&!threatened&&!shortage)unit='aircraft';
         else if(built('factory')&&me.credits>1100){
           unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
         }else if(built('barracks')&&me.credits<350)unit=null;
