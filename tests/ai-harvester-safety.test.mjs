@@ -63,31 +63,41 @@ for(const faction of ['coalition','federation','psionic']){
     faction+': never duplicate a delivered cargo');
   assert.ok(g.saveGame()&&g.loadGame(),faction+': legacy v1 saves remain valid');
 
+  // Healthy workers should keep harvesting; a sighting alone is not
+  // sufficient to abandon income and delay technology construction.
   reset(faction);
-  const scoutHarvester=alive(1,'harvester');
-  scoutHarvester.x=10;scoutHarvester.y=10;
-  const spotted=g.add(0,'soldier',11,11);
-  g.entities=[scoutHarvester,spotted];
+  const healthy=alive(1,'harvester'),healthyRefinery=alive(1,'refinery');
+  healthy.x=healthyRefinery.x-8;healthy.y=healthyRefinery.y-6;
   g.water=()=>false;
-  g.ores=[{x:10,y:10,amount:1200,max:1200},
-    {x:19,y:19,amount:1200,max:1200}];
-  assert.equal(g.chooseHarvestDeposit(scoutHarvester),1,
-    faction+': avoid the visible hostile ore field');
-  spotted.hp=0;
-  assert.equal(g.chooseHarvestDeposit(scoutHarvester),0,
-    faction+': resume nearest ore after the threat disappears');
+  g.ores=[{x:healthy.x+5,y:healthy.y,amount:1200,max:1200}];
+  const nearby=g.add(0,'soldier',healthy.x+1,healthy.y+1);
+  assert.ok(g.sideCanSee(1,nearby));
+  let healthyDestination=null;
+  const originalMoveHealthy=g.move;
+  g.move=(unit,x,y)=>{if(unit.id===healthy.id)healthyDestination={x,y};};
+  g.processHarvester(healthy,.1);
+  g.move=originalMoveHealthy;
+  assert.ok(healthyDestination&&Math.abs(healthyDestination.x-g.ores[0].x)<.01,
+    faction+': healthy harvester should keep its income route');
 
+  // A wounded truck cannot react to an enemy it has never detected.
   reset(faction);
-  const hiddenHarvester=alive(1,'harvester');
+  const hiddenHarvester=alive(1,'harvester'),hiddenRefinery=alive(1,'refinery');
   hiddenHarvester.x=10;hiddenHarvester.y=10;
+  hiddenHarvester.hp=Math.floor(hiddenHarvester.maxHp*.7);
   const hidden=g.add(0,'soldier',18,10);
-  g.entities=[hiddenHarvester,hidden];
+  g.entities=[hiddenHarvester,hiddenRefinery,hidden];
   g.water=()=>false;
-  g.ores=[{x:18,y:10,amount:1200,max:1200},
-    {x:10,y:19,amount:1200,max:1200}];
+  g.ores=[{x:18,y:10,amount:1200,max:1200}];
   assert.equal(g.sideCanSee(1,hidden),false,
     faction+': distant enemy is outside AI sensor coverage');
-  assert.equal(g.chooseHarvestDeposit(hiddenHarvester),0,
-    faction+': cannot use hidden enemy positions to reject ore');
+  let hiddenDestination=null;
+  const originalMoveHidden=g.move;
+  g.move=(unit,x,y)=>{if(unit.id===hiddenHarvester.id)hiddenDestination={x,y};};
+  g.processHarvester(hiddenHarvester,.1);
+  g.move=originalMoveHidden;
+  assert.ok(hiddenDestination&&Math.abs(hiddenDestination.x-18)<.01,
+    faction+': hidden enemy must not trigger retreat');
+
 }
-console.log('PASS: three-faction visible-threat retreats, partial cargo delivery, fog honesty and save compatibility');
+console.log('PASS: three-faction wounded-truck retreats, partial cargo, healthy income, fog honesty and saves');
