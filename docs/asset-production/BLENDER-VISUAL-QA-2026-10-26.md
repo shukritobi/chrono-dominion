@@ -990,7 +990,7 @@ directory. This branch is based on the unmerged [PR #39](https://github.com/shuk
   QA commit [9cfd8a43](https://github.com/shukritobi/chrono-dominion/commit/9cfd8a43ecbdd8a19a9f41d621ee2d5edb41f7cb);
   workflow commit [065dd766](https://github.com/shukritobi/chrono-dominion/commit/065dd766cad0f42672475f2bd2688cc63d307a23).
 
-**Current verification status: pending Actions render and real PNG inspection.**
+**Targeted workflow launched:** [Actions run #40486481510](https://github.com/shukritobi/chrono-dominion/actions/runs/40486481510), initially confirmed to have downloaded the archived source, compiled the new scripts, and entered the 128-frame Blender render step. Archived source preview atlas SHA-256 independently verified from the original artifact: `4f5e4c9b8a90262407fd5145e6363e695d3012642509da40c1861e497441c6f2` (the workflow checks its SHA again after rendering).\n\n**Current verification status: pending Actions render and real PNG inspection.**
 Do not report pixel metrics or source reopen as passed until the targeted
 workflow finishes and actual artifact is inspected. Potential blockers:
 the new vortex may clip at extreme facings, small helices may not read at
