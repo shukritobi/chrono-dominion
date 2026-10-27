@@ -77,6 +77,10 @@ assert.ok(g.canOccupyUnit(returning,secondTarget.x,secondTarget.y,true),
   'recovery must select a legal alternate refinery approach');
 assert.ok(Math.hypot(secondTarget.x-12,secondTarget.y-12)<=3.6,
   'recovery target must remain within the refinery unload radius');
+const returnRoute=g.findPath(returning.x,returning.y,secondTarget.x,secondTarget.y,returning);
+assert.ok(returnRoute.length>0,'recovery must not select an empty A* route');
+assert.ok(Math.hypot(returnRoute.at(-1).x-12,returnRoute.at(-1).y-12)<=3.35,
+  'rounded terminal waypoint must actually enter the unloading radius');
 assert.ok(!JSON.stringify(returning).includes('harvesterReturnRoutes'),
   'transient route assignments must not be stored on saved entities');
 

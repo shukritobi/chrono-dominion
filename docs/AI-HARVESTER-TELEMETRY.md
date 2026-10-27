@@ -91,3 +91,11 @@ experiment preserves the original docking target on normal trips and only
 searches a legal reachable alternate after six seconds without meaningful
 progress. The recovery search evaluates at most eight candidates; the assignment lives in a WeakMap and never changes the saved entity schema. The existing
 720-second economy guard must pass before the experiment can be merged.
+
+The stall-only revision also failed the economy gate. Inspection of its
+archived report showed that **five of seven** loaded-stall snapshots had a
+`null` A* path goal while still outside unloading range. Some fractional
+perimeter targets rounded to unreachable grid endpoints or had no remaining
+waypoints. A third experimental revision now requires a nonempty A* path and
+an actual reachable terminal waypoint safely inside the unloading radius.
+This remains unmerged until natural-match income and delivery counts pass.

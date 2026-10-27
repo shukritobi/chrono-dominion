@@ -1699,8 +1699,13 @@
       // Bound A* work to the eight nearest physically legal approaches.
       for(const {point} of candidates.slice(0,8)){
         const route=this.findPath(e.x,e.y,point.x,point.y,e);
-        const end=route.at(-1)||{x:e.x,y:e.y};
-        if(dist(end,point)<=.85)return point;
+        const end=route.at(-1);
+        // A* can return an empty path or a nearest fallback for a rounded
+        // destination. Such a point can be physically legal yet leave the
+        // truck outside the actual unloading radius forever.
+        if(route.length&&end&&dist(end,point)<=.65&&
+           dist(end,refinery)<=3.35&&
+           this.canOccupyUnit(e,end.x,end.y,true))return point;
       }
       // Preserve legacy fallback if terrain makes every sampled pad unusable.
       return {x:refinery.x+1.9,y:refinery.y+1.3};
