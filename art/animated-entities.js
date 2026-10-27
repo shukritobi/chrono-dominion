@@ -221,11 +221,12 @@
     }
     c.restore();
   }
-  function aircraft(c,e,t,s){
+  function aircraft(c,e,t,s,service={}){
     const yaw=e.worldHeading||0,P=projectFactory(yaw,20);
-    const bank=s.moving?Math.sin(s.phase*.23+e.id)*2:0;
-    const altitude=70+Math.sin(s.phase*.23)*3;
-    shadow(c,30,12,4);
+    const landing=limit(Number(service?.blend)||0,0,1);
+    const bank=s.moving?Math.sin(s.phase*.23+e.id)*2*(1-landing):0;
+    const altitude=70-46*landing+Math.sin(s.phase*.23)*3*(1-landing);
+    shadow(c,30+landing*8,12+landing*3,4);
     c.save();c.translate(bank,-altitude);
     // Contrasting jet silhouette, cockpit glazing, swept wings, twin stabilizers.
     const wings=[P(-.55,-1.9,.1),P(.7,-.42,.1),P(.7,.42,.1),P(-.55,1.9,.1),P(-1.0,.9,.1),P(-1.0,-.9,.1)];
@@ -236,8 +237,16 @@
       poly(c,[P(-1.25,side*.3,.16),P(-1.88,side*.87,.17),P(-.88,side*.68,.17)],t.side,t.dark);
       line(c,[P(.1,side*1.22,.17),P(-.48,side*1.7,.17)],t.accent,2);
       const nozzle=P(-1.76,side*.18,.18);
-      glow(c,nozzle[0],nozzle[1],11,t.accent,.28+Math.sin(s.phase)*.12);
+      glow(c,nozzle[0],nozzle[1],11,t.accent,(.28+Math.sin(s.phase)*.12)*(1-landing*.8));
       ellipse(c,nozzle[0],nozzle[1],3.8,2.6,t.accent);
+    }
+    if(landing>.05){
+      // Landing struts extend beneath the fuselage as the craft descends.
+      for(const side of [-1,1]){
+        line(c,[P(-.48,side*.65,-.1),P(-.48,side*.65,-.48)],t.metal,2.2);
+        const wheel=P(-.48,side*.65,-.48);
+        ellipse(c,wheel[0],wheel[1],3.2,2.3,t.dark,t.light);
+      }
     }
     if(s.firing&&Math.sin(s.phase*2)>.1){
       const n=P(2.0,0,.16);glow(c,n[0],n[1],16,'#fff2c6',.4);
@@ -386,7 +395,7 @@
     const t=THEMES[options.faction],s=state(e,options.time||0);
     c.save();
     if(e.kind==='soldier'||e.kind==='specialist')infantry(c,e,t,s);
-    else if(e.kind==='aircraft')aircraft(c,e,t,s);
+    else if(e.kind==='aircraft')aircraft(c,e,t,s,options.service);
     else vehicle(c,e,t,s);
     c.restore();return true;
   }

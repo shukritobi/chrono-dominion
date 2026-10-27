@@ -4,8 +4,14 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.39.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.40.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.40 Aircraft landing and servicing animations
+
+- Returning aircraft now visibly descend when they reach a friendly, living Air Command. The Blender atlas and original vector renderer share a smooth touchdown/takeoff transition, a pulsing ground-service halo, reduced engine glow and deployed vector landing gear.
+- Landing visuals are derived from the actual rearming assignment and proximity to the pad, not hidden enemy information. Animation state lives in a WeakMap and never changes save files, rearm timing, repairs, aircraft orders or combat balance.
+- [Release notes](docs/RELEASE-2.40.md) · [regression](tests/aircraft-service-visual-v240.test.mjs). Physical-device visual QA remains pending.
 
 ### v2.39 Faster faction-aware combat detection
 

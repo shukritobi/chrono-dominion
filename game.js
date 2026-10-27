@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.39 — indexed faction sensor queries during combat. */
+/* Chrono Dominion v2.40 — animated aircraft landings and airfield service. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -55,6 +55,8 @@
   };
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  // Render-only landing transitions follow entity identity, never serialized saves.
+  const airServiceVisuals=new WeakMap();
   const turnToward=(current,wanted,maxDelta)=>{const delta=Math.atan2(Math.sin(wanted-current),Math.cos(wanted-current));return current+clamp(delta,-maxDelta,maxDelta);};
   const iso=(x,y)=>({x:(x-y)*TW/2,y:(x+y)*TH/2});
   const rand=(x,y,s=0)=>{let v=Math.sin(x*123.17+y*78.233+s*103.13)*43758.5453;return v-Math.floor(v);};
@@ -3062,21 +3064,39 @@
       const mark=rank===2?'★★':'★';
       c.strokeText(mark,x,y);c.fillText(mark,x,y);c.restore();
     }
+    aircraftServiceVisual(e){
+      const pad=e.rearming?this.entityById(e.rearmPadId):null;
+      const docked=!!(pad&&pad.hp>0&&pad.built&&pad.owner===e.owner&&
+        pad.kind==='airfield'&&dist(e,pad)<=1.7);
+      const previous=airServiceVisuals.get(e)||{blend:0,time:this.time};
+      // Smooth touchdown and takeoff across both baked and vector art paths.
+      // Cap elapsed time to avoid jumping after tab suspension or fog reveal.
+      const elapsed=clamp(this.time-previous.time,0,.12);
+      const blend=clamp(previous.blend+(docked?elapsed/1.1:-elapsed/.8),0,1);
+      airServiceVisuals.set(e,{blend,time:this.time});
+      return {blend,docked,returning:!!e.rearming};
+    }
     drawUnit(e){
       const c=this.ctx,p=iso(e.x,e.y),pal=COLORS[this.players[e.owner].faction];c.save();c.translate(p.x,p.y);
+      const service=e.kind==='aircraft'?this.aircraftServiceVisual(e):null;
+      if(service?.blend>.01){
+        c.save();c.globalAlpha=.22+.3*service.blend;
+        this.drawRing(0,3,25+Math.sin(this.time*5)*2,pal.trim);
+        c.restore();
+      }
       if((e.stunnedUntil||0)>this.time){this.drawRing(0,-8,26,'#bd93e8');}
       if(e.yieldOrder&&e.owner===0)this.drawRing(0,0,21,'#eac278');
       else if(e.laneWaiting&&e.owner===0)this.drawRing(0,0,23,'#75bafa');
       const artFaction=this.players[e.owner].faction;
       const baked=window.ChronoBakedArt;
-      if(baked?.drawUnit(c,e,{faction:artFaction,time:this.time})){
+      if(baked?.drawUnit(c,e,{faction:artFaction,time:this.time,service})){
         if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='aircraft'?33:e.kind==='heavy'?29:24,pal.color);
         const offset=e.kind==='aircraft'?-103:(e.kind==='soldier'||e.kind==='specialist'?-58:-73);
         this.health(e,0,offset,e.kind==='heavy'?47:36);
         this.drawRankBadge(e,23,offset-12);c.restore();return;
       }
       const animated=window.ChronoAnimatedArt;
-      if(animated?.drawUnit(c,e,{faction:artFaction,time:this.time})){
+      if(animated?.drawUnit(c,e,{faction:artFaction,time:this.time,service})){
         if(this.selected.includes(e.id))this.drawRing(0,1,e.kind==='aircraft'?33:e.kind==='heavy'?29:24,pal.color);
         const offset=e.kind==='aircraft'?-104:(e.kind==='soldier'||e.kind==='specialist'?-58:-73);
         this.health(e,0,offset,e.kind==='heavy'?47:36);
@@ -3221,6 +3241,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.39.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.40.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
