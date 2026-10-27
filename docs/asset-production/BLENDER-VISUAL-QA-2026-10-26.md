@@ -1228,3 +1228,65 @@ The Bull remains **preview-only**, not integrated into gameplay.
 | Adjacent idle facings, changed RGBA pixels | **832** | **1,167** |
 
 At 160px, idle-to-destroyed alpha differences span **1,585–2,500 pixels**. Downloaded the actual **4.57 MB** artifact, inspected both **160px and 80px contact sheets** and independently recalculated 80px destroyed-alpha deltas for facings **00/04/08/16/24**: **936/892/846/969/896**, all exactly matching the JSON QA report. The compact forked hover silhouette is identifiable at 80px, with bright cyan skids and a suspended neural core. **Visual limitation:** the luminous upper crystal reads more strongly than the low-profile jaw details; the single attack pose is not a temporal firing sequence. Future polish should add phased muzzle/mandible animation rather than enlarging the whole vehicle. Existing Coalition Lynx and Federation Bull renders were not rerendered. **No production sprites, published manifests or game code modified.**
+
+
+## 2026-10-27 Psionic Viper four-beat twin-lance attack — validated preview
+
+**PREVIEW ONLY, NOT GAME INTEGRATED.** PSI-VEH-002 now has a separate
+original Blender four-phase attack sequence: **Charge → Focus → Burst →
+Cooldown**. It extends the [validated Viper tank source from workflow
+#40508990419](https://github.com/shukritobi/chrono-dominion/actions/runs/40508990419)
+without regenerating or replacing its existing 128 idle/move/attack/destroyed
+frames. The new geometry comprises **four independently editable toroidal
+emitter/pressure rings, three physical ion-lance meshes, four editable
+curved plasma filaments and two detached ion shards**. The mandibles,
+hover carriage, neural crown and central crystal articulate by phase.
+
+- [Successful targeted Blender workflow #40518390609](https://github.com/shukritobi/chrono-dominion/actions/runs/40518390609);
+  [new preview artifact #12741045705](https://github.com/shukritobi/chrono-dominion/actions/runs/40518390609/artifacts/12741045705);
+  [draft PR #50](https://github.com/shukritobi/chrono-dominion/pull/50).
+- [Original phase-geometry Blender script](../../tools/blender/preview_psionic_viper_temporal_attack.py),
+  [80px/160px image QA](../../tools/blender/qa_psionic_viper_temporal_attack.py)
+  and [isolated preview-only workflow](../../.github/workflows/psionic-viper-temporal-attack-review.yml).
+- **128 new** transparent 160×160 RGBA frames were rendered (32 facings ×
+  four attack phases), plus a separate 5120×640 atlas, per-facing JSON QA
+  and actual 160px/80px contact sheets. The **137,810-byte editable
+  .blend** was reopened by headless Blender; verified **13 initially hidden
+  editable temporal objects** (9 meshes + 4 curves) and **8 original
+  hidden wreckage meshes**.
+- The original Viper 128-frame atlas SHA-256 was checked before and after:
+  `0c1229bd01f0e874822546a6ef53780b2f5ef1ddc41466a74cdd994176acee78`.
+  **No original atlas, source or game-facing artwork was overwritten.**
+
+| Changed RGBA pixels at 80px, all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → Focus | **829** | 1,227 | 1,075.8 |
+| Focus → Burst | **867** | 1,332 | 1,161.1 |
+| Burst → Cooldown | **870** | 1,380 | 1,190.0 |
+| Burst vs original single-frame attack | **875** | 1,376 | 1,193.2 |
+| Burst vs idle | **891** | 1,369 | 1,189.9 |
+| Cooldown vs original attack | **814** | 1,209 | 1,047.4 |
+
+The burst-versus-idle **80px alpha** difference is **602–1,042 pixels**
+(mean **881.2**). All 128 frames are nonempty, RGBA, within canvas
+bounds, and pass phase-specific 80px change gates. Independent Pillow
+recalculation of burst-versus-old-attack RGBA changes at facings
+00/07/15/23/31 yielded **1,296 / 1,302 / 1,287 / 1,164 / 1,223**
+pixels, matching the archived JSON exactly.
+
+**Actual visual inspection:** downloaded the successful 4.6 MB artifact
+and inspected both real 160px and 80px contact sheets. Charge shows two
+small muzzle halos; Focus adds twin forward energy prongs; Burst has a
+larger turquoise-white combined ion impact; Cooldown retains a thinner
+residual field. Each phase reads at 80px without losing the Viper's
+forked hover silhouette. **Artistic blocker:** the brightest Burst
+concentrates over the emitter assembly and can obscure its fine
+mandible/weapon detail; tune emission for final approval, rather than
+inflating the overall sprite. This is a temporal attack pilot, not yet a
+full gameplay-timed attack implementation.
+
+**Production safety:** the PR is stacked on the unmerged original Viper
+preview branch. Changes are restricted to original Blender modeling,
+pixel QA, isolated workflow, asset register and this documentation;
+**no live textures, manifests, gameplay files or published art changed**.
+Do not merge to live art or deploy without explicit approval.
