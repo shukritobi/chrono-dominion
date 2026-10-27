@@ -73,6 +73,7 @@ jobs:
           node tests/siege-focus-v219.test.mjs
           node tests/rally-recovery-v220.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
+          node tools/simulate-air-engagements.mjs --out=air-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
           node --check audio/voices.js
@@ -109,7 +110,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: balance-lab-${{ github.run_number }}
-          path: balance-report.json
+          path: |
+            balance-report.json
+            air-report.json
           if-no-files-found: warn
           retention-days: 21
       - name: Verify required files
@@ -152,6 +155,7 @@ jobs:
           test -f audio/sfx.js
           test -f tools/maps/build.mjs
           test -f tools/simulate-matches.mjs
+          test -f tools/simulate-air-engagements.mjs
           test -f tests/ore-reachability-v22.test.mjs
           test -f tests/recon-v23.test.mjs
           test -f tests/survey-v24.test.mjs
