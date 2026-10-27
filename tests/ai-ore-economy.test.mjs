@@ -155,7 +155,8 @@ for(const faction of ['coalition','federation','psionic']){
   g.players[1].credits=1100;g.runAI();
   assert.equal(g.players[1].credits,1100,
     faction+': optional units stay paused until the radar is operational');
-  g.advanceProduction(10);
+  // Building progress is advanced by the world simulation, not unit queues.
+  g.step(6);
   assert.equal(alive(g,'radar')[0].built,true,
     faction+': construction finishes through the normal production clock');
   assert.ok(g.saveGame()&&g.loadGame(),
