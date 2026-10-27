@@ -142,3 +142,35 @@ normal movement routine fails to advance (e.g. lane admission, dynamic
 occupancy, stun or stale waypoints), rather than adjusting `separateUnits()`
 blindly. A clear step in the snapshot collision probe does not prove that
 the live `move()` call passed its lane checks.
+
+
+## Live movement rejection tracing (28 October 2026)
+
+The headless match laboratory now wraps the real `move()` call **only for AI
+harvesters with full cargo**. The wrapper delegates every normal occupancy and
+lane-admission decision exactly once; it never changes a route, order, collision
+result, credit, or save. When an occupancy probe rejects a position, a second
+**read-only** static-only probe distinguishes terrain/buildings from dynamic
+unit traffic. Lane admission is never repeated because it mutates reservations.
+
+The `aiHarvesterMove` metrics count loaded movement calls, calls without
+meaningful progress, empty-path outcomes, static and traffic probe rejections,
+lane denials, and full-cargo frames where `move()` was never called. A
+`stunnedNoCallFrames` subset is identified from the tick-start stun timer.
+These are **probe counts**, not distinct blocked harvesters or confirmed root
+causes. In particular, pathfinding and traffic-yield logic may also query
+occupancy while a movement call is active.
+
+Each `fullCargoStallCases[].returnAccess.moveDecision` summarizes the last
+six seconds for that truck: move/no-call frames, static/traffic/lane rejections,
+net movement, and the last attempted destination, path length, waypoint,
+recheck timer, traffic wait and stuck timer. The rolling per-truck history is
+private, limited to 64 samples and six seconds, and excluded from JSON and
+save data. A missing call can also reflect normal unloading or a missing
+refinery; correlate it with the existing unload-distance and separation
+snapshots before deciding on a gameplay correction.
+
+Verify with `node tests/harvester-move-telemetry.test.mjs`,
+`npm run balance:progression`, and the unchanged
+`npm run balance:regression` economy guard. Do not infer improved harvesting
+from instrumentation alone.
