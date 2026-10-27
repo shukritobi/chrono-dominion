@@ -18,6 +18,9 @@ import {newHarvesterTelemetry,observeHarvesterStep,
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
 import {newHarvesterSeparationTelemetry,observeHarvesterSeparationStep,
   summarizeHarvesterSeparation} from './harvester-separation-telemetry.mjs';
+import {newHarvesterMoveTelemetry,traceHarvesterMoves,
+  observeHarvesterMoveTick,summarizeHarvesterMove}
+  from './harvester-move-telemetry.mjs';
 
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8')
   .replace('  new Game();','  window.__balanceGame=new Game();');
@@ -200,6 +203,8 @@ function runScenario(map,difficulty,mi,di){
   let firstAircraftQueuedAt=null,firstAircraftDeployedAt=null;
   const aiHarvesterTelemetry=newHarvesterTelemetry();
   const aiHarvesterSeparation=newHarvesterSeparationTelemetry();
+  const aiHarvesterMove=newHarvesterMoveTelemetry();
+  traceHarvesterMoves(g,aiHarvesterMove);
   let tickStartHarvesters=[];
   const originalSeparateUnits=g.separateUnits;
   // Inspect the exact same units before and after production collision
@@ -223,19 +228,22 @@ function runScenario(map,difficulty,mi,di){
     }
     const beforeHarvesters=g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0)
-      .map(e=>({id:e.id,hp:e.hp,load:e.load,x:e.x,y:e.y}));
+      .map(e=>({id:e.id,hp:e.hp,load:e.load,x:e.x,y:e.y,
+        stunnedUntil:e.stunnedUntil}));
     tickStartHarvesters=beforeHarvesters;
     const oreBefore=g.stats[1].oreHarvested;
     g.step(frame);
     const afterHarvesters=g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0);
+    observeHarvesterMoveTick(aiHarvesterMove,beforeHarvesters,afterHarvesters,g.time);
     observeHarvesterStep(aiHarvesterTelemetry,beforeHarvesters,afterHarvesters,
       oreBefore,g.stats[1].oreHarvested,g.time,
       g.entities.filter(e=>e.owner===1&&e.kind==='refinery'&&e.built&&e.hp>0),
       (truck,refineries)=>({
         ...inspectHarvesterReturnStall(g,truck,refineries,frame),
         separationMotion:summarizeHarvesterSeparation(
-          aiHarvesterSeparation,truck.id,g.time)
+          aiHarvesterSeparation,truck.id,g.time),
+        moveDecision:summarizeHarvesterMove(aiHarvesterMove,truck.id,g.time)
       }));
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
@@ -298,7 +306,7 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,peakAIHarvesters,aiHarvesterTelemetry,
-    aiHarvesterSeparation,
+    aiHarvesterSeparation,aiHarvesterMove,
     platoonSeen,supportSeen,assaultLaunched,
     assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
     siegeFocusOrders:g.aiSiegeOrders||0,aiStructureHits:g.aiSiegeHits||0,firstDamage:Math.round(firstDamage),
@@ -370,6 +378,16 @@ const report={
       n+r.aiHarvesterSeparation.nearCancelledFrames,0),
     aiNoMovementAttemptFrames:results.reduce((n,r)=>
       n+r.aiHarvesterSeparation.noMovementFrames,0),
+    aiLoadedHarvesterMoveCalls:results.reduce((n,r)=>
+      n+r.aiHarvesterMove.loadedMoveCalls,0),
+    aiLoadedHarvesterMoveNoProgressCalls:results.reduce((n,r)=>
+      n+r.aiHarvesterMove.loadedMoveNoProgressCalls,0),
+    aiHarvesterStaticBlockedProbes:results.reduce((n,r)=>
+      n+r.aiHarvesterMove.staticBlockedProbes,0),
+    aiHarvesterTrafficBlockedProbes:results.reduce((n,r)=>
+      n+r.aiHarvesterMove.trafficBlockedProbes,0),
+    aiHarvesterLaneRejectedProbes:results.reduce((n,r)=>
+      n+r.aiHarvesterMove.laneRejectedProbes,0),
     aiFullCargoStallSeconds:Number(results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.fullCargoStallSeconds,0).toFixed(1)),
     aiThreatenedLoadedSamples:results.reduce((n,r)=>

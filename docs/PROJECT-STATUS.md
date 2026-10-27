@@ -3,6 +3,8 @@
 **Last source audit:** 27 October 2026  
 **Current prototype:** v2.42.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
+Post-v2.42 loaded harvester movement rejection tracing: the natural-match simulator now observes the production move() calls, static/dynamic occupancy probes and lane denials without changing movement or saved state. Per-stall six-second decision summaries distinguish calls that made no progress from frames with no move call. The underlying Frostline stall and natural AI aviation problems remain unresolved. [Methodology](AI-HARVESTER-TELEMETRY.md).
+
 Post-v2.42 early economy expansion: AI may buy a second paid ore harvester in the first 120 seconds when safe and solvent, retaining a generator reserve and honoring aviation saving. The simulation reports peak AI harvesters and multi-harvester scenarios. This targets a single-harvester income bottleneck, not a guaranteed natural aircraft milestone. [Tests](../tests/ai-ore-economy.test.mjs) · [notes](AI-ORE-ECONOMY.md).
 
 Post-v2.42 AI aircraft funding: after an Air Command is purchased, a safe AI base with an active harvester, radar and two tanks now saves toward aircraft production, prioritizing each plane ahead of optional turrets, tech and ground recruitment. Power shortages and actual threats override this saving. Three-faction paid-production, reserve, defensive and save/load regressions are in [AI aircraft funding](AI-AIRCRAFT-FUNDING.md). Natural contested-match air-wing frequency remains unverified.
