@@ -109,7 +109,7 @@ jobs:
           set -euo pipefail
           stage=generated/defense-turret-pilot
           python tools/blender/qa_defense_extended_states.py --stage "$stage"
-          (cd "$stage" && sha256sum --check original-atlases.sha256)
+          sha256sum --check "$stage/original-atlases.sha256"
 
       - name: Upload preview-only Blender models and quantitative contact sheets
         if: always()
