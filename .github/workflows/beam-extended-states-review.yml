@@ -1,0 +1,123 @@
+name: Beam Defense Three-Faction Extended-State Blender Review
+
+# Never write live art, game atlases, or production manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/beam-extra-states-20261027
+    paths:
+      - ".github/workflows/beam-extended-states-review.yml"
+      - "tools/blender/preview_beam_extended_states.py"
+      - "tools/blender/qa_beam_extended_states.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-beam-three-faction-extra-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout preview-only branch
+        uses: actions/checkout@v4
+
+      - name: Install Pillow and compile Blender Python scripts
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow
+          python -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/preview_beam_extended_states.py \
+            tools/blender/qa_beam_extended_states.py \
+            tools/blender/pack_animated.py
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only three unfinished faction beam defenses
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/beam-extra-pilot
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/animated_assets.py -- \
+            --output "$stage" --kinds beam \
+            --factions coalition,federation,psionic --size 160
+          python tools/blender/pack_animated.py \
+            --input "$stage" --output "$stage/packed" --size 160
+          for faction in coalition federation psionic; do
+            test -s "$stage/packed/$faction-beam.png"
+            test -s "$stage/sources/$faction-beam.blend"
+          done
+          sha256sum "$stage"/packed/*-beam.png > "$stage/original-atlases.sha256"
+
+      - name: Render three independent extra-state PNGs per beam
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/beam-extra-pilot
+          for faction in coalition federation psionic; do
+            blender --background --threads 4 \
+              "$stage/sources/$faction-beam.blend" \
+              --python-exit-code 1 \
+              --python tools/blender/preview_beam_extended_states.py -- \
+              --faction "$faction" --output "$stage/extra/$faction"
+          done
+
+      - name: Reopen each editable extended Blender source
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/beam-extra-pilot
+          for faction in coalition federation psionic; do
+            blender --background --threads 2 \
+              "$stage/extra/$faction/$faction-beam-extended-states.blend" \
+              --python-exit-code 1 --python-expr \
+              'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(a)==9,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); print("PASS: seven separate hidden editable beam wreckage meshes")'
+          done
+
+      - name: Quantitative 80px and 160px actual PNG review
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/beam-extra-pilot
+          python tools/blender/qa_beam_extended_states.py --stage "$stage"
+          sha256sum --check "$stage/original-atlases.sha256"
+
+      - name: Upload only preview-only editable models and image QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-three-faction-beam-extra-state-pilot
+          path: generated/beam-extra-pilot/
+          if-no-files-found: warn
+          retention-days: 30
