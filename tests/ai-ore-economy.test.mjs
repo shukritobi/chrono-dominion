@@ -164,8 +164,8 @@ for(const faction of ['coalition','federation','psionic']){
   reset();
   g.add(1,'factory',24,23);g.add(1,'generator',21,24);
   g.time=150;g.players[1].credits=1200;
-  const hq=alive(g,'hq')[0];
-  g.add(0,'soldier',hq.x+1,hq.y+1);
+  const radarHq=alive(g,'hq')[0];
+  g.add(0,'soldier',radarHq.x+1,radarHq.y+1);
   g.runAI();
   assert.ok(g.players[1].credits<1200,
     faction+': visible base attack releases radar savings for defense');
