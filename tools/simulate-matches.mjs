@@ -15,6 +15,7 @@ import {runInNewContext} from 'node:vm';
 import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
 import {newHarvesterTelemetry,observeHarvesterStep,
   observeHarvesterThreatSample} from './ai-harvester-telemetry.mjs';
+import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
 
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8')
   .replace('  new Game();','  window.__balanceGame=new Game();');
@@ -212,7 +213,8 @@ function runScenario(map,difficulty,mi,di){
       e.owner===1&&e.kind==='harvester'&&e.hp>0);
     observeHarvesterStep(aiHarvesterTelemetry,beforeHarvesters,afterHarvesters,
       oreBefore,g.stats[1].oreHarvested,g.time,
-      g.entities.filter(e=>e.owner===1&&e.kind==='refinery'&&e.built&&e.hp>0));
+      g.entities.filter(e=>e.owner===1&&e.kind==='refinery'&&e.built&&e.hp>0),
+      (truck,refineries)=>inspectHarvesterReturnStall(g,truck,refineries,frame));
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0).length);
