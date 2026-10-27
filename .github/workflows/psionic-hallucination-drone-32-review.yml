@@ -1,0 +1,96 @@
+name: Psionic Hallucination Drone Original 32-Facing Blender Preview
+
+# Isolated review: no game art, live manifest, or runtime publication.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/psionic-hallucination-drone-32-20261028
+    paths:
+      - .github/workflows/psionic-hallucination-drone-32-review.yml
+      - tools/blender/preview_psionic_hallucination_drone_32.py
+      - tools/blender/qa_psionic_hallucination_drone_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-psionic-hallucination-drone-32
+  cancel-in-progress: true
+
+jobs:
+  original-drone-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout isolated preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile original Blender model and strict PNG QA
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_psionic_hallucination_drone_32.py tools/blender/qa_psionic_hallucination_drone_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-$version-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only new original 128 160px RGBA sprites
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_psionic_hallucination_drone_32.py -- \
+            --output generated/psionic-hallucination-drone
+
+      - name: Reopen editable Blender source and inspect actual physical meshes
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/psionic-hallucination-drone/psionic-hallucination-drone.blend \
+            --python-exit-code 1 --python-expr \
+            'import bpy; f=[o for o in bpy.data.objects if o.type=="EMPTY" and o.name.startswith("Independent phase petal ")]; w=[o for o in bpy.data.objects if o.get("wreckage_only")]; a=[o for o in bpy.data.objects if o.name.startswith("Attack-only")]; c=bpy.data.objects.get("Independent oscillating neural iris"); assert len(f)==6 and len(w)==10 and len(a)==5 and c is not None,(len(f),len(w),len(a)); assert all(o.type=="MESH" and o.hide_render for o in w+a); assert all(len(o.data.vertices)>=8 for o in w); print("PASS REOPEN: six editable petals, independent neural core, five attack meshes, ten hidden wreckage meshes")'
+
+      - name: Validate every actual 160px and 80px frame
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_psionic_hallucination_drone_32.py \
+            --stage generated/psionic-hallucination-drone
+          test -s generated/psionic-hallucination-drone/psionic-hallucination-contact-160.png
+          test -s generated/psionic-hallucination-drone/psionic-hallucination-contact-80.png
+          test -s generated/psionic-hallucination-drone/pixel-qa.json
+
+      - name: Upload only preview-only source, 128 sprites, contact sheets and metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-hallucination-drone-32-preview
+          path: generated/psionic-hallucination-drone/
+          if-no-files-found: warn
+          retention-days: 30
