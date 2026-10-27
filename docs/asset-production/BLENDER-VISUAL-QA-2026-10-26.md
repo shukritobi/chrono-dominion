@@ -1282,3 +1282,41 @@ five development files (new Blender model, strict PNG QA, isolated workflow,
 AssetRegister and this document). No live textures, game manifest,
 runtime or gameplay files were modified. No original 128-frame sprites
 were rerendered. **Preview only; not integrated or approved for publishing.**
+
+
+## 2026-10-28 PSI-VEH-004 four-beat physical gliding movement — verification pending
+
+**PREVIEW ONLY, not integrated.** This isolated follow-up reuses the previously
+validated original Hallucination Drone editable source from
+[Actions #40583938655](https://github.com/shukritobi/chrono-dominion/actions/runs/40583938655)
+and does **not** regenerate its 128 baseline sprites or touch the previously
+validated four-phase attack atlas. Four new movement phases are
+**hover → bank → surge → settle**, with six independently articulated original
+petal rigs, moving neural iris, banked hover chassis, six new closed
+eight-vertex/six-face stabilizer blades, and six additional volumetric
+rearward ion-wake wedges. The new 12 meshes are independently editable and
+hidden in the neutral saved source. Wake geometry is visible only during bank
+and surge; there are no 2D image overlays or generated-image substitutes.
+
+- [Original physical Blender modeling](../../tools/blender/preview_psionic_hallucination_four_beat_glide.py),
+  committed as [458c6247](https://github.com/shukritobi/chrono-dominion/commit/458c6247f7d2cea45aa280399d5f8491742a0a01).
+- [Strict actual-PNG 160px/80px QA](../../tools/blender/qa_psionic_hallucination_four_beat_glide.py),
+  committed as [5a4ed1a7](https://github.com/shukritobi/chrono-dominion/commit/5a4ed1a7617fa28c0f9daf8e4703f3adf3f3ae7d).
+- Baseline atlas must retain SHA-256
+  `59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d`.
+- Targeted workflow should render **128 new RGBA 160×160 frames** across
+  32 facings, reopen the new compressed editable `.blend`, verify all 12
+  added closed volumetric meshes and the preserved six original petals,
+  ten wreckage meshes and five attack meshes, and publish a **separate**
+  5120×640 preview atlas, 160px/80px contact sheets, 80px animated GIF,
+  and per-facing JSON report. Strict acceptance gates at 80px: at least
+  30 changed RGBA pixels per adjacent movement phase, 50 surge-vs-old-move
+  RGBA pixels, 25 surge-vs-idle alpha pixels, and 20 adjacent-facing
+  hover RGBA pixels. Every frame must be nonempty, RGBA and unclipped.
+- **Not yet validated at authoring:** no actual Blender source reopen,
+  PNG measurements, run number, or human 80px inspection is claimed.
+  Record the final run and exact min/max/mean values only after downloading
+  the real artifact. If a gate fails, change geometry; never relax a gate.
+- **Publication barrier:** no `public/` textures, live art manifests,
+  production atlases, game loader, runtime or gameplay files may be changed.
+  Do not publish this new atlas without explicit approval.
