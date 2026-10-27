@@ -8,6 +8,11 @@
 
 
 
+### AI harvester survival and income telemetry (post-v2.42)
+
+- The real-engine balance and 720-second natural-progression reports now measure AI harvester losses, damage observations, last-seen cargo at destruction, ore delivery ticks, longest income gaps and sensor-visible threats near workers. The simulation remains **observation-only**: no unit behavior, credits, saves or assets changed.
+- A separate wounded-harvester retreat experiment reduced natural-match airfield construction and remains unmerged. These new metrics provide a baseline for a safer future economy fix. [Regression](tests/ai-harvester-telemetry.test.mjs) · [methodology](docs/AI-HARVESTER-TELEMETRY.md).
+
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
 - The 720-second progression lab now observes **real AI planner decisions**, classifying missing technology, airfield construction, brownouts, harvester or armour losses, threats, production queues and funding. Reports include per-match decision counts, maximum credits after Air Command purchase and the last 12 decisions. Observation only: no AI, credit or save changes. Run `npm run balance:progression`; [methodology](docs/AI-NATURAL-PROGRESSION.md).
