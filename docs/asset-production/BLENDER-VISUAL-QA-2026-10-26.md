@@ -1064,3 +1064,36 @@ eight-beat gait may be worthwhile. The current game sprite loader does not
 consume these separate 32-facing four-phase movement atlases. Art approval
 and a separately reviewed loader are required before integration. No live
 textures, production manifests, runtime or gameplay files were modified.
+
+## 2026-10-28 Federation Hunter Spider four-stage physical destruction — verification pending
+
+**Preview-only; never replace game artwork.** This follow-on to the validated
+Hunter Spider original 32-facing model (Actions #40556753530) and four-beat
+gait (Actions #40566554369) creates a **separate** 32-facing destruction
+sequence: impact, shear, rupture, settle. The original 128-frame sprite
+atlas is downloaded as an immutable reference, not rerendered.
+
+- [Original four-stage Blender renderer](../../tools/blender/preview_federation_hunter_spider_destruction.py)
+  adds 14 independently editable asymmetric 3D fragments: snapped forelegs,
+  detached pistons, ejected visor, fractured carapace, luminous reactor
+  seams, broken optics, mandibles and collapsed undercarriage.
+- [Strict PNG pixel QA](../../tools/blender/qa_federation_hunter_spider_destruction.py)
+  checks **all 128 new RGBA PNGs** at 160px and 80px, every phase transition,
+  clipping, adjacent facings and the archived atlas SHA-256.
+- [Targeted preview-only GitHub Actions workflow](../../.github/workflows/federation-hunter-spider-destruction-review.yml)
+  downloads the previously validated editable .blend, renders only new
+  destruction frames, reopens the new source and verifies **14 hidden
+  volumetric fragment meshes, 10 preserved original wreckage meshes and
+  eight original hip rigs**. The workflow uploads artifacts even on failure.
+- The archived baseline atlas checksum must remain
+  `0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836`.
+- **Current gate: pending actual Blender render and 80px PNG inspection.**
+  Do not claim visual acceptance until the workflow passes and the real
+  160px/80px contact sheets and per-facing pixel report have been inspected.
+  Failed clipping or insufficient visual changes require geometry repair,
+  not relaxed thresholds.
+
+The branch changes only Blender preview tooling, image QA, review workflow,
+asset register and this document. No live texture, manifest, runtime or
+gameplay file is authorized to change. The unmerged original Spider and
+four-beat gait branches remain dependencies.
