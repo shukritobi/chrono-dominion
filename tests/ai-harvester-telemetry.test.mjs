@@ -32,4 +32,40 @@ assert.equal(m.longestDeliveryGapSeconds,11,'track gap between actual deliveries
 assert.throws(()=>observeHarvesterStep(m,[],[],720,700,21),
   /Invalid ore telemetry step/,'negative ore deliveries must fail loudly');
 assert.equal(m.lost,1,'invalid samples must not change counters');
-console.log('PASS: ore telemetry counts actual deaths, damage, delivery gaps, visible threats and cargo estimates');
+
+const route=newHarvesterTelemetry();
+const parked=h(7,300,360,12,12);
+observeHarvesterStep(route,[parked],[parked],0,0,1);
+for(let second=2;second<=7;second++)
+  observeHarvesterStep(route,[parked],[parked],0,0,second);
+assert.equal(route.fullCargoStallEvents,1,
+  'six consecutive seconds of immobile full cargo must flag a stalled return');
+assert.equal(route.fullCargoStallSeconds,6);
+observeHarvesterStep(route,[parked],[h(7,300,360,15,16)],0,0,8);
+assert.equal(route.travelTiles,5,'measure the actual traversed route');
+assert.equal(route.loadedTravelTiles,5,'distinguish loaded return trips');
+for(let second=9;second<=14;second++)
+  observeHarvesterStep(route,[h(7,300,360,15,16)],
+    [h(7,300,360,15,16)],0,0,second);
+assert.equal(route.fullCargoStallEvents,2,
+  'movement must reset the streak before counting a second episode');
+observeHarvesterStep(route,[h(7,300,360,15,16)],[],0,0,15);
+assert.equal(route.lost,1,'loss ends a stalled truck observation');
+assert.equal(route.fullCargoStallEvents,2,'loss cannot invent a stall episode');
+
+observeHarvesterThreatSample(route,
+  [h(8,300,180,20,20),h(9,300,0,2,2)],
+  [h(100,300,0,21,21),h(101,300,0,3,3)],
+  [{x:1,y:1}]);
+assert.equal(route.threatenedSamples,2);
+assert.equal(route.threatenedLoadedSamples,1);
+assert.equal(route.threatenedEmptySamples,1);
+assert.equal(route.threatenedFarFromRefinerySamples,1,
+  'only exposed ore-route contacts count away from the refinery');
+observeHarvesterThreatSample(route,[h(8,300,180,20,20)],[],[{x:1,y:1}]);
+assert.equal(route.threatenedSamples,2,
+  'invisible hostiles must not be inferred from their true positions');
+assert.equal(JSON.stringify(route).includes('_movement'),false,
+  'internal streak tracking must not leak into reports or saved fields');
+
+console.log('PASS: ore telemetry counts actual deaths, damage, delivery gaps, visible threats cargo estimates, actual travel, stalled returns and exposed ore routes');
