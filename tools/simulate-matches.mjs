@@ -205,7 +205,7 @@ function runScenario(map,difficulty,mi,di){
     }
     const beforeHarvesters=g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0)
-      .map(e=>({id:e.id,hp:e.hp,load:e.load}));
+      .map(e=>({id:e.id,hp:e.hp,load:e.load,x:e.x,y:e.y}));
     const oreBefore=g.stats[1].oreHarvested;
     g.step(frame);
     const afterHarvesters=g.entities.filter(e=>
@@ -407,6 +407,9 @@ assert.ok(results.every(r=>r.aiHarvesterTelemetry.deliveredOre===r.harvest[1]&&
   r.aiHarvesterTelemetry.threatenedLoadedSamples<=r.aiHarvesterTelemetry.threatenedSamples&&
   r.aiHarvesterTelemetry.threatenedFarFromRefinerySamples<=r.aiHarvesterTelemetry.threatenedSamples),
   'AI harvester telemetry must reconcile with actual ore deliveries and sampling');
+assert.ok(report.summary.aiHarvesterTravelTiles>0&&
+  report.summary.aiLoadedHarvesterTravelTiles>0,
+  'actual ore routes must use position snapshots, never silently report zero travel');
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
   r.reconLost>=0&&r.reconLost<=r.reconBuilt&&

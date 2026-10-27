@@ -23,6 +23,8 @@ export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,tim
   if(!Number.isFinite(time)||time<0||!Number.isFinite(oreBefore)||
      !Number.isFinite(oreAfter)||oreAfter<oreBefore)
     throw Error('Invalid ore telemetry step');
+  if([...before,...after].some(h=>!Number.isFinite(h.x)||!Number.isFinite(h.y)))
+    throw Error('Invalid harvester position snapshot');
   const movement=metrics._movement;
   const dt=movement.lastTime===null?0:Math.max(0,time-movement.lastTime);
   movement.lastTime=time;
