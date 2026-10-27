@@ -21,7 +21,7 @@ HIDE = {
                 "Slanted front blast shield"),
  },
  "psionic": {
-  "critical": ("Focused siege aperture", "Neural turret guard.002"),
+  "critical": ("Focused siege aperture", "Neural turret guard", "Aperture lens"),
   "destroyed": ("Focused siege aperture", "Neural turret guard", "Aperture lens",
                 "Tip projectile"),
  },
@@ -72,6 +72,12 @@ def main():
       make_wreck("Critical-only torn armour fin", (-.22,-.73,2.03),
                  (.34,.38,1.12), (.42,.38,-.58), material, root),
     ]
+    if a.faction == "psionic":
+        # Earlier Psionic critical pose changed only 5 alpha pixels at 80px:
+        # the fracture fin was occluded by the intact floating guard.
+        # Lift the broken fin beyond the original upper silhouette.
+        critical[1].location = (-.46,-.96,3.14)
+        critical[1].rotation_euler = (.31,.42,-.59)
     destroyed = [
       make_wreck("Destroyed-only fallen gun body", (1.02,-.72,.93),
                  (1.96,.52,.47), (.17,1.14,-.43), material, root),
