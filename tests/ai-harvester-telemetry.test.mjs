@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {newHarvesterTelemetry,observeHarvesterStep,
   observeHarvesterThreatSample} from '../tools/ai-harvester-telemetry.mjs';
+import {inspectHarvesterReturnStall} from '../tools/harvester-stall-diagnostics.mjs';
 
 const m=newHarvesterTelemetry();
 const h=(id,hp,load=0,x=0,y=0)=>({id,hp,load,x,y});
@@ -100,4 +101,49 @@ assert.equal(withoutRefinery.fullCargoStallCases[0].nearestRefineryId,null,
 assert.equal(withoutRefinery.fullCargoStallCases[0].refineryDistance,null);
 assert.equal(withoutRefinery.fullCargoStallCases[0].withinUnloadRange,false);
 assert.ok(!JSON.stringify(withoutRefinery).includes('_movement'));
+// The collision audit is observation-only and checks actual step occupancy,
+// not merely whether the rounded A* destination looks close to the refinery.
+const truck={...h(11,310,360,10,10),path:[{x:12,y:10}],
+  pathGoal:{x:12,y:10}};
+const refinery={id:88,x:13,y:10};
+const game={
+  stat:()=>1,
+  canOccupyUnit:(_truck,x,y,ignoreUnits)=>
+    ignoreUnits||!(x>10.1&&x<10.3&&Math.abs(y-10)<.2),
+  findPath:(_sx,_sy,x,y)=>x===11&&y===10?
+    [{x:11,y:10}]:[{x:8,y:8}]
+};
+const inspection=inspectHarvesterReturnStall(game,truck,[refinery],.2);
+assert.equal(inspection.waypointDistance,2);
+assert.equal(inspection.pathGoalInsideUnloadRange,true);
+assert.equal(inspection.nextStepClear.direct.static,true);
+assert.equal(inspection.nextStepClear.direct.withTraffic,false,
+  'a dynamic blocker must be distinguishable from terrain');
+assert.deepEqual(inspection.reachableUnloadTile,{x:11,y:10},
+  'only a path reaching its exact unload tile may count as reachable');
+assert.ok(inspection.unloadCandidatesChecked>0);
+const unreachable=inspectHarvesterReturnStall(
+  {...game,findPath:()=>[{x:8,y:8}]},truck,[refinery],.2);
+assert.equal(unreachable.reachableUnloadTile,null,
+  'partial A* paths must not be mistaken for a usable refinery approach');
+const missing=inspectHarvesterReturnStall(game,truck,[],.2);
+assert.equal(missing.reachableUnloadTile,null);
+assert.equal(missing.pathGoalInsideUnloadRange,null);
+
+const inspected=newHarvesterTelemetry();
+let inspections=0;
+observeHarvesterStep(inspected,[truck],[truck],0,0,1);
+for(let second=2;second<=7;second++)
+  observeHarvesterStep(inspected,[truck],[truck],0,0,second,[refinery],
+    (current,refineries)=>{
+      inspections++;
+      assert.equal(current.id,11);
+      assert.equal(refineries[0].id,88);
+      return inspectHarvesterReturnStall(game,current,refineries,1);
+    });
+assert.equal(inspections,1,'expensive route inspection must run only at the six-second threshold');
+assert.deepEqual(inspected.fullCargoStallCases[0].returnAccess.reachableUnloadTile,
+  {x:11,y:10});
+assert.equal(JSON.stringify(inspected).includes('_movement'),false);
+
 console.log('PASS: ore telemetry records losses, deliveries, actual travel, bounded stalled-return context and visible route threats');
