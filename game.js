@@ -1719,7 +1719,9 @@
         if(dist(e,refinery)>3.6){
           let state=returns.get(e);
           if(!state||state.refineryId!==refinery.id){
-            const target=this.chooseRefineryApproach(e,refinery);
+            // Keep the proven legacy route during normal deliveries; only
+            // spend extra pathfinding effort after a measured stall.
+            const target={x:refinery.x+1.9,y:refinery.y+1.3};
             state={refineryId:refinery.id,target,
               lastDistance:dist(e,target),lastProgressAt:this.time};
             returns.set(e,state);

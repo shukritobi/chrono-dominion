@@ -85,9 +85,9 @@ hard-coded southeast refinery target (29.9, 25.3). The path snapshots showed
 no narrow-lane wait or active yield. This supports testing an alternate
 approach but does **not** prove the fixed target was the only obstruction.
 
-A narrowly scoped experimental change now chooses a reachable legal perimeter
-point instead of the southeast target, with a bounded eight-candidate A*
-search only at the start of a loaded return. After six seconds without
-meaningful progress it retries a different perimeter point. The assignment
-lives in a WeakMap and never changes the saved entity schema. The existing
+The initial experiment changed **every** loaded return and failed the
+natural-match economy guard (enemy ore fell on all three maps). The revised
+experiment preserves the original docking target on normal trips and only
+searches a legal reachable alternate after six seconds without meaningful
+progress. The recovery search evaluates at most eight candidates; the assignment lives in a WeakMap and never changes the saved entity schema. The existing
 720-second economy guard must pass before the experiment can be merged.

@@ -62,12 +62,8 @@ const returning=g.add(0,'harvester',7,12);
 returning.load=360;returning.work=0;
 g.processHarvester(returning,.1);
 const firstTarget=g.harvesterReturnRoutes.get(returning).target;
-assert.ok(Math.hypot(firstTarget.x-12,firstTarget.y-12)<=3.6,
-  'selected return target must be inside refinery unloading range');
-assert.ok(g.canOccupyUnit(returning,firstTarget.x,firstTarget.y,true),
-  'refinery approach must be physically legal, not inside another building');
-assert.ok(Math.hypot(firstTarget.x-13.9,firstTarget.y-13.3)>1,
-  'do not reuse the old blocked southeast approach');
+assert.ok(Math.hypot(firstTarget.x-13.9,firstTarget.y-13.3)<.01,
+  'normal returns retain the original docking target until a genuine stall');
 // If no progress is made for six seconds, try another reachable perimeter
 // rather than retrying the same blocked target forever.
 const assignment=g.harvesterReturnRoutes.get(returning);
@@ -77,6 +73,10 @@ g.processHarvester(returning,.1);
 const secondTarget=g.harvesterReturnRoutes.get(returning).target;
 assert.ok(Math.hypot(firstTarget.x-secondTarget.x,firstTarget.y-secondTarget.y)>=1.2,
   'stalled loaded trucks rotate away from the previous approach');
+assert.ok(g.canOccupyUnit(returning,secondTarget.x,secondTarget.y,true),
+  'recovery must select a legal alternate refinery approach');
+assert.ok(Math.hypot(secondTarget.x-12,secondTarget.y-12)<=3.6,
+  'recovery target must remain within the refinery unload radius');
 assert.ok(!JSON.stringify(returning).includes('harvesterReturnRoutes'),
   'transient route assignments must not be stored on saved entities');
 
