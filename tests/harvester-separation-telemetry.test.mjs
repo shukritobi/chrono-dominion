@@ -23,7 +23,7 @@ assert.equal(metrics.noMovementFrames,1,
   'no pre-separation progress must be diagnosed separately');
 assert.equal(metrics.opposingSeparationFrames,1);
 observeHarvesterSeparationStep(metrics,[start],[forward],
-  truck(8,10.25,10),3);
+  [truck(8,10.25,10)],3);
 assert.equal(metrics.opposingSeparationFrames,1,
   'separation pushing along the movement direction is not a reversal');
 assert.equal(metrics.nearCancelledFrames,1);
