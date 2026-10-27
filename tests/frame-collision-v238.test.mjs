@@ -86,5 +86,5 @@ assert.equal(g.walkable(18,18),true);
 delete g.move;
 assert.equal(g.saveGame(),true);
 assert.equal(g.loadGame(),true);
-assert.equal(window.ChronoDominion.version,'2.38.0');
+assert.equal(window.ChronoDominion.version,'2.39.0');
 console.log('v2.38 per-frame indexed ground collision, live obstacles and saves passed');

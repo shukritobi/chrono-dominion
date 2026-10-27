@@ -69,5 +69,5 @@ g.water=()=>false;
 const legacy=g.findPath(8,12,23,12);
 assert.equal(legacy.length,15,'legacy open-terrain shortest path is unchanged');
 assert.equal(legacy.at(-1)?.x,23);
-assert.equal(window.ChronoDominion.version,'2.38.0');
+assert.equal(window.ChronoDominion.version,'2.39.0');
 console.log('v2.35 XL full-route A*, safe fallback, corner and save regression passed');

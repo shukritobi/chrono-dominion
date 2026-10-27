@@ -1,7 +1,7 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 27 October 2026  
-**Current prototype:** v2.38.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
+**Current prototype:** v2.39.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
@@ -10,6 +10,8 @@ v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoo
 v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. The [verified main-branch CI and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed. The nine scripted matches recorded 5/9 actual assault-launch scenarios, 1 stalled-attacker reroute, 6/9 discovered objectives, 10 scouts lost and 74.8% mean survey coverage. These do not establish human win rates.
 
 v2.19 adds observed-only AI building focus fire, damage-aware target spread, reserved siege flanks and original tracer/shockwave drawing. The [v2.19 PR suite](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed, including nine scripted matches, with 32 changed siege orders, 294 confirmed building hits, 5/9 assault launches, 12 recon losses and 74.8% mean survey coverage. Gameplay balance and real-device performance remain unverified.
+
+v2.39 indexes faction-owned sight observers into transient 9-tile buckets during the movement/combat phase, reducing repeated full-roster scans during automatic target acquisition. Sensor positions update as units move, new observers are added immediately, and destroyed/unbuilt observers remain excluded. Outside combat the original live visibility check is retained. See [v2.39 notes](RELEASE-2.39.md). Real-device frame-rate measurements remain pending.
 
 v2.38 indexes living buildings once per simulation movement phase, removing repeated full-roster scans from ground collision and narrow-lane checks. The index is discarded before subsequent production/AI updates; live health checks and out-of-tick queries preserve obstacle changes. See [v2.38 notes](RELEASE-2.38.md). Real-device FPS gains remain unmeasured.
 

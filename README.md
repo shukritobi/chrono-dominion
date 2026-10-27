@@ -4,8 +4,13 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.38.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.39.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.39 Faster faction-aware combat detection
+
+- Each combat tick now indexes friendly observers into temporary 9-tile sensor buckets per faction. Target acquisition only checks nearby observers, rather than scanning every friendly unit and structure for each candidate enemy.
+- Sensors follow moving units and newly created entities; destroyed or unfinished sensors are excluded live. The indexes are cleared before AI/production and never saved. Recon range, fog of war and old saves are unchanged. [Release notes](docs/RELEASE-2.39.md) · [regression](tests/sensor-index-v239.test.mjs).
 
 ### v2.38 Indexed building collisions during movement
 
