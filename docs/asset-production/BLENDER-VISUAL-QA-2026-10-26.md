@@ -532,3 +532,35 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+
+## 2026-10-27 Three-faction airfield extended-state pilot (awaiting CI pixel QA)
+
+**Preview-only, not published.** This is a new branch-scoped pilot for Coalition,
+Federation and Psionic airfields, following the successfully validated turret
+review [#40424902726](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726).
+It does **not** rerender the validated turrets, factories, radar or technology labs.
+
+- [Original editable airfield damage source](../../tools/blender/preview_airfield_extended_states.py):
+  Coalition's hangar roof and control tower collapse; Federation's flak
+  cupola, bunker roof and blast wall break; Psionic's landing guides and
+  levitation deck fracture. Separate glowing fracture/conduit geometry
+  remains independently editable. Each extended .blend contains **seven
+  hidden wreckage meshes** when reopened in the intact state.
+- [Strict visual QA](../../tools/blender/qa_airfield_extended_states.py):
+  compares actual intact versus critical/destroyed/power-out PNGs at both
+  160px and 80px, enforces >=45 critical and >=90 destroyed alpha changes
+  at 80px, <30 power-out alpha changes and >=100 power-out RGBA changes.
+  Produces faction-specific contact sheets and JSON metrics.
+- [Targeted airfield preview workflow](../../.github/workflows/airfield-extended-states-review.yml)
+  builds only three first-pass airfield atlases, checks their original
+  SHA-256 before/after extended-state rendering, reopens three editable
+  extended .blend sources, and uploads **nine separate 160px PNG states**.
+  Production assets and manifests are never touched.
+
+**Current status:** Source and QA committed on isolated
+`asset-preview/airfield-extra-states-20261027` branch. The CI preview is
+not yet validated. Do not claim visual success until the actual Blender
+job and image QA pass and the resulting 80px/160px contact sheets are
+inspected. If a silhouette gate fails, improve the model rather than
+lowering the threshold. Next: beam defenses and vehicle 32-facing tests.
