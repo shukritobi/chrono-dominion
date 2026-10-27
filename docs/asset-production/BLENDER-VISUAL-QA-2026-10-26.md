@@ -532,3 +532,66 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+
+## 2026-10-27 Federation Bull four-phase electrothermal attack — preview-only
+
+The P0 Federation Bull (FED-VEH-002) already has a verified editable original
+Blender model and 32-facing idle/movement/attack/destroyed sprites from
+[successful baseline run #40501761698](https://github.com/shukritobi/chrono-dominion/actions/runs/40501761698).
+This pass **does not rerender the baseline**. It downloads that artifact's
+saved `.blend`, original atlas and idle/attack PNGs and adds 12 editable
+attack-only meshes: three inductive thermal barrel coils, two expanding
+muzzle shock rings, one condensed plasma bolt and six radial vent shards.
+The original turret and cannon recoil articulate across **charge → focus →
+discharge → recover**, each at 32 directions (128 new RGBA PNGs).
+
+- [Modeling script](../../tools/blender/preview_federation_bull_temporal_attack.py),
+  [strict 160px/80px image QA](../../tools/blender/qa_federation_bull_temporal_attack.py)
+  and [targeted preview workflow](../../.github/workflows/federation-bull-temporal-attack-review.yml).
+- [Targeted Actions run #40527927857](https://github.com/shukritobi/chrono-dominion/actions/runs/40527927857)
+  and [draft review PR #51](https://github.com/shukritobi/chrono-dominion/pull/51).
+- Strict gates require 128 populated, unclipped 160px RGBA frames;
+  >=35 changed RGBA pixels at 80px for **every** adjacent phase pair and
+  facing; >=50 changed RGBA pixels for new discharge vs archived attack;
+  >=20 changed alpha pixels for discharge vs archived idle; and >=20
+  changed pixels for adjacent 32-direction facing pairs.
+- Reopen the saved editable `.blend` and verify all 12 new meshes are hidden
+  in its intact pose, with all eight original wreckage meshes and 14
+  original roadwheel pivots retained. Verify the original atlas checksum
+  is identical before/after. Inspect both generated 160px and 80px sheets.
+
+**Final validation: PASSED.** [Successful Blender run #40527927857](https://github.com/shukritobi/chrono-dominion/actions/runs/40527927857)
+rendered **128 NEW 160×160 RGBA frames** in 4 phases × 32 facings.
+The saved **163,520-byte editable .blend** was reopened by Blender;
+12 new temporal meshes, 8 intact-source wreckage meshes and 14 roadwheel
+pivots were verified, with the attack-only meshes hidden in the saved pose.
+The actual 160px and 80px contact sheets were downloaded and visually
+inspected. Coil buildup, expanding muzzle shock, visible discharge and
+cooling phases remain distinguishable at 80px. Independent 80px pixel
+recounts for facings **00, 07, 15, 23 and 31** all exactly matched the
+automated report (charge→focus: 1474, 1518, 1473, 1439, 1398).
+
+| 80px metric | Minimum changed pixels | Maximum |
+|---|---:|---:|
+| Charge → Focus RGBA | **1,090** | 1,580 |
+| Focus → Discharge RGBA | **1,204** | 1,768 |
+| Discharge → Recover RGBA | **1,207** | 1,763 |
+| Discharge vs original attack RGBA | **1,194** | 1,812 |
+| Discharge vs original idle alpha | **484** | 851 |
+| Charge vs original idle RGBA | **559** | 994 |
+| Adjacent 32-direction charge facings RGBA | **1,279** | 1,699 |
+
+All 128 PNGs were nonempty, unclipped and passed strict gates. The original
+**four-state 32-facing atlas** remained untouched,
+with SHA-256
+`22901bc4065a57ac2cce09c615c5c0fc1a85353cec1eeb392bf31c63da6eacc1`
+in the archived baseline, and its checksum verified unchanged by Actions.
+The NEW temporal preview atlas SHA-256 is
+`32356429de6f06a9bdd40a1c6b2ab71e4af84d311f3c46f75453d520421895f6`.
+[Download the separate preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40527927857/artifacts/12744233702).
+
+**Visual limitation:** The bright discharge rings dominate the muzzle at
+80px; fine radial shard detail is more readable at 160px. Next polish can
+reduce white-core glare while preserving clear charge/discharge silhouettes.
+**No live sprite, production manifest or gameplay files were changed.**
