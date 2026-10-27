@@ -93,5 +93,5 @@ assert.equal(g.fog[38][18].seen,true,
 assert.equal(g.fog[38][18].visible,false,
   'dead sensors cannot restore live visibility on load');
 assert.equal(g.playerCanSeeEntity(g.entityById(enemy.id)),true);
-assert.equal(window.ChronoDominion.version,'2.41.0');
+assert.equal(window.ChronoDominion.version,'2.42.0');
 console.log('v2.41 construction sensors, edge-of-fog entity/radar visibility and saves passed');
