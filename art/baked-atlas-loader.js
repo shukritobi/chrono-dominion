@@ -86,7 +86,8 @@
     const dir=isBuilding?0:((Math.round(radians*entry.directions/(2*Math.PI))%
       entry.directions)+entry.directions)%entry.directions;
     const pivotY=Math.max(0,Math.min(entry.size,finite(entry.pivot[1])));
-    const dx=-size*.5,dy=-size*pivotY/entry.size;
+    const dx=-size*.5,dy=-size*pivotY/entry.size+
+      (e.kind==='aircraft'?Math.max(0,Math.min(1,finite(options.service?.blend)))*43:0);
     // Building smoke/construction overlay is rendered by the existing engine.
     c.drawImage(entry.img,dir*entry.size,index*entry.size,entry.size,entry.size,
       dx,dy,size,size);
