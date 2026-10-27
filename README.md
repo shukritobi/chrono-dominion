@@ -10,8 +10,8 @@
 
 ### Threat-aware AI ore harvester safety (post-v2.42)
 
-- Enemy ore harvesters now avoid deposits near **currently observed** hostile combat units and temporarily withdraw to an operational refinery when a detected attacker closes within 4.5 tiles and the truck has lost at least 15% of its hull. They can deliver their actual partial load rather than losing the entire cargo while under fire. The retreat timer is transient and never changes v1 saves or player harvesting.
-- Three-faction regression checks visible-threat behavior, fog honesty, delivered ore accounting and save compatibility. Natural-match aviation and survival remain under evaluation. [Regression](tests/ai-harvester-safety.test.mjs) · [implementation notes](docs/AI-HARVESTER-SAFETY.md).
+- Wounded enemy ore harvesters temporarily withdraw to an operational refinery when a detected attacker closes within 4.5 tiles and the truck has lost at least 15% of its hull. Healthy trucks keep their normal ore routes. They can deliver their actual partial load rather than losing the entire cargo while under fire. The retreat timer is transient and never changes v1 saves or player harvesting.
+- Three-faction regression checks wounded retreats, healthy income, fog honesty, delivered ore accounting and save compatibility. Natural-match aviation and survival remain under evaluation. [Regression](tests/ai-harvester-safety.test.mjs) · [implementation notes](docs/AI-HARVESTER-SAFETY.md).
 
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
