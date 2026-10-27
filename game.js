@@ -57,6 +57,8 @@
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   // Render-only landing transitions follow entity identity, never serialized saves.
   const airServiceVisuals=new WeakMap();
+  // Temporary retreat orders are deliberately not serialized into v1 saves.
+  const harvesterEvacuations=new WeakMap();
   const turnToward=(current,wanted,maxDelta)=>{const delta=Math.atan2(Math.sin(wanted-current),Math.cos(wanted-current));return current+clamp(delta,-maxDelta,maxDelta);};
   const iso=(x,y)=>({x:(x-y)*TW/2,y:(x+y)*TH/2});
   const rand=(x,y,s=0)=>{let v=Math.sin(x*123.17+y*78.233+s*103.13)*43758.5453;return v-Math.floor(v);};
@@ -1670,9 +1672,15 @@
       // Deposits can overlap a newly constructed refinery or sit beyond a
       // lake. Never select a shiny but physically unreachable ore pile.
       const excluded=(e.oreSkipUntil||0)>this.time?e.oreSkipIndex:-1;
+      // Enemy harvesters avoid only *currently observed* combat units. Never
+      // use hidden live enemy positions to select a supposedly safe deposit.
+      const threats=e.owner===1?this.entities.filter(u=>
+        u.owner!==e.owner&&u.hp>0&&u.type==='unit'&&
+        u.kind!=='harvester'&&this.sideCanSee(e.owner,u)):[];
       const candidates=this.ores.map((ore,index)=>({ore,index,d:dist(e,ore)}))
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
-          this.canOccupyUnit(e,ore.x,ore.y,true))
+          this.canOccupyUnit(e,ore.x,ore.y,true)&&
+          !threats.some(enemy=>dist(ore,enemy)<5.2))
         .sort((a,b)=>a.d-b.d||a.index-b.index);
       for(const {ore,index} of candidates){
         const path=this.findPath(e.x,e.y,ore.x,ore.y);
@@ -1686,6 +1694,31 @@
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
         b.kind==='refinery'&&b.built);
       if(!refinery)return;
+      // AI ore trucks are economic lifelines, not combat units. Pull them
+      // toward their refinery when a nearby attacker is actually visible.
+      // Keep retreating briefly after contact breaks to prevent oscillation.
+      const danger=e.owner===1&&this.entities.some(u=>
+        u.owner!==e.owner&&u.hp>0&&u.type==='unit'&&
+        u.kind!=='harvester'&&dist(e,u)<4.5&&this.sideCanSee(e.owner,u));
+      if(danger){
+        if((harvesterEvacuations.get(e)||0)<=this.time){
+          e.oreIndex=-1;e.oreScanAt=0;e.oreLastDistance=null;
+        }
+        harvesterEvacuations.set(e,this.time+24);
+      }
+      if(e.owner===1&&(danger||(harvesterEvacuations.get(e)||0)>this.time)){
+        if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
+        else{
+          // Banking a partial cargo is safer than losing it on the ore field.
+          if(e.load>0&&e.work<=0){
+            this.players[e.owner].credits+=e.load;
+            if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
+            e.load=0;e.work=.6;
+          }
+          if(!danger)harvesterEvacuations.delete(e);
+        }
+        return;
+      }
       if(e.load>=360){
         if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
         else if(e.work<=0){
