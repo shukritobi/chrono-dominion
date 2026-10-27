@@ -128,5 +128,63 @@ for(const faction of ['coalition','federation','psionic']){
   g.runAI();
   assert.equal(queued(g,'harvester').length,1,
     faction+': replacing the only lost harvester remains higher priority');
+
+  // Lost or not-yet-built radar should not be perpetually postponed by
+  // cheap optional recruitment. Exercise the real AI and construction.
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=300;g.players[1].credits=1200;
+  assert.ok(alive(g,'tank').length+alive(g,'heavy').length>0,
+    faction+': radar recovery requires an existing ground screen');
+  assert.equal(g.power(1).low,false,'radar reserve fixture must be powered');
+  g.runAI();g.runAI();
+  assert.equal(queued(g,'recon').length+queued(g,'soldier').length+
+    queued(g,'tank').length+queued(g,'specialist').length,0,
+    faction+': optional recruitment must not consume radar savings');
+  assert.equal(g.players[1].credits,1200,
+    faction+': preserve the radar budget while below 1,550 credits');
+  g.players[1].credits=1550;g.runAI();
+  assert.equal(alive(g,'radar').length,1,
+    faction+': a funded radar must enter normal paid construction');
+  assert.equal(alive(g,'radar')[0].built,false,
+    faction+': radar must not be granted instantly');
+  assert.equal(g.players[1].credits,650,
+    faction+': the emergency generator reserve survives radar purchase');
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': do not spend the emergency reserve during radar construction');
+  g.players[1].credits=1100;g.runAI();
+  assert.equal(g.players[1].credits,1100,
+    faction+': optional units stay paused until the radar is operational');
+  // Building progress is advanced by the world simulation, not unit queues.
+  g.step(6);
+  assert.equal(alive(g,'radar')[0].built,true,
+    faction+': construction finishes through the normal production clock');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': restored radar must survive legacy save/load');
+
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=300;g.players[1].credits=1200;
+  const radarHq=alive(g,'hq')[0];
+  g.add(0,'soldier',radarHq.x+1,radarHq.y+1);
+  g.runAI();
+  assert.ok(g.players[1].credits<1200,
+    faction+': visible base attack releases radar savings for defense');
+
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=300;g.players[1].credits=1200;
+  for(const tank of [...alive(g,'tank'),...alive(g,'heavy')])tank.hp=0;
+  g.runAI();
+  assert.ok(g.queues.some(q=>q.side===1),
+    faction+': a destroyed ground screen releases radar savings for recruitment');
+
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=300;g.players[1].credits=1200;
+  alive(g,'harvester')[0].hp=0;
+  g.runAI();
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': replace lost income instead of banking for radar');
 }
-console.log('PASS: three-faction paid early ore expansion, cap, reserves, threats, power, aviation and saves');
+console.log('PASS: three-faction paid ore expansion, radar recovery reserves, emergency overrides and saves');

@@ -15,3 +15,9 @@ During the first 120 seconds, the enemy may queue a second harvester if it has e
 `node tests/ai-ore-economy.test.mjs` covers all three factions: real credit deductions, queued and completed deployment, duplicate prevention, two-harvester cap, insufficient reserves, late-game exclusion, observed threats, brownout, Air Command saving, radar affordability and reserve, final harvester replacement and legacy save/load.
 
 The production-engine balance and 720-second natural progression simulations additionally record `peakAIHarvesters` per scenario and `casesWithAIMultiHarvesters` in the summary. Compare those metrics with harvested ore and aviation milestones before attributing causality. Neither automated test substitutes for real-device performance or a human-played match.
+
+## Radar recovery reserve (27 October 2026)
+
+Natural aviation diagnostics found prolonged periods with no operational radar. After 240 seconds, the AI now preserves credits for a 900-credit radar plus the existing 650-credit generator reserve when its factory and refinery are operational, at least one harvester and tank/heavy survive, and no observed attack or brownout requires an immediate response. Optional unit production pauses below the 1,550-credit purchase threshold and while the newly purchased radar is under construction. Lost income, destroyed ground cover, local attacks and power shortages release this reserve; construction uses the normal paid placement and build timer. No free resources, new save fields or changes to original assets.
+
+The three-faction `tests/ai-ore-economy.test.mjs` exercises banking, actual paid radar construction, construction-time protection, emergency defense, loss of the ground screen, harvester replacement and legacy save/load. Natural-match progression and survival metrics must still be compared before claiming better aircraft production.
