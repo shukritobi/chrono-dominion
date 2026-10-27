@@ -883,3 +883,39 @@ than a temporal firing sequence. This is a preview, not a game-ready
 which contains the shared original Blender modeling helpers. The current
 game loader supports 1/8 directions, not this separate 32-facing preview.
 No live texture, atlas manifest or gameplay file was modified.
+
+
+## 2026-10-27 Psionic Gravitic Manipulator — 32-facing review candidate
+
+**PREVIEW ONLY, verification pending.** PSI-VEH-005 is a newly authored,
+editable Blender magnetic-lifting vehicle, not a recolour or re-render of
+the already validated Phase-Loom hover carrier. Its silhouette uses four
+separate levitating traction pads, a low armored spine, a tall independent
+rotating lifting spindle, and two raised articulated horseshoe magnet jaws
+with a physically open center. The attack pose spreads the jaws and projects
+a vertical field and suspended crystal. The destroyed pose hides intact
+upper magnetic machinery and reveals eight separate editable wreckage meshes
+with fractured orange induction coils.
+
+- [Original procedural model and 128-frame renderer](../../tools/blender/preview_psionic_gravitic_manipulator_32.py)
+  produces idle/move/attack/destroyed, 32 facings per state, 160×160 RGBA.
+- [80px and 160px pixel acceptance checks](../../tools/blender/qa_psionic_gravitic_manipulator_32.py)
+  reject edge clipping, duplicate adjacent facings, invisible movement or
+  attacks, and damage without changed alpha silhouette.
+- [Targeted preview-only workflow](../../.github/workflows/psionic-gravitic-manipulator-32-review.yml)
+  installs checksum-verified Blender 4.2.23, renders only this new vehicle,
+  reopens the saved .blend and checks eight hidden wreckage meshes, four
+  independent gravitic skids and two magnetic jaws.
+- Modeling commit [aa5e7fff](https://github.com/shukritobi/chrono-dominion/commit/aa5e7fff5d08e7262847fb07df496256b97da33a);
+  initial QA commit [9450f172](https://github.com/shukritobi/chrono-dominion/commit/9450f172fa894823b01e33d9d135790403ea8a84);
+  corrected workflow commit [aa9ece54](https://github.com/shukritobi/chrono-dominion/commit/aa9ece54490a100aa624ab182016e849f6de3f0a).
+- **Verification status:** pending actual GitHub Actions render, saved-source
+  reopen and real 160px/80px PNG inspection. Do not claim the asset passed
+  until the workflow finishes successfully and actual image metrics are read.
+  No existing approved five-frame atlas is rerendered or modified.
+
+**Blockers / next check:** inspect any clipping at the extreme side facings,
+verify magnetic jaws read distinctly at 80px, and confirm the orange wreckage
+fractures remain visible. The current game runtime only supports 1/8-facing
+baked sprites, so this 32-facing preview remains unintegrated. No live
+sprites, manifest, runtime or gameplay files are changed.
