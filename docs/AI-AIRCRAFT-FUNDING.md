@@ -1,0 +1,15 @@
+# AI aircraft funding after Air Command
+
+**27 October 2026.** Post-v2.42 targeted AI economy improvement; gameplay version and save key remain unchanged.
+
+## Verified source bottleneck
+
+After the AI paid for an Air Command, its recruitment planner still bought reconnaissance vehicles and specialists before considering aircraft. At the same time, the optional turret branch reactivated once an airfield existed and could consume the 2,400-credit aircraft threshold. No dedicated saving rule existed after airfield purchase, so the AI repeatedly drained its economy into cheaper ground units. This explains a plausible source-level obstacle to natural aircraft deployment; it is not proof that all matches were blocked for this reason.
+
+## Implementation
+
+When an AI has purchased an Air Command, has a working radar, at least one surviving harvester and two ground tanks/heavies, and sees no nearby base threat, it reserves credits for up to two aircraft. It pauses optional tech, turret and routine unit spending until the airfield is operational and credits cover the 1,600-credit aircraft plus 650 for emergency power. It then purchases through the existing paid queue. Unfinished airfields are not treated as operational. Threats immediately release the reserve for defensive recruitment; lost harvesters and power shortages are not ignored. Aircraft costs, build times, prerequisites, saves, artwork and combat statistics are unchanged.
+
+## Verification and limits
+
+Run `node tests/ai-aircraft-funding.test.mjs` for a real-engine three-faction regression covering the reserve boundary, unfinished airfields, paid queue and deployment, emergency threats, harvester replacement and save/load. This is a deterministic prerequisite-complete test. The existing `npm run balance:progression` remains the honest measure of whether contested matches naturally reach aircraft; results should be compared before claiming that the real-match gap is closed. Real browser and mobile performance are not measured.

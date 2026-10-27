@@ -8,6 +8,11 @@
 
 
 
+### AI aircraft funding after Air Command (post-v2.42)
+
+- With an Air Command purchased and an intact harvester, radar and two-tank defensive screen, the AI now banks for a paid Strike Aircraft plus a 650-credit emergency generator reserve. It defers optional turrets, technology labs, reconnaissance replacements and specialists while saving; urgent defense, harvester replacement and brownout recovery still take priority.
+- At 2,250 credits it queues the aircraft ahead of optional ground recruitment, then repeats for a second plane if the base remains safe. No free credits, new saved state or unit-stat changes. [Regression](tests/ai-aircraft-funding.test.mjs) · [implementation notes](docs/AI-AIRCRAFT-FUNDING.md). Natural-match frequency must be measured separately.
+
 ### Earlier affordable AI aviation investment (post-v2.42)
 
 - With a completed factory and radar, enemy commanders can buy an Air Command for its 1,750-credit cost plus a 650-credit emergency generator reserve, instead of waiting for over 3,500 credits or first buying optional Technology Lab. Once they have two surviving tanks and no visible base threat, they temporarily pause routine unit recruitment and optional turret spending to save for aviation. Brownouts and urgent defenses still take priority.

@@ -2563,6 +2563,12 @@
       const skyguardGoal=Math.min(2,airThreatCount);
       const aviationReady=!owned('airfield').length&&built('factory')&&
         built('radar')&&this.time>130;
+      // Once an airfield is purchased, keep the aviation budget intact until
+      // the first two planes are deployed. Never bank at the expense of a
+      // harvester, basic ground cover, radar recovery or immediate defense.
+      const aviationInvestment=owned('airfield').length>0&&built('radar')&&
+        owned('aircraft').length<2&&owned('harvester').length>0&&
+        owned('tank').length+owned('heavy').length>=2&&!threatened;
       let choice=null;
       if(!owned('generator').length||shortage)choice='generator';
       else if(!owned('refinery').length)choice='refinery';
@@ -2575,9 +2581,10 @@
       // Keep enough cash for an emergency generator after buying aviation.
       else if(aviationReady&&
         me.credits>=BUILD.airfield.cost+BUILD.generator.cost)choice='airfield';
-      else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
+      else if(!owned('tech').length&&this.prereq(side,'tech')&&
+        me.credits>4000&&!aviationInvestment)choice='tech';
       else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&
-        me.credits>2200&&!aviationReady)choice='turret';
+        me.credits>2200&&!aviationReady&&!aviationInvestment)choice='turret';
       if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
         const anchor=choice==='turret'&&threatened?
           (this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester'&&this.sideCanSee(side,b))||base):base;
@@ -2602,15 +2609,24 @@
       // Under a visible local attack, unit recruitment resumes immediately.
       const savingForAirfield=aviationReady&&!threatened&&
         me.credits<BUILD.airfield.cost+BUILD.generator.cost&&
+        owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>=2;
-      if(!this.queues.some(q=>q.side===side)&&!savingForAirfield){
+      const savingForAircraft=aviationInvestment&&
+        (!built('airfield')||shortage||
+          me.credits<UNITS.aircraft.cost+BUILD.generator.cost);
+      if(!this.queues.some(q=>q.side===side)&&
+        !savingForAirfield&&!savingForAircraft){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        else if(aviationInvestment&&built('airfield')&&!shortage&&
+          me.credits>=UNITS.aircraft.cost+BUILD.generator.cost)unit='aircraft';
         else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';
         else if(built('radar')&&built('barracks')&&!owned('specialist').length&&me.credits>=1400)unit='specialist';
+        // Retain the older late-game purchase path for depleted ground armies:
+        // those bases cannot bank safely, but may still buy a plane once rich.
         else if(built('airfield')&&owned('aircraft').length<2&&
-          me.credits>=UNITS.aircraft.cost+800&&
-          (owned('tank').length+owned('heavy').length>=2||this.time>240))unit='aircraft';
+          me.credits>=UNITS.aircraft.cost+BUILD.generator.cost&&
+          this.time>240&&!threatened&&!shortage)unit='aircraft';
         else if(built('factory')&&me.credits>1100){
           unit=built('tech')&&me.credits>2300&&rand(Math.floor(this.time),17)>.53?'heavy':'tank';
         }else if(built('barracks')&&me.credits<350)unit=null;
