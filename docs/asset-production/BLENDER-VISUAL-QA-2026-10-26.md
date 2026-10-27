@@ -1084,3 +1084,51 @@ The 32-facing game loader is not integrated. This PR is stacked on the
 unmerged preview-only Psionic temporal attack branch to preserve shared
 Blender helpers. No existing validated asset was rerendered. No published
 sprites, live texture manifest, or gameplay code were changed.
+
+
+### Final Coalition Lynx P0 Blender visual QA — 27 October 2026
+
+**PASS; supersedes the pending status above.** The [targeted Actions run
+#40494276431](https://github.com/shukritobi/chrono-dominion/actions/runs/40494276431)
+completed successfully with every step green: Python compilation, official
+Blender 4.2.23 installation, all 128 new RGBA 160×160 frames, reopened
+editable source verification, strict 80px/160px pixel QA and artifact upload.
+[Artifact #12729237522](https://github.com/shukritobi/chrono-dominion/actions/runs/40494276431/artifacts/12729237522)
+was downloaded and its **actual** 160px and 80px contact sheets visually
+inspected. The compressed source is **152,136 bytes**, reopened with **8
+hidden editable wreckage meshes**, **12 independently articulated roadwheel
+pivots**, **22 individual tread cleats** and **1 long-bore electromagnetic
+cannon**. The separate review atlas is 5120×640 RGBA; no production-format
+atlas was overwritten.
+
+| Measured changed pixels across 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA, 80px | **978** | 1,383 | 1,237.8 |
+| Attack vs idle RGBA, 80px | **755** | 1,124 | 940.2 |
+| Destroyed vs idle RGBA, 80px | **1,082** | 1,403 | 1,288.2 |
+| Destroyed vs idle alpha, 80px | **584** | 858 | 737.5 |
+| Destroyed vs idle alpha, 160px | **1,153** | 1,651 | 1,434.3 |
+| Adjacent idle facing RGBA, 80px | **1,057** | 1,404 | 1,253.1 |
+
+Independent Pillow recomputation of destroyed alpha at 80px for facings
+00/07/15/23/31 returned **696 / 765 / 781 / 707 / 658**, matching
+the archived JSON exactly. All 128 PNGs have nonempty unclipped alpha
+bounds, all adjacent facings are visibly different, and all animation
+states passed their thresholds.
+
+**Actual visual inspection:** the tank is clearly distinct from the Warden
+because of its single long cannon, high commander cupola, broad continuous
+skirts and blue-white armored turret. Attack emission reads at 80px; the
+destroyed mode loses the intact turret and exposes multiple orange hot
+fractures and detached weapon/armour. **Remaining artistic limitations:**
+individual tread movement remains subtle at 80px, and the ion attack is
+one pose rather than a temporal muzzle-flash sequence. A separate
+four-phase firing sequence is appropriate later; do not rerender this
+already validated 128-frame preview without an explicit targeted change.
+
+**Safety:** compared against parent preview branch, exactly five
+source/QA/workflow/documentation/register files changed. No production
+textures, sprite manifests, runtime, or gameplay files changed.
+The 32-facing renderer is **not integrated** with the current game loader.
+[Draft review PR #43](https://github.com/shukritobi/chrono-dominion/pull/43)
+is stacked on unmerged [Psionic temporal preview PR #41](https://github.com/shukritobi/chrono-dominion/pull/41).
