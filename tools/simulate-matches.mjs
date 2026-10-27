@@ -16,6 +16,8 @@ import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
 import {newHarvesterTelemetry,observeHarvesterStep,
   observeHarvesterThreatSample} from './ai-harvester-telemetry.mjs';
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
+import {newHarvesterSeparationTelemetry,observeHarvesterSeparationStep,
+  summarizeHarvesterSeparation} from './harvester-separation-telemetry.mjs';
 
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8')
   .replace('  new Game();','  window.__balanceGame=new Game();');
@@ -197,6 +199,21 @@ function runScenario(map,difficulty,mi,di){
       .map(kind=>[kind,{startedAt:null,operationalAt:null}]));
   let firstAircraftQueuedAt=null,firstAircraftDeployedAt=null;
   const aiHarvesterTelemetry=newHarvesterTelemetry();
+  const aiHarvesterSeparation=newHarvesterSeparationTelemetry();
+  let tickStartHarvesters=[];
+  const originalSeparateUnits=g.separateUnits;
+  // Inspect the exact same units before and after production collision
+  // resolution. This is a headless-only wrapper, not a gameplay change.
+  g.separateUnits=function(){
+    const loaded=()=>this.entities.filter(e=>
+      e.owner===1&&e.kind==='harvester'&&e.hp>0)
+      .map(e=>({id:e.id,x:e.x,y:e.y,load:e.load}));
+    const beforeSeparation=loaded();
+    const result=originalSeparateUnits.call(this);
+    observeHarvesterSeparationStep(aiHarvesterSeparation,
+      tickStartHarvesters,beforeSeparation,loaded(),this.time);
+    return result;
+  };
   const maxSteps=Math.ceil(seconds/frame);
   let previousDamage=0,previousOre=0;
   for(let i=0;i<maxSteps&&g.state==='playing';i++){
@@ -207,6 +224,7 @@ function runScenario(map,difficulty,mi,di){
     const beforeHarvesters=g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0)
       .map(e=>({id:e.id,hp:e.hp,load:e.load,x:e.x,y:e.y}));
+    tickStartHarvesters=beforeHarvesters;
     const oreBefore=g.stats[1].oreHarvested;
     g.step(frame);
     const afterHarvesters=g.entities.filter(e=>
@@ -214,7 +232,11 @@ function runScenario(map,difficulty,mi,di){
     observeHarvesterStep(aiHarvesterTelemetry,beforeHarvesters,afterHarvesters,
       oreBefore,g.stats[1].oreHarvested,g.time,
       g.entities.filter(e=>e.owner===1&&e.kind==='refinery'&&e.built&&e.hp>0),
-      (truck,refineries)=>inspectHarvesterReturnStall(g,truck,refineries,frame));
+      (truck,refineries)=>({
+        ...inspectHarvesterReturnStall(g,truck,refineries,frame),
+        separationMotion:summarizeHarvesterSeparation(
+          aiHarvesterSeparation,truck.id,g.time)
+      }));
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0).length);
@@ -276,6 +298,7 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,peakAIHarvesters,aiHarvesterTelemetry,
+    aiHarvesterSeparation,
     platoonSeen,supportSeen,assaultLaunched,
     assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
     siegeFocusOrders:g.aiSiegeOrders||0,aiStructureHits:g.aiSiegeHits||0,firstDamage:Math.round(firstDamage),
@@ -339,6 +362,14 @@ const report={
       n+r.aiHarvesterTelemetry.loadedTravelTiles,0).toFixed(1)),
     aiFullCargoStallEvents:results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.fullCargoStallEvents,0),
+    aiLoadedSeparationFrames:results.reduce((n,r)=>
+      n+r.aiHarvesterSeparation.loadedFrames,0),
+    aiOpposingSeparationFrames:results.reduce((n,r)=>
+      n+r.aiHarvesterSeparation.opposingSeparationFrames,0),
+    aiNearCancelledSeparationFrames:results.reduce((n,r)=>
+      n+r.aiHarvesterSeparation.nearCancelledFrames,0),
+    aiNoMovementAttemptFrames:results.reduce((n,r)=>
+      n+r.aiHarvesterSeparation.noMovementFrames,0),
     aiFullCargoStallSeconds:Number(results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.fullCargoStallSeconds,0).toFixed(1)),
     aiThreatenedLoadedSamples:results.reduce((n,r)=>
@@ -407,6 +438,13 @@ assert.ok(results.every(r=>r.aiHarvesterTelemetry.deliveredOre===r.harvest[1]&&
   r.aiHarvesterTelemetry.travelTiles>=r.aiHarvesterTelemetry.loadedTravelTiles&&
   r.aiHarvesterTelemetry.fullCargoStallEvents>=0&&
   r.aiHarvesterTelemetry.fullCargoStallSeconds>=0&&
+  r.aiHarvesterSeparation.loadedFrames>=0&&
+  r.aiHarvesterSeparation.opposingSeparationFrames<=
+    r.aiHarvesterSeparation.loadedFrames&&
+  r.aiHarvesterSeparation.nearCancelledFrames<=
+    r.aiHarvesterSeparation.loadedFrames&&
+  r.aiHarvesterSeparation.noMovementFrames<=
+    r.aiHarvesterSeparation.loadedFrames&&
   r.aiHarvesterTelemetry.threatenedLoadedSamples<=r.aiHarvesterTelemetry.threatenedSamples&&
   r.aiHarvesterTelemetry.threatenedFarFromRefinerySamples<=r.aiHarvesterTelemetry.threatenedSamples),
   'AI harvester telemetry must reconcile with actual ore deliveries and sampling');
