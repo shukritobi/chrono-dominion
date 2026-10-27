@@ -21,7 +21,7 @@ def changed(a, b, alpha=False):
         a, b = a.getchannel("A"), b.getchannel("A")
     delta = ImageChops.difference(a, b)
     return sum(1 for p in delta.getdata()
-               if any(p) if isinstance(p, tuple) else bool(p))
+               if (any(p) if isinstance(p, tuple) else bool(p)))
 
 
 def read(path):
