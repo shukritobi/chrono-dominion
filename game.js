@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.41 — consistent fog-of-war scouting and entity visibility. */
+/* Chrono Dominion v2.42 — adaptive, sensor-informed AI air defense. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -2555,16 +2555,19 @@
         if(b.hp/b.maxHp<.58&&me.credits>550)b.repairing=true;
       }
       const shortage=this.power(side).low;
-      // Only AI-observed aircraft contacts can trigger anti-air construction.
-      const airThreatSeen=knowledge.some(r=>r.type==='unit'&&r.kind==='aircraft'&&
-        Number.isFinite(r.time)&&r.time<=this.time&&this.time-r.time<=28);
+      // Distinct, recent, faction-observed aircraft only; no omniscient intel.
+      const airThreatCount=new Set(knowledge.filter(r=>
+        r.type==='unit'&&r.kind==='aircraft'&&Number.isInteger(r.id)&&
+        Number.isFinite(r.time)&&r.time<=this.time&&this.time-r.time<=28
+      ).map(r=>r.id)).size;
+      const skyguardGoal=Math.min(2,airThreatCount);
       let choice=null;
       if(!owned('generator').length||shortage)choice='generator';
       else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       else if(!owned('factory').length)choice='factory';
       else if(!owned('radar').length&&me.credits>2600)choice='radar';
-      else if(airThreatSeen&&built('radar')&&owned('flak').length<1&&
+      else if(skyguardGoal>0&&built('radar')&&owned('flak').length<skyguardGoal&&
         me.credits>=BUILD.flak.cost+500)choice='flak';
       else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
       else if(!owned('airfield').length&&built('factory')&&built('radar')&&
@@ -3251,6 +3254,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.41.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.42.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
