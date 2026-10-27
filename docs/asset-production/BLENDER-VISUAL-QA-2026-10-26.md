@@ -952,3 +952,30 @@ consume these separate 32-facing four-phase atlases, and production
 integration still requires explicit art approval. No published textures,
 game manifests or gameplay code were edited. No previously validated
 128-frame Warden atlas was rerendered.
+
+## 2026-10-28 Federation Hunter Spider Drone original 32-facing preview
+
+**Preview-only; not integrated or approved for publication.** This is a new
+original eight-legged robotic vehicle, not a re-render of an existing asset.
+The Federation Hunter Spider Drone (`FED-VEH-004`) has a low red ceramic
+carapace, eight independently animated hip rigs, sixteen individually editable
+upper/lower leg struts, a dorsal injection lance and separate damaged geometry.
+
+- [Model and isolated renderer](../../tools/blender/preview_federation_hunter_spider_32.py):
+  32 directions × idle/move/attack/destroyed = **128** transparent 160px RGBA
+  preview frames; an editable compressed `.blend` is saved before animation.
+- [Real 160px and 80px pixel QA](../../tools/blender/qa_federation_hunter_spider_32.py):
+  validates every alpha bounding box, movement, attack, destroyed alpha and
+  adjacent-facing differences; outputs contact sheets, atlas and JSON metrics.
+- [Targeted Blender 4.2.23 workflow](../../.github/workflows/federation-hunter-spider-32-review.yml):
+  verifies Blender archive checksum, compiles scripts, reopens the saved
+  `.blend`, checks **10 hidden wreckage meshes, 8 hip rigs and 16 limb
+  struts**, then runs pixel QA. Failed jobs retain generated artifacts.
+- [Initial Actions render #40556753530](https://github.com/shukritobi/chrono-dominion/actions/runs/40556753530)
+  and [draft preview PR #62](https://github.com/shukritobi/chrono-dominion/pull/62).
+  **Rendering/visual acceptance not yet confirmed in this note.** Do not mark
+  this asset complete until actual PNGs at 160px and 80px are inspected.
+- Source branch is based on the previous unmerged Warden temporal-attack
+  preview PR #60 because its dependency chain contains the common Blender
+  geometry helpers. No live game texture, manifest or gameplay file was
+  modified. Runtime integration and art approval remain blockers.
