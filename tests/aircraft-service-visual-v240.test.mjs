@@ -52,7 +52,7 @@ const saved=JSON.parse(storage.get('chrono-dominion-skirmish-v1'));
 assert.ok(!Object.hasOwn(saved.entities.find(e=>e.id===plane.id),'airServiceVisual'),
   'visual interpolation never enters browser saves');
 assert.equal(g.loadGame(),true);
-assert.equal(window.ChronoDominion.version,'2.41.0');
+assert.equal(window.ChronoDominion.version,'2.42.0');
 
 // Baked Blender aircraft lower on the screen without shifting ground units.
 const entries={coalition:{
