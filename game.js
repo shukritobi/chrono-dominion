@@ -2614,10 +2614,19 @@
       const savingForAircraft=aviationInvestment&&
         (!built('airfield')||shortage||
           me.credits<UNITS.aircraft.cost+BUILD.generator.cost);
+      // A second *paid* early harvester improves sustainable income instead
+      // of leaving the AI dependent on one ore truck for the whole match.
+      // Never interrupt an aviation reserve, emergency defense or brownout,
+      // and stop at two to avoid a runaway economy/traffic loop.
+      const expandingOreEconomy=this.time<=120&&!threatened&&!shortage&&
+        !owned('airfield').length&&!savingForAirfield&&
+        built('refinery')&&owned('harvester').length===1&&
+        me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
       if(!this.queues.some(q=>q.side===side)&&
         !savingForAirfield&&!savingForAircraft){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        else if(expandingOreEconomy)unit='harvester';
         else if(aviationInvestment&&built('airfield')&&!shortage&&
           me.credits>=UNITS.aircraft.cost+BUILD.generator.cost)unit='aircraft';
         else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';
