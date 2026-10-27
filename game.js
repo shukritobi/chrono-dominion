@@ -2574,16 +2574,22 @@
         me.credits>3500&&this.time>130)choice='airfield';
       else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&me.credits>2200)choice='turret';
       if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
-        for(let j=0;j<48;j++){
-          const angle=j*2.39996,radius=4.2+Math.floor(j/8)*.85;
-          const anchor=choice==='turret'&&threatened?(this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester'&&this.sideCanSee(side,b))||base):base;
-          // Keep all AI construction in supply radius of its living buildings.
-          const origin=anchor===base?base:myBuildings.reduce((p,b)=>dist(anchor,b)<dist(anchor,p)?b:p,base);
-          const x=Math.round(origin.x+Math.cos(angle)*radius),y=Math.round(origin.y+Math.sin(angle)*radius);
-          if(!this.canPlace(x,y,side))continue;
-          me.credits-=BUILD[choice].cost;this.stats[side].creditsSpent+=BUILD[choice].cost;
-          const b=this.add(side,choice,x,y,false);b.buildTime=3.5+BUILD[choice].cost/650;
-          break;
+        const anchor=choice==='turret'&&threatened?
+          (this.nearest(base,b=>b.owner===0&&b.type==='unit'&&b.kind!=='harvester'&&this.sideCanSee(side,b))||base):base;
+        // Try the HQ first, then established outposts. The old HQ-only search
+        // stalled all later tech construction once its local ring filled up.
+        // Threatened turret placement keeps its nearest-frontline anchor.
+        const origins=anchor===base?[base,...myBuildings.filter(b=>b.id!==base.id)]:
+          [myBuildings.reduce((p,b)=>dist(anchor,b)<dist(anchor,p)?b:p,base)];
+        construction: for(const origin of origins){
+          for(let j=0;j<48;j++){
+            const angle=j*2.39996,radius=4.2+Math.floor(j/8)*.85;
+            const x=Math.round(origin.x+Math.cos(angle)*radius),y=Math.round(origin.y+Math.sin(angle)*radius);
+            if(!this.canPlace(x,y,side))continue;
+            me.credits-=BUILD[choice].cost;this.stats[side].creditsSpent+=BUILD[choice].cost;
+            const b=this.add(side,choice,x,y,false);b.buildTime=3.5+BUILD[choice].cost/650;
+            break construction;
+          }
         }
       }
       if(!this.queues.some(q=>q.side===side)){
