@@ -1672,7 +1672,7 @@
       const excluded=(e.oreSkipUntil||0)>this.time?e.oreSkipIndex:-1;
       // Enemy harvesters prefer reachable deposits away from *currently
       // observed* hostile combat units and powered defensive structures.
-      // A bounded eight-tile penalty avoids costly cross-map detours and
+      // A bounded two-tile penalty avoids costly cross-map detours and
       // still permits mining when every accessible deposit is contested.
       // Player harvesters retain their existing nearest-ore behavior.
       const threats=e.owner===1?this.entities.filter(other=>
@@ -1686,7 +1686,7 @@
         .map(candidate=>({
           ...candidate,
           danger:threats.some(enemy=>dist(enemy,candidate.ore)<
-            (enemy.type==='building'?6:5))?8:0
+            (enemy.type==='building'?6:5))?2:0
         }))
         .sort((a,b)=>(a.d+a.danger)-(b.d+b.danger)||
           a.d-b.d||a.index-b.index);
