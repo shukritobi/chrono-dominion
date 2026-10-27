@@ -7,7 +7,7 @@ on:
     branches:
       - asset-preview/psionic-hallucination-four-beat-glide-20261028
     paths:
-      - .github/workflows/psionic-hallucination-temporal-attack-review.yml
+      - .github/workflows/psionic-hallucination-four-beat-glide-review.yml
       - tools/blender/preview_psionic_hallucination_four_beat_glide.py
       - tools/blender/qa_psionic_hallucination_four_beat_glide.py
 
