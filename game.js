@@ -1712,6 +1712,22 @@
             options.push(point);
           }
         }
+        // At map edges the direct escape vector can point off-map.
+        // Include lateral routes so trucks can skirt a threat instead of
+        // pathing straight through it toward a distant shelter.
+        const vx=e.x-threat.x,vy=e.y-threat.y;
+        const length=Math.max(.01,Math.hypot(vx,vy));
+        const nx=vx/length,ny=vy/length;
+        for(const radius of [3.5,5,6])for(const angle of
+          [0,Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2]){
+          const cs=Math.cos(angle),sn=Math.sin(angle);
+          const x=Math.round(e.x+(nx*cs-ny*sn)*radius);
+          const y=Math.round(e.y+(ny*cs+nx*sn)*radius);
+          if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)continue;
+          const point={x,y};
+          if(dist(point,threat)>=5.2&&dist(point,threat)>=dist(e,threat)+.7)
+            options.push(point);
+        }
         options.sort((a,b)=>
           dist(e,a)+dist(a,home)*.4-(dist(e,b)+dist(b,home)*.4));
         plan=null;
@@ -1719,7 +1735,9 @@
           if(!this.canOccupyUnit(e,point.x,point.y,true))continue;
           const route=this.findPath(e.x,e.y,point.x,point.y);
           if(!route.length||dist(route.at(-1),point)>1.05)continue;
-          if(dist(route[0],threat)<dist(e,threat)-.75)continue;
+          // A distant safe endpoint is useless if its route crosses the
+          // attacker. Reject paths that first pull the truck into gunfire.
+          if(route.some(step=>dist(step,threat)<dist(e,threat)-.25))continue;
           plan={...point,threatId:threat.id,expires:this.time+5};
           break;
         }
