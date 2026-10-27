@@ -973,8 +973,30 @@ upper/lower leg struts, a dorsal injection lance and separate damaged geometry.
   struts**, then runs pixel QA. Failed jobs retain generated artifacts.
 - [Initial Actions render #40556753530](https://github.com/shukritobi/chrono-dominion/actions/runs/40556753530)
   and [draft preview PR #62](https://github.com/shukritobi/chrono-dominion/pull/62).
-  **Rendering/visual acceptance not yet confirmed in this note.** Do not mark
-  this asset complete until actual PNGs at 160px and 80px are inspected.
+  **Passed** checksum-verified Blender 4.2.23 rendering, reopened-source
+  verification and all 128-frame pixel QA gates. The editable saved
+  `.blend` is **134,244 bytes** and reopens with **10 hidden editable
+  wreckage meshes, 8 hip rigs and 16 two-section leg struts**.
+  [Preview artifact #12757981363](https://github.com/shukritobi/chrono-dominion/actions/runs/40556753530/artifacts/12757981363)
+  contains all 128 PNGs, source, atlas, 160px/80px contact sheets and JSON.
+- Downloaded and inspected **actual** 160px and 80px contact sheets. The
+  small-scale silhouette reads as a distinct long-legged hunter drone with
+  red dorsal armour and amber sensor; the attack visibly extends the lance
+  and the destroyed state loses its legs and scatters fractured equipment.
+  Limitation: individual ankle and knee details are subtle at 80px; movement
+  is a single alternating gait pose, not a multi-beat walk cycle.
+- Actual per-facing pixel QA at 80px, expressed as min / max / mean:
+  **movement RGBA 898 / 1,087 / 999.8**;
+  **attack RGBA 888 / 1,097 / 1,031.4**;
+  **destroyed RGBA 850 / 939 / 908.4**;
+  **destroyed alpha 769 / 847 / 807.5**;
+  **adjacent-facing idle RGBA 891 / 1,038 / 983.7**.
+  At 160px, destroyed alpha is **1,892 / 2,373 / 2,049.8**.
+- Independently recomputed 80px destroyed-alpha pixels for directions
+  **00 / 07 / 15 / 23 / 31**: **804 / 803 / 830 / 816 / 830**;
+  all five match the artifact's per-facing JSON. The 5120×640 preview
+  atlas is RGBA and has SHA-256
+  `0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836`.
 - Source branch is based on the previous unmerged Warden temporal-attack
   preview PR #60 because its dependency chain contains the common Blender
   geometry helpers. No live game texture, manifest or gameplay file was
