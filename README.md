@@ -4,8 +4,13 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.41.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-27):** Playable browser skirmish prototype `v2.42.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.42 Sensor-informed AI air defense scaling
+
+- Enemy AI builds a second Skyguard when its own reconnaissance recently detected at least **two distinct hostile aircraft**. One observed plane warrants one battery; duplicate sightings, unseen planes, stale reports and non-aircraft contacts cannot increase the cap.
+- Radar, construction, power, 500-credit reserve and two-battery maximum are preserved. No new save fields or original asset changes. [Release notes](docs/RELEASE-2.42.md) · [regression](tests/ai-skyguard-scaling-v242.test.mjs).
 
 ### v2.41 Honest fog-of-war visibility
 
