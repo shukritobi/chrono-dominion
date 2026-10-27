@@ -1282,3 +1282,94 @@ five development files (new Blender model, strict PNG QA, isolated workflow,
 AssetRegister and this document). No live textures, game manifest,
 runtime or gameplay files were modified. No original 128-frame sprites
 were rerendered. **Preview only; not integrated or approved for publishing.**
+
+
+## 2026-10-28 PSI-VEH-004 four-beat physical gliding movement — verification pending
+
+**PREVIEW ONLY, not integrated.** This isolated follow-up reuses the previously
+validated original Hallucination Drone editable source from
+[Actions #40583938655](https://github.com/shukritobi/chrono-dominion/actions/runs/40583938655)
+and does **not** regenerate its 128 baseline sprites or touch the previously
+validated four-phase attack atlas. Four new movement phases are
+**hover → bank → surge → settle**, with six independently articulated original
+petal rigs, moving neural iris, banked hover chassis, six new closed
+eight-vertex/six-face stabilizer blades, and six additional volumetric
+rearward ion-wake wedges. The new 12 meshes are independently editable and
+hidden in the neutral saved source. Wake geometry is visible only during bank
+and surge; there are no 2D image overlays or generated-image substitutes.
+
+- [Original physical Blender modeling](../../tools/blender/preview_psionic_hallucination_four_beat_glide.py),
+  committed as [458c6247](https://github.com/shukritobi/chrono-dominion/commit/458c6247f7d2cea45aa280399d5f8491742a0a01).
+- [Strict actual-PNG 160px/80px QA](../../tools/blender/qa_psionic_hallucination_four_beat_glide.py),
+  committed as [5a4ed1a7](https://github.com/shukritobi/chrono-dominion/commit/5a4ed1a7617fa28c0f9daf8e4703f3adf3f3ae7d).
+- Baseline atlas must retain SHA-256
+  `59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d`.
+- Targeted workflow should render **128 new RGBA 160×160 frames** across
+  32 facings, reopen the new compressed editable `.blend`, verify all 12
+  added closed volumetric meshes and the preserved six original petals,
+  ten wreckage meshes and five attack meshes, and publish a **separate**
+  5120×640 preview atlas, 160px/80px contact sheets, 80px animated GIF,
+  and per-facing JSON report. Strict acceptance gates at 80px: at least
+  30 changed RGBA pixels per adjacent movement phase, 50 surge-vs-old-move
+  RGBA pixels, 25 surge-vs-idle alpha pixels, and 20 adjacent-facing
+  hover RGBA pixels. Every frame must be nonempty, RGBA and unclipped.
+- **Not yet validated at authoring:** no actual Blender source reopen,
+  PNG measurements, run number, or human 80px inspection is claimed.
+  Record the final run and exact min/max/mean values only after downloading
+  the real artifact. If a gate fails, change geometry; never relax a gate.
+- **Publication barrier:** no `public/` textures, live art manifests,
+  production atlases, game loader, runtime or gameplay files may be changed.
+  Do not publish this new atlas without explicit approval.
+
+
+### Final validated four-beat Hallucination Drone glide (28 October 2026)
+
+- [Successful single targeted Blender 4.2.23 run #40599506483](https://github.com/shukritobi/chrono-dominion/actions/runs/40599506483),
+  [preview artifact #12777920758](https://github.com/shukritobi/chrono-dominion/actions/runs/40599506483/artifacts/12777920758)
+  and [draft stacked PR #74](https://github.com/shukritobi/chrono-dominion/pull/74).
+  Final workflow launch/fix commit:
+  [406dfe01](https://github.com/shukritobi/chrono-dominion/commit/406dfe016d04fecc41bfd3ef1fb5e7fb7eb7365b).
+- Every workflow step **passed**: checksum-verified Blender 4.2.23,
+  **128 new transparent 160×160 RGBA sprites** (32 facings × 4 movement
+  phases), strict per-frame clipping and 80px pixel QA, and actual saved
+  **124,773-byte editable .blend** reopening. The saved source contains
+  six new closed eight-vertex/six-face stabilizer meshes and six independent
+  closed eight-vertex/six-face ion-wake meshes, with six original petal rigs,
+  ten hidden wreckage meshes, five hidden attack meshes and the original
+  neural iris all preserved.
+- New separate **5120×640 preview atlas** SHA-256:
+  `3e61b0673a863abfda71dd4526884c2b9bdf9874737b6be16f77c380b56bc902`.
+  The original baseline atlas SHA-256 was independently rechecked from
+  the earlier downloaded artifact and remained **unchanged**:
+  `59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d`.
+- Downloaded and visually inspected the **actual 1280×640 160px**
+  and **640×320 80px** contact sheets and 80px animated GIF. At 80px
+  the surge-phase mint wake and changed petal stance remain recognizable;
+  individual thin stabilizer details and iris articulation are subtle.
+  The drone occupies a small portion of its 160px cell; later art polish
+  should enlarge its visible gameplay-scale footprint rather than raising
+  glow. This is a **visual limitation**, not a failed QA gate.
+- Independently recalculated five actual hover→bank 80px RGBA comparisons
+  at facings **00/07/15/23/31 = 657/634/634/672/664**. Every result
+  exactly matches the uploaded JSON. Independently inspected all 128
+  actual PNGs: 160×160 RGBA, nonempty and unclipped; alpha bounds
+  x minimum **37**, x maximum **123**.
+
+| Actual 80px changed pixels across all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Hover → bank RGBA | **606** | 702 | 652.9 |
+| Bank → surge RGBA | **688** | 751 | 715.5 |
+| Surge → settle RGBA | **638** | 713 | 685.2 |
+| Surge vs archived move RGBA | **600** | 716 | 662.9 |
+| Surge vs archived idle RGBA | **624** | 703 | 677.3 |
+| Surge vs archived idle alpha | **511** | 574 | 538.9 |
+| Hover vs archived idle RGBA | **577** | 618 | 595.7 |
+| Adjacent hover facings RGBA | **569** | 644 | 609.5 |
+
+**Production safety:** the parent-branch comparison contains exactly five
+development files: the original Blender modeling script, PNG QA, isolated
+workflow, AssetRegister and this QA document. The validated baseline was
+downloaded, not rerendered. No live game art, production manifest, loader,
+runtime or gameplay file changed. This movement atlas remains **preview-only,
+not approved for publication and not playable**. Current game loader does not
+consume this separate four-phase 32-facing atlas.
