@@ -8,6 +8,10 @@
 
 
 
+### Natural-match AI economy regression gate (post-v2.42)
+
+- The 720-second CI progression laboratory now fails when **enemy-only ore income** drops more than 20% on any baseline map, deliveries fall below 75%, worker losses exceed six, or all natural AI Air Commands disappear. This protects against ore-routing changes that pass unit tests but damage actual AI survival. Run `npm run balance:regression`. No gameplay, saves or assets changed. [Guard methodology](docs/AI-ECONOMY-REGRESSION-GATE.md) · [regression tests](tests/ai-economy-guard.test.mjs).
+
 ### AI harvester survival and income telemetry (post-v2.42)
 
 - The real-engine balance and 720-second natural-progression reports now measure AI harvester losses, damage observations, last-seen cargo at destruction, ore delivery ticks, longest income gaps and sensor-visible threats near workers. The simulation remains **observation-only**: no unit behavior, credits, saves or assets changed.
