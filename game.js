@@ -1249,11 +1249,19 @@
       const length=Math.hypot(dx,dy)||1,vx=dx/length,vy=dy/length;
       const nearby=this.unitBuckets?.nearby(unit.x+vx*.55,unit.y+vy*.55)||
         this.entities.filter(e=>e.type==='unit');
+      // A returning full harvester must negotiate with traffic actually in
+      // its travel lane. The nearest friendly may be beside the road, not
+      // blocking it; asking that bystander to yield leaves the real jam.
+      // Restrict this change to player-owned trucks: broad AI traffic tweaks\n      // reduced natural-match income. AI and other units retain old rules.
+      const loadedReturn=unit.owner===0&&unit.kind==='harvester'&&unit.load>=360;
       const blocker=nearby.filter(other=>other.hp>0&&other.owner===unit.owner&&
         other.id!==unit.id&&other.type==='unit'&&
         (other.x-unit.x)*vx+(other.y-unit.y)*vy>0&&
         Math.hypot(other.x-unit.x,other.y-unit.y)<
-          this.unitRadius(unit)+this.unitRadius(other)+.75)
+          this.unitRadius(unit)+this.unitRadius(other)+.75&&
+        (!loadedReturn||
+          Math.abs((other.x-unit.x)*vy-(other.y-unit.y)*vx)<=
+            (this.unitRadius(unit)+this.unitRadius(other))*Math.sqrt(.84)+.06))
         .sort((a,b)=>Math.hypot(a.x-unit.x,a.y-unit.y)-
           Math.hypot(b.x-unit.x,b.y-unit.y))[0];
       if(!blocker)return false;

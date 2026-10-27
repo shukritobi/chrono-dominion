@@ -180,3 +180,20 @@ from instrumentation alone.
 The production movement engine now has a narrow fallback when a **full (360-credit) harvester** is blocked by a friendly **Hold-position** unit. Previously, the loaded truck had priority, asked the stationary blocker to move, and stopped when the sentry refused. The truck can now attempt its **own** temporary lateral pocket using the same collision, A* reachability and terrain checks already used for ordinary right-of-way maneuvers. The fallback applies only to Hold-position blockers after a real movement stall triggers `tryTrafficYield`; ordinary moving or stunned blockers keep the original priority behavior because broad fallback detours failed the natural-match economy gate (PR #71, initial revision). it never forces Hold units to move, teleports through buildings, or changes the refinery target, harvesting income, production costs or save format.
 
 Regression: `node tests/right-of-way-v16.test.mjs` checks a parked friendly Hold sentry, actual truck movement into a passing pocket and an impossible water-bounded corridor. `npm run balance:regression` must pass before merge. This addresses **one** potential congestion mechanism, not every Frostline stall; measure `fullCargoStallEvents` and ore income in the 720-second simulation separately.
+
+## Loaded-return right-of-way lane selection (28 October 2026)
+
+When a **player-owned** full-cargo harvester requests friendly traffic yielding, it now ignores
+nearby allies whose center lies outside the moving truck's collision-width
+travel corridor. Previously, the nearest friendly could be beside the road;
+that bystander would receive a yield order while an actual Hold-position
+sentry remained in front of the truck. The loaded truck can now use its
+existing safe lateral pocket around the correct Hold sentry. No refinery
+routing, teleportation, unit statistics, save fields or general unit traffic
+priority is changed. Empty/partially loaded trucks **and all AI harvesters** keep\ntheir existing rules. A broader AI application failed the natural-match\neconomy gate (Ashen Basin 10,440 vs 15,120 baseline; Frostline 6,120 vs\n9,000), so it was withheld rather than deployed.
+
+Regression: `node tests/right-of-way-v16.test.mjs` includes an off-axis
+bystander nearer than the actual blocker and a partial-load compatibility
+case. Natural-match income, deliveries and prolonged stalls must still be
+verified using `npm run balance:regression`; this targeted correction is
+not a claim that all Frostline stalls are resolved.
