@@ -601,3 +601,67 @@ compact at 80px; add larger distinct shards in a future focused polish if
 needed. These are **preview-only**, not in the playable game. No approved
 artwork, game manifests or live sprites were changed. Next: beam defense
 critical/destroyed/power-out, then 32-facing vehicle tests.
+
+
+## 2026-10-27 Three-faction beam defense extended-state Blender review (passed)
+
+**Preview-only.** Original Coalition accelerator, Federation induction-furnace
+and Psionic monolith defense buildings now have independently editable
+**critical, destroyed and power-out** states. The original five-frame
+**160x800 RGBA** atlas contract remains unchanged. Each faction has a
+second saved .blend with **nine separate hidden wreckage meshes** (four
+critical, five destroyed), plus three independent **160x160 RGBA** state
+PNGs. None is wired into the game or published to a live art manifest.
+
+- [Initial full three-faction headless Blender render and pixel QA, passed
+  #40436425113](https://github.com/shukritobi/chrono-dominion/actions/runs/40436425113).
+  [Original preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40436425113/artifacts/12704516859).
+  First pass succeeded all numerical gates but inspection of actual
+  160px/80px contact sheets revealed that Federation and Psionic destroyed
+  wreckage was largely hidden inside the intact lower structure.
+- [Focused corrected two-faction Blender rerender, passed
+  #40436882994](https://github.com/shukritobi/chrono-dominion/actions/runs/40436882994).
+  [Final consolidated artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40436882994/artifacts/12703923282).
+  Reused the already verified three original source .blend files and three
+  five-frame atlases from the first run; **did not rerender** Coalition or
+  any original atlas. Moved the broken Federation coil/induction equipment
+  and Psionic fallen crystal blades **above** the intact rooflines so they
+  are visible at 80px. The initial focused run
+  [#40436829067](https://github.com/shukritobi/chrono-dominion/actions/runs/40436829067)
+  failed at Python compile due to literal escaped newlines in comments;
+  [source fix](https://github.com/shukritobi/chrono-dominion/commit/a555f9fedf0b432b25c9c43d52d254799c89fbc1)
+  passed on the rerun without changing any baseline atlas.
+- [Editable geometry renderer](../../tools/blender/preview_beam_extended_states.py),
+  [strict PNG QA](../../tools/blender/qa_beam_extended_states.py),
+  [full review workflow](../../.github/workflows/beam-extended-states-review.yml),
+  [focused repair workflow](../../.github/workflows/beam-wreckage-visual-repair.yml),
+  and [draft stacked review PR #25](https://github.com/shukritobi/chrono-dominion/pull/25).
+  The first workflow is frozen to manual dispatch to avoid duplicate jobs.
+- All three original atlas SHA-256 values were checked after both stages:
+  Coalition `fde8b650c6887801006f5bd208f3b82ce1bb8f12869e8385bdad01f3381aed04`;
+  Federation `13eeb21f7eaf1546e1b8a0294d4b942b9773ee0c598a7a01caa96b187b83eb64`;
+  Psionic `6154c074ebf81774a3368d06a592354c05d150695ed29ebd9c92cd7afa357dc9`.
+  Source-reopen headless Blender checks verified nine hidden editable meshes
+  in each source (Coalition in full pass, Federation and Psionic in repair).
+
+| Beam defense | Critical alpha 160 / 80 | Destroyed alpha 160 / 80 | Power-out alpha 80 | Power-out changed RGBA 80 |
+|---|---:|---:|---:|---:|
+| Coalition | 518 / **140** | 778 / **217** | **0** | **1,259** |
+| Federation | 339 / **85** | 704 / **176** | **0** | **1,351** |
+| Psionic | 294 / **80** | 950 / **247** | **0** | **1,253** |
+
+Actual downloaded final contact sheets at **160px and 80px** were inspected.
+Federation destroyed now visibly shows jagged fallen copper equipment instead
+of a clean brown bunker. Psionic destroyed now exposes multiple violet
+crystal fragments over its collapsed lower plinth. Relative to the first
+pass, the corrected destroyed images changed **1,075 Federation** and
+**1,112 Psionic** RGBA pixels at 80px; Coalition changed **zero**.
+The strict 80px alpha gates (critical >=45; destroyed >=90) and power-out
+gates (alpha <30; changed RGBA >=100) all passed. Power-out darkens
+emissive parts without changing silhouette.
+
+**Remaining limitation:** These are static one-angle building previews.
+Separate extra-state images are not part of the five-frame runtime atlas.
+Further work: original 32-facing moving vehicle and destruction poses,
+then integrate only after gameplay/art approval. No production textures,
+manifest, or live runtime were modified.
