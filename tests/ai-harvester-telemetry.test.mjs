@@ -68,4 +68,8 @@ assert.equal(route.threatenedSamples,2,
 assert.equal(JSON.stringify(route).includes('_movement'),false,
   'internal streak tracking must not leak into reports or saved fields');
 
+assert.throws(()=>observeHarvesterStep(route,
+  [{id:17,hp:100,load:360}],[h(17,100,360,1,1)],0,0,16),
+  /Invalid harvester position snapshot/,
+  'a missing before-step position must fail rather than silently record zero travel');
 console.log('PASS: ore telemetry counts actual deaths, damage, delivery gaps, visible threats cargo estimates, actual travel, stalled returns and exposed ore routes');
