@@ -92,13 +92,36 @@ for(const faction of ['coalition','federation','psionic']){
   g.add(1,'factory',24,23);g.add(1,'radar',23,25);
   g.add(1,'generator',21,24);g.add(1,'generator',22,20);
   g.add(1,'tank',23,21);g.add(1,'tank',23,20);
-  g.time=100;g.players[1].credits=1800;
+  g.time=150;g.players[1].credits=1800;
   assert.equal(g.power(1).low,false,'aviation saving fixture must be powered');
   g.runAI();
   assert.equal(queued(g,'harvester').length,0,
     faction+': do not divert Air Command savings to extra harvesters');
   assert.equal(g.players[1].credits,1800,
     faction+': keep the entire Air Command reserve while banking');
+
+  // A second early harvester should not strand the AI behind the old
+  // 2,600-credit radar threshold: the 900-credit radar needs only a
+  // 650-credit emergency power reserve.
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=150;g.players[1].credits=1550;
+  g.queues.push({side:1,key:'soldier',elapsed:0,total:2});
+  assert.equal(g.power(1).low,false,'radar purchase fixture must be powered');
+  g.runAI();
+  assert.equal(alive(g,'radar').length,1,
+    faction+': affordable radar must not wait for 2,600 credits');
+  assert.equal(g.players[1].credits,650,
+    faction+': radar purchase leaves the emergency generator reserve');
+  assert.equal(alive(g,'radar')[0].built,false,'radar still takes time to construct');
+
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=150;g.players[1].credits=1549;
+  g.queues.push({side:1,key:'soldier',elapsed:0,total:2});
+  g.runAI();
+  assert.equal(alive(g,'radar').length,0,
+    faction+': radar must not consume the generator reserve');
 
   reset();
   alive(g,'harvester')[0].hp=0;
