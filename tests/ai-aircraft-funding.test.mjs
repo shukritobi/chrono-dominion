@@ -43,7 +43,8 @@ for(const faction of ['coalition','federation','psionic']){
     g.add(1,'tank',23,21);
     g.time=260;g.queues=[];
     assert.equal(g.power(1).low,false,'fixture must be powered');
-    assert.ok(g.prereq(1,'aircraft'),'fixture must unlock aircraft');
+    assert.equal(g.prereq(1,'aircraft'),airfieldBuilt,
+      'only an operational airfield can produce aircraft');
   };
 
   reset();
