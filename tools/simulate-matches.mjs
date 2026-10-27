@@ -12,6 +12,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
 
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8')
   .replace('  new Game();','  window.__balanceGame=new Game();');
@@ -135,11 +136,49 @@ function checkIntegrity(g,tag){
   assert.ok(g.projectiles.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)),
     tag+': invalid projectile coordinates');
 }
+function aviationSnapshot(g){
+  const owned=kind=>g.entities.filter(e=>e.owner===1&&e.kind===kind&&e.hp>0);
+  const structures=g.entities.filter(e=>e.owner===1&&e.type==='building'&&e.hp>0&&e.built);
+  return {
+    time:Number(g.time.toFixed(1)),credits:Math.floor(g.players[1].credits),
+    hasFactory:owned('factory').some(e=>e.built),
+    hasRadar:owned('radar').some(e=>e.built),
+    airfieldOwned:owned('airfield').length>0,
+    airfieldBuilt:owned('airfield').some(e=>e.built),
+    harvesters:owned('harvester').length,
+    armor:owned('tank').length+owned('heavy').length,
+    aircraft:owned('aircraft').length,
+    threatened:g.entities.some(e=>e.owner===0&&e.type==='unit'&&e.hp>0&&
+      e.kind!=='harvester'&&structures.some(b=>Math.hypot(b.x-e.x,b.y-e.y)<8)&&
+      g.sideCanSee(1,e)),
+    powerLow:g.power(1).low,
+    queueKey:g.queues.find(q=>q.side===1)?.key??null
+  };
+}
 function runScenario(map,difficulty,mi,di){
   const playerFaction=FACTIONS[(mi+di)%3];
   const enemyFaction=FACTIONS[(mi+di+1)%3];
   const {game:g}=createGame();
   g.newMatch({map,difficulty,playerFaction,enemyFaction,startingCredits:5000});
+  const aiAviation={decisions:{},recent:[],maxCreditsAfterAirfield:0,airfieldDecisionTicks:0};
+  if(progression){
+    // Record post-decision state at real planner ticks, without altering its logic.
+    const originalRunAI=g.runAI.bind(g);
+    g.runAI=()=>{
+      const result=originalRunAI();
+      const state=aviationSnapshot(g),reason=classifyAviationBlocker(state);
+      aiAviation.decisions[reason]=(aiAviation.decisions[reason]||0)+1;
+      if(state.airfieldOwned){
+        aiAviation.airfieldDecisionTicks++;
+        aiAviation.maxCreditsAfterAirfield=Math.max(aiAviation.maxCreditsAfterAirfield,state.credits);
+      }
+      aiAviation.recent.push({time:state.time,reason,credits:state.credits,
+        armor:state.armor,harvesters:state.harvesters,powerLow:state.powerLow,
+        queueKey:state.queueKey});
+      if(aiAviation.recent.length>12)aiAviation.recent.shift();
+      return result;
+    };
+  }
   const base=g.entities.filter(e=>e.kind==='hq');
   assert.equal(base.length,2);
   assert.ok(!g.fog[28]?.[27]?.seen,'fresh map must not expose the opposing command base');
@@ -227,7 +266,7 @@ function runScenario(map,difficulty,mi,di){
     reconAlive,reconLost:Math.max(0,observedRecon.size-reconAlive),
     airfieldSeen,aircraftBuilt:observedAircraft.size,aircraftAlive,
     aircraftLost:Math.max(0,observedAircraft.size-aircraftAlive),
-    aiMilestones,firstAircraftQueuedAt,firstAircraftDeployedAt};
+    aiMilestones,aiAviation,firstAircraftQueuedAt,firstAircraftDeployedAt};
 }
 const results=[];
 for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
@@ -272,6 +311,11 @@ const report={
     casesWithAITechLabs:results.filter(r=>r.aiMilestones.tech.operationalAt!==null).length,
     casesWithAIAirfields:results.filter(r=>r.aiMilestones.airfield.operationalAt!==null).length,
     casesWithAIQueuedAircraft:results.filter(r=>r.firstAircraftQueuedAt!==null).length,
+    aiAviationBlockers:results.reduce((counts,r)=>{
+      for(const [reason,n] of Object.entries(r.aiAviation.decisions))
+        counts[reason]=(counts[reason]||0)+n;
+      return counts;
+    },{}),
     casesWithAircraft:results.filter(r=>r.aircraftBuilt>0).length,
     totalAircraftLost:results.reduce((n,r)=>n+r.aircraftLost,0),
     meanAISurveyPercent:Number((results.reduce((n,r)=>n+r.aiSurveyPercent,0)/results.length).toFixed(1)),
@@ -297,6 +341,10 @@ assert.equal(results.length,progression?3:9,
 if(progression){
   assert.equal(new Set(results.map(r=>r.enemyFaction)).size,3,
     'natural progression must cover all three AI factions');
+  assert.ok(results.every(r=>Object.values(r.aiAviation.decisions).reduce((n,v)=>n+v,0)>0),
+    'each natural progression match must observe AI planning decisions');
+  assert.ok(results.every(r=>r.aiAviation.recent.every(s=>Number.isFinite(s.credits)&&s.credits>=0&&Number.isFinite(s.time))),
+    'aviation samples must have valid credits and time');
   assert.ok(report.summary.casesWithAIFactories>=1,
     'extended progression must reach an operational AI factory in at least one scenario');
 }
