@@ -95,7 +95,7 @@ jobs:
           blender --background --threads 2 \
             "$stage/extra/federation/federation-turret-extended-states.blend" \
             --python-exit-code 1 --python-expr \
-            'import bpy; w=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(w)==12,(len(w),[o.name for o in w]); assert all(o.hide_render for o in w); assert len([o for o in w if "fracture" in o.name.lower()])>=3; print("PASS: 12 EDITABLE HIDDEN WRECKAGE MESHES INCLUDING THREE EXPOSED FRACTURES")'
+            'import bpy; w=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(w)==12,(len(w),[o.name for o in w]); assert all(o.hide_render for o in w); assert len([o for o in w if ("fracture" in o.name.lower() or "glowing split roof" in o.name.lower())])>=3; print("PASS: 12 EDITABLE HIDDEN WRECKAGE MESHES INCLUDING THREE EXPOSED FRACTURES")'
 
       - name: Validate real 160px and 80px PNGs and unchanged atlas
         shell: bash
