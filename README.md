@@ -18,6 +18,12 @@
 - Added six deterministic, real-engine aircraft engagements: all three factions each run an unopposed strike and a powered Skyguard defense. The exercise measures projectile hits, aircraft survival, ammunition reloads and time spent servicing at an Air Command; it does **not** claim human win rates or mobile FPS.
 - Run `npm run balance:air` for console telemetry or `node tools/simulate-air-engagements.mjs --out=air-report.json` for JSON. The original nine-map/difficulty ground balance matrix remains unchanged. Both exercises now run in CI; their reports are archived together. See [air engagement verification](docs/AIR-ENGAGEMENT-BALANCE.md).
 
+### Extended air-wing and AI aircraft production checks (post-v2.41)
+
+- The production-engine aviation lab now includes six three-aircraft wing encounters (with/without two powered Skyguard batteries) and three paid AI aircraft production checks, in addition to the original six single-plane engagements.
+- The AI checks exercise actual production queues and spending; wing checks record simultaneous combat, aircraft losses, rearming and repair-budget integrity. These are scripted tests, not proof of natural-match aircraft frequency or real-device frame rates.
+- Run `npm run balance:air`; CI archives the expanded JSON report. [Methodology](docs/AIR-ENGAGEMENT-BALANCE.md).
+
 ### v2.40 Aircraft landing and servicing animations
 
 - Returning aircraft now visibly descend when they reach a friendly, living Air Command. The Blender atlas and original vector renderer share a smooth touchdown/takeoff transition, a pulsing ground-service halo, reduced engine glow and deployed vector landing gear.
