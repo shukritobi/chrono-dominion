@@ -104,6 +104,7 @@ jobs:
           node tests/fog-visibility-v241.test.mjs
           node tests/ai-skyguard-scaling-v242.test.mjs
           node tests/ai-construction-frontier.test.mjs
+          node tests/ai-aviation-investment.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
@@ -196,6 +197,7 @@ jobs:
           test -f tests/sensor-index-v239.test.mjs
           test -f tests/aircraft-service-visual-v240.test.mjs
           test -f tests/fog-visibility-v241.test.mjs
+          test -f tests/ai-aviation-investment.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
