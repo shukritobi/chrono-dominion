@@ -8,6 +8,11 @@
 
 
 
+### Natural AI technology progression laboratory (post-v2.42)
+
+- The existing production-engine balance lab now records when enemy generators, refineries, factories, radar, technology labs and Air Commands start construction and become operational, plus first aircraft queue/deployment times. These are **observed events**, not pre-granted tech.
+- Run `npm run balance:progression` for three 720-second, standard-difficulty matches spanning all three AI factions. CI archives `progression-report.json` separately from the nine-scenario ground matrix and controlled aviation lab. This establishes a reproducible baseline; a missing aircraft milestone remains visible rather than being reported as a success. [Methodology](docs/AI-NATURAL-PROGRESSION.md).
+
 ### Post-v2.42 AI construction expansion fix
 
 - Enemy AI now searches legal construction locations around established friendly buildings when the HQ construction ring is exhausted. It still tries the HQ first, uses the existing supply-radius and collision rules, and retains frontline placement for threatened turrets.
