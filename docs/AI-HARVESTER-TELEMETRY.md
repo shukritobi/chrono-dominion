@@ -174,3 +174,9 @@ Verify with `node tests/harvester-move-telemetry.test.mjs`,
 `npm run balance:progression`, and the unchanged
 `npm run balance:regression` economy guard. Do not infer improved harvesting
 from instrumentation alone.
+
+## Full-cargo harvester detour around an immovable friendly unit (28 October 2026)
+
+The production movement engine now has a narrow fallback when a **full (360-credit) harvester** is blocked by a friendly unit that cannot accept a traffic-yield order. Previously, the loaded truck had priority, asked the blocker to move, and stopped if that unit was holding position, stunned or lacked a reachable passing pocket. The truck can now attempt its **own** temporary lateral pocket using the same collision, A* reachability and terrain checks already used for ordinary right-of-way maneuvers. The fallback runs only after a real movement stall triggers `tryTrafficYield`; it never forces Hold units to move, teleports through buildings, or changes the refinery target, harvesting income, production costs or save format.
+
+Regression: `node tests/right-of-way-v16.test.mjs` checks a parked friendly Hold sentry, actual truck movement into a passing pocket and an impossible water-bounded corridor. `npm run balance:regression` must pass before merge. This addresses **one** potential congestion mechanism, not every Frostline stall; measure `fullCargoStallEvents` and ore income in the 720-second simulation separately.
