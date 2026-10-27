@@ -9,6 +9,17 @@
 
 
 
+### Loaded harvester collision-reversal diagnostics (post-v2.42)
+
+- The natural-match simulator now observes loaded ore trucks **before and after
+  unit separation**, distinguishing movement never attempted from movement
+  cancelled by collision resolution. Six-second summaries are attached to
+  individual stall cases, with aggregate counts for opposed, near-cancelled
+  and stationary frames. This is **headless telemetry only**, not a gameplay
+  fix; saves, production movement and the economic baseline are unchanged.
+  [Methodology](docs/AI-HARVESTER-TELEMETRY.md) ·
+  [regression](tests/harvester-separation-telemetry.test.mjs).
+
 ### Individual AI full-cargo stall snapshots (post-v2.42)
 
 - The 720-second match report now preserves up to 12 six-second loaded-stall

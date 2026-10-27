@@ -99,3 +99,46 @@ credits, AI planning, save format or original artwork changes. Run
 `node tests/ai-harvester-telemetry.test.mjs` and
 `npm run balance:progression` to inspect the archived stall cases before
 attempting another refinery routing change.
+
+## Movement versus collision separation audit (28 October 2026)
+
+The natural-match laboratory now samples each **AI harvester carrying a full
+360-credit load** at three exact points: the beginning of a simulation tick,
+immediately before `separateUnits()`, and immediately after it. The difference
+between the first two positions is movement attempted by the real engine; the
+difference between the last two is displacement introduced by unit separation.
+
+The new `aiHarvesterSeparation` report measures loaded frames, distance moved
+before separation, distance displaced by separation, final net distance,
+frames where separation opposed the attempted movement, near-cancelled
+movement, and frames where no movement was attempted at all. Each
+`fullCargoStallCases[].returnAccess.separationMotion` includes a bounded
+six-second summary for that specific truck. This separates a harvester that
+never advances from one whose advance is repeatedly undone by traffic
+separation. It does **not** prove the underlying reason for either behavior.
+
+The sampling wrapper exists **only in the headless simulation**; the
+production engine, saves, AI spending and art are untouched. History is
+non-serializable and limited to 64 samples per truck and six seconds.
+Run `node tests/harvester-separation-telemetry.test.mjs` for pure diagnostics
+and `npm run balance:progression` for natural-match observations. Compare
+the new measurements with the three previously observed Frostline stalls
+before attempting a movement correction; any change must still pass
+`npm run balance:regression`.
+
+### First verified natural-match result (28 October 2026)
+
+PR verification ran the complete nine-scenario matrix and three 720-second
+natural matches successfully. The extended matches recorded **3,092 loaded
+harvester frames, zero opposing-separation frames and zero near-cancelled
+frames**. Each of the three Frostline six-second stall cases showed **31/31
+frames without a meaningful pre-separation movement attempt**, with zero
+separation displacement. The existing ore economy regression guard passed
+with the unchanged 3,960 / 15,120 / 9,000 AI ore-income baseline.
+
+This **rejects the previous collision-separation rollback hypothesis** for
+the reproduced stalls. The next investigation should instrument why the
+normal movement routine fails to advance (e.g. lane admission, dynamic
+occupancy, stun or stale waypoints), rather than adjusting `separateUnits()`
+blindly. A clear step in the snapshot collision probe does not prove that
+the live `move()` call passed its lane checks.
