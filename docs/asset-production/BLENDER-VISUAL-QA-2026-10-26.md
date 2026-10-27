@@ -564,3 +564,40 @@ not yet validated. Do not claim visual success until the actual Blender
 job and image QA pass and the resulting 80px/160px contact sheets are
 inspected. If a silhouette gate fails, improve the model rather than
 lowering the threshold. Next: beam defenses and vehicle 32-facing tests.
+
+
+### Final CI result: three-faction airfields, 27 October 2026
+
+[Successful targeted headless Blender workflow #40430282519](https://github.com/shukritobi/chrono-dominion/actions/runs/40430282519)
+on isolated preview branch, commit `e74b190b807109d2cb19dc267a9ead411754f540`.
+[Download original workflow artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40430282519/artifacts/12701262973).
+
+The job rendered only three airfield models and their three extra-state
+previews, reopened all **three editable extended .blend** sources and verified
+**seven hidden, editable wreckage meshes per source**. The downloaded artifact
+contained three 160x800 RGBA five-frame atlases, six editable .blend files,
+nine independent 160x160 RGBA extra-state PNGs, 160px/80px contact sheets,
+and JSON pixel QA. The three atlas checksums passed unchanged.
+
+Actual downloaded 160px and 80px PNG contact sheets were visually inspected.
+Coalition's intact roof/control tower are absent in wreckage; Federation's
+flak cupola and heavy bunker roof visibly collapse; Psionic's luminous
+landing arch is broken in critical and its levitation deck crumples in
+destroyed. Power-out preserves the silhouette and turns off illumination.
+
+| Airfield | Critical alpha 160/80 | Destroyed alpha 160/80 | Power-out alpha 80 | Power-out RGBA 80 |
+|---|---:|---:|---:|---:|
+| Coalition | 641 / **162** | 1,897 / **479** | **0** | **1,295** |
+| Federation | 738 / **187** | 2,486 / **635** | **0** | **1,389** |
+| Psionic | 480 / **130** | 595 / **159** | **0** | **1,079** |
+
+All 80px strict gates passed. Atlas SHA-256:
+Coalition `c5a9b2f62f0d9c52aaba60538471011c884e7f73ea7cca23ad463af7fe826e88`;
+Federation `d33219dcf4bec76f938def53a573a2e1ab6e83aba775eec73b5821d7f1cdbb4d`;
+Psionic `bbb2cfae803133fc3253976f63ccb32a02ab8cadcf515b76f87cbd8387675935`.
+
+**Visual limitation:** Psionic destroyed airfield remains comparatively
+compact at 80px; add larger distinct shards in a future focused polish if
+needed. These are **preview-only**, not in the playable game. No approved
+artwork, game manifests or live sprites were changed. Next: beam defense
+critical/destroyed/power-out, then 32-facing vehicle tests.
