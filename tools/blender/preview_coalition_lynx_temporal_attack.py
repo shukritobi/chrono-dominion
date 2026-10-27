@@ -162,7 +162,7 @@ def main():
             running.location.z = (0, -.012, -.072, .010)[phase_index]
             running.rotation_euler.y = (0, -.007, .040, -.012)[phase_index]
             turret.rotation_euler.z = (0, .022, -.055, .012)[phase_index]
-            gun.location.x = (.63, .60, .42, .57)[phase_index]
+            gun.location.x = (.63, .40, .42, .57)[phase_index]  # lock: retract to prevent 1px clipping at facings 03/19
             gun.rotation_euler.y = (0, -.010, -.055, .017)[phase_index]
             for i, obj in enumerate(coils):
                 obj.hide_render = phase == "recover" and i > 0
