@@ -13,7 +13,7 @@ def delta(a,b,alpha=False):
         a,b=a.getchannel("A"),b.getchannel("A")
     diff=ImageChops.difference(a,b)
     return sum(1 for px in diff.getdata()
-               if any(px) if isinstance(px,tuple) else px)
+               if (any(px) if isinstance(px,tuple) else bool(px)))
 
 
 def main():
