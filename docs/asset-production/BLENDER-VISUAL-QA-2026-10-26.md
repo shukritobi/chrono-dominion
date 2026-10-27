@@ -1209,3 +1209,13 @@ flash may improve it without rerendering unchanged validated poses.
 workflow, register and documentation files relative to its parent preview
 branch. No live textures, game manifests or runtime code were changed.
 The Bull remains **preview-only**, not integrated into gameplay.
+
+
+## 2026-10-27 Psionic Viper Light Tank (PSI-VEH-002) P0 pilot — targeted render in verification
+
+**Preview-only, not integrated.** Following the validated Coalition Lynx and Federation Bull P0 tank pilots, this branch authors an independently modeled Psionic hovering skirmisher. Geometry includes two separately articulated gravity skids, two independent forward crescent fangs, a suspended neural core, paired phase emitters and eight individually editable wreckage-only meshes. Unlike the two tracked P0 pilots, the Viper is levitating, narrow and bifurcated.
+
+- [New original Blender model](../../tools/blender/preview_psionic_viper_32.py), [real PNG QA](../../tools/blender/qa_psionic_viper_32.py) and [targeted preview workflow](../../.github/workflows/psionic-viper-32-review.yml).
+- The workflow renders **only** PSI-VEH-002: 32 facings × idle/move/attack/destroyed = **128** independent 160×160 transparent RGBA PNGs; also produces 160px and 80px contact sheets, a sprite atlas, JSON pixel measurements and an editable .blend. Source-reopen checks assert two skids, two mandibles, two ion apertures and eight initially hidden wreckage meshes.
+- Acceptance requires all 128 PNGs to be populated, unclipped and nonduplicate; at 80px each facing must have >=20 changed RGBA pixels for movement, >=40 for attack, >=65 changed alpha pixels for destruction, and >=20 changed RGBA pixels between neighboring idle facings. These are minimum automated gates, **not** a substitute for inspecting the actual downloaded sheets.
+- **Status at commit:** workflow triggered by preview-branch push; awaiting verified run ID, pixel ranges and reopened .blend evidence. Do not claim passed until checks and actual PNG inspection are complete. Existing Coalition Lynx and Federation Bull renders are not rerendered. No production sprites, published manifests or game code are modified.
