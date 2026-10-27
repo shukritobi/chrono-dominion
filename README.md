@@ -7,6 +7,12 @@
 > **Project status (2026-10-27):** Playable browser skirmish prototype `v2.42.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
 
+
+### Post-v2.42 AI construction expansion fix
+
+- Enemy AI now searches legal construction locations around established friendly buildings when the HQ construction ring is exhausted. It still tries the HQ first, uses the existing supply-radius and collision rules, and retains frontline placement for threatened turrets.
+- Prevents later radar/tech/airfield construction from stalling solely because the initial HQ area is crowded. Costs, power, prerequisites, saves and original art remain unchanged. [Regression](tests/ai-construction-frontier.test.mjs) · [implementation notes](docs/AI-CONSTRUCTION-FRONTIER.md).
+
 ### v2.42 Sensor-informed AI air defense scaling
 
 - Enemy AI builds a second Skyguard when its own reconnaissance recently detected at least **two distinct hostile aircraft**. One observed plane warrants one battery; duplicate sightings, unseen planes, stale reports and non-aircraft contacts cannot increase the cap.
