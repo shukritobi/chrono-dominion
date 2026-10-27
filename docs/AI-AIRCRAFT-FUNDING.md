@@ -13,3 +13,9 @@ When an AI has purchased an Air Command, has a working radar, at least one survi
 ## Verification and limits
 
 Run `node tests/ai-aircraft-funding.test.mjs` for a real-engine three-faction regression covering the reserve boundary, unfinished airfields, paid queue and deployment, emergency threats, harvester replacement and save/load. This is a deterministic prerequisite-complete test. The existing `npm run balance:progression` remains the honest measure of whether contested matches naturally reach aircraft; results should be compared before claiming that the real-match gap is closed. Real browser and mobile performance are not measured.
+
+## Post-airfield attrition recovery (27 October 2026)
+
+The two-tank requirement still applies when saving for an **unbuilt** Air Command. After paying for the airfield, however, losing one of those tanks no longer cancels aviation savings: one surviving tank or heavy and no observed local invasion are sufficient to continue banking for the first or second aircraft. Without any surviving ground armour, ordinary defensive recruitment resumes. Power shortages, harvester loss and observed attacks still override the reserve. This targets the observed gap between controlled aircraft-production tests and contested matches without creating free aircraft or changing saves.
+
+The expanded `tests/ai-aircraft-funding.test.mjs` verifies all three factions at 1,800 and 2,250 credits after losing one tank, paid deployment, saving for the second plane, and zero-tank recruitment. The 720-second progression laboratory remains the arbiter of **actual natural-match deployment**; do not infer a guaranteed improvement from the isolated regression alone.

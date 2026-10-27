@@ -2566,9 +2566,13 @@
       // Once an airfield is purchased, keep the aviation budget intact until
       // the first two planes are deployed. Never bank at the expense of a
       // harvester, basic ground cover, radar recovery or immediate defense.
+      // An Air Command was purchased behind a two-tank screen. If one tank
+      // falls before the first sortie, keep banking for air support instead
+      // of draining the budget on optional scouts, turrets or specialists.
+      // A completely lost ground screen still permits normal recruitment.
       const aviationInvestment=owned('airfield').length>0&&built('radar')&&
         owned('aircraft').length<2&&owned('harvester').length>0&&
-        owned('tank').length+owned('heavy').length>=2&&!threatened;
+        owned('tank').length+owned('heavy').length>=1&&!threatened;
       let choice=null;
       if(!owned('generator').length||shortage)choice='generator';
       else if(!owned('refinery').length)choice='refinery';
