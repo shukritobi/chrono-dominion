@@ -108,6 +108,7 @@ jobs:
           node tests/ai-aircraft-funding.test.mjs
           node tests/ai-ore-economy.test.mjs
           node tests/ai-aviation-diagnostics.test.mjs
+          node tests/ai-harvester-safety.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check

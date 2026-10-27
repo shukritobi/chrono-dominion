@@ -57,6 +57,8 @@
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   // Render-only landing transitions follow entity identity, never serialized saves.
   const airServiceVisuals=new WeakMap();
+  // Temporary retreat orders are deliberately not serialized into v1 saves.
+  const harvesterEvacuations=new WeakMap();
   const turnToward=(current,wanted,maxDelta)=>{const delta=Math.atan2(Math.sin(wanted-current),Math.cos(wanted-current));return current+clamp(delta,-maxDelta,maxDelta);};
   const iso=(x,y)=>({x:(x-y)*TW/2,y:(x+y)*TH/2});
   const rand=(x,y,s=0)=>{let v=Math.sin(x*123.17+y*78.233+s*103.13)*43758.5453;return v-Math.floor(v);};
@@ -1686,6 +1688,32 @@
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
         b.kind==='refinery'&&b.built);
       if(!refinery)return;
+      // AI ore trucks are economic lifelines, not combat units. Pull them
+      // toward their refinery when a nearby attacker is actually visible.
+      // Keep retreating briefly after contact breaks to prevent oscillation.
+      const danger=e.owner===1&&this.entities.some(u=>
+        u.owner!==e.owner&&u.hp>0&&u.type==='unit'&&
+        u.kind!=='harvester'&&e.hp<e.maxHp*.85&&
+        dist(e,u)<4.5&&this.sideCanSee(e.owner,u));
+      if(danger){
+        if((harvesterEvacuations.get(e)||0)<=this.time){
+          e.oreIndex=-1;e.oreScanAt=0;e.oreLastDistance=null;
+        }
+        harvesterEvacuations.set(e,this.time+16);
+      }
+      if(e.owner===1&&(danger||(harvesterEvacuations.get(e)||0)>this.time)){
+        if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
+        else{
+          // Banking a partial cargo is safer than losing it on the ore field.
+          if(e.load>0&&e.work<=0){
+            this.players[e.owner].credits+=e.load;
+            if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
+            e.load=0;e.work=.6;
+          }
+          if(!danger)harvesterEvacuations.delete(e);
+        }
+        return;
+      }
       if(e.load>=360){
         if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
         else if(e.work<=0){
