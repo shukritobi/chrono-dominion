@@ -760,3 +760,66 @@ production manifests or runtime files were modified.
 
 Next: review and polish Psionic phase-core readability at 80px, then
 continue missing faction vehicle classes and 32-direction destruction.
+
+
+## 2026-10-27 Federation Hailstorm rocket artillery: original 32-facing preview
+
+**Preview-only; verified in the targeted Blender workflow, not installed in the game.**
+New original **FED-VEH-005** geometry is an eight-wheel Federation siege
+artillery chassis, not a recolored Coalition carrier or AR-9 recovery vehicle.
+It has eight independently editable wheel hubs, two independently modeled
+triple-rocket cassettes with six missile barrels, an elevating launcher rack,
+hydraulic rear stabilizers, an armored ammunition magazine, orange targeting
+optics, an attack-only rocket/exhaust, and **six independent hidden wreckage
+meshes**. Destroyed mode physically removes intact launch equipment and
+exposes broken missile pods, torn launcher and hot fracture surfaces.
+
+- [Original Blender modeling and four-state renderer](../../tools/blender/preview_federation_hailstorm_32.py):
+  32 directions × idle/move/attack/destroyed = **128 160×160 transparent RGBA
+  PNGs**, plus a compressed editable `.blend`.
+- [Strict PNG and 80px QA](../../tools/blender/qa_federation_hailstorm_32.py)
+  checks 128 frame bounds, all 32 adjacent facings, movement/attack changes,
+  and destroyed silhouette changes. It also generates a separate 5120×640
+  review atlas and 160px/80px contact sheets. It does **not** publish an
+  atlas compatible with the current game's 1/8-facing loader.
+- [Targeted preview-only workflow](../../.github/workflows/federation-hailstorm-32-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the editable source and
+  asserts six hidden wreckage meshes, eight independent wheel hubs, two
+  triple-rocket cassettes and six live missile barrels.
+- Modeling commit [5b3008a6](https://github.com/shukritobi/chrono-dominion/commit/5b3008a66f02e82526d10571982dcbbf331b4695);
+  QA commits [8f039d08](https://github.com/shukritobi/chrono-dominion/commit/8f039d08d2d9b4ce58104c67ba91c8590907df96)
+  and [5de0584e](https://github.com/shukritobi/chrono-dominion/commit/5de0584ed6e0cbab482ca4501c93f1120e07a6b3);
+  workflow commit [61ff4c96](https://github.com/shukritobi/chrono-dominion/commit/61ff4c967df965b623d2153a751aaa293706ef7e).
+- [Successful targeted Actions run #40459582654](https://github.com/shukritobi/chrono-dominion/actions/runs/40459582654)
+  passed script compilation, all 128 Blender renders, saved-source reopening,
+  all 80px image gates and artifact upload. The
+  [preview artifact #12713757701](https://github.com/shukritobi/chrono-dominion/actions/runs/40459582654/artifacts/12713757701)
+  was downloaded and extracted: **137,077-byte editable Blender source**,
+  128 PNG frames, 5120×640 review atlas, two contact sheets and JSON QA.
+  The actual 160px and 80px contact sheets were visually inspected.
+
+| Changed pixels at 80px | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA | **1,073** | 1,562 | 1,396.2 |
+| Attack vs idle RGBA | **802** | 1,231 | 1,054.5 |
+| Destroyed vs idle RGBA | **1,279** | 1,586 | 1,471.3 |
+| Destroyed vs idle alpha | **718** | 950 | 860.8 |
+| Adjacent-facing idle RGBA | **1,149** | 1,561 | 1,434.3 |
+
+Independent local recomputation of destroyed alpha differences at directions
+00/07/15/23/31 matched the JSON exactly: **867 / 918 / 871 / 867 / 819**
+pixels respectively. All 128 frames are present. At 80px the twin upper
+missile pods and long firing rocket remain identifiable, while destroyed
+mode visibly breaks the launcher and scatters orange-exposed fragments.
+
+**Visual limitations:** The idle-to-move suspension bob is small and the
+attack rocket appears like a narrow extended glowing rod at 80px rather
+than a fully staged launch animation. A later animation pass can add
+exhaust particles and multi-frame firing without replacing this validated
+model. This preview branch depends on unmerged [Psionic preview PR #31](https://github.com/shukritobi/chrono-dominion/pull/31)
+for shared original Blender helper primitives; [draft PR #33](https://github.com/shukritobi/chrono-dominion/pull/33)
+targets that preview branch. No older validated asset was rerendered.
+
+**Never overwrite unapproved game textures or manifests.** No live art,
+production atlas, runtime or gameplay files were modified. Next: continue
+remaining vehicle classes and plan the 32-facing loader separately.
