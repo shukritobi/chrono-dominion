@@ -1672,15 +1672,9 @@
       // Deposits can overlap a newly constructed refinery or sit beyond a
       // lake. Never select a shiny but physically unreachable ore pile.
       const excluded=(e.oreSkipUntil||0)>this.time?e.oreSkipIndex:-1;
-      // Enemy harvesters avoid only *currently observed* combat units. Never
-      // use hidden live enemy positions to select a supposedly safe deposit.
-      const threats=e.owner===1?this.entities.filter(u=>
-        u.owner!==e.owner&&u.hp>0&&u.type==='unit'&&
-        u.kind!=='harvester'&&this.sideCanSee(e.owner,u)):[];
       const candidates=this.ores.map((ore,index)=>({ore,index,d:dist(e,ore)}))
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
-          this.canOccupyUnit(e,ore.x,ore.y,true)&&
-          !threats.some(enemy=>dist(ore,enemy)<3.8))
+          this.canOccupyUnit(e,ore.x,ore.y,true))
         .sort((a,b)=>a.d-b.d||a.index-b.index);
       for(const {ore,index} of candidates){
         const path=this.findPath(e.x,e.y,ore.x,ore.y);
