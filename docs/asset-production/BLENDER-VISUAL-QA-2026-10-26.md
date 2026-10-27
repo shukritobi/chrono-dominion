@@ -1132,3 +1132,96 @@ textures, sprite manifests, runtime, or gameplay files changed.
 The 32-facing renderer is **not integrated** with the current game loader.
 [Draft review PR #43](https://github.com/shukritobi/chrono-dominion/pull/43)
 is stacked on unmerged [Psionic temporal preview PR #41](https://github.com/shukritobi/chrono-dominion/pull/41).
+
+
+## 2026-10-28 Coalition Lynx — four-phase 32-facing electromagnetic attack (pending render)
+
+**Preview-only; not in the playable game.** The validated Coalition Lynx
+(COA-VEH-002) still has its original 128-frame baseline and editable Blender
+source in [successful Actions #40494276431](https://github.com/shukritobi/chrono-dominion/actions/runs/40494276431).
+This follow-up **does not rerender that baseline**. It downloads the existing
+archived source and renders only **128 new 160×160 RGBA sprites** across
+32 directions × charge/lock/discharge/recover, saving a separate editable
+Blender source and 5120×640 preview atlas.
+
+- [Original temporal modeling code](../../tools/blender/preview_coalition_lynx_temporal_attack.py)
+  adds **12 independently editable meshes**: three inductive barrel coils,
+  two exposed capacitor rails, two expanding muzzle shockwave rings, one
+  tapered ion penetrator and four real jagged discharge-ribbon meshes
+  (10 vertices and four faces each). Turret traverse, cannon recoil,
+  chassis response and emissive geometry vary per phase. The eight
+  archived wreckage meshes, 12 wheel pivots and 22 tread cleats remain.
+- [Strict 160px/80px image QA](../../tools/blender/qa_coalition_lynx_temporal_attack.py)
+  reads actual PNGs, rejects clipped frames, weak consecutive phases,
+  duplicate adjacent directions and an attack too close to the archived
+  single-frame firing pose. It records per-facing changed-pixel counts,
+  a separate 5120×640 RGBA atlas, and both real-resolution contact sheets.
+- [Targeted preview workflow](../../.github/workflows/coalition-lynx-temporal-attack-review.yml)
+  reopens the saved .blend to verify editable mesh structure, downloads
+  only the original validated artifact, and checks the archived atlas
+  SHA-256 before and after. It cannot publish to game-art paths.
+- [Modeling commit](https://github.com/shukritobi/chrono-dominion/commit/2ad73213fa0adc034ebd86b0dbc0cfe3397ccb18);
+  [image QA commit](https://github.com/shukritobi/chrono-dominion/commit/1a12ffbc199bb15211f2c4ce38a152f95cdcb50f);
+  [workflow launch commit](https://github.com/shukritobi/chrono-dominion/commit/f4e83ab95efcadc61b06756458a7a60b2f07c9e0).
+  [Targeted Actions #40538288070](https://github.com/shukritobi/chrono-dominion/actions/runs/40538288070);
+  [draft PR #57](https://github.com/shukritobi/chrono-dominion/pull/57),
+  stacked on the original unmerged Lynx preview PR #43.
+
+**Validation pending.** No new 80px metrics, Blender reopen success or
+visual approval is claimed until the Actions run passes and its actual
+artifact is inspected. Keep the original Lynx atlas untouched, and do
+not integrate or publish any preview art without approval.
+
+
+### Final Coalition Lynx four-phase temporal attack QA — 28 October 2026
+
+**PASS; supersedes the pending state above.** [Targeted successful Actions
+#40538587949](https://github.com/shukritobi/chrono-dominion/actions/runs/40538587949)
+downloaded the previously validated Lynx model from run #40494276431
+without rerendering its 128 original frames. It rendered **128 NEW**
+160×160 RGBA temporal frames, reopened the **158,882-byte editable .blend**
+and verified **12 original hidden temporal meshes** (including four
+independent jagged ribbon meshes with 10 vertices and four faces each),
+eight retained hidden wreckage meshes, 12 roadwheel pivots and 22 tread
+cleats. The new preview atlas is **5120×640 RGBA**.
+
+[Artifact #12749816069](https://github.com/shukritobi/chrono-dominion/actions/runs/40538587949/artifacts/12749816069)
+was downloaded, and the **actual 160px and 80px contact sheets** were
+visually inspected. At 80px the Lynx retains its single long-bore gun
+silhouette: charge shows restrained induction coils, lock reveals an
+extended wave collar, discharge adds an enlarged white-blue shock ring
+and four mesh ribbons, and recover clears the field. Bright discharge
+rings are still a possible polish candidate but do not erase the turret.
+
+| Changed pixels at 80px across all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → Lock RGBA | **873** | 1,287 | 1,133.9 |
+| Lock → Discharge RGBA | **998** | 1,438 | 1,288.8 |
+| Discharge → Recover RGBA | **1,009** | 1,454 | 1,293.2 |
+| Discharge vs archived single attack RGBA | **1,009** | 1,499 | 1,304.0 |
+| Discharge vs archived idle RGBA | **1,005** | 1,455 | 1,286.1 |
+| Discharge vs archived idle alpha | **437** | 772 | 650.5 |
+| Adjacent Charge facings RGBA | **1,057** | 1,405 | 1,256.9 |
+
+Five independently recomputed 80px **Discharge vs archived Attack**
+RGBA pixel counts for facings **00 / 07 / 15 / 23 / 31** were
+**1,314 / 1,388 / 1,366 / 1,405 / 1,249**, each matching the archived
+JSON exactly. All 128 frames passed the nonempty RGBA, 160px alpha bounds,
+phase-change and adjacent-facing gates. The archived original atlas SHA-256
+was independently recomputed from the original ZIP and remained
+**4e7e21b95c96b29dd94e672671766b52772580d4ea22633cabe1151f24e2af7a**.
+
+**Honest failure and fix:** [first run #40538288070](https://github.com/shukritobi/chrono-dominion/actions/runs/40538288070)
+successfully rendered and reopened the Blender source but **failed pixel
+QA** because Lock facing 03 reached alpha bound x=159 and facing 19
+reached x=1 (the strict safe interval is 2–158). The failure was not
+suppressed or reclassified. [Geometry fix e3db2a38](https://github.com/shukritobi/chrono-dominion/commit/e3db2a386cf808fbfb95c48fef20fb9cf9da2e9e)
+retracted the Lock-phase gun mount by 0.20 Blender units; the next
+targeted workflow passed **without lowering any threshold**.
+
+**Production safety:** only Blender source, image QA, targeted workflow,
+asset register and documentation changed on
+[draft PR #57](https://github.com/shukritobi/chrono-dominion/pull/57),
+stacked on the unmerged Lynx PR #43. No production textures, game
+manifests, live art or runtime files were modified. The animation
+remains preview-only, not playable or approved for publication.
