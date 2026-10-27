@@ -503,3 +503,32 @@ The [corrective geometry commit](https://github.com/shukritobi/chrono-dominion/c
 removes the intact Psionic guard/lens during critical damage and elevates
 a physically broken fin beyond the old roofline; [targeted rerun #40424902726](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726)
 was launched. **Do not mark this pilot passed until the new actual PNG QA passes.**
+
+
+### Final validated three-faction turret review (27 October 2026)
+
+[Successful targeted Blender workflow #40424902726](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726)
+produced three original editable turret .blend sources, three independent
+extended-state .blend sources, three untouched five-frame 160x800 RGBA atlases,
+nine extra 160x160 RGBA PNGs, 80px/160px contact sheets, and JSON pixel QA.
+The extra sources were **reopened in headless Blender** and each had five
+separate hidden, editable wreckage meshes. All three original atlas SHA-256
+hashes passed post-render verification.
+
+| Faction | Critical alpha changed 160/80 | Destroyed alpha 160/80 | Power-out alpha 80 | Power-out RGBA changed 80 |
+|---|---:|---:|---:|---:|
+| Coalition | 399 / **102** | 503 / **127** | 0 | **1,060** |
+| Federation | 376 / **90** | 542 / **132** | 0 | **1,179** |
+| Psionic | 422 / **105** | 305 / **74** | 0 | **989** |
+
+The failed first Psionic critical pose changed just **5 alpha pixels at 80px**;
+after exposing broken crown geometry, the final pass changed **105**.
+Actual downloaded 160px and 80px contact sheets were inspected. The three
+factions remain visibly distinct. **Visual limitation:** the Federation
+destroyed pose is a clean low armored bunker with removed cannon, but
+scattered debris is still subtle at 80px. The next polish should make the
+front wall visibly fractured without making the pose clip its frame.
+
+[Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
+**Preview-only; no live textures or production manifests modified.**
+Next priority: airfields and beam defenses, then unfinished vehicles.
