@@ -823,3 +823,63 @@ targets that preview branch. No older validated asset was rerendered.
 **Never overwrite unapproved game textures or manifests.** No live art,
 production atlas, runtime or gameplay files were modified. Next: continue
 remaining vehicle classes and plan the 32-facing loader separately.
+
+
+## 2026-10-27 Coalition Autonomous Warden Tank — validated 32-facing preview
+
+**Preview-only; not approved for publication.** The new **COA-VEH-004**
+is an unmanned split-track sentinel, distinct from the Coalition Modular
+Support Carrier: two separately armoured track pods, animated individual
+cleats, chevron glacis, gyrostabilised faceted sensor crown, two ion accelerator
+barrels, panoramic sensor visor, illuminated optics, and eight independently
+editable wreckage meshes. The destroyed pose hides intact upper weapons and
+roof components, then exposes fallen cannons, ruptured capacitor, detached
+track guard and raised roof armour. No previously validated model is rerendered.
+
+- [New original Blender model and renderer](../../tools/blender/preview_coalition_warden_32.py)
+  saves an intact editable `.blend` and produces 32 directions ×
+  idle/move/attack/destroyed = **128 transparent 160px RGBA frames**.
+  Modeling commit [ae7d842a](https://github.com/shukritobi/chrono-dominion/commit/ae7d842ab2a05cdcb9da2d333f3384277ec80bfa).
+- [Strict pixel QA](../../tools/blender/qa_coalition_warden_32.py)
+  checks 128 frames, 160px alpha bounds, 80px movement and ion-attack
+  visibility, 80px destroyed alpha, and all 32 adjacent facing differences.
+  It generates a **5120×640 preview atlas**, 160px/80px contact sheets
+  and per-facing JSON. QA commit [4635adab](https://github.com/shukritobi/chrono-dominion/commit/4635adabe294ec5a19f38e08f008812d9f92033f).
+- The [targeted preview workflow](../../.github/workflows/coalition-warden-32-review.yml)
+  will compile the scripts, render only the new Warden in headless Blender
+  4.2.23, reopen the saved source to verify hidden editable wreckage, inspect
+  actual 160px/80px PNGs, and upload review-only artifacts.
+- **Verified:** [successful targeted Actions run #40471597359](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359)
+  passed script compilation, checksum-verified Blender 4.2.23 rendering of all
+  128 RGBA frames, reopening the **131,367-byte editable .blend**, and every
+  strict 80px pixel gate. The reopened source contains **8 hidden editable
+  wreckage meshes**, **18 individual track cleats**, and **2 ion barrels**.
+  [Artifact #12718354515](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359/artifacts/12718354515)
+  was downloaded and its actual 160px/80px contact sheets visually inspected.
+  The archive contains 128 PNGs, 5120×640 preview atlas, editable source,
+  two contact sheets and JSON pixel QA. No previously validated asset was
+  rerendered.
+
+| Changed pixels | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA at 80px | **925** | 1,233 | 1,111.8 |
+| Attack vs idle RGBA at 80px | **713** | 944 | 855.1 |
+| Destroyed vs idle RGBA at 80px | **985** | 1,261 | 1,164.8 |
+| Destroyed vs idle alpha at 80px | **557** | 722 | 639.8 |
+| Destroyed vs idle alpha at 160px | **933** | 1,376 | 1,120.7 |
+| Adjacent-facing idle RGBA at 80px | **1,008** | 1,226 | 1,136.3 |
+
+Independently recomputed 80px destroyed-alpha changes for facings
+00/07/15/23/31: **620 / 699 / 674 / 661 / 611** pixels, exactly matching
+the JSON report. At 80px, the twin-ion turret and bright orange battery
+rupture are identifiable, and the destroyed pose clearly loses the intact
+sensor crown. **Visual limitation:** the track-cleat movement is subtle
+at 80px, and the attack state is a single posed energy discharge rather
+than a temporal firing sequence. This is a preview, not a game-ready
+32-facing animation runtime.
+
+**Dependency:** based on the unmerged Federation Hailstorm preview branch
+([draft PR #33](https://github.com/shukritobi/chrono-dominion/pull/33)),
+which contains the shared original Blender modeling helpers. The current
+game loader supports 1/8 directions, not this separate 32-facing preview.
+No live texture, atlas manifest or gameplay file was modified.
