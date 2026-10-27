@@ -635,3 +635,48 @@ ladders, hydraulic extraction crane, winch drum and warning lights.
 per-facing 80px/160px pixel metrics, and visual inspection after the first
 targeted render. Repair genuine geometry failures rather than weakening
 thresholds. Do not claim success before artifact review.
+
+
+### Final verified Federation AR-9 review (27 October 2026)
+
+[First run #40448398281](https://github.com/shukritobi/chrono-dominion/actions/runs/40448398281)
+rendered **all 128** frames, but the source-reopen check incorrectly searched
+for a Coalition `turret` object rather than the Federation `crane` object.
+This was a **workflow assertion bug**, not a failed render or broken mesh.
+[Correction commit b619e924](https://github.com/shukritobi/chrono-dominion/commit/b619e9247784ebd6c869f05152f305b09d3c2ba8)
+repaired the assertion without changing model geometry or reducing image QA
+thresholds. [Successful targeted rerun #40448534553](https://github.com/shukritobi/chrono-dominion/actions/runs/40448534553)
+passed every job step, including Blender 4.2.23 source reopening with
+**five hidden editable wreckage meshes** and the named crane.
+
+The successful [artifact #12709506607](https://github.com/shukritobi/chrono-dominion/actions/runs/40448534553/artifacts/12709506607)
+was downloaded and inspected. It contains a **131,155-byte editable .blend**,
+128 unclipped 160x160 RGBA frames, a separate 5120x640 preview atlas,
+160px/80px contact sheets, and per-facing `pixel-qa.json`.
+The image QA passed every direction; independent local recomputation of the
+first-run frames matched the final JSON values exactly.
+
+| Changed pixels at 80px | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA | **1,148** | 1,680 | 1,481.3 |
+| Attack vs idle RGBA | **608** | 1,028 | 825.0 |
+| Destroyed vs idle RGBA | **1,223** | 1,780 | 1,565.4 |
+| Destroyed vs idle alpha | **622** | 1,042 | 865.1 |
+| Adjacent-facing idle RGBA | **1,243** | 1,692 | 1,513.8 |
+
+The actual 160px and 80px PNG contact sheets were visually inspected.
+The distinctive low tracked body, raked plow, sand-colored operator cab,
+upright recovery crane and amber extraction hook remain readable at 80px.
+Attack rotates the recovery arm; destroyed removes the upper jib and
+roof, leaving a lower broken chassis and displaced fracture pieces.
+**Visual limitation:** the tracked suspension's small bob is subtle at
+80px, and one separated dark crane fragment reads as floating debris in
+the destroyed pose. A later art polish can ground that fragment.
+
+The [Asset Register](../../planning/AssetRegister.csv) now assigns this
+new original vehicle **FED-VEH-010**. It does not replace the registered
+FED-VEH-003 Shrapnel Carrier. [Draft PR #29](https://github.com/shukritobi/chrono-dominion/pull/29)
+targets the Coalition preview branch to reuse its original Blender
+utility helpers without copying or rerendering its validated asset.
+**Preview-only: no live game textures, manifest or runtime changes.**
+Next: original Psionic vehicle with independent 32-facing animation.
