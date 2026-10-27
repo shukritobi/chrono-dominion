@@ -2614,10 +2614,15 @@
       // Keep a small defensive army, then bank for aviation instead of
       // spending every income delivery on another tank or optional turret.
       // Under a visible local attack, unit recruitment resumes immediately.
+      // After prolonged combat, a single surviving tank is enough to
+      // protect a safe base while banking for its first Air Command.
+      // Early bases still require two; losing all armour or detecting an
+      // invasion immediately restores ground recruitment.
+      const airfieldScreen=owned('tank').length+owned('heavy').length;
       const savingForAirfield=aviationReady&&!threatened&&
         me.credits<BUILD.airfield.cost+BUILD.generator.cost&&
         owned('harvester').length>0&&
-        owned('tank').length+owned('heavy').length>=2;
+        airfieldScreen>=(this.time>=240?1:2);
       const savingForAircraft=aviationInvestment&&
         (!built('airfield')||shortage||
           me.credits<UNITS.aircraft.cost+BUILD.generator.cost);

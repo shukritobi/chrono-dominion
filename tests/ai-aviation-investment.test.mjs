@@ -66,6 +66,34 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='turret').length,0,
     faction+': optional turret must not consume the aviation reserve');
 
+  // In a long contested match one of two tanks may be destroyed before
+  // Air Command funding completes. A surviving tank should still protect
+  // the aviation budget when the base is not under observed attack.
+  reset();prerequisites();g.add(1,'tank',23,21);
+  g.time=260;g.players[1].credits=1800;g.queues=[];
+  g.runAI();
+  assert.equal(g.players[1].credits,1800,
+    faction+': late one-tank base must preserve Air Command savings');
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': late one-tank airfield reserve must block optional recruitment');
+
+  // Do not compromise early ground defenses: before 240 seconds, one
+  // tank is not a sufficient screen for the same saving rule.
+  reset();prerequisites();g.add(1,'tank',23,21);
+  g.time=150;g.players[1].credits=1800;g.queues=[];
+  g.runAI();
+  assert.ok(g.queues.some(q=>q.side===1&&q.key!=='aircraft'),
+    faction+': early one-tank base should continue recruiting');
+
+  // An observed attack cancels saving even in a mature base.
+  reset();prerequisites();g.add(1,'tank',23,21);
+  const home=g.entities.find(e=>e.owner===1&&e.kind==='hq');
+  g.add(0,'soldier',home.x+1,home.y+1);
+  g.time=260;g.players[1].credits=1800;g.queues=[];
+  g.runAI();
+  assert.ok(g.queues.some(q=>q.side===1&&q.key!=='aircraft'),
+    faction+': detected invasion must override late aviation savings');
+
   reset();prerequisites();g.time=150;g.players[1].credits=2399;
   g.runAI();
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,0,

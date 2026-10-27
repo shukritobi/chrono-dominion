@@ -8,6 +8,10 @@
 
 
 
+### Late-match AI Air Command savings after tank attrition (post-v2.42)
+
+- Once a base has operated for 240 game seconds, one surviving tank/heavy and no detected local invasion are sufficient to preserve credits for its first Air Command. Earlier bases still need two tanks; losing all armour or facing an attack restores normal defense spending. The rule retains the 650-credit power reserve, normal building costs and old saves. Three-faction regression coverage exercises early, late and threatened cases. Natural-match aircraft deployment remains to be measured.
+
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
 - The 720-second progression lab now observes **real AI planner decisions**, classifying missing technology, airfield construction, brownouts, harvester or armour losses, threats, production queues and funding. Reports include per-match decision counts, maximum credits after Air Command purchase and the last 12 decisions. Observation only: no AI, credit or save changes. Run `npm run balance:progression`; [methodology](docs/AI-NATURAL-PROGRESSION.md).
