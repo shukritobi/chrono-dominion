@@ -19,7 +19,7 @@
 
 ### Radar recovery economy safeguard (post-v2.42)
 
-- When a powered AI base has a factory, refinery, harvester and ground tank but no operational radar, it now saves for the paid 900-credit radar plus a 650-credit generator reserve rather than repeatedly buying optional units. The reserve remains protected during radar construction and is released for observed attacks, harvester loss, lost ground cover or brownouts. This targets the radar-missing blocker observed in natural-match diagnostics, without free income, new save fields or asset changes. [Regression](tests/ai-ore-economy.test.mjs) · [notes](docs/AI-ORE-ECONOMY.md).
+- After 240 seconds, when a powered AI base has a factory, refinery, harvester and ground tank but no operational radar, it now saves for the paid 900-credit radar plus a 650-credit generator reserve rather than repeatedly buying optional units. The reserve remains protected during radar construction and is released for observed attacks, harvester loss, lost ground cover or brownouts. This targets the radar-missing blocker observed in natural-match diagnostics, without free income, new save fields or asset changes. [Regression](tests/ai-ore-economy.test.mjs) · [notes](docs/AI-ORE-ECONOMY.md).
 
 ### AI aircraft funding after Air Command (post-v2.42)
 
