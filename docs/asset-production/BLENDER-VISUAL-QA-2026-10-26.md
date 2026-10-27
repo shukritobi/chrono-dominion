@@ -607,3 +607,31 @@ Next: extend this authored carrier geometry to Federation and Psionic
 faction-specific vehicle designs, then validate 32-facing movement/destruction
 for other missing vehicle classes. Do not rerender this unchanged validated
 Coalition carrier in the next run.
+
+
+## 2026-10-27 Federation AR-9 recovery carrier, original 32-facing preview (verification pending)
+
+**Preview-only.** Follows the independently validated Coalition Modular Support
+Carrier without rerendering it. The new Iron Federation AR-9 is an original
+tracked battlefield-recovery vehicle, **not** a recolored Coalition chassis.
+Its model has a raked armored recovery plow, seven separate road wheels per
+side, individual visible steel track cleats, a sloped protected cabin, side
+ladders, hydraulic extraction crane, winch drum and warning lights.
+
+- [Original editable Blender source generator](../../tools/blender/preview_federation_recovery_carrier_32.py)
+  imports only the previously validated modeling utilities, while building
+  distinct Federation geometry from scratch.
+- [Strict 128-frame image QA](../../tools/blender/qa_federation_recovery_carrier_32.py)
+  checks all 32 facings across idle/move/attack/destroyed, frame bounds,
+  adjacent-facing uniqueness, and 80px movement/attack/destroyed differences.
+- [Targeted preview-only render workflow](../../.github/workflows/federation-recovery-carrier-32-review.yml)
+  reopens the editable Blender source and checks five hidden, independent
+  wreckage meshes. It produces a 5120x640 **review-only** atlas and
+  160px/80px contact sheets, not an existing game sprite manifest.
+- All rendered art stays in GitHub Actions artifacts. No live art,
+  game runtime, or production manifest is touched.
+
+**Pending verification:** Record actual workflow run, Blender reopen results,
+per-facing 80px/160px pixel metrics, and visual inspection after the first
+targeted render. Repair genuine geometry failures rather than weakening
+thresholds. Do not claim success before artifact review.
