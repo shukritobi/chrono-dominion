@@ -109,6 +109,7 @@ jobs:
           node tests/ai-ore-economy.test.mjs
           node tests/ai-aviation-diagnostics.test.mjs
           node tests/ai-harvester-telemetry.test.mjs
+          node tests/ai-harvester-ore-safety.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
