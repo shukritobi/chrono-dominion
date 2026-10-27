@@ -15,9 +15,9 @@ STATES = ("idle", "move", "attack", "destroyed")
 def difference(a, b, alpha=False):
     if alpha:
         a, b = a.getchannel("A"), b.getchannel("A")
-    return sum(1 for pixel in ImageChops.difference(a, b).getdata()
-               if any(pixel) if isinstance(pixel, tuple)) if not alpha else sum(
-                   1 for pixel in ImageChops.difference(a, b).getdata() if pixel)
+    diff = ImageChops.difference(a, b)
+    return sum(1 for pixel in diff.getdata()
+               if (any(pixel) if isinstance(pixel, tuple) else pixel))
 
 
 def main():
