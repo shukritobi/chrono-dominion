@@ -30,13 +30,32 @@ export function traceHarvesterMoves(game,metrics){
     const baseOccupy=this.canOccupyUnit;
     const baseLane=this.checkLaneEntry;
     let staticBlocked=0,trafficBlocked=0,laneRejected=0,laneAccepted=0;
+    const blockers=new Map();
     // The same live engine makes every decision. Extra static probes are
     // read-only and run only after an occupancy rejection.
     this.canOccupyUnit=function(e,x,y,ignoreUnits=false){
       const allowed=baseOccupy.call(this,e,x,y,ignoreUnits);
       if(e===unit&&!ignoreUnits&&!allowed){
-        if(baseOccupy.call(this,e,x,y,true))trafficBlocked++;
-        else staticBlocked++;
+        if(baseOccupy.call(this,e,x,y,true)){
+          trafficBlocked++;
+          // Attribute the rejected probe to the units actually intersecting
+          // its collision circle, rather than the nearest friendly bystander.
+          // Read-only; no traffic or lane state is changed.
+          const nearby=this.unitBuckets?.nearby(x,y)||
+            this.entities.filter(other=>other.type==='unit');
+          for(const other of nearby){
+            if(other.id===e.id||other.hp<=0||other.type!=='unit'||
+               other.kind==='aircraft')continue;
+            const margin=this.unitRadius(e)+this.unitRadius(other);
+            if((other.x-x)**2+(other.y-y)**2>=margin*margin*.84)continue;
+            const previous=blockers.get(other.id);
+            blockers.set(other.id,{
+              id:other.id,owner:other.owner,kind:other.kind,
+              stance:other.stance||'guard',yielding:!!other.yieldOrder,
+              probes:(previous?.probes||0)+1
+            });
+          }
+        }else staticBlocked++;
       }
       return allowed;
     };
@@ -59,7 +78,8 @@ export function traceHarvesterMoves(game,metrics){
         pathRecheckAfter:round(Number(unit.pathRecheck)||0),
         trafficWaitAfter:round(Number(unit.trafficWait)||0),
         stuckAfter:round(Number(unit.stuck)||0),
-        staticBlocked,trafficBlocked,laneRejected,laneAccepted
+        staticBlocked,trafficBlocked,laneRejected,laneAccepted,
+        blockers:[...blockers.values()]
       };
       metrics.loadedMoveCalls++;
       metrics.staticBlockedProbes+=staticBlocked;
@@ -115,6 +135,13 @@ export function summarizeHarvesterMove(metrics,id,time){
   const calls=frames.flatMap(f=>f.calls);
   const sum=key=>calls.reduce((n,c)=>n+c[key],0);
   const last=calls.at(-1);
+  const blockerCounts=new Map();
+  for(const call of calls)for(const b of call.blockers||[]){
+    const previous=blockerCounts.get(b.id);
+    blockerCounts.set(b.id,{...b,probes:(previous?.probes||0)+b.probes});
+  }
+  const trafficBlockers=[...blockerCounts.values()]
+    .sort((a,b)=>b.probes-a.probes||a.id-b.id).slice(0,5);
   return {
     frames:frames.length,moveCalls:calls.length,
     noMoveCallFrames:frames.filter(f=>f.noCall).length,
@@ -123,6 +150,7 @@ export function summarizeHarvesterMove(metrics,id,time){
     emptyPathNoProgressCalls:calls.filter(c=>c.moved<=.01&&!c.pathAfter).length,
     staticBlockedProbes:sum('staticBlocked'),
     trafficBlockedProbes:sum('trafficBlocked'),
+    trafficBlockers,
     laneRejectedProbes:sum('laneRejected'),
     acceptedLaneProbes:sum('laneAccepted'),
     netMovementTiles:round(frames.reduce((n,f)=>n+f.netMovement,0)),
