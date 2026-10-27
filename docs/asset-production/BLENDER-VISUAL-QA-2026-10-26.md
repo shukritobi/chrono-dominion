@@ -490,3 +490,16 @@ are not connected to live art or production manifests.
 **Status:** [initial workflow run #40424726108](https://github.com/shukritobi/chrono-dominion/actions/runs/40424726108) was running at the last check; [corrected checksum-path run #40424741912](https://github.com/shukritobi/chrono-dominion/actions/runs/40424741912) was queued behind it under workflow concurrency. The second run is the authoritative one. Measured pixels and reopened sources must be checked before calling the pilot validated. No approved textures were overwritten. If an 80px gate
 fails, fix geometry instead of lowering thresholds. Next: extend the proven
 pipeline to beam defenses and airfields, then remaining vehicles.
+
+
+**Pilot QA correction:** [first attempted run #40424726108](https://github.com/shukritobi/chrono-dominion/actions/runs/40424726108)
+rendered and reopened all three editable wreckage sources, but failed the
+80px critical silhouette gate for Psionic turret: **5 changed alpha pixels**
+(34 at 160px), while its destroyed state reached **74 at 80px** and
+power-out changed **989 RGBA pixels** without alpha change. The failed
+artifact was preserved for comparison. The [second run #40424741912](https://github.com/shukritobi/chrono-dominion/actions/runs/40424741912)
+reproduced the honest visual failure after fixing the checksum command.
+The [corrective geometry commit](https://github.com/shukritobi/chrono-dominion/commit/f6a7b6300a557659660286c311988f1d97752aca)
+removes the intact Psionic guard/lens during critical damage and elevates
+a physically broken fin beyond the old roofline; [targeted rerun #40424902726](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726)
+was launched. **Do not mark this pilot passed until the new actual PNG QA passes.**
