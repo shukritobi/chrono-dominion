@@ -487,7 +487,6 @@ are not connected to live art or production manifests.
 - Modeling commit `9e4bf469ca9b21e354fbd36cfe2008889bd9ef4c`;
   QA commit `c7d168777b710c89afc126e338d00063c0a7e2ef`.
 
-**Status:** workflow run and measured pixels must be checked before calling
-the pilot validated. No approved textures were overwritten. If an 80px gate
+**Status:** [initial workflow run #40424726108](https://github.com/shukritobi/chrono-dominion/actions/runs/40424726108) was running at the last check; [corrected checksum-path run #40424741912](https://github.com/shukritobi/chrono-dominion/actions/runs/40424741912) was queued behind it under workflow concurrency. The second run is the authoritative one. Measured pixels and reopened sources must be checked before calling the pilot validated. No approved textures were overwritten. If an 80px gate
 fails, fix geometry instead of lowering thresholds. Next: extend the proven
 pipeline to beam defenses and airfields, then remaining vehicles.
