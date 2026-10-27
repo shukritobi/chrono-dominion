@@ -76,8 +76,9 @@ def main():
             "adjacent_idle_rgba_80": changed(states["idle"], next_idle),
         }
         for key, minimum in report["acceptance"].items():
-            assert row[key] >= minimum, (
-                "Actual 80px art gate failed", facing, key, row[key], minimum)
+            metric = key.removesuffix("_min")
+            assert row[metric] >= minimum, (
+                "Actual 80px art gate failed", facing, metric, row[metric], minimum)
         report["per_facing"]["%02d" % facing] = row
     for size in (160, 80):
         sheet = Image.new("RGBA", (size * 8, size * 4), (17, 24, 33, 255))
