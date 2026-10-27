@@ -905,8 +905,45 @@ cooldown** sequence across 32 facings, creating 128 new 160px RGBA previews.
   the archived attack, 20 changed alpha pixels for volley vs idle, and
   20 RGBA pixels between adjacent charge facings. It checks every frame
   for transparency, clipping and a preserved archived atlas SHA-256.
-- **Pending:** do not call the new animation visually validated until
-  workflow completion, independent inspection of real 160px/80px PNGs
-  and exact per-facing metrics are recorded here.
+- **Validated:** [successful Actions run #40547061043](https://github.com/shukritobi/chrono-dominion/actions/runs/40547061043)
+  passed the original Blender source download, Python compilation, checksum-
+  verified Blender 4.2.23 install, **128 new RGBA renders**, reopening the
+  **142,547-byte editable .blend**, all 16 new hidden editable meshes
+  (including four genuine 10-vertex/4-face plasma ribbons), eight original
+  wreckage meshes, 18 track cleats, two ion barrels and strict pixel QA.
+  [Preview artifact #12752728314](https://github.com/shukritobi/chrono-dominion/actions/runs/40547061043/artifacts/12752728314)
+  contains the Blender source, 128 individual frames, a 5120×640 new
+  four-phase atlas, both contact sheets and quantitative JSON.
+- The original atlas SHA-256 was unchanged before and after:
+  `97da4b781b50dc6bad7f154c04adc44cfe7f001e77c1f2e4a02c75bb454d2d7a`.
+  The new preview-only atlas SHA-256 is
+  `d81a8249ebffadbb7cd8e83090b130614fa208adba6f8c21f317be3867f28d1f`.
+- The actual 160px and 80px PNG contact sheets were downloaded and visually
+  inspected. At 80px both muzzle effects are legible; synchronization has
+  separated white ring highlights, volley adds dual visible energy bursts,
+  and cooldown retracts the glare to expose the underlying turret.
+  Bright volley coils partially obscure the barrel ends at 80px: this
+  is a remaining artistic polish item, not a validation failure.
 
-No published textures, game manifests or gameplay code were edited.
+| Actual 80px changed pixels | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → Synchronize RGBA | **803** | 1,181 | 1,042.1 |
+| Synchronize → Volley RGBA | **922** | 1,301 | 1,162.9 |
+| Volley → Cooldown RGBA | **933** | 1,306 | 1,165.8 |
+| Volley vs original attack RGBA | **946** | 1,346 | 1,189.5 |
+| Volley vs original idle RGBA | **931** | 1,283 | 1,160.3 |
+| Volley vs original idle alpha | **444** | 693 | 593.9 |
+| Charge vs original idle RGBA | **545** | 799 | 656.8 |
+| Adjacent charge facing RGBA | **1,009** | 1,230 | 1,137.2 |
+
+Independent pixel recalculation from downloaded PNGs for facing
+00/07/15/23/31 gave **1,239 / 1,315 / 1,248 / 1,181 / 1,185** changed
+80px RGBA pixels for volley vs original attack, and
+**593 / 693 / 647 / 592 / 555** changed 80px alpha pixels for volley vs
+idle. All ten values exactly matched the workflow JSON.
+
+**Blockers:** the playable game's current sprite loader does not yet
+consume these separate 32-facing four-phase atlases, and production
+integration still requires explicit art approval. No published textures,
+game manifests or gameplay code were edited. No previously validated
+128-frame Warden atlas was rerendered.
