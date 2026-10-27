@@ -1015,6 +1015,7 @@ settle**. This creates **128 new 160×160 RGBA movement sprites**, one for each
 of 32 directions and four gait phases. No original attack, idle or wreckage
 sprite was rerendered.
 
+- [Draft stacked review PR #66](https://github.com/shukritobi/chrono-dominion/pull/66), based on the unmerged original Hunter Spider PR #62.
 - [Successful targeted Blender render, source reopen and strict pixel QA
   #40566554369](https://github.com/shukritobi/chrono-dominion/actions/runs/40566554369).
   [Preview artifact #12763152657](https://github.com/shukritobi/chrono-dominion/actions/runs/40566554369/artifacts/12763152657)
