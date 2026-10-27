@@ -8,6 +8,17 @@
 
 
 
+
+### Actual AI ore-route and stalled-return diagnostics (post-v2.42)
+
+- Natural-match reports now measure **traveled harvester distance**, loaded
+  return distance, full-cargo immobility episodes lasting six seconds, and
+  AI-visible enemy exposure along routes away from refineries. This helps
+  distinguish long or obstructed return trips from unsafe ore destinations.
+  It is telemetry only: **no gameplay, save, asset or economic baseline
+  changes**. [Methodology](docs/AI-HARVESTER-TELEMETRY.md) ·
+  [regression tests](tests/ai-harvester-telemetry.test.mjs).
+
 ### Natural-match AI economy regression gate (post-v2.42)
 
 - The 720-second CI progression laboratory now fails when **enemy-only ore income** drops more than 20% on any baseline map, deliveries fall below 75%, worker losses exceed six, or all natural AI Air Commands disappear. This protects against ore-routing changes that pass unit tests but damage actual AI survival. Run `npm run balance:regression`. No gameplay, saves or assets changed. [Guard methodology](docs/AI-ECONOMY-REGRESSION-GATE.md) · [regression tests](tests/ai-economy-guard.test.mjs).

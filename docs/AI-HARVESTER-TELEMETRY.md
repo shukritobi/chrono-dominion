@@ -24,3 +24,34 @@ The summary aggregates losses, damage observations, last-seen cargo, delivery ti
 Run `node tests/ai-harvester-telemetry.test.mjs` for pure accounting regression coverage, then `npm run balance:progression` for the three 720-second natural AI matches or `npm run balance` for nine standard scenarios. CI runs both, plus the existing aviation laboratory.
 
 Interpretation: these metrics identify *where* income may be interrupted, not whether a particular tactical change would improve competitive balance. The next step is to correlate low-income matches with harvester deaths, cargo losses, and delivery gaps, then trial one narrow fix against this unchanged baseline.
+
+## Route and stalled-return diagnostics (28 October 2026)
+
+The same real-engine lab now records **actual movement**, not a hypothetical
+straight line to an ore deposit:
+
+- `travelTiles` and `loadedTravelTiles`: sum of successive harvester position
+  changes per simulation tick, including loaded return trips. These are
+  observed traveled distances, **not** pathfinder requests or route lengths.
+- `fullCargoStallSeconds`: time observed with a full 360-credit load and no
+  measurable movement. `fullCargoStallEvents` counts each uninterrupted
+  six-second episode once, avoiding normal short refinery unload pauses.
+- `threatenedLoadedSamples` and `threatenedEmptySamples`: loaded vs empty
+  harvesters with an **AI-visible** enemy combat unit within five tiles.
+- `threatenedFarFromRefinerySamples`: those threatened samples at least five
+  tiles from **every operational friendly refinery**, distinguishing exposed
+  ore routes from fighting immediately outside the base.
+
+Per-truck stall streaks remain internal to the diagnostic module and do not
+appear in JSON or saves. All metrics are additive; the established ore-income
+regression gate and gameplay rules remain unchanged. Route exposure is a
+12-second sensor sample, not a guarantee that the truck took enemy fire.
+A stationary loaded truck may be blocked by terrain, congestion or an
+unavailable refinery: correlate stall events with ore delivery gaps before
+changing the movement engine.
+
+Verify with `node tests/ai-harvester-telemetry.test.mjs` and
+`npm run balance:progression`. Use the per-scenario metrics to decide whether
+the next narrow experiment should target loaded return paths, refinery exits,
+or escort behavior. Do not infer a successful economy fix from these
+observation-only changes.

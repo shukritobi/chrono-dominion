@@ -248,7 +248,8 @@ function runScenario(map,difficulty,mi,di){
       // Sparse observation of *sensor-visible* combat threats only.
       const observedHostiles=g.entities.filter(e=>e.owner===0&&
         e.hp>0&&e.type==='unit'&&e.kind!=='harvester'&&g.sideCanSee(1,e));
-      observeHarvesterThreatSample(aiHarvesterTelemetry,afterHarvesters,observedHostiles);
+      observeHarvesterThreatSample(aiHarvesterTelemetry,afterHarvesters,observedHostiles,
+        g.entities.filter(e=>e.owner===1&&e.kind==='refinery'&&e.hp>0&&e.built));
       samples++;
       const damage=g.stats[0].damageDealt+g.stats[1].damageDealt;
       const ore=g.stats[0].oreHarvested+g.stats[1].oreHarvested;
@@ -329,6 +330,18 @@ const report={
       n+r.aiHarvesterTelemetry.deliveryTicks,0),
     aiHarvesterThreatenedSamples:results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.threatenedSamples,0),
+    aiHarvesterTravelTiles:Number(results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.travelTiles,0).toFixed(1)),
+    aiLoadedHarvesterTravelTiles:Number(results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.loadedTravelTiles,0).toFixed(1)),
+    aiFullCargoStallEvents:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.fullCargoStallEvents,0),
+    aiFullCargoStallSeconds:Number(results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.fullCargoStallSeconds,0).toFixed(1)),
+    aiThreatenedLoadedSamples:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.threatenedLoadedSamples,0),
+    aiThreatenedFarFromRefinerySamples:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.threatenedFarFromRefinerySamples,0),
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
     casesWithAirfields:results.filter(r=>r.airfieldSeen).length,
     casesWithAIFactories:results.filter(r=>r.aiMilestones.factory.operationalAt!==null).length,
@@ -387,7 +400,12 @@ assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(results.every(r=>r.aiHarvesterTelemetry.deliveredOre===r.harvest[1]&&
   r.aiHarvesterTelemetry.lost>=0&&r.aiHarvesterTelemetry.cargoAtLoss>=0&&
   r.aiHarvesterTelemetry.threatenedSamples<=r.aiHarvesterTelemetry.harvesterSamples&&
-  r.aiHarvesterTelemetry.longestDeliveryGapSeconds<=r.seconds+1),
+  r.aiHarvesterTelemetry.longestDeliveryGapSeconds<=r.seconds+1&&
+  r.aiHarvesterTelemetry.travelTiles>=r.aiHarvesterTelemetry.loadedTravelTiles&&
+  r.aiHarvesterTelemetry.fullCargoStallEvents>=0&&
+  r.aiHarvesterTelemetry.fullCargoStallSeconds>=0&&
+  r.aiHarvesterTelemetry.threatenedLoadedSamples<=r.aiHarvesterTelemetry.threatenedSamples&&
+  r.aiHarvesterTelemetry.threatenedFarFromRefinerySamples<=r.aiHarvesterTelemetry.threatenedSamples),
   'AI harvester telemetry must reconcile with actual ore deliveries and sampling');
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
