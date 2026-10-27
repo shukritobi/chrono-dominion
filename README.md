@@ -9,6 +9,10 @@
 
 
 
+### Loaded harvester fallback around immovable friendly traffic (post-v2.42)
+
+- A full ore truck obstructed by a friendly **Hold-position sentry** can now attempt its **own reachable lateral passing pocket**. This only runs after a real traffic stall; Hold defenders stay in place and blocked terrain remains impassable. The normal refinery target, saved orders, costs and original assets are unchanged. [Regression](tests/right-of-way-v16.test.mjs) · [details](docs/AI-HARVESTER-TELEMETRY.md). Natural-match economy and stall frequency require CI verification.
+
 ### Loaded harvester movement rejection diagnostics (post-v2.42)
 
 - The headless natural-match simulator now observes each real loaded AI harvester

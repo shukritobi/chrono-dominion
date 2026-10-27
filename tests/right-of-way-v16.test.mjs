@@ -55,6 +55,32 @@ const attacker=g.add(0,'tank',11,12),hostile=g.add(1,'soldier',11.85,12);
 assert.equal(g.tryTrafficYield(attacker,1,0),false,'enemy units never yield');
 assert.equal(hostile.yieldOrder,undefined);
 
+// A full ore truck can detour around a stationary friendly Hold defender.
+// The sentry stays put; only the truck receives a short lateral yield order.
+reset();
+const loaded=g.add(0,'harvester',11,12),parked=g.add(0,'soldier',11.85,12);
+loaded.load=360;parked.stance='hold';
+assert.equal(g.tryTrafficYield(loaded,1,0),true,
+  'full harvester may use its own safe pocket when a friendly sentry cannot yield');
+assert.ok(loaded.yieldOrder,'the loaded truck receives the temporary detour');
+assert.equal(parked.yieldOrder,undefined,'hold-position defender never yields');
+const pocket={...loaded.yieldOrder};
+for(let i=0;i<130&&loaded.yieldOrder;i++)g.step(.05);
+assert.equal(loaded.yieldOrder,null,'truck detour finishes and restores harvesting');
+assert.ok(Math.hypot(loaded.x-pocket.x,loaded.y-pocket.y)<1,
+  'the truck moves to the pocket without teleporting the defender');
+
+// No legal shoulder: the loaded truck cannot invent a route through water.
+reset();
+const trapped=g.add(0,'harvester',11,12),fixed=g.add(0,'soldier',11.85,12);
+trapped.load=360;fixed.stance='hold';
+g.water=(x,y)=>!(y>11.6&&y<12.4);
+assert.equal(g.tryTrafficYield(trapped,1,0),false,
+  'a blocked lateral pocket cannot be used as an escape');
+assert.equal(trapped.yieldOrder,undefined);
+assert.equal(fixed.yieldOrder,undefined);
+g.water=()=>false;
+
 // When the terrain has no pocket, no order is created and no teleport occurs.
 reset();
 const first=g.add(0,'heavy',11,12),other=g.add(0,'soldier',11.85,12);

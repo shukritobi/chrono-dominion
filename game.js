@@ -1260,9 +1260,15 @@
       const mine=this.trafficPriority(unit),theirs=this.trafficPriority(blocker);
       const higher=mine>theirs||(mine===theirs&&unit.id<blocker.id);
       // Only friendly units coordinate; enemies never yield to an attack.
-      // A lower-priority mover can take the side pocket itself.
-      return higher?this.startTrafficYield(blocker,unit,vx,vy):
-        this.startTrafficYield(unit,blocker,vx,vy);
+      // A lower-priority mover can take the side pocket itself. A loaded
+      // harvester may also detour around a friendly Hold sentry, which cannot
+      // voluntarily yield. Ordinary moving traffic retains the original
+      // priority behavior: broad fallback detours harmed ore deliveries.
+      // Both attempts use the existing collision-checked lateral pockets.
+      if(!higher)return this.startTrafficYield(unit,blocker,vx,vy);
+      if(this.startTrafficYield(blocker,unit,vx,vy))return true;
+      return unit.kind==='harvester'&&unit.load>=360&&blocker.stance==='hold'?
+        this.startTrafficYield(unit,blocker,vx,vy):false;
     }
     finishYield(e){
       e.yieldOrder=null;e.yieldRetryAt=this.time+1.35;
