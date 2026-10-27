@@ -1670,10 +1670,26 @@
       // Deposits can overlap a newly constructed refinery or sit beyond a
       // lake. Never select a shiny but physically unreachable ore pile.
       const excluded=(e.oreSkipUntil||0)>this.time?e.oreSkipIndex:-1;
+      // Enemy harvesters prefer reachable deposits away from *currently
+      // observed* hostile combat units and powered defensive structures.
+      // A bounded eight-tile penalty avoids costly cross-map detours and
+      // still permits mining when every accessible deposit is contested.
+      // Player harvesters retain their existing nearest-ore behavior.
+      const threats=e.owner===1?this.entities.filter(other=>
+        other.owner!==e.owner&&other.hp>0&&other.built&&
+        ((other.type==='unit'&&other.kind!=='harvester')||
+          (other.type==='building'&&BUILD[other.kind]?.damage>0))&&
+        this.sideCanSee(e.owner,other)):[];
       const candidates=this.ores.map((ore,index)=>({ore,index,d:dist(e,ore)}))
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
           this.canOccupyUnit(e,ore.x,ore.y,true))
-        .sort((a,b)=>a.d-b.d||a.index-b.index);
+        .map(candidate=>({
+          ...candidate,
+          danger:threats.some(enemy=>dist(enemy,candidate.ore)<
+            (enemy.type==='building'?6:5))?8:0
+        }))
+        .sort((a,b)=>(a.d+a.danger)-(b.d+b.danger)||
+          a.d-b.d||a.index-b.index);
       for(const {ore,index} of candidates){
         const path=this.findPath(e.x,e.y,ore.x,ore.y);
         const landing=path.at(-1)||{x:e.x,y:e.y};
