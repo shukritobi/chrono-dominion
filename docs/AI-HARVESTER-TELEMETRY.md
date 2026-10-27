@@ -180,3 +180,23 @@ from instrumentation alone.
 The production movement engine now has a narrow fallback when a **full (360-credit) harvester** is blocked by a friendly **Hold-position** unit. Previously, the loaded truck had priority, asked the stationary blocker to move, and stopped when the sentry refused. The truck can now attempt its **own** temporary lateral pocket using the same collision, A* reachability and terrain checks already used for ordinary right-of-way maneuvers. The fallback applies only to Hold-position blockers after a real movement stall triggers `tryTrafficYield`; ordinary moving or stunned blockers keep the original priority behavior because broad fallback detours failed the natural-match economy gate (PR #71, initial revision). it never forces Hold units to move, teleports through buildings, or changes the refinery target, harvesting income, production costs or save format.
 
 Regression: `node tests/right-of-way-v16.test.mjs` checks a parked friendly Hold sentry, actual truck movement into a passing pocket and an impossible water-bounded corridor. `npm run balance:regression` must pass before merge. This addresses **one** potential congestion mechanism, not every Frostline stall; measure `fullCargoStallEvents` and ore income in the 720-second simulation separately.
+
+## Per-stall physical traffic blocker identities (28 October 2026)
+
+The headless loaded-harvester movement tracer now attributes each dynamic
+occupancy rejection to units whose **actual collision circles** intersect the
+rejected step. The six-second `moveDecision.trafficBlockers` summary contains
+at most five blocker IDs, owners, kinds, stances, yielding flags and probe
+counts, sorted by rejection frequency. This distinguishes a stationary Hold
+sentry from a nearby nonblocking bystander and shows whether the same unit
+repeatedly blocks a loaded return route. These are **probe counts**, not unique
+collisions or proof of a root cause; enemy identities may appear in diagnostic
+reports but are never passed to the in-game AI planner.
+
+The wrapper delegates all original movement, lane and occupancy decisions.
+There are no gameplay, save, asset or economy changes. The per-truck history
+still expires after six seconds. Verify with
+`node tests/harvester-move-telemetry.test.mjs` and the natural-match economy
+guard. An experimental lane-aware yield-selection change (PR #73) failed the
+AI income regression gate even when restricted to player-owned trucks, so it
+remains unmerged; use these blocker IDs before another gameplay experiment.
