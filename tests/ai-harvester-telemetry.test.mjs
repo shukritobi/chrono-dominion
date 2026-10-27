@@ -37,18 +37,37 @@ const route=newHarvesterTelemetry();
 const parked=h(7,300,360,12,12);
 observeHarvesterStep(route,[parked],[parked],0,0,1);
 for(let second=2;second<=7;second++)
-  observeHarvesterStep(route,[parked],[parked],0,0,second);
+  observeHarvesterStep(route,[parked],[parked],0,0,second,
+    [{id:44,x:12,y:12}]);
 assert.equal(route.fullCargoStallEvents,1,
   'six consecutive seconds of immobile full cargo must flag a stalled return');
 assert.equal(route.fullCargoStallSeconds,6);
+assert.equal(route.fullCargoStallCases.length,1);
+assert.equal(route.fullCargoStallCases[0].id,7);
+assert.equal(route.fullCargoStallCases[0].nearestRefineryId,44);
+assert.equal(route.fullCargoStallCases[0].withinUnloadRange,true);
+assert.equal(route.fullCargoStallCases[0].refineryDistance,0);
+assert.equal(route.fullCargoStallCases[0].time,7);
 observeHarvesterStep(route,[parked],[h(7,300,360,15,16)],0,0,8);
 assert.equal(route.travelTiles,5,'measure the actual traversed route');
 assert.equal(route.loadedTravelTiles,5,'distinguish loaded return trips');
+const blocked={...h(7,300,360,15,16),
+  pathTarget:{x:12,y:14},pathGoal:{x:13,y:14},
+  path:[{x:14,y:15}],trafficWait:.8,laneWaiting:'narrow-1',
+  yieldOrder:{x:16,y:17}};
 for(let second=9;second<=14;second++)
-  observeHarvesterStep(route,[h(7,300,360,15,16)],
-    [h(7,300,360,15,16)],0,0,second);
+  observeHarvesterStep(route,[blocked],[blocked],0,0,second,
+    [{id:44,x:12,y:12}]);
 assert.equal(route.fullCargoStallEvents,2,
   'movement must reset the streak before counting a second episode');
+assert.equal(route.fullCargoStallCases.length,2);
+assert.equal(route.fullCargoStallCases[1].withinUnloadRange,false);
+assert.equal(route.fullCargoStallCases[1].nearestRefineryId,44);
+assert.deepEqual(route.fullCargoStallCases[1].pathTarget,{x:12,y:14});
+assert.deepEqual(route.fullCargoStallCases[1].nextWaypoint,{x:14,y:15});
+assert.equal(route.fullCargoStallCases[1].laneWaiting,'narrow-1');
+assert.equal(route.fullCargoStallCases[1].yielding,true);
+assert.equal(route.fullCargoStallCasesOmitted,0);
 observeHarvesterStep(route,[h(7,300,360,15,16)],[],0,0,15);
 assert.equal(route.lost,1,'loss ends a stalled truck observation');
 assert.equal(route.fullCargoStallEvents,2,'loss cannot invent a stall episode');
@@ -72,4 +91,13 @@ assert.throws(()=>observeHarvesterStep(route,
   [{id:17,hp:100,load:360}],[h(17,100,360,1,1)],0,0,16),
   /Invalid harvester position snapshot/,
   'a missing before-step position must fail rather than silently record zero travel');
-console.log('PASS: ore telemetry counts actual deaths, damage, delivery gaps, visible threats cargo estimates, actual travel, stalled returns and exposed ore routes');
+const withoutRefinery=newHarvesterTelemetry();
+observeHarvesterStep(withoutRefinery,[parked],[parked],0,0,1);
+for(let second=2;second<=7;second++)
+  observeHarvesterStep(withoutRefinery,[parked],[parked],0,0,second);
+assert.equal(withoutRefinery.fullCargoStallCases[0].nearestRefineryId,null,
+  'lost refinery must be reported explicitly, not guessed');
+assert.equal(withoutRefinery.fullCargoStallCases[0].refineryDistance,null);
+assert.equal(withoutRefinery.fullCargoStallCases[0].withinUnloadRange,false);
+assert.ok(!JSON.stringify(withoutRefinery).includes('_movement'));
+console.log('PASS: ore telemetry records losses, deliveries, actual travel, bounded stalled-return context and visible route threats');
