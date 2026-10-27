@@ -532,3 +532,78 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+
+## 2026-10-27 Coalition Modular Support Carrier, original 32-facing Blender pilot
+
+**Preview-only, pending actual Actions pixel QA.** This is a new unmodeled
+Coalition modular support carrier (AssetRegister COA-VEH-003), not a rerender
+of previously validated buildings or existing unit atlases.
+
+- [Editable original Blender model generator](../../tools/blender/preview_coalition_carrier_32.py)
+  creates a six-wheel armoured chassis, sloped glacis, independently animated
+  suspension and wheel spokes, rotatable twin-mode pulse turret, personnel
+  ramp, mast and four hidden editable wreckage meshes.
+- [Strict 32-facing 160px/80px image QA](../../tools/blender/qa_coalition_carrier_32.py)
+  requires 128 nonempty, unclipped RGBA images: 32 directions each for
+  idle, move, attack and destroyed. It checks adjacent facing uniqueness,
+  80px animation differences and physically changed destroyed silhouettes.
+- [Targeted preview workflow](../../.github/workflows/coalition-carrier-32-facing-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved .blend, verifies
+  four hidden editable wreckage meshes, builds a separate **5120x640**
+  four-row, 32-column preview atlas, emits 160px/80px contact sheets and
+  per-facing JSON measurements. **This is not the existing five-frame
+  game atlas contract and must not be installed without renderer changes.**
+- Modeling commit [96c5d02c](https://github.com/shukritobi/chrono-dominion/commit/96c5d02c2c41b5bd19f314c606a0cc1029d62227),
+  QA commit [16c00ef7](https://github.com/shukritobi/chrono-dominion/commit/16c00ef7f298ac939ae9e3fe612fb51f115c685b),
+  workflow commit [13dd6d34](https://github.com/shukritobi/chrono-dominion/commit/13dd6d3439aed9fc469b58539cd6da56fc17565c).
+- [Targeted workflow run #40441986334](https://github.com/shukritobi/chrono-dominion/actions/runs/40441986334)
+  was **in progress** at the first check. Do not claim validated
+  render, reopened source, measured pixels or visual inspection until
+  actual artifacts have been checked. Do not trigger duplicate jobs.
+
+The source branch contains only modeling scripts, QA, workflow and documentation;
+**no live textures or production manifests were modified**. Next: inspect
+actual run, repair any failed geometry gates, then extend to Federation and
+Psionic carrier variants and the remaining vehicle roster.
+
+
+### Final verified carrier review (27 October 2026)
+
+[Successful targeted GitHub Actions run #40441986334](https://github.com/shukritobi/chrono-dominion/actions/runs/40441986334)
+completed **every step successfully**, including Blender 4.2.23 installation,
+128 original renders, saved source reopening, four hidden editable wreckage
+meshes and 80px/160px PNG QA. [Download original workflow artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40441986334/artifacts/12706442520).
+
+The artifact was downloaded and its **actual** 160px and 80px contact sheets
+visually inspected. It contains a **126,157-byte editable .blend**, 128
+160x160 RGBA frame PNGs, one separate 5120x640 preview-only atlas,
+both gameplay-scale contact sheets and pixel-qa.json. The six-wheel
+silhouette, sloped glacis, raised communication spine and twin pulse turret
+remain readable across eight sampled orientations. Destroyed poses visibly
+expose orange fractures and displace the turret and mast. The movement
+suspension is visually subtle at 80px, but measurably changes pixels.
+The attack flare is bright at 80px; future art polish may reduce its width.
+
+Independent inspection of the downloaded JSON across **all 32 directions**:
+
+| 80px metric | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle changed RGBA pixels | **831** | 1,181 | 1,058.4 |
+| Attack vs idle changed RGBA pixels | **491** | 848 | 665.7 |
+| Destroyed vs idle changed RGBA pixels | **885** | 1,317 | 1,145.4 |
+| Destroyed vs idle changed alpha pixels | **511** | 782 | 647.1 |
+| Adjacent-facing idle RGBA differences | **904** | 1,210 | 1,096.8 |
+
+All 128 frames are nonempty, 160x160 RGBA and unclipped. Every adjacent
+facing differs in actual 80px pixels; no direction is a copied sprite.
+**Source and artifact passed.** This is a new 32-direction *preview* format,
+not a production asset manifest update. [Draft PR #26](https://github.com/shukritobi/chrono-dominion/pull/26)
+changes **exactly four files**: the original modeling script, QA script,
+targeted workflow and this QA document. There are **zero live textures,
+game manifests or runtime modifications**.
+
+Next: extend this authored carrier geometry to Federation and Psionic
+faction-specific vehicle designs, then validate 32-facing movement/destruction
+for other missing vehicle classes. Do not rerender this unchanged validated
+Coalition carrier in the next run.
