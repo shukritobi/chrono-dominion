@@ -463,3 +463,31 @@ second editable .blend.
    after explicit approval.
 
 **Never overwrite approved game textures without explicit approval.**
+
+
+## 2026-10-27 Three-faction defense turret extended-state pilot (in verification)
+
+This pilot extends the separate critical/destroyed/power-out contract from the
+validated Psionic Factory to **Coalition, Federation and Psionic defense turrets**.
+The existing five-frame `160×800` atlas remains the baseline; each turret gets
+three **separate** `160×160` transparent PNGs and a second editable
+`.blend` with hidden broken-weapon meshes. These are **preview-only** and
+are not connected to live art or production manifests.
+
+- [Original faction-aware broken turret modeling](../../tools/blender/preview_defense_extended_states.py)
+  uses a fallen gun carriage, torn armor and buckled mast. Signature upper
+  weapons are physically hidden in critical/destroyed states.
+- [Quantitative PNG QA and 80px/160px contact sheets](../../tools/blender/qa_defense_extended_states.py)
+  require >=25 changed 80px alpha pixels for critical, >=65 for destroyed,
+  <30 for power-out and >=100 changed 80px RGBA pixels for power-out.
+- [Targeted headless Blender review workflow](../../.github/workflows/defense-turret-extended-states-review.yml)
+  renders **only** three previously unrendered turret classes, reopens
+  each extended source, checks its hidden editable wreckage, and uploads
+  the separate source, atlases, PNGs and measurements.
+- Modeling commit `9e4bf469ca9b21e354fbd36cfe2008889bd9ef4c`;
+  QA commit `c7d168777b710c89afc126e338d00063c0a7e2ef`.
+
+**Status:** workflow run and measured pixels must be checked before calling
+the pilot validated. No approved textures were overwritten. If an 80px gate
+fails, fix geometry instead of lowering thresholds. Next: extend the proven
+pipeline to beam defenses and airfields, then remaining vehicles.
