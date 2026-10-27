@@ -2569,9 +2569,11 @@
       else if(!owned('radar').length&&me.credits>2600)choice='radar';
       else if(skyguardGoal>0&&built('radar')&&owned('flak').length<skyguardGoal&&
         me.credits>=BUILD.flak.cost+500)choice='flak';
-      else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
+      // Air Command requires factory + radar, not optional Technology Lab.
+      // Keep enough cash for an emergency generator after buying aviation.
       else if(!owned('airfield').length&&built('factory')&&built('radar')&&
-        me.credits>3500&&this.time>130)choice='airfield';
+        me.credits>=BUILD.airfield.cost+BUILD.generator.cost&&this.time>130)choice='airfield';
+      else if(!owned('tech').length&&this.prereq(side,'tech')&&me.credits>4000)choice='tech';
       else if(built('factory')&&built('turret')<(this.settings.difficulty==='veteran'?2:1)&&me.credits>2200)choice='turret';
       if(choice&&this.prereq(side,choice)&&me.credits>=BUILD[choice].cost){
         const anchor=choice==='turret'&&threatened?
