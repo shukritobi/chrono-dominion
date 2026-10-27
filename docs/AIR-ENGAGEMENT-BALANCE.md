@@ -40,3 +40,26 @@ normal mixed-army battles. The results also do not measure browser FPS or
 physical mobile performance. Next add mixed anti-air formations, multi-aircraft
 sorties and AI-produced aircraft in longer scenarios, then compare survival,
 rearm cycles and player experience on real devices.
+
+## Extended aviation regression (27 October 2026)
+
+The same `npm run balance:air` command now also exercises **six three-aircraft
+sorties**: each faction attacks a reinforced objective with no dedicated
+anti-air battery or with two powered Skyguards. These scripted encounters
+verify simultaneous projectile fire, hull damage, ammunition bounds, survival
+in unopposed controls, rearming, power supply and nonnegative repair balances.
+The lab reports wing losses and service cycles without requiring any
+particular defended-case loss rate.
+
+Three additional **AI production checks** prepare a powered, prerequisite-
+complete base for each enemy faction, then call the real strategic AI planner.
+They verify that the AI pays for an aircraft, queues it, deploys it through
+the normal production pipeline and records the deployment. The setup supplies
+existing technology and scouts, so this is not a claim that ordinary AI will
+reach aviation within a short 240-second ground simulation.
+
+The JSON schema is now `chrono-dominion-air-exercise-v2`, with the original
+`results` preserved and additional `wingResults` and `aiProduction` arrays.
+The original six control results remain comparable with earlier reports.
+There are now **15 scenarios** in the aviation lab. This is deterministic
+headless coverage, not human competitive balancing or physical-device FPS.
