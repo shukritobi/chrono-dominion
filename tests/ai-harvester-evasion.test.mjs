@@ -49,7 +49,9 @@ for(const faction of ['coalition','federation','psionic']){
   truck.x=spots[0].x;truck.y=spots[0].y;
   truck.path=[];truck.pathRecheck=0;truck.oreIndex=0;
   const enemy=g.add(0,'soldier',truck.x-2.8,truck.y);
-  enemy.ready=1e6;enemy.stance='hold';
+  // Keep the attacker alive while nearby AI defenders return fire, so the
+  // test measures sustained evasion rather than normal post-kill harvesting.
+  enemy.hp=1e6;enemy.maxHp=1e6;enemy.ready=1e6;enemy.stance='hold';
   assert.equal(g.sideCanSee(1,enemy),true,faction+': hostile must be visible');
   const before=distance(truck,enemy),credits=g.players[1].credits;
   assert.equal(g.evadeAIHarvester(truck,.2),true,faction+': evade a visible armed enemy');
