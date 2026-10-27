@@ -2574,7 +2574,10 @@
       else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       else if(!owned('factory').length)choice='factory';
-      else if(!owned('radar').length&&me.credits>2600)choice='radar';
+      // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
+      // bases after the second harvester purchase. Keep a generator reserve.
+      else if(!owned('radar').length&&
+        me.credits>=BUILD.radar.cost+BUILD.generator.cost)choice='radar';
       else if(skyguardGoal>0&&built('radar')&&owned('flak').length<skyguardGoal&&
         me.credits>=BUILD.flak.cost+500)choice='flak';
       // Air Command requires factory + radar, not optional Technology Lab.
