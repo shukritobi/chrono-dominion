@@ -532,3 +532,37 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+
+## 2026-10-27 Coalition Modular Support Carrier, original 32-facing Blender pilot
+
+**Preview-only, pending actual Actions pixel QA.** This is a new unmodeled
+Coalition modular support carrier (AssetRegister COA-VEH-003), not a rerender
+of previously validated buildings or existing unit atlases.
+
+- [Editable original Blender model generator](../../tools/blender/preview_coalition_carrier_32.py)
+  creates a six-wheel armoured chassis, sloped glacis, independently animated
+  suspension and wheel spokes, rotatable twin-mode pulse turret, personnel
+  ramp, mast and four hidden editable wreckage meshes.
+- [Strict 32-facing 160px/80px image QA](../../tools/blender/qa_coalition_carrier_32.py)
+  requires 128 nonempty, unclipped RGBA images: 32 directions each for
+  idle, move, attack and destroyed. It checks adjacent facing uniqueness,
+  80px animation differences and physically changed destroyed silhouettes.
+- [Targeted preview workflow](../../.github/workflows/coalition-carrier-32-facing-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved .blend, verifies
+  four hidden editable wreckage meshes, builds a separate **5120x640**
+  four-row, 32-column preview atlas, emits 160px/80px contact sheets and
+  per-facing JSON measurements. **This is not the existing five-frame
+  game atlas contract and must not be installed without renderer changes.**
+- Modeling commit [96c5d02c](https://github.com/shukritobi/chrono-dominion/commit/96c5d02c2c41b5bd19f314c606a0cc1029d62227),
+  QA commit [16c00ef7](https://github.com/shukritobi/chrono-dominion/commit/16c00ef7f298ac939ae9e3fe612fb51f115c685b),
+  workflow commit [13dd6d34](https://github.com/shukritobi/chrono-dominion/commit/13dd6d3439aed9fc469b58539cd6da56fc17565c).
+- [Targeted workflow run #40441986334](https://github.com/shukritobi/chrono-dominion/actions/runs/40441986334)
+  was **in progress** at the first check. Do not claim validated
+  render, reopened source, measured pixels or visual inspection until
+  actual artifacts have been checked. Do not trigger duplicate jobs.
+
+The source branch contains only modeling scripts, QA, workflow and documentation;
+**no live textures or production manifests were modified**. Next: inspect
+actual run, repair any failed geometry gates, then extend to Federation and
+Psionic carrier variants and the remaining vehicle roster.
