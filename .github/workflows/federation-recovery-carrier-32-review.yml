@@ -74,7 +74,7 @@ jobs:
           blender --background --threads 2 \
             generated/federation-recovery-carrier-32/federation-armoured-recovery-carrier.blend \
             --python-exit-code 1 --python-expr \
-            'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and o.get("wreckage_only")]; assert len(a)==5,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); assert any("turret" in o.name.lower() for o in bpy.data.objects); print("PASS REOPEN: FIVE EDITABLE HIDDEN WRECKAGE MESHES")'
+            'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and o.get("wreckage_only")]; assert len(a)==5,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); assert any("crane" in o.name.lower() for o in bpy.data.objects); print("PASS REOPEN: FIVE EDITABLE HIDDEN WRECKAGE MESHES")'
 
       - name: Inspect all 160px and 80px pixels and pack preview-only atlas
         run: |
