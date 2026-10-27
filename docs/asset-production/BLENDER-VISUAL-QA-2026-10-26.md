@@ -1043,3 +1043,44 @@ manifests or game runtime were modified. This sequence is **not integrated
 into gameplay**; the game loader currently supports 1/8 facings rather
 than these 32-facing temporal previews. Next: additional missing vehicle
 classes, with separate gameplay integration planning only after approval.
+
+
+## 2026-10-27 Coalition Lynx Battle Tank — original P0 art-pilot preview (render in progress)
+
+**PREVIEW ONLY.** COA-VEH-002 is a new original tracked Coalition main
+battle tank rather than a modification of the previously verified Warden
+or Modular Support Carrier. It uses a layered chevron glacis, broad ceramic
+side skirts with individually modeled reactive tiles, a single long-bore
+electromagnetic cannon with independent recoil/elevation, asymmetrical
+commander optics and an exposed rear engine deck. Running gear has **12
+independently articulated roadwheel pivots** and **22 independently
+positioned track cleats**. Destroyed mode hides intact turret/gun hardware
+and exposes **8 separately editable wreckage meshes**, including detached
+mantlet, sheared gun, raised armour and glowing engine fracture.
+
+- [Original P0 Lynx Blender source](../../tools/blender/preview_coalition_lynx_32.py)
+  renders only this new vehicle: 32 facings × idle/move/attack/destroyed,
+  **128 RGBA 160×160 PNG frames**, plus a compressed editable .blend.
+- [Lynx 80px/160px pixel QA](../../tools/blender/qa_coalition_lynx_32.py)
+  rejects empty or clipped sprites, adjacent-facing duplicates, invisible
+  movement/attack, and destruction with insufficient alpha change; emits
+  two real-resolution contact sheets, 5120×640 review atlas and JSON.
+- [Targeted branch-scoped workflow](../../.github/workflows/coalition-lynx-32-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved source and
+  verifies eight hidden wreckage meshes, 12 roadwheel pivots, 22 track
+  cleats and one long-bore cannon. It uploads isolated review artifacts.
+- Source commit [96291591](https://github.com/shukritobi/chrono-dominion/commit/962915913aff1f70d11ef59bf21740cbbb9cd0a9),
+  QA commit [68eddcce](https://github.com/shukritobi/chrono-dominion/commit/68eddccefa3ddae8b976f9efef04fe43152656db),
+  workflow commit [06960722](https://github.com/shukritobi/chrono-dominion/commit/069607225488a779c652d6bf378e84212cd9c02a).
+- [Targeted Actions run #40494276431](https://github.com/shukritobi/chrono-dominion/actions/runs/40494276431)
+  was queued after the new workflow file was committed. **No success,
+  source-reopen, or pixel metric is claimed until this run passes and its
+  actual artifact has been inspected.**
+
+**Artistic acceptance to inspect:** single-barrel silhouette must read at
+80px, track animation must be visible, destroyed turret must no longer
+resemble intact equipment, and emission must not obscure the vehicle.
+The 32-facing game loader is not integrated. This PR is stacked on the
+unmerged preview-only Psionic temporal attack branch to preserve shared
+Blender helpers. No existing validated asset was rerendered. No published
+sprites, live texture manifest, or gameplay code were changed.
