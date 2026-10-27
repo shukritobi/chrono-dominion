@@ -8,6 +8,10 @@
 
 
 
+### XL 120-unit movement and collision benchmark (post-v2.42)
+
+- Added a repeatable **120-unit, 48×48-map** production-engine stress fixture exercising pathfinding, building collision, live movement, combat ticks and v1 save/load. The report records movement progress, path/occupancy calls and machine-dependent wall-clock time. It does **not** claim browser FPS or mobile performance. Run `npm run perf:armies`; CI archives `large-army-report.json`. [Methodology](docs/LARGE-ARMY-BENCHMARK.md) · [regression](tests/large-army-perf.test.mjs).
+
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
 - The 720-second progression lab now observes **real AI planner decisions**, classifying missing technology, airfield construction, brownouts, harvester or armour losses, threats, production queues and funding. Reports include per-match decision counts, maximum credits after Air Command purchase and the last 12 decisions. Observation only: no AI, credit or save changes. Run `npm run balance:progression`; [methodology](docs/AI-NATURAL-PROGRESSION.md).
