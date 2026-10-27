@@ -45,7 +45,7 @@ g.entities.some=function(...args){
 };
 let path=g.findPath(19,23,27,23);
 assert.deepEqual([path.at(-1)?.x,path.at(-1)?.y],[27,23]);
-assert.ok(path.length>8,'active building forces a detour');
+assert.ok(path.some(p=>p.y!==23),'active building forces a detour');
 assert.equal(entityScans,0,'A* must use indexed footprints, not repeated entity scans');
 assert.ok(path.every(p=>g.walkable(p.x,p.y)),'route never enters a building');
 
