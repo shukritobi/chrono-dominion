@@ -17,7 +17,8 @@
     "audio:catalog": "node tools/audio/export-register.mjs",
     "audio:bake": "python3 tools/audio/build_builtin.py",
     "audio:check": "python3 tools/audio/build_builtin.py --check && node tests/builtin-audio-v224.test.mjs",
-    "balance:air": "node tools/simulate-air-engagements.mjs"
+    "balance:air": "node tools/simulate-air-engagements.mjs",
+    "balance:progression": "node tools/simulate-matches.mjs --progression"
   },
   "engines": {
     "node": ">=20"
