@@ -88,5 +88,5 @@ delete g.walkable;
 g.entities=originalEntities;g.water=originalWater;
 assert.equal(g.saveGame(),true);
 assert.equal(g.loadGame(),true);
-assert.equal(window.ChronoDominion.version,'2.37.0');
+assert.equal(window.ChronoDominion.version,'2.38.0');
 console.log('v2.37 indexed XL navigation, dynamic obstacles, custom hooks and saves passed');

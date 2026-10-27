@@ -96,6 +96,7 @@ jobs:
           node tests/xl-pathfinding-v235.test.mjs
           node tests/path-query-cache-v236.test.mjs
           node tests/navigation-footprint-v237.test.mjs
+          node tests/frame-collision-v238.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
@@ -180,6 +181,7 @@ jobs:
           test -f tests/airfield-choice-v233.test.mjs
           test -f tests/target-acquisition-v234.test.mjs
           test -f tests/xl-pathfinding-v235.test.mjs
+          test -f tests/frame-collision-v238.test.mjs
           test -f tools/blender/generate_tanks.py
           test -f tools/blender/pack_atlas.py
           test -f docs/game-design/FULL-BLUEPRINT.md
