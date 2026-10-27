@@ -9,6 +9,16 @@
 
 
 
+### Loaded harvester movement rejection diagnostics (post-v2.42)
+
+- The headless natural-match simulator now observes each real loaded AI harvester
+  `move()` call, classifying static occupancy rejections, dynamic unit-traffic
+  rejections, lane admission denials, empty paths and missing move calls.
+  Six-second `moveDecision` histories accompany each prolonged stall case.
+  The tracer delegates actual movement decisions without changing them; it
+  cannot by itself establish a fix. [Methodology](docs/AI-HARVESTER-TELEMETRY.md)
+  · [regression](tests/harvester-move-telemetry.test.mjs).
+
 ### Loaded harvester collision-reversal diagnostics (post-v2.42)
 
 - The natural-match simulator now observes loaded ore trucks **before and after
