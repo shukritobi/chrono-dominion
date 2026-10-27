@@ -13,6 +13,8 @@ import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
+import {newHarvesterTelemetry,observeHarvesterStep,
+  observeHarvesterThreatSample} from './ai-harvester-telemetry.mjs';
 
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8')
   .replace('  new Game();','  window.__balanceGame=new Game();');
@@ -193,6 +195,7 @@ function runScenario(map,difficulty,mi,di){
     ['generator','refinery','factory','radar','tech','airfield']
       .map(kind=>[kind,{startedAt:null,operationalAt:null}]));
   let firstAircraftQueuedAt=null,firstAircraftDeployedAt=null;
+  const aiHarvesterTelemetry=newHarvesterTelemetry();
   const maxSteps=Math.ceil(seconds/frame);
   let previousDamage=0,previousOre=0;
   for(let i=0;i<maxSteps&&g.state==='playing';i++){
@@ -200,7 +203,15 @@ function runScenario(map,difficulty,mi,di){
       scriptedPlayer(g,iteration++);
       nextAction+=7.5;
     }
+    const beforeHarvesters=g.entities.filter(e=>
+      e.owner===1&&e.kind==='harvester'&&e.hp>0)
+      .map(e=>({id:e.id,hp:e.hp,load:e.load}));
+    const oreBefore=g.stats[1].oreHarvested;
     g.step(frame);
+    const afterHarvesters=g.entities.filter(e=>
+      e.owner===1&&e.kind==='harvester'&&e.hp>0);
+    observeHarvesterStep(aiHarvesterTelemetry,beforeHarvesters,afterHarvesters,
+      oreBefore,g.stats[1].oreHarvested,g.time);
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0).length);
@@ -234,6 +245,10 @@ function runScenario(map,difficulty,mi,di){
     }
     if(i%Math.max(1,Math.round(12/frame))===0){
       checkIntegrity(g,map+'/'+difficulty+' @'+g.time.toFixed(1));
+      // Sparse observation of *sensor-visible* combat threats only.
+      const observedHostiles=g.entities.filter(e=>e.owner===0&&
+        e.hp>0&&e.type==='unit'&&e.kind!=='harvester'&&g.sideCanSee(1,e));
+      observeHarvesterThreatSample(aiHarvesterTelemetry,afterHarvesters,observedHostiles);
       samples++;
       const damage=g.stats[0].damageDealt+g.stats[1].damageDealt;
       const ore=g.stats[0].oreHarvested+g.stats[1].oreHarvested;
@@ -256,7 +271,8 @@ function runScenario(map,difficulty,mi,di){
     damage:[...g.stats.map(s=>Math.round(s.damageDealt))],
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
-    peakEntities:peak,peakAIHarvesters,platoonSeen,supportSeen,assaultLaunched,
+    peakEntities:peak,peakAIHarvesters,aiHarvesterTelemetry,
+    platoonSeen,supportSeen,assaultLaunched,
     assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
     siegeFocusOrders:g.aiSiegeOrders||0,aiStructureHits:g.aiSiegeHits||0,firstDamage:Math.round(firstDamage),
     firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples,
@@ -304,6 +320,15 @@ const report={
     casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     casesWithAIMultiHarvesters:results.filter(r=>r.peakAIHarvesters>=2).length,
+    aiHarvesterLosses:results.reduce((n,r)=>n+r.aiHarvesterTelemetry.lost,0),
+    aiHarvesterDamageObservations:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.damageObservations,0),
+    aiCargoAtHarvesterLoss:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.cargoAtLoss,0),
+    aiOreDeliveryTicks:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.deliveryTicks,0),
+    aiHarvesterThreatenedSamples:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.threatenedSamples,0),
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
     casesWithAirfields:results.filter(r=>r.airfieldSeen).length,
     casesWithAIFactories:results.filter(r=>r.aiMilestones.factory.operationalAt!==null).length,
@@ -359,6 +384,11 @@ for(const r of results){
     'AI aircraft must be purchased through a production queue before deployment');
 }
 assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
+assert.ok(results.every(r=>r.aiHarvesterTelemetry.deliveredOre===r.harvest[1]&&
+  r.aiHarvesterTelemetry.lost>=0&&r.aiHarvesterTelemetry.cargoAtLoss>=0&&
+  r.aiHarvesterTelemetry.threatenedSamples<=r.aiHarvesterTelemetry.harvesterSamples&&
+  r.aiHarvesterTelemetry.longestDeliveryGapSeconds<=r.seconds+1),
+  'AI harvester telemetry must reconcile with actual ore deliveries and sampling');
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
   r.reconLost>=0&&r.reconLost<=r.reconBuilt&&
