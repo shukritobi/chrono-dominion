@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import bpy
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from preview_coalition_carrier_32 import scene_setup, mat, empty, cube, cyl, wedge
 
 STATES = ("idle", "move", "attack", "destroyed")
