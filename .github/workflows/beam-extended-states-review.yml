@@ -3,13 +3,6 @@ name: Beam Defense Three-Faction Extended-State Blender Review
 # Never write live art, game atlases, or production manifests.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - asset-preview/beam-extra-states-20261027
-    paths:
-      - ".github/workflows/beam-extended-states-review.yml"
-      - "tools/blender/preview_beam_extended_states.py"
-      - "tools/blender/qa_beam_extended_states.py"
 
 permissions:
   contents: read
@@ -102,7 +95,7 @@ jobs:
             blender --background --threads 2 \
               "$stage/extra/$faction/$faction-beam-extended-states.blend" \
               --python-exit-code 1 --python-expr \
-              'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(a)==9,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); print("PASS: seven separate hidden editable beam wreckage meshes")'
+              'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(a)==9,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); print("PASS: nine separate hidden editable beam wreckage meshes")'
           done
 
       - name: Quantitative 80px and 160px actual PNG review
