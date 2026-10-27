@@ -1680,7 +1680,7 @@
       const candidates=this.ores.map((ore,index)=>({ore,index,d:dist(e,ore)}))
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
           this.canOccupyUnit(e,ore.x,ore.y,true)&&
-          !threats.some(enemy=>dist(ore,enemy)<5.2))
+          !threats.some(enemy=>dist(ore,enemy)<3.8))
         .sort((a,b)=>a.d-b.d||a.index-b.index);
       for(const {ore,index} of candidates){
         const path=this.findPath(e.x,e.y,ore.x,ore.y);
@@ -1699,12 +1699,13 @@
       // Keep retreating briefly after contact breaks to prevent oscillation.
       const danger=e.owner===1&&this.entities.some(u=>
         u.owner!==e.owner&&u.hp>0&&u.type==='unit'&&
-        u.kind!=='harvester'&&dist(e,u)<4.5&&this.sideCanSee(e.owner,u));
+        u.kind!=='harvester'&&e.hp<e.maxHp*.85&&
+        dist(e,u)<4.5&&this.sideCanSee(e.owner,u));
       if(danger){
         if((harvesterEvacuations.get(e)||0)<=this.time){
           e.oreIndex=-1;e.oreScanAt=0;e.oreLastDistance=null;
         }
-        harvesterEvacuations.set(e,this.time+24);
+        harvesterEvacuations.set(e,this.time+16);
       }
       if(e.owner===1&&(danger||(harvesterEvacuations.get(e)||0)>this.time)){
         if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
