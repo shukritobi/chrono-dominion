@@ -73,6 +73,7 @@ jobs:
           node tests/siege-focus-v219.test.mjs
           node tests/rally-recovery-v220.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
+          node tools/simulate-matches.mjs --progression --out=progression-report.json
           node tools/simulate-air-engagements.mjs --out=air-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
@@ -114,6 +115,7 @@ jobs:
           name: balance-lab-${{ github.run_number }}
           path: |
             balance-report.json
+            progression-report.json
             air-report.json
           if-no-files-found: warn
           retention-days: 21
