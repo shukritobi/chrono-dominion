@@ -125,3 +125,20 @@ and `npm run balance:progression` for natural-match observations. Compare
 the new measurements with the three previously observed Frostline stalls
 before attempting a movement correction; any change must still pass
 `npm run balance:regression`.
+
+### First verified natural-match result (28 October 2026)
+
+PR verification ran the complete nine-scenario matrix and three 720-second
+natural matches successfully. The extended matches recorded **3,092 loaded
+harvester frames, zero opposing-separation frames and zero near-cancelled
+frames**. Each of the three Frostline six-second stall cases showed **31/31
+frames without a meaningful pre-separation movement attempt**, with zero
+separation displacement. The existing ore economy regression guard passed
+with the unchanged 3,960 / 15,120 / 9,000 AI ore-income baseline.
+
+This **rejects the previous collision-separation rollback hypothesis** for
+the reproduced stalls. The next investigation should instrument why the
+normal movement routine fails to advance (e.g. lane admission, dynamic
+occupancy, stun or stale waypoints), rather than adjusting `separateUnits()`
+blindly. A clear step in the snapshot collision probe does not prove that
+the live `move()` call passed its lane checks.
