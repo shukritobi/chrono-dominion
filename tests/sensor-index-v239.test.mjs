@@ -94,5 +94,5 @@ assert.equal(g.loadGame(),true);
 assert.equal(g.sensorBuckets,null,'sensor buckets are never persisted');
 assert.equal(g.sideCanSee(0,{x:28,y:28}),true,
   'scout vision survives ordinary save/load');
-assert.equal(window.ChronoDominion.version,'2.41.0');
+assert.equal(window.ChronoDominion.version,'2.42.0');
 console.log('v2.39 faction sensor indexing, dynamic sight and legacy saves passed');
