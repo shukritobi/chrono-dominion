@@ -561,6 +561,37 @@ discharge → recover**, each at 32 directions (128 new RGBA PNGs).
   original roadwheel pivots retained. Verify the original atlas checksum
   is identical before/after. Inspect both generated 160px and 80px sheets.
 
-**Status at commit:** targeted Blender render / pixel verification in progress;
-**do not claim validated until workflow and actual PNG QA pass**. All outputs
-are separate preview artifacts. No approved live sprite or manifest changes.
+**Final validation: PASSED.** [Successful Blender run #40527927857](https://github.com/shukritobi/chrono-dominion/actions/runs/40527927857)
+rendered **128 NEW 160×160 RGBA frames** in 4 phases × 32 facings.
+The saved **163,520-byte editable .blend** was reopened by Blender;
+12 new temporal meshes, 8 intact-source wreckage meshes and 14 roadwheel
+pivots were verified, with the attack-only meshes hidden in the saved pose.
+The actual 160px and 80px contact sheets were downloaded and visually
+inspected. Coil buildup, expanding muzzle shock, visible discharge and
+cooling phases remain distinguishable at 80px. Independent 80px pixel
+recounts for facings **00, 07, 15, 23 and 31** all exactly matched the
+automated report (charge→focus: 1474, 1518, 1473, 1439, 1398).
+
+| 80px metric | Minimum changed pixels | Maximum |
+|---|---:|---:|
+| Charge → Focus RGBA | **1,090** | 1,580 |
+| Focus → Discharge RGBA | **1,204** | 1,768 |
+| Discharge → Recover RGBA | **1,207** | 1,763 |
+| Discharge vs original attack RGBA | **1,194** | 1,812 |
+| Discharge vs original idle alpha | **484** | 851 |
+| Charge vs original idle RGBA | **559** | 994 |
+| Adjacent 32-direction charge facings RGBA | **1,279** | 1,699 |
+
+All 128 PNGs were nonempty, unclipped and passed strict gates. The original
+**four-state 32-facing atlas** remained untouched,
+with SHA-256
+`22901bc4065a57ac2cce09c615c5c0fc1a85353cec1eeb392bf31c63da6eacc1`
+in the archived baseline, and its checksum verified unchanged by Actions.
+The NEW temporal preview atlas SHA-256 is
+`32356429de6f06a9bdd40a1c6b2ab71e4af84d311f3c46f75453d520421895f6`.
+[Download the separate preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40527927857/artifacts/12744233702).
+
+**Visual limitation:** The bright discharge rings dominate the muzzle at
+80px; fine radial shard detail is more readable at 160px. Next polish can
+reduce white-core glare while preserving clear charge/discharge silhouettes.
+**No live sprite, production manifest or gameplay files were changed.**
