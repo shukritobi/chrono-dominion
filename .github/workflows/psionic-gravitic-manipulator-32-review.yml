@@ -1,0 +1,95 @@
+name: Psionic Gravitic Manipulator 32-Facing Blender Preview
+
+# New original Blender geometry only. Never publish or replace game art.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/psionic-gravitic-manipulator-32-20261027
+    paths:
+      - .github/workflows/psionic-gravitic-manipulator-32-review.yml
+      - tools/blender/preview_psionic_gravitic_manipulator_32.py
+      - tools/blender/qa_psionic_gravitic_manipulator_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-psionic-gravitic-manipulator-32-review
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout original preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile Blender modeling and pixel QA scripts
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_carrier_32.py tools/blender/preview_psionic_gravitic_manipulator_32.py tools/blender/qa_psionic_gravitic_manipulator_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only the new Psionic Gravitic Manipulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_psionic_gravitic_manipulator_32.py -- \
+            --output generated/psionic-gravitic-manipulator-32
+
+      - name: Reopen saved editable Blender source
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/psionic-gravitic-manipulator-32/psionic-gravitic-manipulator.blend \
+            --python-exit-code 1 --python-expr \
+            'import bpy; objects=list(bpy.data.objects); wreck=[o for o in objects if o.type=="MESH" and o.get("wreckage_only")]; assert len(wreck)==8,(len(wreck),[o.name for o in wreck]); assert all(o.hide_render for o in wreck); assert len([o for o in objects if o.name.startswith("Articulated gravitic traction pad")])==4; assert len([o for o in objects if o.name.startswith("Independent articulated horseshoe magnetic jaw")])==2; assert all(o.type=="MESH" for o in wreck); print("PASS REOPEN: 8 HIDDEN EDITABLE WRECKAGE MESHES, 4 FIELD SKIDS, 2 MAGNETIC JAWS")'
+
+      - name: Verify all 128 actual RGBA PNGs at 160px and 80px
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_psionic_gravitic_manipulator_32.py --stage generated/psionic-gravitic-manipulator-32
+          test -s generated/psionic-gravitic-manipulator-32/psionic-gravitic-manipulator-contact-160.png
+          test -s generated/psionic-gravitic-manipulator-32/psionic-gravitic-manipulator-contact-80.png
+          test -s generated/psionic-gravitic-manipulator-32/pixel-qa.json
+
+      - name: Upload preview-only Blender model, 128 sprites and visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-gravitic-manipulator-32-preview
+          path: generated/psionic-gravitic-manipulator-32/
+          if-no-files-found: warn
+          retention-days: 30
