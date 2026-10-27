@@ -532,3 +532,27 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+
+## 2026-10-27 Federation turret destroyed-state fracture polish (preview-only)
+
+The earlier three-faction defense pilot passed its 80px gates, but actual
+contact-sheet inspection showed the Federation destroyed turret still read as
+an almost undamaged, smooth bunker. This follow-up changes **only Federation**
+and deliberately leaves Coalition, Psionic and all published art untouched.
+
+- [Fracture geometry](../../tools/blender/preview_defense_extended_states.py):
+  four separated, physically raised roof/front armour pieces and three bright
+  exposed orange fracture strips, in addition to the existing five wreckage
+  meshes. The extra meshes are hidden in the saved intact editable source.
+- [Focused Blender workflow](../../.github/workflows/federation-turret-fracture-review.yml)
+  renders only the Federation turret and its three independent extended-state
+  PNGs, reopens the source and checks **12** editable hidden wreckage meshes.
+- [Focused actual-image QA](../../tools/blender/qa_federation_turret_fracture.py)
+  inspects both 160px and 80px PNGs, checks construction/idle atlas SHA-256
+  before and after, enforces destroyed silhouette >=132 changed alpha pixels
+  at 80px (the prior successful baseline), and requires >=8 newly exposed
+  warm fracture pixels at 80px.
+- **Status: awaiting targeted GitHub Actions verification.** Do not claim
+  rendered/passed or assign new pixel metrics until the run finishes and its
+  actual contact sheets are inspected. No live textures or manifests changed.
