@@ -80,7 +80,7 @@ def profiles(faction, steel, armor, glow, root):
             wedge("Destroyed-only exposed coil flash",(-.63,-.87,1.53),
                   (.15,.12,.95),(.54,.40,.16),glow,root),
         ]
-    elif faction=="federation":
+    elif faction=="federation":\n        # Wreckage sits ABOVE the intact converter roof (z=1.955).\n        # Previous lower shards were occluded, leaving a clean bunker at 80px.
         critical=[
             wedge("Critical-only snapped arc fork",(-.75,-.62,2.55),
                   (.43,.44,1.70),(.55,.66,-.21),steel,root),
@@ -92,15 +92,15 @@ def profiles(faction, steel, armor, glow, root):
                   (.36,.40,1.02),(.61,.42,.23),steel,root),
         ]
         destroyed=[
-            wedge("Destroyed-only fallen induction barrel",(.72,-.47,1.04),
+            wedge("Destroyed-only fallen induction barrel",(.72,-.47,2.21),
                   (1.97,.73,.57),(.43,.94,.34),armor,root),
-            wedge("Destroyed-only ruptured arc fork",(-.80,-.44,1.27),
+            wedge("Destroyed-only ruptured arc fork",(-.80,-.44,2.27),
                   (.56,.49,1.64),(.98,.54,-.19),steel,root),
-            wedge("Destroyed-only buckled furnace cap",(.31,.67,.94),
+            wedge("Destroyed-only buckled furnace cap",(.31,.67,2.13),
                   (1.82,.53,.34),(.29,.63,.29),armor,root),
-            wedge("Destroyed-only cracked blast casing",(1.08,-.72,.84),
+            wedge("Destroyed-only cracked blast casing",(1.08,-.72,1.92),
                   (.64,1.20,.51),(.28,-.40,.35),steel,root),
-            wedge("Destroyed-only molten orange fracture",(-.64,-.89,1.50),
+            wedge("Destroyed-only molten orange fracture",(-.64,-.89,2.33),
                   (.16,.13,1.06),(.57,.35,.13),glow,root),
         ]
     else:
@@ -115,15 +115,15 @@ def profiles(faction, steel, armor, glow, root):
                   (.35,.30,1.14),(.53,.42,.27),steel,root),
         ]
         destroyed=[
-            wedge("Destroyed-only toppled neural obelisk",(.67,-.36,1.07),
+            wedge("Destroyed-only toppled neural obelisk",(.67,-.36,2.39),
                   (2.07,.60,.67),(.48,.92,.37),steel,root),
-            wedge("Destroyed-only broken crystal blade",(-.81,-.54,1.29),
+            wedge("Destroyed-only broken crystal blade",(-.81,-.54,2.45),
                   (.57,.51,1.84),(.98,.55,-.18),armor,root),
-            wedge("Destroyed-only fallen psi focus",(.41,.69,.98),
+            wedge("Destroyed-only fallen psi focus",(.41,.69,2.26),
                   (1.61,.46,.38),(.32,.74,.29),steel,root),
-            wedge("Destroyed-only shattered outer plinth",(1.07,-.64,.90),
+            wedge("Destroyed-only shattered outer plinth",(1.07,-.64,1.97),
                   (.65,1.07,.51),(.29,-.40,.32),armor,root),
-            wedge("Destroyed-only luminous psychic fissure",(-.66,-.90,1.58),
+            wedge("Destroyed-only luminous psychic fissure",(-.66,-.90,2.46),
                   (.17,.14,1.06),(.51,.36,.18),glow,root),
         ]
     return critical,destroyed
