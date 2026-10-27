@@ -3,6 +3,8 @@
 **Last source audit:** 27 October 2026  
 **Current prototype:** v2.42.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
+Post-v2.42 AI aircraft funding: after an Air Command is purchased, a safe AI base with an active harvester, radar and two tanks now saves toward aircraft production, prioritizing each plane ahead of optional turrets, tech and ground recruitment. Power shortages and actual threats override this saving. Three-faction paid-production, reserve, defensive and save/load regressions are in [AI aircraft funding](AI-AIRCRAFT-FUNDING.md). Natural contested-match air-wing frequency remains unverified.
+
 Post-v2.42 AI aviation investment: a prerequisite-complete AI now considers Air Command at its actual cost plus a generator reserve (2,400 credits), ahead of optional Technology Lab. Brownout recovery remains higher priority. A three-faction regression checks paid construction and saves; real contested air-wing frequency is not established.
 
 Post-v2.42 testing: the real-engine match lab now records first AI factory/radar/tech/airfield construction and completion, as well as first aircraft queue and deployment. An extended 720-second three-faction progression matrix runs in CI without granting AI prerequisites or free resources. Missing milestones remain explicit null values rather than implied aviation success. See [AI natural progression methodology](AI-NATURAL-PROGRESSION.md).
