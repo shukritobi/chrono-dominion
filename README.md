@@ -13,6 +13,11 @@
 - Enemy units at the edge of a visible fog tile are rendered, shown on radar, and selectable only if a living friendly sensor actually detects their position. The battlefield and radar share one sensor-verified roster each render frame.
 - Existing explored terrain, manual orders, save format, and original artwork remain unchanged. Automated edge-of-sight and save/load regressions are included.
 
+### Aircraft versus Skyguard balance exercise (post-v2.41 testing)
+
+- Added six deterministic, real-engine aircraft engagements: all three factions each run an unopposed strike and a powered Skyguard defense. The exercise measures projectile hits, aircraft survival, ammunition reloads and time spent servicing at an Air Command; it does **not** claim human win rates or mobile FPS.
+- Run `npm run balance:air` for console telemetry or `node tools/simulate-air-engagements.mjs --out=air-report.json` for JSON. The original nine-map/difficulty ground balance matrix remains unchanged. Both exercises now run in CI; their reports are archived together. See [air engagement verification](docs/AIR-ENGAGEMENT-BALANCE.md).
+
 ### v2.40 Aircraft landing and servicing animations
 
 - Returning aircraft now visibly descend when they reach a friendly, living Air Command. The Blender atlas and original vector renderer share a smooth touchdown/takeoff transition, a pulsing ground-service halo, reduced engine glow and deployed vector landing gear.
