@@ -74,6 +74,7 @@ jobs:
           node tests/rally-recovery-v220.test.mjs
           node tools/simulate-matches.mjs --duration=240 --out=balance-report.json
           node tools/simulate-matches.mjs --progression --out=progression-report.json
+          node tools/check-ai-economy-regression.mjs progression-report.json
           node tools/simulate-air-engagements.mjs --out=air-report.json
           node tests/production-v17.test.mjs
           node --check audio/sfx.js
@@ -109,6 +110,7 @@ jobs:
           node tests/ai-ore-economy.test.mjs
           node tests/ai-aviation-diagnostics.test.mjs
           node tests/ai-harvester-telemetry.test.mjs
+          node tests/ai-economy-guard.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
