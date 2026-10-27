@@ -57,7 +57,10 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(truck.oreSkipIndex,0,faction+': avoid the ambushed ore deposit');
   assert.ok(truck.oreSkipUntil>g.time,faction+': ore retry is delayed');
   for(let i=0;i<20;i++)g.step(.2);
-  assert.ok(distance(truck,enemy)>before+.2,faction+': real movement increases separation');
+  assert.ok(distance(truck,enemy)>before+.2,
+    faction+': real movement increases separation '+JSON.stringify({before,after:distance(truck,enemy),
+      truck:{x:truck.x,y:truck.y},enemy:{x:enemy.x,y:enemy.y},
+      target:g.harvesterEvadeTargets.get(truck),path:truck.path?.slice(0,3),stuck:truck.stuck}));
   assert.ok(g.players[1].credits>=credits,faction+': evasion cannot charge or grant credits');
   assert.equal(truck.order?.type,'harvest',faction+': original harvesting order remains');
   enemy.hp=0;
