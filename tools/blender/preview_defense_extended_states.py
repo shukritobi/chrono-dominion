@@ -86,6 +86,36 @@ def main():
       make_wreck("Destroyed-only torn front glacis", (.77,.61,.79),
                  (1.35,.40,.36), (.19,-.37,.55), material, root),
     ]
+    if a.faction == "federation":
+        # 80px visual repair: the original destroyed pose read as a smooth
+        # intact bunker. Split its roof and front armour into exposed,
+        # independently editable pieces, with genuinely raised fracture edges.
+        # These are wreckage-only meshes; the intact five-frame atlas is untouched.
+        fracture = bpy.data.materials.new("Federation exposed orange fracture edges")
+        fracture.use_nodes = True
+        shader = fracture.node_tree.nodes.get("Principled BSDF")
+        shader.inputs["Base Color"].default_value = (.88,.28,.055,1)
+        shader.inputs["Metallic"].default_value = .18
+        shader.inputs["Roughness"].default_value = .46
+        shader.inputs["Emission Color"].default_value = (1,.20,.018,1)
+        shader.inputs["Emission Strength"].default_value = 1.25
+        destroyed.extend([
+            make_wreck("Destroyed-only Federation peeled left roof armour",
+                       (-.55,-.40,2.04),(.73,.28,.66),(.23,.62,-.25),material,root),
+            make_wreck("Destroyed-only Federation peeled right roof armour",
+                       (.38,-.63,2.12),(.63,.25,.76),(.44,-.49,.38),material,root),
+            make_wreck("Destroyed-only Federation torn front wall slab",
+                       (.88,-.96,1.05),(.95,.30,.58),(.25,-.31,.41),material,root),
+            make_wreck("Destroyed-only Federation raised roof debris spike",
+                       (-.84,-.30,2.29),(.30,.27,.86),(.35,.57,.55),material,root),
+            make_wreck("Destroyed-only Federation exposed left fracture",
+                       (.35,-1.12,1.24),(.09,.09,.96),(.15,.20,-.45),fracture,root),
+            make_wreck("Destroyed-only Federation exposed right fracture",
+                       (1.02,-.99,1.10),(.09,.09,.86),(.12,.40,.30),fracture,root),
+            make_wreck("Destroyed-only Federation glowing split roof edge",
+                       (-.12,-.82,1.98),(.74,.09,.09),(.35,.40,.13),fracture,root),
+        ])
+        assert len(critical)+len(destroyed)==12
     a.output.mkdir(parents=True,exist_ok=True)
     source = a.output/(a.faction+"-turret-extended-states.blend")
     bpy.ops.wm.save_as_mainfile(filepath=str(source.resolve()),compress=True)
