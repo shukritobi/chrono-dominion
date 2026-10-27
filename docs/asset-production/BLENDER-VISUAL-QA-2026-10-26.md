@@ -680,3 +680,83 @@ targets the Coalition preview branch to reuse its original Blender
 utility helpers without copying or rerendering its validated asset.
 **Preview-only: no live game textures, manifest or runtime changes.**
 Next: original Psionic vehicle with independent 32-facing animation.
+
+
+## 2026-10-27 Psionic Phase-Loom hover carrier: 32-facing original preview
+
+**New preview implementation; render/pixel QA pending.** The next original
+Psionic vehicle is **PSI-VEH-008**, a floating Phase-Loom logistics and
+phase-projector craft. It does not recolour the Coalition six-wheel carrier
+or Federation AR-9 tracks. Its physically forked front horns leave a
+visible central phase channel, with independently articulated lateral
+wings, suspended crystal reactor, levitation coils and a projected attack
+lance. The destroyed pose hides intact horns and upper reactor parts and
+shows **seven separately editable broken meshes** with exposed fracture
+materials. Movement changes hover height, fin pose and core rotation;
+attack opens the fins and extends a separate phase lance.
+
+- [Original Blender generator](../../tools/blender/preview_psionic_phase_loom_carrier_32.py)
+  saves a compressed editable .blend in the idle pose and renders **128
+  original 160x160 RGBA frames** (32 facings × idle/move/attack/destroyed).
+- [Strict image QA](../../tools/blender/qa_psionic_phase_loom_carrier_32.py)
+  checks every image for alpha bounds, compares all four states at 80px,
+  requires >=20 move RGBA, >=40 attack RGBA and >=65 destroyed alpha changed
+  pixels, and checks every adjacent facing differs by >=20 RGBA pixels.
+  It generates 160px and 80px contact sheets and a separate **5120x640
+  review atlas**. These are not game-compatible production atlases.
+- [Targeted branch-scoped Blender workflow](../../.github/workflows/psionic-phase-loom-carrier-32-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved .blend and
+  asserts seven hidden editable wreckage meshes, two forward horn groups
+  and a suspended spindle before checking all actual PNGs.
+- Model commit [e6a19f30](https://github.com/shukritobi/chrono-dominion/commit/e6a19f3080bd65a14bc49f3aa1ba9f8ea6a161ae);
+  pixel QA commit [82bdf8d8](https://github.com/shukritobi/chrono-dominion/commit/82bdf8d84921b5aa5fa099d25bdcd734f0f124dc);
+  QA correction [546531b1](https://github.com/shukritobi/chrono-dominion/commit/546531b12685241f4b165474f8e4e4d017682efd);
+  workflow commit [715345da](https://github.com/shukritobi/chrono-dominion/commit/715345da4cf169cb143cf1cc6d3df842a3bf0526).
+
+**Verification boundary:** Blender is not installed in the local execution
+container, so do **not** claim this model has rendered, reopened, passed
+pixel gates or been visually inspected until the targeted GitHub Actions
+artifact is available and checked. If any 80px gate fails, repair geometry
+rather than lowering thresholds. Do not duplicate an already running job.
+**No production art, live textures, runtime code or manifests were changed.**
+
+### Final verified Psionic Phase-Loom render (27 October 2026)
+
+The first targeted [workflow #40453851489](https://github.com/shukritobi/chrono-dominion/actions/runs/40453851489)
+failed **before rendering** because Blender's script execution did not put
+the shared modeling helper directory on `sys.path`. No geometry gate
+failed; [import-path fix commit 7272efb5](https://github.com/shukritobi/chrono-dominion/commit/7272efb5eb3ed5dd6aa1c4a4942e6efbda1a074c)
+restored the established helper-import pattern without changing the model.
+The automatic [targeted workflow #40453937907](https://github.com/shukritobi/chrono-dominion/actions/runs/40453937907)
+then **passed every step**: Blender 4.2.23 rendered all 128 RGBA frames,
+saved and reopened the **122,289-byte editable .blend**, confirmed
+**seven hidden editable wreckage meshes**, both independent horn groups
+and the suspended spindle, and passed strict 80px pixel gates.
+
+The [successful preview artifact #12711387091](https://github.com/shukritobi/chrono-dominion/actions/runs/40453937907/artifacts/12711387091)
+was downloaded and extracted. It contains all 128 unclipped 160×160 RGBA
+frames, a separate 5120×640 preview atlas, actual 160px/80px contact
+sheets and per-facing JSON QA. The actual contact sheets were visually
+inspected: the purple twin-prong hover silhouette and mint phase channel
+read at 80px, attack projects a bright central lance, and destruction
+physically removes the intact horns and exposes orange fracture pieces.
+The central reactor is subtle at 80px; hovering movement reads more as
+a small displacement than as obvious mechanical articulation. No
+rerender of previously validated Coalition/Federation vehicles occurred.
+
+| Changed pixels at 80px | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA | **884** | 1,140 | 1,055.7 |
+| Attack vs idle RGBA | **879** | 1,050 | 959.6 |
+| Destroyed vs idle RGBA | **947** | 1,141 | 1,059.1 |
+| Destroyed vs idle alpha | **686** | 865 | 786.5 |
+| Adjacent-facing idle RGBA | **947** | 1,110 | 1,037.1 |
+
+**Preview QA passed; not playable yet.** The 32-direction four-state
+5120×640 atlas is *not* compatible with the existing 1/8-direction game
+loader. The separate preview branch and draft PR retain only modeling,
+QA, workflow and documentation changes. No live art, textures,
+production manifests or runtime files were modified.
+
+Next: review and polish Psionic phase-core readability at 80px, then
+continue missing faction vehicle classes and 32-direction destruction.
