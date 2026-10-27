@@ -1196,3 +1196,40 @@ veins are subtle at 80px. The spectral attack flare is visible but partly
 covers the front psychic needles. The original drone has one movement pose
 and one firing pose, not yet a temporal cycle. It remains **preview-only**;
 no art publication or game integration is approved.
+
+
+## 2026-10-28 PSI-VEH-004 four-phase psychic discharge — render verification pending
+
+**Preview-only, not approved for integration.** This follow-up opens the
+already validated Hallucination Drone editable source from
+[successful Actions #40583938655](https://github.com/shukritobi/chrono-dominion/actions/runs/40583938655)
+rather than regenerating any of its original 128 sprites. It adds 15
+separately editable physical Blender effect meshes: three toroidal
+focusing rings, two tapered neural lances, four eight-vertex faceted
+psychic filaments and six detached mirage splinters. The six original
+petal rigs and independent neural iris move between **charge → focus →
+burst → cooldown**, with the original five attack meshes retained but
+hidden to reduce overexposed weapon glare.
+
+- [Original new Blender modeling](../../tools/blender/preview_psionic_hallucination_temporal_attack.py).
+- [Actual 160px/80px PNG QA and contact-sheet generator](../../tools/blender/qa_psionic_hallucination_temporal_attack.py).
+- [Isolated targeted render workflow](../../.github/workflows/psionic-hallucination-temporal-attack-review.yml).
+- Expected archived preview atlas SHA-256:
+  59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d.
+  The pipeline must verify this before and after rendering.
+- Planned deliverables: a second compressed editable .blend, 128 new
+  160×160 transparent RGBA sprites, separate 5120×640 four-phase preview
+  atlas, real 160px and 80px contact sheets, 80px animated GIF, and
+  per-facing JSON. Acceptance gates: >=30 changed RGBA pixels at 80px
+  between each adjacent phase, >=50 versus the old attack, >=25 changed
+  alpha pixels for burst versus idle, and >=20 changed RGBA pixels for
+  adjacent viewing directions. Clipping and source reopen are mandatory.
+
+**Status at implementation:** the workflow has not yet passed; no numerical
+pixel results or source-reopen verification are claimed here. Review the
+actual 160px/80px artifact and record exact metrics, run/commit links,
+and any failures before promoting this from pending to validated. If
+a threshold fails, change the physical geometry rather than lowering
+the acceptance gates. No approved texture, live manifest, or runtime
+path is written. The 32-facing temporal atlas remains unsupported by
+the current game sprite loader.
