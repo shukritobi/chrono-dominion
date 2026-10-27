@@ -143,7 +143,7 @@ function runScenario(map,difficulty,mi,di){
   const base=g.entities.filter(e=>e.kind==='hq');
   assert.equal(base.length,2);
   assert.ok(!g.fog[28]?.[27]?.seen,'fresh map must not expose the opposing command base');
-  let nextAction=5,iteration=0,peak=0,samples=0,platoonSeen=false,supportSeen=false,assaultLaunched=false,
+  let nextAction=5,iteration=0,peak=0,peakAIHarvesters=0,samples=0,platoonSeen=false,supportSeen=false,assaultLaunched=false,
     damageEvents=0,firstDamage=0,oreEvents=0,firstHarvest=0,
     firstObjectiveDiscovery=null,firstPlatoonAt=null;
   const observedRecon=new Set(),observedAircraft=new Set();
@@ -163,6 +163,8 @@ function runScenario(map,difficulty,mi,di){
     }
     g.step(frame);
     peak=Math.max(peak,g.entities.length);
+    peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
+      e.owner===1&&e.kind==='harvester'&&e.hp>0).length);
     for(const e of g.entities){
       if(e.owner!==1||e.hp<=0)continue;
       const milestone=aiMilestones[e.kind];
@@ -215,7 +217,7 @@ function runScenario(map,difficulty,mi,di){
     damage:[...g.stats.map(s=>Math.round(s.damageDealt))],
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
-    peakEntities:peak,platoonSeen,supportSeen,assaultLaunched,
+    peakEntities:peak,peakAIHarvesters,platoonSeen,supportSeen,assaultLaunched,
     assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
     siegeFocusOrders:g.aiSiegeOrders||0,aiStructureHits:g.aiSiegeHits||0,firstDamage:Math.round(firstDamage),
     firstHarvest:Math.round(firstHarvest),damageEvents,oreEvents,samples,
@@ -262,6 +264,7 @@ const report={
     totalAIStructureHits:results.reduce((n,r)=>n+r.aiStructureHits,0),
     casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
+    casesWithAIMultiHarvesters:results.filter(r=>r.peakAIHarvesters>=2).length,
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
     casesWithAirfields:results.filter(r=>r.airfieldSeen).length,
     casesWithAIFactories:results.filter(r=>r.aiMilestones.factory.operationalAt!==null).length,

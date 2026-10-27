@@ -2574,7 +2574,10 @@
       else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       else if(!owned('factory').length)choice='factory';
-      else if(!owned('radar').length&&me.credits>2600)choice='radar';
+      // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
+      // bases after the second harvester purchase. Keep a generator reserve.
+      else if(!owned('radar').length&&
+        me.credits>=BUILD.radar.cost+BUILD.generator.cost)choice='radar';
       else if(skyguardGoal>0&&built('radar')&&owned('flak').length<skyguardGoal&&
         me.credits>=BUILD.flak.cost+500)choice='flak';
       // Air Command requires factory + radar, not optional Technology Lab.
@@ -2614,10 +2617,19 @@
       const savingForAircraft=aviationInvestment&&
         (!built('airfield')||shortage||
           me.credits<UNITS.aircraft.cost+BUILD.generator.cost);
+      // A second *paid* early harvester improves sustainable income instead
+      // of leaving the AI dependent on one ore truck for the whole match.
+      // Never interrupt an aviation reserve, emergency defense or brownout,
+      // and stop at two to avoid a runaway economy/traffic loop.
+      const expandingOreEconomy=this.time<=120&&!threatened&&!shortage&&
+        !owned('airfield').length&&!savingForAirfield&&
+        built('refinery')&&owned('harvester').length===1&&
+        me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
       if(!this.queues.some(q=>q.side===side)&&
         !savingForAirfield&&!savingForAircraft){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        else if(expandingOreEconomy)unit='harvester';
         else if(aviationInvestment&&built('airfield')&&!shortage&&
           me.credits>=UNITS.aircraft.cost+BUILD.generator.cost)unit='aircraft';
         else if(built('factory')&&!owned('recon').length&&me.credits>=UNITS.recon.cost+650)unit='recon';

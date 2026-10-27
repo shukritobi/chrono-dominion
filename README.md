@@ -8,6 +8,11 @@
 
 
 
+### Early AI ore-economy expansion (post-v2.42)
+
+- The AI can now purchase one additional harvester during the first 120 seconds when it has a working refinery, sufficient credits for the 900-credit harvester **plus** a 650-credit emergency generator reserve, and no nearby detected attack or power shortage. This is a real production queue, not free income; it stops at two living harvesters and never interrupts Air Command or aircraft savings.
+- The natural-progression and ground balance reports now include peak AI harvester count and scenarios with two active harvesters. This measures economy growth without claiming aircraft deployment has been solved. [Regression](tests/ai-ore-economy.test.mjs) · [notes](docs/AI-ORE-ECONOMY.md).
+
 ### AI aircraft funding after Air Command (post-v2.42)
 
 - With an Air Command purchased and an intact harvester, radar and two-tank defensive screen, the AI now banks for a paid Strike Aircraft plus a 650-credit emergency generator reserve. It defers optional turrets, technology labs, reconnaissance replacements and specialists while saving; urgent defense, harvester replacement and brownout recovery still take priority.
