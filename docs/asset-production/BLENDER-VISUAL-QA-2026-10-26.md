@@ -883,3 +883,30 @@ than a temporal firing sequence. This is a preview, not a game-ready
 which contains the shared original Blender modeling helpers. The current
 game loader supports 1/8 directions, not this separate 32-facing preview.
 No live texture, atlas manifest or gameplay file was modified.
+
+## 2026-10-28 Coalition Warden dual-ion temporal attack (verification underway)
+
+**Preview-only; no live sprite publication.** This focused pass reuses the
+validated [COA-VEH-004 original 32-facing Blender artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359)
+rather than regenerating its 128 original sprites. A second editable source
+adds **16 independent Blender meshes**: six induction coils, four expanding
+muzzle waves, two ion penetrators and four faceted plasma ribbons. The two
+ion emitters operate in a four-phase **charge / synchronize / volley /
+cooldown** sequence across 32 facings, creating 128 new 160px RGBA previews.
+
+- [New dual-ion Blender modeling script](../../tools/blender/preview_coalition_warden_temporal_attack.py).
+- [Strict new-vs-archived 160px/80px image QA](../../tools/blender/qa_coalition_warden_temporal_attack.py).
+- [Isolated targeted workflow](../../.github/workflows/coalition-warden-temporal-attack-review.yml):
+  [render run #40547061043](https://github.com/shukritobi/chrono-dominion/actions/runs/40547061043).
+- The workflow checks 16 hidden editable new meshes, four genuine faceted
+  streamer meshes, eight original wreckage meshes, 18 track cleats and two
+  original barrels after reopening the saved source. Pixel QA requires
+  30 changed RGBA pixels per phase transition at 80px, 50 for volley vs
+  the archived attack, 20 changed alpha pixels for volley vs idle, and
+  20 RGBA pixels between adjacent charge facings. It checks every frame
+  for transparency, clipping and a preserved archived atlas SHA-256.
+- **Pending:** do not call the new animation visually validated until
+  workflow completion, independent inspection of real 160px/80px PNGs
+  and exact per-facing metrics are recorded here.
+
+No published textures, game manifests or gameplay code were edited.
