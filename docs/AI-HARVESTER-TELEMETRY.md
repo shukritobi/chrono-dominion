@@ -75,3 +75,27 @@ Only the AI's own truck positions and friendly operational refineries are
 inspected; no unseen enemy information enters the report. The game, save
 schema, AI economy and assets remain unchanged. Inspect the archived
 `progression-report.json` from CI before changing refinery return routing.
+
+## Experimental refinery perimeter approach (28 October 2026)
+
+The first detailed progression artifact located all three six-second loaded
+stalls on the snow map. Trucks 16 and 20 stopped around (23, 20.8) or
+(25.3, 20.9), outside the 3.6-tile unload radius, while pursuing the same
+hard-coded southeast refinery target (29.9, 25.3). The path snapshots showed
+no narrow-lane wait or active yield. This supports testing an alternate
+approach but does **not** prove the fixed target was the only obstruction.
+
+The initial experiment changed **every** loaded return and failed the
+natural-match economy guard (enemy ore fell on all three maps). The revised
+experiment preserves the original docking target on normal trips and only
+searches a legal reachable alternate after six seconds without meaningful
+progress. The recovery search evaluates at most eight candidates; the assignment lives in a WeakMap and never changes the saved entity schema. The existing
+720-second economy guard must pass before the experiment can be merged.
+
+The stall-only revision also failed the economy gate. Inspection of its
+archived report showed that **five of seven** loaded-stall snapshots had a
+`null` A* path goal while still outside unloading range. Some fractional
+perimeter targets rounded to unreachable grid endpoints or had no remaining
+waypoints. A third experimental revision now requires a nonempty A* path and
+an actual reachable terminal waypoint safely inside the unloading radius.
+This remains unmerged until natural-match income and delivery counts pass.

@@ -53,6 +53,37 @@ assert.equal(g.chooseHarvestDeposit(riverFarmer),0,'temporary blacklist prevents
 riverFarmer.oreSkipUntil=g.time-1;
 assert.equal(g.chooseHarvestDeposit(riverFarmer),1,'blacklist expires');
 
+// A loaded truck must find a legal approach when the old fixed southeast
+// refinery target is occupied by a nearby structure.
+g.entities=[];g.ores=[];g.water=()=>false;
+const returnRefinery=g.add(0,'refinery',12,12);
+g.add(0,'generator',14,13);
+const returning=g.add(0,'harvester',7,12);
+returning.load=360;returning.work=0;
+g.processHarvester(returning,.1);
+const firstTarget=g.harvesterReturnRoutes.get(returning).target;
+assert.ok(Math.hypot(firstTarget.x-13.9,firstTarget.y-13.3)<.01,
+  'normal returns retain the original docking target until a genuine stall');
+// If no progress is made for six seconds, try another reachable perimeter
+// rather than retrying the same blocked target forever.
+const assignment=g.harvesterReturnRoutes.get(returning);
+assignment.lastDistance=Math.hypot(returning.x-firstTarget.x,returning.y-firstTarget.y);
+assignment.lastProgressAt=g.time-7;
+g.processHarvester(returning,.1);
+const secondTarget=g.harvesterReturnRoutes.get(returning).target;
+assert.ok(Math.hypot(firstTarget.x-secondTarget.x,firstTarget.y-secondTarget.y)>=1.2,
+  'stalled loaded trucks rotate away from the previous approach');
+assert.ok(g.canOccupyUnit(returning,secondTarget.x,secondTarget.y,true),
+  'recovery must select a legal alternate refinery approach');
+assert.ok(Math.hypot(secondTarget.x-12,secondTarget.y-12)<=3.6,
+  'recovery target must remain within the refinery unload radius');
+const returnRoute=g.findPath(returning.x,returning.y,secondTarget.x,secondTarget.y,returning);
+assert.ok(returnRoute.length>0,'recovery must not select an empty A* route');
+assert.ok(Math.hypot(returnRoute.at(-1).x-12,returnRoute.at(-1).y-12)<=3.35,
+  'rounded terminal waypoint must actually enter the unloading radius');
+assert.ok(!JSON.stringify(returning).includes('harvesterReturnRoutes'),
+  'transient route assignments must not be stored on saved entities');
+
 // A missing persisted ore index is fine: older save data must be compatible.
 g.water=savedWater;
 g.newMatch(settings);

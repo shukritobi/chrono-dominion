@@ -1681,14 +1681,67 @@
       }
       return -1;
     }
+    chooseRefineryApproach(e,refinery,excluded=null){
+      // An old fixed southeast docking coordinate could strand loaded trucks
+      // behind a building or narrow route. Search legal reachable points on
+      // the refinery perimeter, preferring the side closest to the truck.
+      const candidates=[];
+      for(const radius of [2.45,3.05])for(let i=0;i<12;i++){
+        const angle=i*Math.PI/6;
+        const point={x:refinery.x+Math.cos(angle)*radius,
+          y:refinery.y+Math.sin(angle)*radius};
+        if(excluded&&dist(point,excluded)<1.2)continue;
+        if(!this.canOccupyUnit(e,point.x,point.y,true))continue;
+        candidates.push({point,distance:dist(e,point)});
+      }
+      candidates.sort((a,b)=>a.distance-b.distance||
+        a.point.x-b.point.x||a.point.y-b.point.y);
+      // Bound A* work to the eight nearest physically legal approaches.
+      for(const {point} of candidates.slice(0,8)){
+        const route=this.findPath(e.x,e.y,point.x,point.y,e);
+        const end=route.at(-1);
+        // A* can return an empty path or a nearest fallback for a rounded
+        // destination. Such a point can be physically legal yet leave the
+        // truck outside the actual unloading radius forever.
+        if(route.length&&end&&dist(end,point)<=.65&&
+           dist(end,refinery)<=3.35&&
+           this.canOccupyUnit(e,end.x,end.y,true))return point;
+      }
+      // Preserve legacy fallback if terrain makes every sampled pad unusable.
+      return {x:refinery.x+1.9,y:refinery.y+1.3};
+    }
     processHarvester(e,dt){
       e.work-=dt;
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
         b.kind==='refinery'&&b.built);
       if(!refinery)return;
       if(e.load>=360){
-        if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
-        else if(e.work<=0){
+        // Return assignments are transient (WeakMap), never serialized into
+        // existing save files. Re-evaluate only after genuine six-second
+        // stalls, not on every frame or during ordinary refinery unloading.
+        const returns=this.harvesterReturnRoutes||
+          (this.harvesterReturnRoutes=new WeakMap());
+        if(dist(e,refinery)>3.6){
+          let state=returns.get(e);
+          if(!state||state.refineryId!==refinery.id){
+            // Keep the proven legacy route during normal deliveries; only
+            // spend extra pathfinding effort after a measured stall.
+            const target={x:refinery.x+1.9,y:refinery.y+1.3};
+            state={refineryId:refinery.id,target,
+              lastDistance:dist(e,target),lastProgressAt:this.time};
+            returns.set(e,state);
+          }
+          const remaining=dist(e,state.target);
+          if(remaining<state.lastDistance-.3){
+            state.lastDistance=remaining;state.lastProgressAt=this.time;
+          }else if(this.time-state.lastProgressAt>=6){
+            state.target=this.chooseRefineryApproach(e,refinery,state.target);
+            state.lastDistance=dist(e,state.target);
+            state.lastProgressAt=this.time;
+          }
+          this.move(e,state.target.x,state.target.y,dt);
+        }else if(e.work<=0){
+          returns.delete(e);
           this.players[e.owner].credits+=e.load;
           if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
           e.load=0;e.work=.6;

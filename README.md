@@ -9,6 +9,14 @@
 
 
 
+### Experimental refinery return access (post-v2.42)
+
+- Loaded harvesters retain the established docking target on ordinary trips,
+  but can search a legal reachable alternate refinery-perimeter approach after
+  a sustained six-second no-progress interval. Route assignments are transient;
+  the save schema and unit costs remain unchanged. This change is subject to
+  the extended natural-match economy regression gate.
+
 ### Individual AI full-cargo stall snapshots (post-v2.42)
 
 - The 720-second match report now preserves up to 12 six-second loaded-stall
