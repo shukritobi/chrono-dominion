@@ -54,6 +54,18 @@ for(const faction of ['coalition','federation','psionic']){
   assert.ok(g.saveGame()&&g.loadGame(),'construction must survive save/load');
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,1);
 
+  reset();prerequisites();
+  g.add(1,'tank',24,20);g.add(1,'tank',23,19);
+  g.time=150;g.players[1].credits=1800;g.queues=[];
+  const bank=g.players[1].credits;
+  g.runAI();
+  assert.equal(g.players[1].credits,bank,
+    faction+': safe two-tank base should bank credits toward aviation');
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': routine tank recruitment must pause during aviation saving');
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='turret').length,0,
+    faction+': optional turret must not consume the aviation reserve');
+
   reset();prerequisites();g.time=150;g.players[1].credits=2399;
   g.runAI();
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,0,
