@@ -102,6 +102,7 @@ jobs:
           node tests/aircraft-service-visual-v240.test.mjs
           node tests/fog-visibility-v241.test.mjs
           node tests/ai-skyguard-scaling-v242.test.mjs
+          node tests/ai-construction-frontier.test.mjs
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
