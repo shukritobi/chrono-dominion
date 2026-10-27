@@ -1233,3 +1233,52 @@ a threshold fails, change the physical geometry rather than lowering
 the acceptance gates. No approved texture, live manifest, or runtime
 path is written. The 32-facing temporal atlas remains unsupported by
 the current game sprite loader.
+
+
+### Final validated four-phase Hallucination Drone review (28 October 2026)
+
+- [Successful targeted Blender 4.2.23 Actions run #40592046457](https://github.com/shukritobi/chrono-dominion/actions/runs/40592046457),
+  [preview artifact #12773569603](https://github.com/shukritobi/chrono-dominion/actions/runs/40592046457/artifacts/12773569603)
+  and [draft stacked PR #72](https://github.com/shukritobi/chrono-dominion/pull/72).
+- Original modeling commit [de58fee7](https://github.com/shukritobi/chrono-dominion/commit/de58fee7b153d2c0e951521f033844a9bbe07d78);
+  actual-pixel QA commit [c4439eba](https://github.com/shukritobi/chrono-dominion/commit/c4439eba7ee97c43be0698f4815dc4702dca7d8b);
+  isolated workflow commit [4e6d053b](https://github.com/shukritobi/chrono-dominion/commit/4e6d053b042d1a84287523ad643e28e727feebde).
+- All **128 new 160×160 RGBA frames** passed. The saved **137,295-byte
+  compressed editable Blender source reopened successfully** and verified
+  all 15 new meshes, four genuine eight-vertex/three-face filaments, six
+  original petal rigs, ten original wreckage meshes and five preserved
+  original attack meshes (all hidden in the saved idle-compatible source).
+- Original atlas SHA-256 was unchanged before/after:
+  59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d.
+  New separate 5120×640 temporal atlas SHA-256:
+  4a749486d0f75bb76cdae81049516938311f5e33e53dd2851d9590af4b6c7c5b.
+- Downloaded and inspected the **actual 1280×640 160px** and
+  **640×320 80px** contact sheets, plus the separate animated 80px GIF.
+  Five independent charge→focus 80px RGBA measurements at facings
+  **00/07/15/23/31 = 648/664/675/666/647**, matching JSON exactly.
+
+| Actual 80px changed pixels across 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → focus RGBA | **619** | 699 | 661.5 |
+| Focus → burst RGBA | **590** | 742 | 684.9 |
+| Burst → cooldown RGBA | **618** | 750 | 703.3 |
+| Burst vs archived single-pose attack RGBA | **571** | 728 | 678.1 |
+| Burst vs archived idle RGBA | **605** | 735 | 695.2 |
+| Burst vs archived idle alpha | **457** | 576 | 542.9 |
+| Charge vs archived idle RGBA | **569** | 620 | 596.2 |
+| Adjacent-facing charge RGBA | **603** | 652 | 633.0 |
+
+**Visual finding:** the new forward physical torus and forked discharge
+remain recognizable at 80px and the intense old single-frame flare no
+longer obscures the twin psychic needles. However, the delicate torus
+and petal articulation remain subtle at gameplay scale; the 160px view
+is more legible. Future polish could enlarge the main burst silhouette
+slightly without increasing bloom. The original movement remains a
+single-pose preview, and the game loader cannot consume the separate
+32-facing temporal atlas yet.
+
+**Safety verified:** the comparison against parent PR #70 contains only
+five development files (new Blender model, strict PNG QA, isolated workflow,
+AssetRegister and this document). No live textures, game manifest,
+runtime or gameplay files were modified. No original 128-frame sprites
+were rerendered. **Preview only; not integrated or approved for publishing.**
