@@ -895,6 +895,11 @@ ion emitters operate in a four-phase **charge / synchronize / volley /
 cooldown** sequence across 32 facings, creating 128 new 160px RGBA previews.
 
 - [New dual-ion Blender modeling script](../../tools/blender/preview_coalition_warden_temporal_attack.py).
+  Modeling [commit 4895bd2e](https://github.com/shukritobi/chrono-dominion/commit/4895bd2eb3990ec30dd6dd80392c0cbcc0ddbfd3).
+  Image QA [commit 490e61a0](https://github.com/shukritobi/chrono-dominion/commit/490e61a0052fe9891161a3806b58750850ad06c8).
+  Workflow [commit d5636f92](https://github.com/shukritobi/chrono-dominion/commit/d5636f92dde1001a5a2bc1d50d35cb80ab7293c7).
+  Measured QA documentation [commit c327e12c](https://github.com/shukritobi/chrono-dominion/commit/c327e12ce99a7ccf56a41216d6bb246909df95d4).
+  [Draft review PR #60](https://github.com/shukritobi/chrono-dominion/pull/60).
 - [Strict new-vs-archived 160px/80px image QA](../../tools/blender/qa_coalition_warden_temporal_attack.py).
 - [Isolated targeted workflow](../../.github/workflows/coalition-warden-temporal-attack-review.yml):
   [render run #40547061043](https://github.com/shukritobi/chrono-dominion/actions/runs/40547061043).
