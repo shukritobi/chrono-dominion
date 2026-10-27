@@ -553,6 +553,35 @@ and deliberately leaves Coalition, Psionic and all published art untouched.
   before and after, enforces destroyed silhouette >=132 changed alpha pixels
   at 80px (the prior successful baseline), and requires >=8 newly exposed
   warm fracture pixels at 80px.
-- **Status: awaiting targeted GitHub Actions verification.** Do not claim
-  rendered/passed or assign new pixel metrics until the run finishes and its
-  actual contact sheets are inspected. No live textures or manifests changed.
+- [Initial workflow #40464802133](https://github.com/shukritobi/chrono-dominion/actions/runs/40464802133)
+  rendered all four states and saved the Blender source but **failed the source
+  reopen assertion** because the third bright seam was named "glowing split
+  roof edge" rather than containing the word "fracture". The meshes were
+  present; the QA assertion was corrected in
+  [commit a496b7ab](https://github.com/shukritobi/chrono-dominion/commit/a496b7ab8a0f2399af6135e6d50595d840f4942f).
+- [Successful focused Blender workflow #40464898636](https://github.com/shukritobi/chrono-dominion/actions/runs/40464898636)
+  **passed every step**, including reopening the editable source with **12
+  independently editable wreckage meshes, all hidden in the intact pose**,
+  and validating actual transparent 160px/80px PNGs. The successful
+  [preview-only artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40464898636/artifacts/12716192510)
+  was downloaded and both real contact sheets inspected.
+
+| Federation turret state | Changed alpha at 160px / 80px | Changed RGBA at 160px / 80px | Newly exposed warm pixels at 80px |
+|---|---:|---:|---:|
+| Critical | 376 / **90** | 4,229 / **1,246** | 135 |
+| Destroyed | 614 / **149** | 4,682 / **1,326** | **248** |
+| Power-Out | 0 / **0** | 4,601 / **1,179** | 3 |
+
+The prior successful Federation destroyed pose changed **132** alpha pixels
+at 80px. The repaired pose changes **149** (+17). Independent comparison
+against the archived earlier destroyed PNG shows **955 changed RGBA pixels
+and 27 changed alpha pixels at 80px** (3,568 RGBA / 106 alpha at 160px).
+The split roof and orange fracture seams now remain visible at 80px; the
+central roof slab is still fairly smooth and could benefit from deeper
+future fragmentation.
+
+The original five-frame 160x800 atlas SHA-256 was unchanged:
+`f131d2020d71c5ae68578f44374c67170e255c7554993c946eb44f63d1f00e6e`.
+The artifact contains a separate edited .blend and independent extra-state
+PNGs. **Preview only: no published game textures, production manifests or
+runtime code were changed.**
