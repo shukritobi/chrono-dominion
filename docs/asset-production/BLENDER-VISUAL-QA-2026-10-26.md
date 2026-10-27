@@ -719,3 +719,44 @@ pixel gates or been visually inspected until the targeted GitHub Actions
 artifact is available and checked. If any 80px gate fails, repair geometry
 rather than lowering thresholds. Do not duplicate an already running job.
 **No production art, live textures, runtime code or manifests were changed.**
+
+### Final verified Psionic Phase-Loom render (27 October 2026)
+
+The first targeted [workflow #40453851489](https://github.com/shukritobi/chrono-dominion/actions/runs/40453851489)
+failed **before rendering** because Blender's script execution did not put
+the shared modeling helper directory on `sys.path`. No geometry gate
+failed; [import-path fix commit 7272efb5](https://github.com/shukritobi/chrono-dominion/commit/7272efb5eb3ed5dd6aa1c4a4942e6efbda1a074c)
+restored the established helper-import pattern without changing the model.
+The automatic [targeted workflow #40453937907](https://github.com/shukritobi/chrono-dominion/actions/runs/40453937907)
+then **passed every step**: Blender 4.2.23 rendered all 128 RGBA frames,
+saved and reopened the **122,289-byte editable .blend**, confirmed
+**seven hidden editable wreckage meshes**, both independent horn groups
+and the suspended spindle, and passed strict 80px pixel gates.
+
+The [successful preview artifact #12711387091](https://github.com/shukritobi/chrono-dominion/actions/runs/40453937907/artifacts/12711387091)
+was downloaded and extracted. It contains all 128 unclipped 160×160 RGBA
+frames, a separate 5120×640 preview atlas, actual 160px/80px contact
+sheets and per-facing JSON QA. The actual contact sheets were visually
+inspected: the purple twin-prong hover silhouette and mint phase channel
+read at 80px, attack projects a bright central lance, and destruction
+physically removes the intact horns and exposes orange fracture pieces.
+The central reactor is subtle at 80px; hovering movement reads more as
+a small displacement than as obvious mechanical articulation. No
+rerender of previously validated Coalition/Federation vehicles occurred.
+
+| Changed pixels at 80px | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA | **884** | 1,140 | 1,055.7 |
+| Attack vs idle RGBA | **879** | 1,050 | 959.6 |
+| Destroyed vs idle RGBA | **947** | 1,141 | 1,059.1 |
+| Destroyed vs idle alpha | **686** | 865 | 786.5 |
+| Adjacent-facing idle RGBA | **947** | 1,110 | 1,037.1 |
+
+**Preview QA passed; not playable yet.** The 32-direction four-state
+5120×640 atlas is *not* compatible with the existing 1/8-direction game
+loader. The separate preview branch and draft PR retain only modeling,
+QA, workflow and documentation changes. No live art, textures,
+production manifests or runtime files were modified.
+
+Next: review and polish Psionic phase-core readability at 80px, then
+continue missing faction vehicle classes and 32-direction destruction.
