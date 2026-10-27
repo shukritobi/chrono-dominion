@@ -955,3 +955,91 @@ suspension has only one movement pose. A future temporal attack animation
 should add a widening magnetic ring or curved energy arc. Do not replace
 the already verified preview merely to tweak it without a targeted art
 review. **No live textures, manifests, runtime or gameplay were changed.**
+
+
+## 2026-10-27 Psionic Gravitic Manipulator — four-phase 32-facing attack sequence (awaiting render QA)
+
+**Preview-only; not approved for publication.** This pass addresses the
+validated PSI-VEH-005's single-frame vertical magnetic attack by adding
+an original **charge → grip → discharge → release** sequence. The original
+validated model and 128-frame source atlas are **not rerendered**. The
+targeted workflow downloads the successful Blender artifact from
+[run #40478892855](https://github.com/shukritobi/chrono-dominion/actions/runs/40478892855),
+loads its saved editable `.blend`, and renders only **128 new 160×160
+RGBA temporal frames** (four phases × 32 facings) to an isolated preview
+directory. This branch is based on the unmerged [PR #39](https://github.com/shukritobi/chrono-dominion/pull/39).
+
+- [Original editable temporal Blender geometry](../../tools/blender/preview_psionic_gravitic_attack_sequence.py):
+  three separate luminous toroidal field hoops and four curved magnetic
+  filaments, with phase-specific jaw opening, tower rotation, crystal lift,
+  coil expansion and beam visibility. A **new** `.blend` is saved with
+  seven hidden `temporal_only` objects; the eight pre-existing wreckage
+  meshes remain intact and hidden.
+- [Strict pixel QA](../../tools/blender/qa_psionic_gravitic_attack_sequence.py):
+  128 frame dimensions, RGBA alpha bounds, all 32 facings, consecutive
+  phase difference >=35 changed RGBA pixels at **80px**, peak vs archived
+  attack >=50, peak vs idle >=80 RGBA and >=20 alpha pixels. Writes
+  per-facing JSON, 160px/80px contact sheets, and a **separate** 5120×640
+  temporal preview atlas.
+- [Targeted preview workflow](../../.github/workflows/psionic-gravitic-temporal-attack-review.yml):
+  downloads the archived source artifact rather than rebuilding it,
+  installs checksum-verified Blender 4.2.23, reopens the new editable
+  `.blend`, checks 3 torus meshes + 4 curve objects + 8 existing wreckage
+  meshes, and compares the original atlas SHA-256 before/after.
+- Modeling commit [aca140c1](https://github.com/shukritobi/chrono-dominion/commit/aca140c14f086800343aeb21605598be33e9738a);
+  QA commit [9cfd8a43](https://github.com/shukritobi/chrono-dominion/commit/9cfd8a43ecbdd8a19a9f41d621ee2d5edb41f7cb);
+  workflow commit [065dd766](https://github.com/shukritobi/chrono-dominion/commit/065dd766cad0f42672475f2bd2688cc63d307a23).
+
+**Targeted workflow launched:** [Actions run #40486481510](https://github.com/shukritobi/chrono-dominion/actions/runs/40486481510), initially confirmed to have downloaded the archived source, compiled the new scripts, and entered the 128-frame Blender render step. Archived source preview atlas SHA-256 independently verified from the original artifact: `4f5e4c9b8a90262407fd5145e6363e695d3012642509da40c1861e497441c6f2` (the workflow checks its SHA again after rendering).
+
+**Current verification status: pending Actions render and real PNG inspection.**
+Do not report pixel metrics or source reopen as passed until the targeted
+workflow finishes and actual artifact is inspected. Potential blockers:
+the new vortex may clip at extreme facings, small helices may not read at
+80px, or GitHub Actions may reject archived cross-run artifact access.
+Fix geometry or workflow instead of lowering visual thresholds.
+No live sprites, game manifests or runtime files were modified.
+
+
+### Final validated temporal Gravitic attack review — 27 October 2026
+
+**PASS; supersedes the pending state above.** [Targeted successful Actions
+run #40486481510](https://github.com/shukritobi/chrono-dominion/actions/runs/40486481510)
+downloaded the existing verified PSI-VEH-005 artifact from run #40478892855,
+**did not rerender any of its 128 original frames**, rendered **128 new
+160×160 RGBA attack-phase frames**, and uploaded
+[artifact #12724493741](https://github.com/shukritobi/chrono-dominion/actions/runs/40486481510/artifacts/12724493741).
+The separate temporal atlas is **5120×640 RGBA**. The new **142,773-byte
+editable Blender source** reopened successfully, verifying **3 independent
+torus meshes, 4 editable curved field filaments and 8 retained hidden
+wreckage meshes**. The original source atlas SHA-256 remained exactly
+`4f5e4c9b8a90262407fd5145e6363e695d3012642509da40c1861e497441c6f2`
+before and after rendering.
+
+| Changed RGBA pixels at 80px across 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → Grip | **1,007** | 1,214 | 1,143.0 |
+| Grip → Discharge | **1,018** | 1,292 | 1,215.0 |
+| Discharge → Release | **1,070** | 1,332 | 1,246.6 |
+| Peak Discharge vs original single attack | **1,030** | 1,314 | 1,228.1 |
+| Peak Discharge vs archived idle | **1,075** | 1,335 | 1,252.0 |
+| Peak Discharge vs idle alpha pixels | **680** | 913 | 814.6 |
+
+The actual 160px and 80px contact sheets from the successful artifact
+were downloaded and visually inspected. The charge phase exposes a single
+ring, grip tightens multiple concentric loops, discharge wraps the lifting
+field in bright helical arcs, and release leaves a smaller expanding swirl.
+At 80px all four phases read distinctly in every sampled facing. Five
+independent Pillow recomputations of **peak vs original attack** at
+facings 00/07/15/23/31 returned **1,273 / 1,288 / 1,270 / 1,223 /
+1,235** changed 80px RGBA pixels, exactly matching the JSON QA report.
+All 128 frames were unclipped and passed the per-facing thresholds.
+
+**Visual limitation:** discharge can be very bright and obscure the
+underlying lifting spindle at 80px; a later artistic review may soften
+the mint emission or taper the helix thickness. The preview remains
+distinctive and passes all acceptance gates. No live textures, published
+manifests or game runtime were modified. This sequence is **not integrated
+into gameplay**; the game loader currently supports 1/8 facings rather
+than these 32-facing temporal previews. Next: additional missing vehicle
+classes, with separate gameplay integration planning only after approval.
