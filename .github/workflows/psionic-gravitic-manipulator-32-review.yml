@@ -81,8 +81,8 @@ jobs:
         run: |
           set -euo pipefail
           python tools/blender/qa_psionic_gravitic_manipulator_32.py --stage generated/psionic-gravitic-manipulator-32
-          test -s generated/psionic-gravitic-manipulator-32/coalition-warden-contact-160.png
-          test -s generated/psionic-gravitic-manipulator-32/coalition-warden-contact-80.png
+          test -s generated/psionic-gravitic-manipulator-32/psionic-gravitic-manipulator-contact-160.png
+          test -s generated/psionic-gravitic-manipulator-32/psionic-gravitic-manipulator-contact-80.png
           test -s generated/psionic-gravitic-manipulator-32/pixel-qa.json
 
       - name: Upload preview-only Blender model, 128 sprites and visual QA
