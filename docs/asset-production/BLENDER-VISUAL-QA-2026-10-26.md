@@ -823,3 +823,39 @@ targets that preview branch. No older validated asset was rerendered.
 **Never overwrite unapproved game textures or manifests.** No live art,
 production atlas, runtime or gameplay files were modified. Next: continue
 remaining vehicle classes and plan the 32-facing loader separately.
+
+
+## 2026-10-27 Coalition Autonomous Warden Tank — original 32-facing preview in verification
+
+**Preview-only; not approved for publication.** The new **COA-VEH-004**
+is an unmanned split-track sentinel, distinct from the Coalition Modular
+Support Carrier: two separately armoured track pods, animated individual
+cleats, chevron glacis, gyrostabilised faceted sensor crown, two ion accelerator
+barrels, panoramic sensor visor, illuminated optics, and eight independently
+editable wreckage meshes. The destroyed pose hides intact upper weapons and
+roof components, then exposes fallen cannons, ruptured capacitor, detached
+track guard and raised roof armour. No previously validated model is rerendered.
+
+- [New original Blender model and renderer](../../tools/blender/preview_coalition_warden_32.py)
+  saves an intact editable `.blend` and produces 32 directions ×
+  idle/move/attack/destroyed = **128 transparent 160px RGBA frames**.
+  Modeling commit [ae7d842a](https://github.com/shukritobi/chrono-dominion/commit/ae7d842ab2a05cdcb9da2d333f3384277ec80bfa).
+- [Strict pixel QA](../../tools/blender/qa_coalition_warden_32.py)
+  checks 128 frames, 160px alpha bounds, 80px movement and ion-attack
+  visibility, 80px destroyed alpha, and all 32 adjacent facing differences.
+  It generates a **5120×640 preview atlas**, 160px/80px contact sheets
+  and per-facing JSON. QA commit [4635adab](https://github.com/shukritobi/chrono-dominion/commit/4635adabe294ec5a19f38e08f008812d9f92033f).
+- The [targeted preview workflow](../../.github/workflows/coalition-warden-32-review.yml)
+  will compile the scripts, render only the new Warden in headless Blender
+  4.2.23, reopen the saved source to verify hidden editable wreckage, inspect
+  actual 160px/80px PNGs, and upload review-only artifacts.
+- **Verification pending:** do not claim successful rendering, image inspection
+  or numerical pixel results until the workflow completes and its actual
+  images have been reviewed. If the QA gate fails, repair geometry, not the
+  thresholds. Record the workflow run, artifact and exact measured deltas here.
+
+**Dependency:** based on the unmerged Federation Hailstorm preview branch
+([draft PR #33](https://github.com/shukritobi/chrono-dominion/pull/33)),
+which contains the shared original Blender modeling helpers. The current
+game loader supports 1/8 directions, not this separate 32-facing preview.
+No live texture, atlas manifest or gameplay file was modified.
