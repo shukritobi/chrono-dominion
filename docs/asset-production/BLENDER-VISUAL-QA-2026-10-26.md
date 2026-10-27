@@ -1171,3 +1171,57 @@ Blender source and 5120×640 preview atlas.
 visual approval is claimed until the Actions run passes and its actual
 artifact is inspected. Keep the original Lynx atlas untouched, and do
 not integrate or publish any preview art without approval.
+
+
+### Final Coalition Lynx four-phase temporal attack QA — 28 October 2026
+
+**PASS; supersedes the pending state above.** [Targeted successful Actions
+#40538587949](https://github.com/shukritobi/chrono-dominion/actions/runs/40538587949)
+downloaded the previously validated Lynx model from run #40494276431
+without rerendering its 128 original frames. It rendered **128 NEW**
+160×160 RGBA temporal frames, reopened the **158,882-byte editable .blend**
+and verified **12 original hidden temporal meshes** (including four
+independent jagged ribbon meshes with 10 vertices and four faces each),
+eight retained hidden wreckage meshes, 12 roadwheel pivots and 22 tread
+cleats. The new preview atlas is **5120×640 RGBA**.
+
+[Artifact #12749816069](https://github.com/shukritobi/chrono-dominion/actions/runs/40538587949/artifacts/12749816069)
+was downloaded, and the **actual 160px and 80px contact sheets** were
+visually inspected. At 80px the Lynx retains its single long-bore gun
+silhouette: charge shows restrained induction coils, lock reveals an
+extended wave collar, discharge adds an enlarged white-blue shock ring
+and four mesh ribbons, and recover clears the field. Bright discharge
+rings are still a possible polish candidate but do not erase the turret.
+
+| Changed pixels at 80px across all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Charge → Lock RGBA | **873** | 1,287 | 1,133.9 |
+| Lock → Discharge RGBA | **998** | 1,438 | 1,288.8 |
+| Discharge → Recover RGBA | **1,009** | 1,454 | 1,293.2 |
+| Discharge vs archived single attack RGBA | **1,009** | 1,499 | 1,304.0 |
+| Discharge vs archived idle RGBA | **1,005** | 1,455 | 1,286.1 |
+| Discharge vs archived idle alpha | **437** | 772 | 650.5 |
+| Adjacent Charge facings RGBA | **1,057** | 1,405 | 1,256.9 |
+
+Five independently recomputed 80px **Discharge vs archived Attack**
+RGBA pixel counts for facings **00 / 07 / 15 / 23 / 31** were
+**1,314 / 1,388 / 1,366 / 1,405 / 1,249**, each matching the archived
+JSON exactly. All 128 frames passed the nonempty RGBA, 160px alpha bounds,
+phase-change and adjacent-facing gates. The archived original atlas SHA-256
+was independently recomputed from the original ZIP and remained
+**4e7e21b95c96b29dd94e672671766b52772580d4ea22633cabe1151f24e2af7a**.
+
+**Honest failure and fix:** [first run #40538288070](https://github.com/shukritobi/chrono-dominion/actions/runs/40538288070)
+successfully rendered and reopened the Blender source but **failed pixel
+QA** because Lock facing 03 reached alpha bound x=159 and facing 19
+reached x=1 (the strict safe interval is 2–158). The failure was not
+suppressed or reclassified. [Geometry fix e3db2a38](https://github.com/shukritobi/chrono-dominion/commit/e3db2a386cf808fbfb95c48fef20fb9cf9da2e9e)
+retracted the Lock-phase gun mount by 0.20 Blender units; the next
+targeted workflow passed **without lowering any threshold**.
+
+**Production safety:** only Blender source, image QA, targeted workflow,
+asset register and documentation changed on
+[draft PR #57](https://github.com/shukritobi/chrono-dominion/pull/57),
+stacked on the unmerged Lynx PR #43. No production textures, game
+manifests, live art or runtime files were modified. The animation
+remains preview-only, not playable or approved for publication.
