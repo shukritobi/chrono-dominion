@@ -680,3 +680,42 @@ targets the Coalition preview branch to reuse its original Blender
 utility helpers without copying or rerendering its validated asset.
 **Preview-only: no live game textures, manifest or runtime changes.**
 Next: original Psionic vehicle with independent 32-facing animation.
+
+
+## 2026-10-27 Psionic Phase-Loom hover carrier: 32-facing original preview
+
+**New preview implementation; render/pixel QA pending.** The next original
+Psionic vehicle is **PSI-VEH-008**, a floating Phase-Loom logistics and
+phase-projector craft. It does not recolour the Coalition six-wheel carrier
+or Federation AR-9 tracks. Its physically forked front horns leave a
+visible central phase channel, with independently articulated lateral
+wings, suspended crystal reactor, levitation coils and a projected attack
+lance. The destroyed pose hides intact horns and upper reactor parts and
+shows **seven separately editable broken meshes** with exposed fracture
+materials. Movement changes hover height, fin pose and core rotation;
+attack opens the fins and extends a separate phase lance.
+
+- [Original Blender generator](../../tools/blender/preview_psionic_phase_loom_carrier_32.py)
+  saves a compressed editable .blend in the idle pose and renders **128
+  original 160x160 RGBA frames** (32 facings × idle/move/attack/destroyed).
+- [Strict image QA](../../tools/blender/qa_psionic_phase_loom_carrier_32.py)
+  checks every image for alpha bounds, compares all four states at 80px,
+  requires >=20 move RGBA, >=40 attack RGBA and >=65 destroyed alpha changed
+  pixels, and checks every adjacent facing differs by >=20 RGBA pixels.
+  It generates 160px and 80px contact sheets and a separate **5120x640
+  review atlas**. These are not game-compatible production atlases.
+- [Targeted branch-scoped Blender workflow](../../.github/workflows/psionic-phase-loom-carrier-32-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved .blend and
+  asserts seven hidden editable wreckage meshes, two forward horn groups
+  and a suspended spindle before checking all actual PNGs.
+- Model commit [e6a19f30](https://github.com/shukritobi/chrono-dominion/commit/e6a19f3080bd65a14bc49f3aa1ba9f8ea6a161ae);
+  pixel QA commit [82bdf8d8](https://github.com/shukritobi/chrono-dominion/commit/82bdf8d84921b5aa5fa099d25bdcd734f0f124dc);
+  QA correction [546531b1](https://github.com/shukritobi/chrono-dominion/commit/546531b12685241f4b165474f8e4e4d017682efd);
+  workflow commit [715345da](https://github.com/shukritobi/chrono-dominion/commit/715345da4cf169cb143cf1cc6d3df842a3bf0526).
+
+**Verification boundary:** Blender is not installed in the local execution
+container, so do **not** claim this model has rendered, reopened, passed
+pixel gates or been visually inspected until the targeted GitHub Actions
+artifact is available and checked. If any 80px gate fails, repair geometry
+rather than lowering thresholds. Do not duplicate an already running job.
+**No production art, live textures, runtime code or manifests were changed.**
