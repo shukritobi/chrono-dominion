@@ -4,8 +4,13 @@
 
 [**Play the prototype on GitHub Pages**](https://shukritobi.github.io/chrono-dominion/) · [Full game blueprint](docs/game-design/FULL-BLUEPRINT.md) · [Asset production plan](docs/asset-production/ASSET-PRODUCTION-PLAN.md) · [308-family asset register](planning/AssetRegister.csv)
 
-> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.37.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
+> **Project status (2026-10-26):** Playable browser skirmish prototype `v2.38.0`, now with original high-definition vector animation across infantry, vehicles, structures and a first-pass playable aircraft class. This is not a finished commercial RTS. Original Blender-baked sprite sheets now exist for multiple units and structures; full atlas integration, final art coverage and detailed aviation mechanics remain future production work.
 
+
+### v2.38 Indexed building collisions during movement
+
+- Every simulation tick now builds a short-lived spatial index of living structures. Ground-unit collision, separation and narrow-lane walkability check nearby structures rather than scanning the whole army and building roster on every movement probe.
+- The index is discarded before projectiles, production and AI updates; outside the movement phase collision queries still use live entities. Building health, terrain, air-layer movement and old saves remain unchanged. [Release notes](docs/RELEASE-2.38.md) · [regression](tests/frame-collision-v238.test.mjs).
 
 ### v2.37 Indexed building footprints for XL navigation
 

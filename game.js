@@ -1,4 +1,4 @@
-/* Chrono Dominion v2.35 — complete XL map A* route exploration. */
+/* Chrono Dominion v2.38 — indexed per-frame ground collision. */
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -66,10 +66,10 @@
   // Spatial buckets keep local collision checks proportional to nearby units,
   // rather than comparing every moving vehicle with every unit every frame.
   class UnitBuckets {
-    constructor(size=2){this.size=size;this.cells=new Map();this.positions=new Map();}
+    constructor(size=2,kind='unit'){this.size=size;this.kind=kind;this.cells=new Map();this.positions=new Map();}
     key(x,y){return Math.floor(x/this.size)+','+Math.floor(y/this.size);}
     insert(e){
-      if(e.hp<=0||e.type!=='unit')return;
+      if(e.hp<=0||e.type!==this.kind)return;
       const k=this.key(e.x,e.y),set=this.cells.get(k)||new Set();
       set.add(e);this.cells.set(k,set);this.positions.set(e.id,k);
     }
@@ -102,7 +102,7 @@
       this.canvas=$('world');this.ctx=this.canvas.getContext('2d');
       this.radar=$('radar');this.rctx=this.radar.getContext('2d');
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();this.mousePan=null;
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;this.buildingBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
@@ -402,7 +402,7 @@
       if(this.aiSupportPlatoon&&this.aiPlatoon&&this.aiSupportPlatoon.ids.some(id=>this.aiPlatoon.ids.includes(id)))this.aiSupportPlatoon=null;
       this.entities=saved.entities.map(e=>({...e,
         kills:Number.isInteger(e.kills)&&e.kills>=0?Math.min(9999,e.kills):0,
-        lanePass:null,laneWaiting:null}));this.unitBuckets=null;this.laneReservations=new Map();
+        lanePass:null,laneWaiting:null}));this.unitBuckets=null;this.buildingBuckets=null;this.laneReservations=new Map();
       this.ores=saved.ores.map(o=>({...o}));
       this.queues=saved.queues.map(q=>({...q}));
       this.projectiles=Array.isArray(saved.projectiles)?saved.projectiles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
@@ -482,7 +482,7 @@
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
       WORLD_SIZE=mapSize(s.map);
       this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
-      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
+      this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.buildingBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.trafficYieldCount=0;this.laneReservations=new Map();
       this.camera={...this.camera,x:0,y:370,zoom:1.03};
@@ -970,7 +970,8 @@
     }
     walkable(x,y){
       if(x<1||y<1||x>WORLD_SIZE-2||y>WORLD_SIZE-2||this.water(x,y))return false;
-      return !this.entities.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5);
+      const buildings=this.buildingBuckets?.nearby(x,y)||this.entities;
+      return !buildings.some(b=>b.hp>0&&b.type==='building'&&Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5);
     }
     trafficCosts(except){
       // Create a coarse, per-request heat map only when a moving unit is
@@ -1067,7 +1068,11 @@
       if(e.kind==='aircraft')return x>=.8&&y>=.8&&x<=WORLD_SIZE-.8&&y<=WORLD_SIZE-.8;
       const r=this.unitRadius(e);
       if(x<.8||y<.8||x>WORLD_SIZE-.8||y>WORLD_SIZE-.8||this.water(x,y))return false;
-      for(const b of this.entities){
+      // During a simulation tick, only inspect buildings near this unit.
+      // Outside the tick, use live entities so editor/tests and new orders
+      // observe changes immediately without retaining a stale spatial index.
+      const buildings=this.buildingBuckets?.nearby(x,y)||this.entities;
+      for(const b of buildings){
         if(b.hp<=0||b.id===e.id||b.type!=='building')continue;
         if(Math.abs(b.x-x)<1.27+r*.14&&Math.abs(b.y-y)<1.27+r*.14)return false;
       }
@@ -1719,6 +1724,9 @@
     step(dt){
       this.time+=dt;
       this.unitBuckets=new UnitBuckets().rebuild(this.entities);
+      // One building index for the movement/separation phase; collision
+      // checks still read live HP and the index is discarded every tick.
+      this.buildingBuckets=new UnitBuckets(2,'building').rebuild(this.entities);
       const pan=380*dt/this.camera.zoom;
       if(this.keys.has('w')||this.keys.has('arrowup'))this.camera.y-=pan;
       if(this.keys.has('s')||this.keys.has('arrowdown'))this.camera.y+=pan;
@@ -1791,7 +1799,7 @@
       }
       this.separateUnits();
       this.advanceLaneReservations();
-      this.unitBuckets=null;
+      this.unitBuckets=null;this.buildingBuckets=null;
       this.updateProjectiles(dt);
       this.repairBuildings(dt);
       this.advanceProduction(dt);
@@ -3207,6 +3215,6 @@
       requestAnimationFrame(t=>this.frame(t));
     }
   }
-  window.ChronoDominion={version:'2.37.0',build:'original-blender-atlas-pipeline'};
+  window.ChronoDominion={version:'2.38.0',build:'original-blender-atlas-pipeline'};
   new Game();
 })();
