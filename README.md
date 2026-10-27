@@ -8,6 +8,10 @@
 
 
 
+### Natural-match AI aviation blocker diagnostics (post-v2.42)
+
+- The 720-second progression lab now observes **real AI planner decisions**, classifying missing technology, airfield construction, brownouts, harvester or armour losses, threats, production queues and funding. Reports include per-match decision counts, maximum credits after Air Command purchase and the last 12 decisions. Observation only: no AI, credit or save changes. Run `npm run balance:progression`; [methodology](docs/AI-NATURAL-PROGRESSION.md).
+
 ### Early AI ore-economy expansion (post-v2.42)
 
 - The AI can now purchase one additional harvester during the first 120 seconds when it has a working refinery, sufficient credits for the 900-credit harvester **plus** a 650-credit emergency generator reserve, and no nearby detected attack or power shortage. This is a real production queue, not free income; it stops at two living harvesters and never interrupts Air Command or aircraft savings.
