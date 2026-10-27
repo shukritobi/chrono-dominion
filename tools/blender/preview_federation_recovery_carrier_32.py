@@ -95,8 +95,8 @@ def apply_pose(parts, state, facing):
     chassis.location.z = .09 if state == "move" else 0
     chassis.rotation_euler = (0, .045 if state == "move" else
                               -.13 if state == "destroyed" else 0, 0)
-    crane.rotation_euler.z = .38 if state == "attack" else
-                             -.70 if state == "destroyed" else 0
+    crane.rotation_euler.z = (.38 if state == "attack" else
+                              -.70 if state == "destroyed" else 0)
     crane.rotation_euler.y = -.18 if state == "attack" else 0
     for wheel in wheels:
         wheel.rotation_euler.y = .75 if state == "move" else 0
