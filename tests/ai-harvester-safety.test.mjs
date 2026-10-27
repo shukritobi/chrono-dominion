@@ -36,7 +36,7 @@ for(const faction of ['coalition','federation','psionic']){
   reset(faction);
   const h=alive(1,'harvester'),refinery=alive(1,'refinery');
   h.x=refinery.x-8;h.y=refinery.y-6;
-  h.load=80;h.work=0;
+  h.load=80;h.work=0;h.hp=Math.floor(h.maxHp*.7);
   const enemy=g.add(0,'soldier',h.x+1,h.y+1);
   assert.ok(g.sideCanSee(1,enemy),faction+': local threat must be visible');
   let retreat=null;
