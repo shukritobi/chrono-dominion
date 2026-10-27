@@ -83,6 +83,46 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.queues.filter(q=>q.side===1).length,0,
     faction+': AI should also bank for its second plane');
 
+
+  // A contested match can destroy one of the two tanks *after* the Air
+  // Command is paid for. The surviving tank is still a defensive screen;
+  // spending aircraft savings on optional units would strand the airfield.
+  reset();
+  const screen=g.entities.filter(e=>e.owner===1&&['tank','heavy'].includes(e.kind)&&e.hp>0);
+  assert.ok(screen.length>=2,faction+': attrition fixture needs two initial tanks');
+  screen[0].hp=0;
+  g.players[1].credits=1800;
+  g.runAI();
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': one surviving tank should preserve aircraft savings');
+  assert.equal(g.players[1].credits,1800,
+    faction+': no optional purchases during one-tank airfield recovery');
+  assert.equal(g.entities.filter(e=>e.owner===1&&['tech','turret'].includes(e.kind)).length,0,
+    faction+': optional buildings must not consume the reserve after tank losses');
+  g.players[1].credits=2250;
+  g.runAI();
+  assert.equal(g.queues.find(q=>q.side===1)?.key,'aircraft',
+    faction+': first aircraft should be paid for with one tank surviving');
+  assert.equal(g.players[1].credits,650,
+    faction+': aircraft purchase must retain emergency generator credits');
+  g.advanceProduction(10);
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='aircraft'&&e.hp>0).length,1,
+    faction+': attrition recovery must deploy a real aircraft');
+  g.queues=[];g.players[1].credits=1800;
+  g.runAI();
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': continue saving for a second plane after losing one tank');
+
+  // Losing every ground tank is different: allow normal recruitment to
+  // rebuild a screen rather than indefinitely locking the production queue.
+  reset();
+  for(const tank of g.entities.filter(e=>e.owner===1&&['tank','heavy'].includes(e.kind)))
+    tank.hp=0;
+  g.players[1].credits=1800;
+  g.runAI();
+  assert.ok(g.queues.some(q=>q.side===1&&q.key!=='aircraft'),
+    faction+': zero surviving tanks must not freeze all ground recruitment');
+
   reset(false);
   g.players[1].credits=2300;
   g.runAI();

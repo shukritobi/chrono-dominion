@@ -15,6 +15,8 @@
 
 ### AI aircraft funding after Air Command (post-v2.42)
 
+- **Attrition recovery:** once an Air Command is purchased, one surviving tank/heavy is enough to preserve aircraft savings after the original two-tank screen suffers a loss. If all armour is lost, routine ground recruitment resumes; detected attacks, missing harvesters and brownouts still override the reserve. Three-faction regression coverage verifies paid aircraft deployment without changing saves. This does not yet establish reliable natural-match aviation.
+
 - With an Air Command purchased and an intact harvester, radar and two-tank defensive screen, the AI now banks for a paid Strike Aircraft plus a 650-credit emergency generator reserve. It defers optional turrets, technology labs, reconnaissance replacements and specialists while saving; urgent defense, harvester replacement and brownout recovery still take priority.
 - At 2,250 credits it queues the aircraft ahead of optional ground recruitment, then repeats for a second plane if the base remains safe. No free credits, new saved state or unit-stat changes. [Regression](tests/ai-aircraft-funding.test.mjs) · [implementation notes](docs/AI-AIRCRAFT-FUNDING.md). Natural-match frequency must be measured separately.
 
