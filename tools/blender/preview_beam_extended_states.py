@@ -80,7 +80,9 @@ def profiles(faction, steel, armor, glow, root):
             wedge("Destroyed-only exposed coil flash",(-.63,-.87,1.53),
                   (.15,.12,.95),(.54,.40,.16),glow,root),
         ]
-    elif faction=="federation":\n        # Wreckage sits ABOVE the intact converter roof (z=1.955).\n        # Previous lower shards were occluded, leaving a clean bunker at 80px.
+    elif faction=="federation":
+        # Wreckage sits ABOVE the intact converter roof (z=1.955).
+        # Previous lower shards were occluded, leaving a clean bunker at 80px.
         critical=[
             wedge("Critical-only snapped arc fork",(-.75,-.62,2.55),
                   (.43,.44,1.70),(.55,.66,-.21),steel,root),
