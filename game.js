@@ -2623,7 +2623,8 @@
       // the 650-credit generator reserve, defer optional unit purchases.
       // Continue banking through construction; release the reserve when
       // threatened, short of power, without income or without ground cover.
-      const savingForRadar=!built('radar')&&built('factory')&&built('refinery')&&
+      const savingForRadar=this.time>240&&!built('radar')&&
+        built('factory')&&built('refinery')&&
         owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>0&&
         !threatened&&!shortage&&
