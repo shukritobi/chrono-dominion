@@ -9,6 +9,7 @@ on:
       - asset-preview/beam-extra-states-20261027
     paths:
       - ".github/workflows/beam-wreckage-visual-repair.yml"
+      - "tools/blender/preview_beam_extended_states.py"
 
 permissions:
   contents: read
