@@ -1,0 +1,115 @@
+name: Federation Turret Fracture Polish Blender Preview
+
+# Original geometry repair only. Never publish or overwrite live game art.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/federation-turret-fracture-polish-20261027
+    paths:
+      - .github/workflows/federation-turret-fracture-review.yml
+      - tools/blender/preview_defense_extended_states.py
+      - tools/blender/qa_federation_turret_fracture.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-federation-turret-fracture-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout preview-only source
+        uses: actions/checkout@v4
+
+      - name: Install Pillow and check Blender Python source
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow
+          python -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/preview_defense_extended_states.py \
+            tools/blender/qa_federation_turret_fracture.py \
+            tools/blender/pack_animated.py
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only the changed Federation defense turret
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/federation-turret-fracture
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/animated_assets.py -- \
+            --output "$stage" --kinds turret --factions federation --size 160
+          python tools/blender/pack_animated.py \
+            --input "$stage" --output "$stage/packed" --size 160
+          test -s "$stage/packed/federation-turret.png"
+          sha256sum "$stage/packed/federation-turret.png" > "$stage/original-atlas.sha256"
+
+      - name: Render independent critical destroyed and power-out states
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/federation-turret-fracture
+          blender --background --threads 4 \
+            "$stage/sources/federation-turret.blend" \
+            --python-exit-code 1 \
+            --python tools/blender/preview_defense_extended_states.py -- \
+            --faction federation --output "$stage/extra/federation"
+
+      - name: Reopen Blender source and verify 12 hidden editable wreckage meshes
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/federation-turret-fracture
+          blender --background --threads 2 \
+            "$stage/extra/federation/federation-turret-extended-states.blend" \
+            --python-exit-code 1 --python-expr \
+            'import bpy; w=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(w)==12,(len(w),[o.name for o in w]); assert all(o.hide_render for o in w); assert len([o for o in w if ("fracture" in o.name.lower() or "glowing split roof" in o.name.lower())])>=3; print("PASS: 12 EDITABLE HIDDEN WRECKAGE MESHES INCLUDING THREE EXPOSED FRACTURES")'
+
+      - name: Validate real 160px and 80px PNGs and unchanged atlas
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/federation-turret-fracture
+          python tools/blender/qa_federation_turret_fracture.py --stage "$stage"
+          sha256sum --check "$stage/original-atlas.sha256"
+
+      - name: Upload preview-only Blender and QA artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-federation-turret-fracture-preview
+          path: generated/federation-turret-fracture/
+          if-no-files-found: warn
+          retention-days: 30
