@@ -108,6 +108,8 @@
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
       this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
+      // Transient AI harvester escape routes; never written into browser saves.
+      this.harvesterEvadeTargets=new WeakMap();
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
       this.vehicleAtlases=null;
@@ -1681,6 +1683,87 @@
       }
       return -1;
     }
+    evadeAIHarvester(e,dt){
+      // Only react to *currently visible*, armed hostile units. Never inspect
+      // hidden enemy positions or redirect the player's ore trucks.
+      if(e.owner!==1)return false;
+      let plan=this.harvesterEvadeTargets.get(e);
+      // Healthy trucks keep earning income. Retreat only after real damage,
+      // avoiding a costly evacuation on every harmless distant sighting.
+      if(!plan&&e.hp/e.maxHp>.35)return false;
+      // After breaking contact, remain at the safe point briefly instead of
+      // instantly driving back into the same attacker on the ore route.
+      const threat=this.nearest(e,u=>u.owner!==e.owner&&u.type==='unit'&&
+        u.hp>0&&this.stat(u,'damage')>0&&this.sideCanSee(e.owner,u),
+        plan?.holdUntil>this.time?8:4.5);
+      if(!threat){this.harvesterEvadeTargets.delete(e);return false;}
+      if(plan&&dist(e,threat)>4.5&&plan.holdUntil>this.time){
+        this.move(e,plan.x,plan.y,dt);
+        return true;
+      }
+      if(!plan||plan.expires<=this.time||plan.threatId!==threat.id||
+         dist(plan,threat)<4.5){
+        const shelters=this.entities.filter(b=>b.owner===e.owner&&b.hp>0&&
+          b.built&&b.type==='building'&&['hq','refinery'].includes(b.kind))
+          .sort((a,b)=>dist(e,a)-dist(e,b));
+        const home=shelters[0]||e,options=[];
+        // Prefer reachable positions on the far side of a friendly refinery
+        // or headquarters, with an away-from-contact fallback.
+        for(const origin of [...shelters.slice(0,2),e]){
+          const vx=origin.x-threat.x,vy=origin.y-threat.y;
+          const length=Math.max(.01,Math.hypot(vx,vy));
+          const nx=vx/length,ny=vy/length;
+          for(const radius of [3.5,5.5,7])for(const skew of [0,.65,-.65]){
+            const x=Math.round(origin.x+(nx-ny*skew)*radius);
+            const y=Math.round(origin.y+(ny+nx*skew)*radius);
+            if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)continue;
+            const point={x,y};
+            if(dist(point,threat)<5.2||dist(point,threat)<dist(e,threat)+.7)continue;
+            options.push(point);
+          }
+        }
+        // At map edges the direct escape vector can point off-map.
+        // Include lateral routes so trucks can skirt a threat instead of
+        // pathing straight through it toward a distant shelter.
+        const vx=e.x-threat.x,vy=e.y-threat.y;
+        const length=Math.max(.01,Math.hypot(vx,vy));
+        const nx=vx/length,ny=vy/length;
+        for(const radius of [3.5,5,6])for(const angle of
+          [0,Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2]){
+          const cs=Math.cos(angle),sn=Math.sin(angle);
+          const x=Math.round(e.x+(nx*cs-ny*sn)*radius);
+          const y=Math.round(e.y+(ny*cs+nx*sn)*radius);
+          if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)continue;
+          const point={x,y};
+          if(dist(point,threat)>=5.2&&dist(point,threat)>=dist(e,threat)+.7)
+            options.push(point);
+        }
+        options.sort((a,b)=>
+          dist(e,a)+dist(a,home)*.4-(dist(e,b)+dist(b,home)*.4));
+        plan=null;
+        for(const point of options.slice(0,12)){
+          if(!this.canOccupyUnit(e,point.x,point.y,true))continue;
+          const route=this.findPath(e.x,e.y,point.x,point.y);
+          if(!route.length||dist(route.at(-1),point)>1.05)continue;
+          // A distant safe endpoint is useless if its route crosses the
+          // attacker. Reject paths that first pull the truck into gunfire.
+          if(route.some(step=>dist(step,threat)<dist(e,threat)-.25))continue;
+          plan={...point,threatId:threat.id,expires:this.time+5,
+            holdUntil:this.time+4};
+          break;
+        }
+        if(!plan){this.harvesterEvadeTargets.delete(e);return false;}
+        this.harvesterEvadeTargets.set(e,plan);
+      }
+      // Existing ore-skip fields prevent an immediate return to the ambush.
+      // The route itself is transient, preserving the v1 save schema.
+      if(e.oreIndex>=0){
+        e.oreSkipIndex=e.oreIndex;e.oreSkipUntil=this.time+24;
+        e.oreIndex=-1;e.oreScanAt=0;
+      }
+      this.move(e,plan.x,plan.y,dt);
+      return true;
+    }
     processHarvester(e,dt){
       e.work-=dt;
       const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
@@ -1756,7 +1839,10 @@
               continue;
             }
           }
-          if(e.kind==='harvester'){this.processHarvester(e,dt);continue;}
+          if(e.kind==='harvester'){
+            if(!this.evadeAIHarvester(e,dt))this.processHarvester(e,dt);
+            continue;
+          }
           if(this.serviceAircraft(e,dt))continue;
           if(e.owner===1&&(e.retreatUntil||0)>this.time&&e.order?.type==='move'){
             this.move(e,e.order.x,e.order.y,dt);
