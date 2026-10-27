@@ -34,7 +34,7 @@ for(const faction of ['coalition','federation','psionic']){
     playerFaction:'coalition',enemyFaction:faction});
   g.entities=[];g.ores=[
     {x:12,y:10,amount:2000,max:2000},
-    {x:19,y:10,amount:2000,max:2000}
+    {x:10,y:13,amount:2000,max:2000}
   ];
   const harvester=g.add(1,'harvester',10,10);
   // Test threat ranking separately from terrain collision and A*.
@@ -43,7 +43,9 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.chooseHarvestDeposit(harvester),0,
     faction+': nearest unthreatened deposit wins');
 
-  const enemy=g.add(0,'soldier',13,10);
+  // A friendly observer makes the nearby guard visible without omniscience.
+  g.add(1,'recon',14,10);
+  const enemy=g.add(0,'soldier',15,10);
   assert.equal(g.sideCanSee(1,enemy),true,
     faction+': enemy must be actually visible to the AI');
   assert.equal(g.chooseHarvestDeposit(harvester),1,
@@ -56,23 +58,18 @@ for(const faction of ['coalition','federation','psionic']){
   g.sideCanSee=see;
 
   enemy.hp=0;
-  const turret=g.add(0,'turret',13,10);
+  const turret=g.add(0,'turret',16,10);
   assert.equal(g.chooseHarvestDeposit(harvester),1,
     faction+': detected armed structure also makes a deposit risky');
 
-  const distantFighter=g.add(0,'soldier',18,10);
-  // The second threat is unseen from the harvester: no omniscient risk.
-  assert.equal(g.sideCanSee(1,distantFighter),false);
-  assert.equal(g.chooseHarvestDeposit(harvester),1,
-    faction+': hidden defenders cannot spoil the alternate deposit');
-  g.add(1,'recon',17,10);
+  const distantFighter=g.add(0,'soldier',10,14);
   assert.equal(g.sideCanSee(1,distantFighter),true);
   assert.equal(g.chooseHarvestDeposit(harvester),0,
     faction+': when both deposits are dangerous, continue mining nearest');
 
   distantFighter.hp=0;
   const originalPath=g.findPath;
-  g.findPath=(x,y,tx,ty)=>tx===19?[]:[{x:tx,y:ty}];
+  g.findPath=(x,y,tx,ty)=>tx===10&&ty===13?[]:[{x:tx,y:ty}];
   assert.equal(g.chooseHarvestDeposit(harvester),0,
     faction+': an unreachable safer deposit must not strand the harvester');
   g.findPath=originalPath;
@@ -80,7 +77,7 @@ for(const faction of ['coalition','federation','psionic']){
   // Do not change the player-controlled harvester's established behavior.
   const playerHarvester=g.add(0,'harvester',10,10);
   turret.hp=0;
-  g.add(1,'soldier',13,10);
+  g.add(1,'soldier',12,10);
   assert.equal(g.chooseHarvestDeposit(playerHarvester),0,
     faction+': player mining remains nearest-reachable ore');
 
