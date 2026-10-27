@@ -1,7 +1,7 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 27 October 2026  
-**Current prototype:** v2.40.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
+**Current prototype:** v2.41.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
@@ -10,6 +10,8 @@ v2.17 ranks enemy objectives using AI sensor reports and closes a support-platoo
 v2.18 adds connected-ground objective filtering, bounded perimeter assault positions and timed rerouting after stalls, with tests and new launch/reroute telemetry. The [verified main-branch CI and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40302281701) passed. The nine scripted matches recorded 5/9 actual assault-launch scenarios, 1 stalled-attacker reroute, 6/9 discovered objectives, 10 scouts lost and 74.8% mean survey coverage. These do not establish human win rates.
 
 v2.19 adds observed-only AI building focus fire, damage-aware target spread, reserved siege flanks and original tracer/shockwave drawing. The [v2.19 PR suite](https://github.com/shukritobi/chrono-dominion/actions/runs/40304543534) passed, including nine scripted matches, with 32 changed siege orders, 294 confirmed building hits, 5/9 assault launches, 12 recon losses and 74.8% mean survey coverage. Gameplay balance and real-device performance remain unverified.
+
+v2.41 closes two fog-of-war leaks: unfinished friendly buildings no longer contribute exploration, and enemies on the fringe of a visible tile are not drawn, shown on radar or selectable unless the actual faction sensor radius reaches their position. The battlefield and minimap share the same per-frame detected-enemy set. See [v2.41 notes](RELEASE-2.41.md). Browser/mobile visual verification remains pending.
 
 v2.40 adds render-only landing and takeoff transitions for aircraft returning to living friendly Air Commands. Both baked Blender and vector aircraft descend during docked servicing, with a pulsing service halo, dimmer engine glow and vector landing gear. Visual interpolation is weakly keyed to each entity and never serialized; existing ordnance, repairs, power behavior and saves are unchanged. See [v2.40 notes](RELEASE-2.40.md). Real-device rendering remains unverified.
 
@@ -83,7 +85,7 @@ v2.20 restores primary/support rally movement after tactical interruptions, with
 
 - The **308-family asset register** is a plan, not 308 completed sprites. `art/rendered/manifest.json` still has no packed PNG atlases, but `art/baked-v1/manifest.json` now describes original Blender-baked unit and building sheets. Asset integration and final coverage must be validated separately.
 - Many Blender source models and baked sheets now exist, but final packed frame atlases, detailed infantry death animations, destroyed-building models, environment variations and a complete soundtrack remain unfinished. Runtime vector infantry walking and building activity animations are available.
-- Aircraft have first-pass ammunition and proximity rearming, but landing, fuel, dogfighting and final Blender-baked dedicated anti-air atlases are not implemented. First-pass dedicated Skyguard defenses now operate with original animated vector art. Naval warfare, garrisons, advanced mind-control chains, country-specific units, superweapons, campaigns, multiplayer and replays remain unimplemented.
+- Aircraft have first-pass ammunition, proximity rearming and render-only landing/takeoff transitions, but fuel, dogfighting and final Blender-baked dedicated anti-air atlases are not implemented. First-pass dedicated Skyguard defenses now operate with original animated vector art. Naval warfare, garrisons, advanced mind-control chains, country-specific units, superweapons, campaigns, multiplayer and replays remain unimplemented.
 - AI reconnaissance samples explored tiles near uncharted territory while retaining landmark patrol fallback. v2.11 prices whole scout routes using last-known threats, but cannot predict unknown enemy ambushes, optimize long-term territory ownership or guarantee scout safety. Battle balance remains provisional; the headless player is scripted and not a human substitute.
 - Two-finger pinch and camera pan are implemented, but mobile UI layout, low-end device performance, accessibility and long-session browser testing require hands-on verification.
 - No third-party proprietary game artwork, audio or code is included. The project's redistribution license is still undecided.
