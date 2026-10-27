@@ -919,3 +919,39 @@ verify magnetic jaws read distinctly at 80px, and confirm the orange wreckage
 fractures remain visible. The current game runtime only supports 1/8-facing
 baked sprites, so this 32-facing preview remains unintegrated. No live
 sprites, manifest, runtime or gameplay files are changed.
+
+
+### Final verified Gravitic Manipulator review — 27 October 2026
+
+**Passed, supersedes the pending status above.**
+[Successful targeted workflow #40478892855](https://github.com/shukritobi/chrono-dominion/actions/runs/40478892855)
+rendered exactly 128 original 160×160 RGBA frames and a separate
+5120×640 preview atlas. The saved **125,369-byte editable .blend** reopened
+successfully in Blender 4.2.23 with **8 hidden wreckage meshes, 4 articulated
+field skids and 2 independently articulated magnetic jaws**.
+[Preview artifact #12720899703](https://github.com/shukritobi/chrono-dominion/actions/runs/40478892855/artifacts/12720899703)
+contains 128 frame PNGs, the source, contact sheets and JSON metrics.
+
+| Actual changed pixels | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA, 80px | **1,095** | 1,210 | 1,168.2 |
+| Attack vs idle RGBA, 80px | **835** | 983 | 926.6 |
+| Destroyed vs idle RGBA, 80px | **1,067** | 1,268 | 1,177.0 |
+| Destroyed vs idle alpha, 80px | **692** | 837 | 757.4 |
+| Destroyed vs idle alpha, 160px | **1,239** | 1,818 | 1,509.0 |
+| Adjacent idle facings RGBA, 80px | **1,104** | 1,184 | 1,148.5 |
+
+The actual 160px and 80px contact sheets were downloaded and inspected.
+Independent Pillow alpha-difference checks at 80px for facings
+00/07/15/23/31 returned **714 / 808 / 740 / 755 / 706**,
+matching the artifact's JSON exactly. The four pads, paired raised
+magnetic jaws, bright central spindle and wreckage remain distinguishable
+at gameplay scale. The destroyed pose clearly loses the intact field
+tower and exposes orange broken induction equipment.
+
+**Visual limitation:** at 80px the narrow lifting field resembles a bright
+vertical column more than a dramatic magnetic vortex, and the field-drive
+suspension has only one movement pose. A future temporal attack animation
+should add a widening magnetic ring or curved energy arc. Do not replace
+the already verified preview merely to tweak it without a targeted art
+review. **No live textures, manifests, runtime or gameplay were changed.**
