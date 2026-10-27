@@ -1211,11 +1211,20 @@ branch. No live textures, game manifests or runtime code were changed.
 The Bull remains **preview-only**, not integrated into gameplay.
 
 
-## 2026-10-27 Psionic Viper Light Tank (PSI-VEH-002) P0 pilot — targeted render in verification
+## 2026-10-27 Psionic Viper Light Tank (PSI-VEH-002) P0 pilot — validated preview
 
 **Preview-only, not integrated.** Following the validated Coalition Lynx and Federation Bull P0 tank pilots, this branch authors an independently modeled Psionic hovering skirmisher. Geometry includes two separately articulated gravity skids, two independent forward crescent fangs, a suspended neural core, paired phase emitters and eight individually editable wreckage-only meshes. Unlike the two tracked P0 pilots, the Viper is levitating, narrow and bifurcated.
 
 - [New original Blender model](../../tools/blender/preview_psionic_viper_32.py), [real PNG QA](../../tools/blender/qa_psionic_viper_32.py) and [targeted preview workflow](../../.github/workflows/psionic-viper-32-review.yml).
 - The workflow renders **only** PSI-VEH-002: 32 facings × idle/move/attack/destroyed = **128** independent 160×160 transparent RGBA PNGs; also produces 160px and 80px contact sheets, a sprite atlas, JSON pixel measurements and an editable .blend. Source-reopen checks assert two skids, two mandibles, two ion apertures and eight initially hidden wreckage meshes.
 - Acceptance requires all 128 PNGs to be populated, unclipped and nonduplicate; at 80px each facing must have >=20 changed RGBA pixels for movement, >=40 for attack, >=65 changed alpha pixels for destruction, and >=20 changed RGBA pixels between neighboring idle facings. These are minimum automated gates, **not** a substitute for inspecting the actual downloaded sheets.
-- **Status at commit:** workflow triggered by preview-branch push; awaiting verified run ID, pixel ranges and reopened .blend evidence. Do not claim passed until checks and actual PNG inspection are complete. Existing Coalition Lynx and Federation Bull renders are not rerendered. No production sprites, published manifests or game code are modified.
+- **Validated on 27 October 2026:** [successful targeted Blender Actions run #40508990419](https://github.com/shukritobi/chrono-dominion/actions/runs/40508990419) and [preview artifact #12735414337](https://github.com/shukritobi/chrono-dominion/actions/runs/40508990419/artifacts/12735414337). Blender 4.2.23 LTS reopened the **126,151-byte editable .blend** and verified **8 hidden wreckage meshes, 2 independently articulated gravitic skids, 2 crescent mandibles and 2 paired ion apertures**. All **128** 160×160 RGBA frames passed alpha-boundary, populated-frame and 80px facing/state gates.
+
+| 80px measured visual change | Minimum | Maximum |
+|---|---:|---:|
+| Idle to move, changed RGBA pixels | **834** | **1,184** |
+| Idle to attack, changed RGBA pixels | **543** | **884** |
+| Idle to destroyed, changed alpha pixels | **743** | **1,007** |
+| Adjacent idle facings, changed RGBA pixels | **832** | **1,167** |
+
+At 160px, idle-to-destroyed alpha differences span **1,585–2,500 pixels**. Downloaded the actual **4.57 MB** artifact, inspected both **160px and 80px contact sheets** and independently recalculated 80px destroyed-alpha deltas for facings **00/04/08/16/24**: **936/892/846/969/896**, all exactly matching the JSON QA report. The compact forked hover silhouette is identifiable at 80px, with bright cyan skids and a suspended neural core. **Visual limitation:** the luminous upper crystal reads more strongly than the low-profile jaw details; the single attack pose is not a temporal firing sequence. Future polish should add phased muzzle/mandible animation rather than enlarging the whole vehicle. Existing Coalition Lynx and Federation Bull renders were not rerendered. **No production sprites, published manifests or game code modified.**
