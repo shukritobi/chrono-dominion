@@ -91,6 +91,17 @@ assert.equal(bystander.yieldOrder,undefined,
 assert.equal(laneSentry.yieldOrder,undefined,
   'Hold-position defender remains immovable');
 
+// AI harvesters retain baseline courtesy selection until a separate AI
+// economy-safe solution is verified across the natural-match laboratory.
+reset();
+const aiTruck=g.add(1,'harvester',11,12);
+const aiOffAxis=g.add(1,'soldier',11.30,12.77);
+const aiSentry=g.add(1,'soldier',11.85,12);
+aiTruck.load=360;aiOffAxis.order={type:'move',x:7,y:12.77};aiSentry.stance='hold';
+assert.equal(g.tryTrafficYield(aiTruck,1,0),true);
+assert.ok(aiOffAxis.yieldOrder,'AI traffic selection remains unchanged');
+assert.equal(aiTruck.yieldOrder,undefined,'AI truck does not receive new detour');
+
 // Empty and partially loaded trucks retain the original broader courtesy
 // behaviour; the filter applies only to full-cargo return traffic.
 reset();
