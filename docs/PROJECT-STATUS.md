@@ -1,7 +1,9 @@
 # Chrono Dominion — verified project status
 
 **Last source audit:** 27 October 2026  
-**Current prototype:** v2.41.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
+**Current prototype:** v2.42.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
+
+v2.42 scales AI Skyguard procurement from one to two batteries only when its own sensor reports contain two distinct recent aircraft contacts. Duplicate or stale reports cannot trigger escalation. Radar, power, affordability and saves are unchanged. [Regression](../tests/ai-skyguard-scaling-v242.test.mjs) · [notes](RELEASE-2.42.md).
 
 v2.16 introduces two original unit combat-experience ranks, kill-based promotions, visible rank indicators and modest stat bonuses. CI and balance verification remain separate from the implementation. v2.15 retains surviving primary/support platoon members and rally slots after losses, and excludes wounded reserve fighters from primary recruitment. Focused runtime checks and the full [v2.15 CI verification and Pages deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40297911617) passed, including nine scripted balance scenarios. A matched before/after balance comparison remains pending.
 
