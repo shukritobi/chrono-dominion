@@ -1132,3 +1132,80 @@ textures, sprite manifests, runtime, or gameplay files changed.
 The 32-facing renderer is **not integrated** with the current game loader.
 [Draft review PR #43](https://github.com/shukritobi/chrono-dominion/pull/43)
 is stacked on unmerged [Psionic temporal preview PR #41](https://github.com/shukritobi/chrono-dominion/pull/41).
+
+
+## 2026-10-27 Federation Bull Heavy Tank — original P0 art-pilot (verification pending)
+
+**PREVIEW ONLY; do not integrate or overwrite production artwork.**
+FED-VEH-002 is a new original Federation siege-oriented heavy tank, distinct
+from the Coalition Lynx and Federation Hailstorm. Original authored Blender
+geometry includes a low slab-armoured chassis, separate heavy battering-ram
+prow, 14 individually articulated roadwheel pivots, 24 track cleats, two
+exposed vertical exhaust stacks, an independent block turret, one short
+oversized electrothermal gun and a movable recoil mount. The destroyed pose
+hides intact turret/gun/stack hardware and reveals eight independently
+editable displaced wreckage meshes, including exposed orange fractures.
+
+- [Bull Blender modeling source](../../tools/blender/preview_federation_bull_32.py)
+  renders **only this new asset**: 32 directions × idle/move/attack/destroyed,
+  producing 128 independent 160×160 transparent RGBA frames and a compressed
+  editable .blend source.
+- [Strict 160px/80px PNG QA](../../tools/blender/qa_federation_bull_32.py)
+  checks alpha clipping, movement/attack RGB differences, destruction
+  silhouette and adjacent-direction uniqueness, generating a 5120×640
+  preview atlas, both contact sheets and a per-direction JSON report.
+- [Isolated Actions workflow](../../.github/workflows/federation-bull-32-review.yml)
+  uses checksum-verified Blender 4.2.23 and reopens the .blend to verify
+  **8 hidden wreckage meshes, 14 wheel pivots, 24 cleats and 1 cannon**.
+
+**Status:** Blender modeling and QA code committed; targeted rendering,
+source reopening and real 80px inspection are **not yet verified**.
+Do not claim success or invent pixel metrics until Actions finishes and
+actual PNGs are inspected. Correct physical geometry rather than weakening
+visual acceptance thresholds if any pose fails. This branch is stacked on
+unmerged Coalition Lynx PR #43 to retain the shared preview-only Blender
+helpers. No production atlas, manifest or game runtime is changed.
+
+
+### Final Federation Bull P0 visual QA — 27 October 2026
+
+**PASS; supersedes the pending state above.** The [targeted successful
+Blender workflow #40501761698](https://github.com/shukritobi/chrono-dominion/actions/runs/40501761698)
+completed all steps: Python compilation, checksum-verified Blender 4.2.23,
+128 original 160×160 RGBA renders, reopened compressed .blend verification,
+80px/160px PNG acceptance and artifact upload. The independent
+[preview artifact #12732743005](https://github.com/shukritobi/chrono-dominion/actions/runs/40501761698/artifacts/12732743005)
+contains the **156,949-byte editable Blender source**, 128 frames, a
+5120×640 RGBA review atlas, JSON metrics and two actual contact sheets.
+Reopening the saved source in headless Blender verified **8 hidden editable
+wreckage meshes**, **14 roadwheel pivots**, **24 animated track cleats** and
+**1 oversized electrothermal cannon**.
+
+| Changed pixels across all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA at 80px | **1,203** | 1,694 | 1,506.0 |
+| Attack vs idle RGBA at 80px | **901** | 1,410 | 1,167.8 |
+| Destroyed vs idle RGBA at 80px | **1,261** | 1,703 | 1,542.4 |
+| Destroyed vs idle alpha at 80px | **689** | 948 | 834.9 |
+| Destroyed vs idle alpha at 160px | **1,324** | 2,046 | 1,721.9 |
+| Adjacent idle facings RGBA at 80px | **1,283** | 1,698 | 1,534.6 |
+
+I downloaded the **actual 160px and 80px contact sheets** and inspected
+all four rows. The Bull's broad red siege chassis, slab-sided turret,
+short heavy gun and two rear exhausts are readable at 80px and visually
+distinct from the blue-white Coalition Lynx. Destroyed poses visibly lose
+the complete intact turret and show separated armor, a collapsed barrel,
+and hot orange engine fractures. The 80px attack flash is readable.
+Independent Pillow recalculation of destroyed-alpha differences at facings
+00/07/15/23/31 gave **872 / 901 / 859 / 827 / 807** changed pixels,
+exactly matching the archived JSON for each facing. All 128 PNGs have
+nonempty unclipped alpha bounds and all adjacent facings pass uniqueness.
+
+**Artistic limitations:** movement is mostly wheel/cleat and chassis bob,
+subtle in the 80px sheet; the electrothermal attack has one bright static
+muzzle pose rather than a temporal sequence. A later targeted four-phase
+flash may improve it without rerendering unchanged validated poses.
+**Production safety:** PR #45 contains only five Blender source, QA,
+workflow, register and documentation files relative to its parent preview
+branch. No live textures, game manifests or runtime code were changed.
+The Bull remains **preview-only**, not integrated into gameplay.
