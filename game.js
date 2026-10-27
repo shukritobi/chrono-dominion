@@ -1687,10 +1687,17 @@
       // Only react to *currently visible*, armed hostile units. Never inspect
       // hidden enemy positions or redirect the player's ore trucks.
       if(e.owner!==1)return false;
-      const threat=this.nearest(e,u=>u.owner!==e.owner&&u.type==='unit'&&
-        u.hp>0&&this.stat(u,'damage')>0&&this.sideCanSee(e.owner,u),4.5);
-      if(!threat){this.harvesterEvadeTargets.delete(e);return false;}
       let plan=this.harvesterEvadeTargets.get(e);
+      // After breaking contact, remain at the safe point briefly instead of
+      // instantly driving back into the same attacker on the ore route.
+      const threat=this.nearest(e,u=>u.owner!==e.owner&&u.type==='unit'&&
+        u.hp>0&&this.stat(u,'damage')>0&&this.sideCanSee(e.owner,u),
+        plan?.holdUntil>this.time?8:4.5);
+      if(!threat){this.harvesterEvadeTargets.delete(e);return false;}
+      if(plan&&dist(e,threat)>4.5&&plan.holdUntil>this.time){
+        this.move(e,plan.x,plan.y,dt);
+        return true;
+      }
       if(!plan||plan.expires<=this.time||plan.threatId!==threat.id||
          dist(plan,threat)<4.5){
         const shelters=this.entities.filter(b=>b.owner===e.owner&&b.hp>0&&
@@ -1738,7 +1745,8 @@
           // A distant safe endpoint is useless if its route crosses the
           // attacker. Reject paths that first pull the truck into gunfire.
           if(route.some(step=>dist(step,threat)<dist(e,threat)-.25))continue;
-          plan={...point,threatId:threat.id,expires:this.time+5};
+          plan={...point,threatId:threat.id,expires:this.time+5,
+            holdUntil:this.time+8};
           break;
         }
         if(!plan){this.harvesterEvadeTargets.delete(e);return false;}
