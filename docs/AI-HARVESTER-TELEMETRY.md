@@ -55,3 +55,23 @@ Verify with `node tests/ai-harvester-telemetry.test.mjs` and
 the next narrow experiment should target loaded return paths, refinery exits,
 or escort behavior. Do not infer a successful economy fix from these
 observation-only changes.
+
+## Per-stall return context (28 October 2026)
+
+To distinguish a blocked refinery approach from unit traffic or a destroyed
+refinery, the 720-second report now includes up to **12**
+`fullCargoStallCases` per scenario. Each record is captured when a truck first
+reaches six consecutive seconds of full-cargo immobility. It includes the
+harvester ID, observed position and time, closest **operational** refinery and
+distance, whether it is inside the 3.6-tile unload radius, the current
+path target/terminal waypoint/next waypoint, traffic wait, narrow-lane wait
+and yielding state. `fullCargoStallCasesOmitted` counts any additional
+unrecorded episodes; the original stall-event and duration counters are
+unchanged. Missing refineries and missing path state are explicit `null`.
+
+These fields are **diagnostic snapshots, not root-cause labels**: a path target
+may be stale and a six-second stall does not by itself prove an A* defect.
+Only the AI's own truck positions and friendly operational refineries are
+inspected; no unseen enemy information enters the report. The game, save
+schema, AI economy and assets remain unchanged. Inspect the archived
+`progression-report.json` from CI before changing refinery return routing.

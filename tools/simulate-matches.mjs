@@ -211,7 +211,8 @@ function runScenario(map,difficulty,mi,di){
     const afterHarvesters=g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0);
     observeHarvesterStep(aiHarvesterTelemetry,beforeHarvesters,afterHarvesters,
-      oreBefore,g.stats[1].oreHarvested,g.time);
+      oreBefore,g.stats[1].oreHarvested,g.time,
+      g.entities.filter(e=>e.owner===1&&e.kind==='refinery'&&e.built&&e.hp>0));
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0).length);

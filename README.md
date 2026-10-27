@@ -9,6 +9,15 @@
 
 
 
+### Individual AI full-cargo stall snapshots (post-v2.42)
+
+- The 720-second match report now preserves up to 12 six-second loaded-stall
+  snapshots per scenario, including truck position, operational refinery
+  distance, unload-range status, current path waypoints and traffic/yield
+  state. This distinguishes a missing refinery from approach and congestion
+  symptoms without guessing a cause. Telemetry only: no game, saves or
+  economic baseline changes. [Methodology](docs/AI-HARVESTER-TELEMETRY.md).
+
 ### Actual AI ore-route and stalled-return diagnostics (post-v2.42)
 
 - Natural-match reports now measure **traveled harvester distance**, loaded

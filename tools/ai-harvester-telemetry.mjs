@@ -11,7 +11,8 @@ export function newHarvesterTelemetry(){
     deliveredOre:0,longestDeliveryGapSeconds:0,lastDeliveryAt:0,
     threatenedSamples:0,harvesterSamples:0,
     travelTiles:0,loadedTravelTiles:0,fullCargoStallSeconds:0,
-    fullCargoStallEvents:0,threatenedLoadedSamples:0,
+    fullCargoStallEvents:0,fullCargoStallCases:[],fullCargoStallCasesOmitted:0,
+    threatenedLoadedSamples:0,
     threatenedEmptySamples:0,threatenedFarFromRefinerySamples:0};
   // Keep the per-truck streak state out of exported JSON reports and saves.
   Object.defineProperty(metrics,'_movement',{enumerable:false,value:{
@@ -19,7 +20,7 @@ export function newHarvesterTelemetry(){
   }});
   return metrics;
 }
-export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,time){
+export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,time,refineries=[]){
   if(!Number.isFinite(time)||time<0||!Number.isFinite(oreBefore)||
      !Number.isFinite(oreAfter)||oreAfter<oreBefore)
     throw Error('Invalid ore telemetry step');
@@ -50,7 +51,35 @@ export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,tim
          Number.isFinite(traveled)&&traveled<Math.max(.01,dt*.03)){
         const previous=movement.streaks.get(prior.id)||0;
         const streak=previous+dt;
-        if(previous<6&&streak>=6)metrics.fullCargoStallEvents++;
+        if(previous<6&&streak>=6){
+          metrics.fullCargoStallEvents++;
+          // Capture bounded, observational context at the first six-second
+          // threshold. This is not a diagnosis of why the unit is stationary.
+          if(metrics.fullCargoStallCases.length<12){
+            const nearest=refineries.filter(r=>Number.isFinite(r.x)&&
+              Number.isFinite(r.y)).sort((a,b)=>
+              Math.hypot(a.x-current.x,a.y-current.y)-
+              Math.hypot(b.x-current.x,b.y-current.y))[0];
+            const range=nearest?Math.hypot(nearest.x-current.x,
+              nearest.y-current.y):null;
+            const point=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?
+              {x:Number(p.x.toFixed(2)),y:Number(p.y.toFixed(2))}:null;
+            metrics.fullCargoStallCases.push({
+              id:prior.id,time:Number(time.toFixed(1)),
+              position:point(current),
+              nearestRefineryId:nearest?.id??null,
+              refineryDistance:range===null?null:Number(range.toFixed(2)),
+              withinUnloadRange:range!==null&&range<=3.6,
+              pathTarget:point(current.pathTarget),
+              pathGoal:point(current.pathGoal),
+              nextWaypoint:point(current.path?.[0]),
+              trafficWait:Number.isFinite(current.trafficWait)?
+                Number(current.trafficWait.toFixed(2)):null,
+              laneWaiting:current.laneWaiting??null,
+              yielding:!!current.yieldOrder
+            });
+          }else metrics.fullCargoStallCasesOmitted++;
+        }
         metrics.fullCargoStallSeconds+=dt;
         movement.streaks.set(prior.id,streak);
       }else movement.streaks.delete(prior.id);
