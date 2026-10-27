@@ -1065,35 +1065,60 @@ consume these separate 32-facing four-phase movement atlases. Art approval
 and a separately reviewed loader are required before integration. No live
 textures, production manifests, runtime or gameplay files were modified.
 
-## 2026-10-28 Federation Hunter Spider four-stage physical destruction — verification pending
+## 2026-10-28 Federation Hunter Spider four-stage physical destruction — validated
 
-**Preview-only; never replace game artwork.** This follow-on to the validated
-Hunter Spider original 32-facing model (Actions #40556753530) and four-beat
-gait (Actions #40566554369) creates a **separate** 32-facing destruction
-sequence: impact, shear, rupture, settle. The original 128-frame sprite
-atlas is downloaded as an immutable reference, not rerendered.
+**Preview-only, not published or integrated.** The original Hunter Spider
+editable source from [Actions #40556753530](https://github.com/shukritobi/chrono-dominion/actions/runs/40556753530)
+was downloaded rather than regenerated. Four genuinely different physical
+destruction phases (**impact → shear → rupture → settle**) were rendered
+for 32 facings: **128 new transparent 160×160 RGBA sprites**. The existing
+128-frame atlas was neither rerendered nor modified.
 
-- [Original four-stage Blender renderer](../../tools/blender/preview_federation_hunter_spider_destruction.py)
-  adds 14 independently editable asymmetric 3D fragments: snapped forelegs,
-  detached pistons, ejected visor, fractured carapace, luminous reactor
-  seams, broken optics, mandibles and collapsed undercarriage.
-- [Strict PNG pixel QA](../../tools/blender/qa_federation_hunter_spider_destruction.py)
-  checks **all 128 new RGBA PNGs** at 160px and 80px, every phase transition,
-  clipping, adjacent facings and the archived atlas SHA-256.
-- [Targeted preview-only GitHub Actions workflow](../../.github/workflows/federation-hunter-spider-destruction-review.yml)
-  downloads the previously validated editable .blend, renders only new
-  destruction frames, reopens the new source and verifies **14 hidden
-  volumetric fragment meshes, 10 preserved original wreckage meshes and
-  eight original hip rigs**. The workflow uploads artifacts even on failure.
-- The archived baseline atlas checksum must remain
-  `0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836`.
-- **Current gate: pending actual Blender render and 80px PNG inspection.**
-  Do not claim visual acceptance until the workflow passes and the real
-  160px/80px contact sheets and per-facing pixel report have been inspected.
-  Failed clipping or insufficient visual changes require geometry repair,
-  not relaxed thresholds.
+- [Successful targeted Blender 4.2.23 workflow #40575580364](https://github.com/shukritobi/chrono-dominion/actions/runs/40575580364)
+  and [preview-only artifact #12766852312](https://github.com/shukritobi/chrono-dominion/actions/runs/40575580364/artifacts/12766852312).
+  [Draft stacked PR #68](https://github.com/shukritobi/chrono-dominion/pull/68)
+  depends on the earlier gait PR #66 and original model PR #62.
+- [Original volumetric Blender destruction modeling](../../tools/blender/preview_federation_hunter_spider_destruction.py),
+  [per-facing actual PNG QA](../../tools/blender/qa_federation_hunter_spider_destruction.py)
+  and [isolated preview workflow](../../.github/workflows/federation-hunter-spider-destruction-review.yml).
+- All workflow steps **passed**: 128 frames rendered, source reopened,
+  **14 new hidden eight-vertex/six-face editable fragments** verified,
+  10 original hidden wreckage meshes and eight original hip rigs preserved,
+  and all 160px/80px alpha clipping and pixel acceptance gates passed.
+  The saved compressed editable .blend is **131,487 bytes**.
+- The baseline atlas SHA-256 remained exactly
+  `0be6b3eb5149dd022e3d904e951fc63e9c8314aff1e084dde451877b3ebe7836`
+  before and after. The separate new four-stage preview atlas SHA-256 is
+  `a2146a40bae4fdbc0f40744a89591d2433ace820a0c54684c0aa4cb45191ae70`.
+- Downloaded the real artifact and inspected **both 160px and 80px contact
+  sheets**. At 160px the drone's front legs shear away, armor separates,
+  glowing core fractures emerge and the remaining chassis collapses. At 80px
+  all four silhouettes remain distinguishable, with visible reductions in
+  height and leg count. **Five independently recalculated 80px impact→shear
+  RGBA pixel counts** for facings 00/07/15/23/31 were
+  **1068 / 1046 / 933 / 968 / 1074**, all exactly matching JSON.
 
-The branch changes only Blender preview tooling, image QA, review workflow,
-asset register and this document. No live texture, manifest, runtime or
-gameplay file is authorized to change. The unmerged original Spider and
-four-beat gait branches remain dependencies.
+| Actual 80px changed pixels across 32 directions | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Impact → shear RGBA | **877** | 1,074 | 984.9 |
+| Shear → rupture RGBA | **814** | 1,087 | 953.2 |
+| Rupture → settle RGBA | **726** | 929 | 817.6 |
+| Impact → shear alpha | **740** | 888 | 808.9 |
+| Shear → rupture alpha | **673** | 904 | 790.0 |
+| Rupture → settle alpha | **540** | 712 | 630.1 |
+| Settle vs archived destroyed RGBA | **536** | 623 | 589.4 |
+| Settle vs archived destroyed alpha | **327** | 437 | 392.4 |
+| Impact vs archived idle RGBA | **881** | 983 | 931.9 |
+| Adjacent impact facings RGBA | **927** | 1,058 | 979.1 |
+
+**Artistic limitations:** the orange reactor exposure is comparatively bright
+in the rupture phase at 80px, and the settled wreck retains a broad upper
+rectangular silhouette. Future polish should soften the brightest fracture
+patches and make one edge of the final chassis more jagged. These are
+art-direction improvements, not failed pixel acceptance gates. The game
+loader cannot yet consume the separate four-phase 32-facing destruction
+atlas; integration needs separate art approval and loader changes.
+
+**Production safety:** the stacked PR contains only Blender preview modeling,
+strict PNG QA, targeted workflow, asset register and this document. No
+published textures, manifests, runtime or gameplay files were changed.
