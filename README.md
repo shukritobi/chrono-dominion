@@ -17,6 +17,10 @@
 - The AI can now purchase one additional harvester during the first 120 seconds when it has a working refinery, sufficient credits for the 900-credit harvester **plus** a 650-credit emergency generator reserve, and no nearby detected attack or power shortage. This is a real production queue, not free income; it stops at two living harvesters and never interrupts Air Command or aircraft savings.
 - The natural-progression and ground balance reports now include peak AI harvester count and scenarios with two active harvesters. This measures economy growth without claiming aircraft deployment has been solved. [Regression](tests/ai-ore-economy.test.mjs) · [notes](docs/AI-ORE-ECONOMY.md).
 
+### Radar recovery economy safeguard (post-v2.42)
+
+- When a powered AI base has a factory, refinery, harvester and ground tank but no operational radar, it now saves for the paid 900-credit radar plus a 650-credit generator reserve rather than repeatedly buying optional units. The reserve remains protected during radar construction and is released for observed attacks, harvester loss, lost ground cover or brownouts. This targets the radar-missing blocker observed in natural-match diagnostics, without free income, new save fields or asset changes. [Regression](tests/ai-ore-economy.test.mjs) · [notes](docs/AI-ORE-ECONOMY.md).
+
 ### AI aircraft funding after Air Command (post-v2.42)
 
 - **Attrition recovery:** once an Air Command is purchased, one surviving tank/heavy is enough to preserve aircraft savings after the original two-tank screen suffers a loss. If all armour is lost, routine ground recruitment resumes; detected attacks, missing harvesters and brownouts still override the reserve. Three-faction regression coverage verifies paid aircraft deployment without changing saves. This does not yet establish reliable natural-match aviation.
