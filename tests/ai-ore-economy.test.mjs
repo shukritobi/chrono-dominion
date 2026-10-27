@@ -133,7 +133,7 @@ for(const faction of ['coalition','federation','psionic']){
   // cheap optional recruitment. Exercise the real AI and construction.
   reset();
   g.add(1,'factory',24,23);g.add(1,'generator',21,24);
-  g.time=150;g.players[1].credits=1200;
+  g.time=300;g.players[1].credits=1200;
   assert.ok(alive(g,'tank').length+alive(g,'heavy').length>0,
     faction+': radar recovery requires an existing ground screen');
   assert.equal(g.power(1).low,false,'radar reserve fixture must be powered');
@@ -164,7 +164,7 @@ for(const faction of ['coalition','federation','psionic']){
 
   reset();
   g.add(1,'factory',24,23);g.add(1,'generator',21,24);
-  g.time=150;g.players[1].credits=1200;
+  g.time=300;g.players[1].credits=1200;
   const radarHq=alive(g,'hq')[0];
   g.add(0,'soldier',radarHq.x+1,radarHq.y+1);
   g.runAI();
@@ -173,7 +173,7 @@ for(const faction of ['coalition','federation','psionic']){
 
   reset();
   g.add(1,'factory',24,23);g.add(1,'generator',21,24);
-  g.time=150;g.players[1].credits=1200;
+  g.time=300;g.players[1].credits=1200;
   for(const tank of [...alive(g,'tank'),...alive(g,'heavy')])tank.hp=0;
   g.runAI();
   assert.ok(g.queues.some(q=>q.side===1),
@@ -181,7 +181,7 @@ for(const faction of ['coalition','federation','psionic']){
 
   reset();
   g.add(1,'factory',24,23);g.add(1,'generator',21,24);
-  g.time=150;g.players[1].credits=1200;
+  g.time=300;g.players[1].credits=1200;
   alive(g,'harvester')[0].hp=0;
   g.runAI();
   assert.equal(queued(g,'harvester').length,1,
