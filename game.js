@@ -1252,8 +1252,8 @@
       // A returning full harvester must negotiate with traffic actually in
       // its travel lane. The nearest friendly may be beside the road, not
       // blocking it; asking that bystander to yield leaves the real jam.
-      // Other units keep their established right-of-way selection rules.
-      const loadedReturn=unit.kind==='harvester'&&unit.load>=360;
+      // Restrict this change to player-owned trucks: broad AI traffic tweaks\n      // reduced natural-match income. AI and other units retain old rules.
+      const loadedReturn=unit.owner===0&&unit.kind==='harvester'&&unit.load>=360;
       const blocker=nearby.filter(other=>other.hp>0&&other.owner===unit.owner&&
         other.id!==unit.id&&other.type==='unit'&&
         (other.x-unit.x)*vx+(other.y-unit.y)*vy>0&&
