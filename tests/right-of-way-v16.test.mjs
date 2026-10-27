@@ -70,6 +70,36 @@ assert.equal(loaded.yieldOrder,null,'truck detour finishes and restores harvesti
 assert.ok(Math.hypot(loaded.x-pocket.x,loaded.y-pocket.y)<1,
   'the truck moves to the pocket without teleporting the defender');
 
+// A closer friendly standing BESIDE the return lane is not the traffic
+// blocker. The full truck must negotiate with the actual Hold sentry ahead,
+// rather than sending the off-axis bystander on an unnecessary detour.
+reset();
+const returner=g.add(0,'harvester',11,12);
+const bystander=g.add(0,'soldier',11.30,12.77);
+const laneSentry=g.add(0,'soldier',11.85,12);
+returner.load=360;
+bystander.order={type:'move',x:7,y:12.77};
+laneSentry.stance='hold';
+assert.ok(Math.hypot(bystander.x-returner.x,bystander.y-returner.y)<
+  Math.hypot(laneSentry.x-returner.x,laneSentry.y-returner.y),
+  'off-axis decoy is deliberately closer than the real blocker');
+assert.equal(g.tryTrafficYield(returner,1,0),true,
+  'full truck selects the in-lane Hold sentry, not the closer off-axis ally');
+assert.ok(returner.yieldOrder,'truck receives a reachable passing pocket');
+assert.equal(bystander.yieldOrder,undefined,
+  'off-axis ally keeps its existing movement order');
+assert.equal(laneSentry.yieldOrder,undefined,
+  'Hold-position defender remains immovable');
+
+// Empty and partially loaded trucks retain the original broader courtesy
+// behaviour; the filter applies only to full-cargo return traffic.
+reset();
+const partial=g.add(0,'harvester',11,12),offAxis=g.add(0,'soldier',11.30,12.77);
+const distant=g.add(0,'soldier',11.85,12);
+partial.load=220;offAxis.order={type:'move',x:7,y:12.77};distant.stance='hold';
+assert.equal(g.tryTrafficYield(partial,1,0),true);
+assert.ok(offAxis.yieldOrder,'partial-load traffic retains previous selection');
+
 // No legal shoulder: the loaded truck cannot invent a route through water.
 reset();
 const trapped=g.add(0,'harvester',11,12),fixed=g.add(0,'soldier',11.85,12);
