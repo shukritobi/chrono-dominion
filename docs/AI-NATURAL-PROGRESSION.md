@@ -19,3 +19,8 @@ The extended check requires three distinct AI factions, a valid economy and comb
 The Pages verification workflow runs the original nine-scenario balance test, the three extended natural-progression matches, and the 15 controlled aviation scenarios. It archives `balance-report.json`, `progression-report.json` and `air-report.json` for comparison. No browser FPS, human balance, actual mobile touch experience or naturally competitive air-wing win rates are inferred.
 
 Follow-up: review progression reports across maps and difficulties, identify the bottleneck (income, power, placement, AI priorities or early defeat), then make narrowly scoped gameplay changes backed by repeatable regressions.
+## Affordable Air Command investment follow-up
+
+The first extended CI baseline observed **three operational factories and three radars, but zero Technology Labs, Air Commands or aircraft** across three 720-second contested matches. This is an observed testing gap, not evidence that aviation functions naturally. In the source, Air Command required >3,500 credits and was evaluated after optional Technology Lab, despite costing 1,750 credits and requiring only factory/radar.
+
+The targeted AI change now considers Air Command first when its 1,750-credit cost plus a 650-credit generator reserve is available, after existing power and emergency-defense priorities. `tests/ai-aviation-investment.test.mjs` covers the real construction decision across all three factions. The extended progression report will reveal whether this alone is sufficient in contested games; no guaranteed aircraft count is assumed.
