@@ -8,6 +8,11 @@
 
 
 
+### Threat-aware AI ore harvester safety (post-v2.42)
+
+- Enemy ore harvesters now avoid deposits near **currently observed** hostile combat units and temporarily withdraw to an operational refinery when an attacker closes within 4.5 tiles. They can deliver their actual partial load rather than losing the entire cargo while under fire. The retreat timer is transient and never changes v1 saves or player harvesting.
+- Three-faction regression checks visible-threat behavior, fog honesty, delivered ore accounting and save compatibility. Natural-match aviation and survival remain under evaluation. [Regression](tests/ai-harvester-safety.test.mjs) · [implementation notes](docs/AI-HARVESTER-SAFETY.md).
+
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
 - The 720-second progression lab now observes **real AI planner decisions**, classifying missing technology, airfield construction, brownouts, harvester or armour losses, threats, production queues and funding. Reports include per-match decision counts, maximum credits after Air Command purchase and the last 12 decisions. Observation only: no AI, credit or save changes. Run `npm run balance:progression`; [methodology](docs/AI-NATURAL-PROGRESSION.md).
