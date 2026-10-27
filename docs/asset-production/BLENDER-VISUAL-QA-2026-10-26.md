@@ -825,7 +825,7 @@ production atlas, runtime or gameplay files were modified. Next: continue
 remaining vehicle classes and plan the 32-facing loader separately.
 
 
-## 2026-10-27 Coalition Autonomous Warden Tank — original 32-facing preview in verification
+## 2026-10-27 Coalition Autonomous Warden Tank — validated 32-facing preview
 
 **Preview-only; not approved for publication.** The new **COA-VEH-004**
 is an unmanned split-track sentinel, distinct from the Coalition Modular
@@ -849,10 +849,34 @@ track guard and raised roof armour. No previously validated model is rerendered.
   will compile the scripts, render only the new Warden in headless Blender
   4.2.23, reopen the saved source to verify hidden editable wreckage, inspect
   actual 160px/80px PNGs, and upload review-only artifacts.
-- **Verification pending:** do not claim successful rendering, image inspection
-  or numerical pixel results until the workflow completes and its actual
-  images have been reviewed. If the QA gate fails, repair geometry, not the
-  thresholds. Record the workflow run, artifact and exact measured deltas here.
+- **Verified:** [successful targeted Actions run #40471597359](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359)
+  passed script compilation, checksum-verified Blender 4.2.23 rendering of all
+  128 RGBA frames, reopening the **131,367-byte editable .blend**, and every
+  strict 80px pixel gate. The reopened source contains **8 hidden editable
+  wreckage meshes**, **18 individual track cleats**, and **2 ion barrels**.
+  [Artifact #12718354515](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359/artifacts/12718354515)
+  was downloaded and its actual 160px/80px contact sheets visually inspected.
+  The archive contains 128 PNGs, 5120×640 preview atlas, editable source,
+  two contact sheets and JSON pixel QA. No previously validated asset was
+  rerendered.
+
+| Changed pixels | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Move vs idle RGBA at 80px | **925** | 1,233 | 1,111.8 |
+| Attack vs idle RGBA at 80px | **713** | 944 | 855.1 |
+| Destroyed vs idle RGBA at 80px | **985** | 1,261 | 1,164.8 |
+| Destroyed vs idle alpha at 80px | **557** | 722 | 639.8 |
+| Destroyed vs idle alpha at 160px | **933** | 1,376 | 1,120.7 |
+| Adjacent-facing idle RGBA at 80px | **1,008** | 1,226 | 1,136.3 |
+
+Independently recomputed 80px destroyed-alpha changes for facings
+00/07/15/23/31: **620 / 699 / 674 / 661 / 611** pixels, exactly matching
+the JSON report. At 80px, the twin-ion turret and bright orange battery
+rupture are identifiable, and the destroyed pose clearly loses the intact
+sensor crown. **Visual limitation:** the track-cleat movement is subtle
+at 80px, and the attack state is a single posed energy discharge rather
+than a temporal firing sequence. This is a preview, not a game-ready
+32-facing animation runtime.
 
 **Dependency:** based on the unmerged Federation Hailstorm preview branch
 ([draft PR #33](https://github.com/shukritobi/chrono-dominion/pull/33)),
