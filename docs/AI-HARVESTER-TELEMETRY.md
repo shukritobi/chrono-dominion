@@ -75,3 +75,27 @@ Only the AI's own truck positions and friendly operational refineries are
 inspected; no unseen enemy information enters the report. The game, save
 schema, AI economy and assets remain unchanged. Inspect the archived
 `progression-report.json` from CI before changing refinery return routing.
+
+## Refinery return-access audit (28 October 2026)
+
+At the first six-second full-cargo stall, the natural-match report now
+inspects the **actual next movement step** using the production engine's
+collision rules. `returnAccess.nextStepClear` separates static terrain or
+building obstruction from dynamic unit traffic for the direct step, axis
+fallbacks and both lateral sidesteps. This does not call the lane-reservation
+mutator, so `laneWaiting` remains a separate observation.
+
+For the nearest operational friendly refinery, the audit searches legal
+integer tile centers within the existing 3.6-tile unloading radius. It
+accepts a destination only if the actual A* path reaches that exact tile,
+rather than mistaking a partial path for success. The result includes
+`reachableUnloadTile`, `unloadCandidatesChecked` and
+`pathGoalInsideUnloadRange`. A null reachable tile means **no tile-center
+route was demonstrated by this check**, not that no sub-tile route exists.
+
+The inspection runs only when a stall first reaches six seconds and only
+for the first twelve recorded cases. It is telemetry-only: no unit movement,
+credits, AI planning, save format or original artwork changes. Run
+`node tests/ai-harvester-telemetry.test.mjs` and
+`npm run balance:progression` to inspect the archived stall cases before
+attempting another refinery routing change.
