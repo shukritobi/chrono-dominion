@@ -7,7 +7,10 @@ const metrics=newHarvesterMoveTelemetry();
 const truck={id:18,owner:1,kind:'harvester',load:360,x:2,y:2,
   path:[{x:5,y:2}],pathGoal:{x:5,y:2},pathRecheck:1,trafficWait:0};
 let occupyCalls=0,laneCalls=0;
-const game={time:1,
+const blocker={id:24,owner:1,kind:'soldier',type:'unit',hp:100,
+  x:6,y:2,stance:'hold'};
+const game={time:1,entities:[truck,blocker],
+  unitRadius(){return .4;},
   canOccupyUnit(e,x,y,ignoreUnits=false){
     occupyCalls++;
     return x!==5&&(ignoreUnits||x!==6);
@@ -44,6 +47,9 @@ assert.equal(summary.moveCalls,4);
 assert.equal(summary.noProgressMoveCalls,3);
 assert.equal(summary.staticBlockedProbes,1);
 assert.equal(summary.trafficBlockedProbes,1);
+assert.deepEqual(summary.trafficBlockers,[{
+  id:24,owner:1,kind:'soldier',stance:'hold',yielding:false,probes:1
+}], 'actual colliding Hold soldier is identified without changing occupancy');
 assert.equal(summary.laneRejectedProbes,1);
 assert.deepEqual(summary.lastMove.destination,{x:8,y:2});
 assert.equal(JSON.stringify(metrics).includes('_history'),false);
@@ -59,6 +65,8 @@ assert.equal(metrics.stunnedNoCallFrames,1);
 assert.equal(summarizeHarvesterMove(metrics,18,5).stunnedNoCallFrames,1);
 game.time=12;
 observeHarvesterMoveTick(metrics,before(),after(),12);
+assert.deepEqual(summarizeHarvesterMove(metrics,18,12).trafficBlockers,[],
+  'stale blocker identities are removed with the bounded six-second history');
 assert.equal(summarizeHarvesterMove(metrics,18,12).moveCalls,0,
   'history older than six seconds is discarded');
 restore();
