@@ -19,9 +19,10 @@ const MAPS=['verdant','desert','snow'];
 const DIFFICULTIES=['recruit','standard','veteran'];
 const FACTIONS=['coalition','federation','psionic'];
 const options=process.argv.slice(2);
+const progression=options.includes('--progression');
 const arg=name=>options.find(a=>a.startsWith(name+'='));
 const seconds=Number(arg('--duration')?.split('=')[1]||
-  (options.includes('--quick')?'75':options.includes('--full')?'540':'240'));
+  (options.includes('--quick')?'75':options.includes('--full')?'540':progression?'720':'240'));
 const frame=Number(arg('--step')?.split('=')[1]||'.20');
 const out=arg('--out')?.split('=').slice(1).join('=');
 if(!Number.isFinite(seconds)||seconds<10||seconds>1800||
@@ -147,6 +148,12 @@ function runScenario(map,difficulty,mi,di){
     firstObjectiveDiscovery=null,firstPlatoonAt=null;
   const observedRecon=new Set(),observedAircraft=new Set();
   let airfieldSeen=false;
+  // Record natural AI technology milestones, without pre-spawning structures,
+  // granting free credits, bypassing placement or disabling the AI planner.
+  const aiMilestones=Object.fromEntries(
+    ['generator','refinery','factory','radar','tech','airfield']
+      .map(kind=>[kind,{startedAt:null,operationalAt:null}]));
+  let firstAircraftQueuedAt=null,firstAircraftDeployedAt=null;
   const maxSteps=Math.ceil(seconds/frame);
   let previousDamage=0,previousOre=0;
   for(let i=0;i<maxSteps&&g.state==='playing';i++){
@@ -156,6 +163,19 @@ function runScenario(map,difficulty,mi,di){
     }
     g.step(frame);
     peak=Math.max(peak,g.entities.length);
+    for(const e of g.entities){
+      if(e.owner!==1||e.hp<=0)continue;
+      const milestone=aiMilestones[e.kind];
+      if(milestone){
+        if(milestone.startedAt===null)milestone.startedAt=Number(g.time.toFixed(1));
+        if(e.built&&milestone.operationalAt===null)
+          milestone.operationalAt=Number(g.time.toFixed(1));
+      }
+      if(e.kind==='aircraft'&&firstAircraftDeployedAt===null)
+        firstAircraftDeployedAt=Number(g.time.toFixed(1));
+    }
+    if(firstAircraftQueuedAt===null&&g.queues.some(q=>q.side===1&&q.key==='aircraft'))
+      firstAircraftQueuedAt=Number(g.time.toFixed(1));
     if(g.aiPlatoon){
       platoonSeen=true;
       if(firstPlatoonAt===null)firstPlatoonAt=g.time;
@@ -204,10 +224,13 @@ function runScenario(map,difficulty,mi,di){
     aiSurveyPercent,reconBuilt:observedRecon.size,
     reconAlive,reconLost:Math.max(0,observedRecon.size-reconAlive),
     airfieldSeen,aircraftBuilt:observedAircraft.size,aircraftAlive,
-    aircraftLost:Math.max(0,observedAircraft.size-aircraftAlive)};
+    aircraftLost:Math.max(0,observedAircraft.size-aircraftAlive),
+    aiMilestones,firstAircraftQueuedAt,firstAircraftDeployedAt};
 }
 const results=[];
 for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
+  // One standard-difficulty match per map yields all three enemy factions.
+  if(progression&&di!==1)continue;
   const result=runScenario(MAPS[mi],DIFFICULTIES[di],mi,di);
   results.push(result);
   if(!options.includes('--json'))console.log(
@@ -220,7 +243,8 @@ for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
      result.outcome].join(' | '));
 }
 const report={
-  schema:'chrono-dominion-balance-lab-v1',version:'2.22.0',
+  schema:'chrono-dominion-balance-lab-v1',version:'2.42.0',
+  mode:progression?'natural-ai-progression':'standard-matrix',
   simulationSeconds:seconds,simulationStep:frame,
   disclaimer:'Scripted-player scenario coverage, not real human win rates or a verified fair multiplayer balance benchmark.',
   scenarios:results.length,results,
@@ -240,6 +264,11 @@ const report={
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     totalReconLost:results.reduce((n,r)=>n+r.reconLost,0),
     casesWithAirfields:results.filter(r=>r.airfieldSeen).length,
+    casesWithAIFactories:results.filter(r=>r.aiMilestones.factory.operationalAt!==null).length,
+    casesWithAIRadars:results.filter(r=>r.aiMilestones.radar.operationalAt!==null).length,
+    casesWithAITechLabs:results.filter(r=>r.aiMilestones.tech.operationalAt!==null).length,
+    casesWithAIAirfields:results.filter(r=>r.aiMilestones.airfield.operationalAt!==null).length,
+    casesWithAIQueuedAircraft:results.filter(r=>r.firstAircraftQueuedAt!==null).length,
     casesWithAircraft:results.filter(r=>r.aircraftBuilt>0).length,
     totalAircraftLost:results.reduce((n,r)=>n+r.aircraftLost,0),
     meanAISurveyPercent:Number((results.reduce((n,r)=>n+r.aiSurveyPercent,0)/results.length).toFixed(1)),
@@ -260,7 +289,24 @@ const report={
 if(out)writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 if(options.includes('--json'))console.log(JSON.stringify(report,null,2));
 else console.log('BALANCE LAB SUMMARY:',JSON.stringify(report.summary));
-assert.equal(results.length,9,'complete three-map/three-difficulty matrix');
+assert.equal(results.length,progression?3:9,
+  'complete '+(progression?'three-faction natural progression':'three-map/three-difficulty')+' matrix');
+if(progression){
+  assert.equal(new Set(results.map(r=>r.enemyFaction)).size,3,
+    'natural progression must cover all three AI factions');
+  assert.ok(report.summary.casesWithAIFactories>=1,
+    'extended progression must reach an operational AI factory in at least one scenario');
+}
+for(const r of results){
+  for(const milestone of Object.values(r.aiMilestones)){
+    assert.ok(milestone.operationalAt===null||milestone.startedAt!==null&&
+      milestone.operationalAt>=milestone.startedAt,
+      'AI technology must not become operational before construction is observed');
+  }
+  assert.ok(r.firstAircraftDeployedAt===null||r.firstAircraftQueuedAt!==null&&
+    r.firstAircraftDeployedAt>=r.firstAircraftQueuedAt,
+    'AI aircraft must be purchased through a production queue before deployment');
+}
 assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(report.summary.peakEntities>=16,'actual units and structures were created');
 assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
@@ -272,13 +318,13 @@ assert.ok(results.every(r=>r.aiSurveyPercent>=0&&r.aiSurveyPercent<=100&&
   (r.firstObjectiveDiscovery===null||r.firstObjectiveDiscovery>=0&&
     r.firstObjectiveDiscovery<=r.seconds+1)),
   'recon survival and objective-discovery telemetry must be internally consistent');
-assert.equal(report.summary.casesWithIncome,9,
-  'all scripted map/difficulty scenarios must generate some delivered income');
-assert.ok(report.summary.casesWithCombat>=6,
+assert.equal(report.summary.casesWithIncome,results.length,
+  'all scripted scenarios must generate some delivered income');
+assert.ok(report.summary.casesWithCombat>=Math.ceil(results.length*2/3),
   'the battlefield simulator must exercise actual projectile combat on most maps');
 if(seconds>=220){
   for(const match of results.filter(r=>r.map==='desert'))
     assert.ok(match.harvest[1]>=3000,
       'Ashen Basin AI economic regression: inaccessible ore or failed deliveries');
 }
-console.log('PASS: 9 deterministic headless skirmish scenarios, resource/economy integrity, fog, recon telemetry and production safety');
+console.log('PASS: '+results.length+' deterministic headless skirmish scenarios, AI technology milestones, economy integrity, fog, recon telemetry and production safety');
