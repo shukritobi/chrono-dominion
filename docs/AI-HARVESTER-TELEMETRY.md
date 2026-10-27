@@ -75,3 +75,19 @@ Only the AI's own truck positions and friendly operational refineries are
 inspected; no unseen enemy information enters the report. The game, save
 schema, AI economy and assets remain unchanged. Inspect the archived
 `progression-report.json` from CI before changing refinery return routing.
+
+## Experimental refinery perimeter approach (28 October 2026)
+
+The first detailed progression artifact located all three six-second loaded
+stalls on the snow map. Trucks 16 and 20 stopped around (23, 20.8) or
+(25.3, 20.9), outside the 3.6-tile unload radius, while pursuing the same
+hard-coded southeast refinery target (29.9, 25.3). The path snapshots showed
+no narrow-lane wait or active yield. This supports testing an alternate
+approach but does **not** prove the fixed target was the only obstruction.
+
+A narrowly scoped experimental change now chooses a reachable legal perimeter
+point instead of the southeast target, with a bounded eight-candidate A*
+search only at the start of a loaded return. After six seconds without
+meaningful progress it retries a different perimeter point. The assignment
+lives in a WeakMap and never changes the saved entity schema. The existing
+720-second economy guard must pass before the experiment can be merged.
