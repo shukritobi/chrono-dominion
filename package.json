@@ -18,7 +18,8 @@
     "audio:bake": "python3 tools/audio/build_builtin.py",
     "audio:check": "python3 tools/audio/build_builtin.py --check && node tests/builtin-audio-v224.test.mjs",
     "balance:air": "node tools/simulate-air-engagements.mjs",
-    "balance:progression": "node tools/simulate-matches.mjs --progression"
+    "balance:progression": "node tools/simulate-matches.mjs --progression",
+    "balance:regression": "node tools/simulate-matches.mjs --progression --out=progression-report.json && node tools/check-ai-economy-regression.mjs progression-report.json"
   },
   "engines": {
     "node": ">=20"
