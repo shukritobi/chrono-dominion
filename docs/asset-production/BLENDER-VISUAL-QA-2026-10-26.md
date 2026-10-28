@@ -1887,3 +1887,39 @@ No live texture, manifest, loader or gameplay code is modified.
   geometry; do not lower acceptance thresholds.
 - Parent preview: [Federation Shrapnel Carrier validated run](https://github.com/shukritobi/chrono-dominion/actions/runs/40684908621).
 - No previously validated asset is rerendered by this isolated workflow.
+
+### Final targeted verification — 28 October 2026 (PASSED)
+
+- [Single successful Blender 4.2.23 workflow #40694099269](https://github.com/shukritobi/chrono-dominion/actions/runs/40694099269), [complete 133-file artifact #12817913977](https://github.com/shukritobi/chrono-dominion/actions/runs/40694099269/artifacts/12817913977). No other Spider Drone rendering job was launched.
+- The **125,407-byte compressed editable .blend** was reopened successfully by Blender 4.2.23. The reopened scene contained **10 hidden closed manifold fracture meshes** (each 12 vertices, eight faces), **six articulated leg hinge objects**, and **15 custom tapered leg beams** (12 leg beams plus three physical attack-only injector/fang beams).
+- **128 unique, nonempty, unclipped 160×160 RGBA PNGs** passed the predeclared per-facing thresholds. Minimum alpha-image margin was independently remeasured as **9px at 160px**.
+- Independently downloaded and inspected both actual 160px and 80px contact sheets. At 160px the six angular legs, suspended octagonal carapace and frontal injector are distinguishable. At 80px the silhouette reads as a small spider, but several legs overlap in some directions; the attack effect is brighter than the thin injector geometry, and destroyed debris is visibly fragmented rather than a cohesive chassis wreck.
+- Independent Pillow recalculation checked **all 128 unique hashes, all alpha margins, all 32 facings × six state metrics and all 32 adjacent-facing differences**. Every calculated value matched the workflow JSON exactly.
+
+| Independent all-32-facing pixel measurements | Minimum | Maximum |
+|---|---:|---:|
+| Idle → move RGBA, 80px | **1,184** | 1,312 |
+| Idle → attack RGBA, 80px | **459** | 724 |
+| Idle → attack alpha, 80px | **57** | 125 |
+| Idle → destroyed RGBA, 80px | **1,096** | 1,211 |
+| Idle → destroyed alpha, 80px | **1,002** | 1,105 |
+| Idle → destroyed alpha, 160px | **2,358** | 2,804 |
+| Adjacent idle directions RGBA, 80px | **1,160** | 1,303 |
+
+New isolated preview atlas SHA-256:
+`71af62c53a6bd18fe83e068aca05e38c1a8e4a0353694184074215e8ee0fc523`.
+Downloaded artifact ZIP SHA-256:
+`e763c23d94764a561c52383649b825f699d1ae89816f4918f31f86a4b64739de`.
+The original 51-atlas published vehicle wave on main was not touched by this
+branch; no baseline sprites were rerendered.
+
+**QA limitation:** Pixel difference is not proof of high-quality silhouette
+or leg readability. The actual 80px sheet shows partially overlapping legs,
+a bright attack spike and scattered debris. These are art-polish candidates,
+not blockers for the current first-pass preview. No true crawling cycle,
+unit collision/hitbox integration, live texture or gameplay integration exists.
+
+**Publication safety:** Only the original preview model, isolated pixel QA,
+branch-scoped workflow, asset-register entry and this QA document differ
+from the stacked parent preview branch. **Draft PR #103 remains unapproved;
+never merge/publish this art without owner approval.**
