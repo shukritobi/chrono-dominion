@@ -952,3 +952,34 @@ consume these separate 32-facing four-phase atlases, and production
 integration still requires explicit art approval. No published textures,
 game manifests or gameplay code were edited. No previously validated
 128-frame Warden atlas was rerendered.
+
+
+## 2026-10-28 Coalition Warden four-stage physical destruction — isolated preview pending QA
+
+**COA-VEH-004; not approved for publication.** Extends the already validated
+[32-facing Warden source](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359)
+without rerendering its idle/move/attack/destroyed atlas. The new
+[modeling script](../../tools/blender/preview_coalition_warden_four_stage_destruction.py)
+authors **20 independent asymmetric closed 3D fracture meshes**, including
+three low-intensity cyan conductor cracks, split twin-chevron glacis,
+severed dual ion accelerators, detached sensor crown, broken track guards,
+and a collapsed battery chassis. The phases are impact / shear / rupture /
+settle, with **32 directions × 4 phases = 128 NEW** 160px transparent
+sprites, plus separate editable .blend and 80px contact sheet/GIF.
+
+- [Strict actual PNG QA](../../tools/blender/qa_coalition_warden_four_stage_destruction.py)
+  checks every 160px RGBA frame for transparency, margins, four phase
+  transitions, original idle/destroyed comparisons, adjacent directions
+  and 80px silhouette change. It records per-facing metrics and SHA-256
+  before/after for the **unchanged original atlas**.
+- [Targeted workflow](../../.github/workflows/coalition-warden-four-stage-destruction-review.yml)
+  downloads the validated Warden source and baseline artifact, installs
+  checksum-verified Blender 4.2.23, reopens the saved new source, and
+  publishes preview artifacts only.
+- **Validation status: PENDING first workflow.** Do not claim measured
+  pixels, Blender reopen, or artistic acceptance until the workflow
+  completes and actual 160px/80px PNGs have been inspected. Do not lower
+  acceptance gates to conceal weak fracture silhouettes.
+- **Isolation:** stacked on the Warden temporal preview branch, with
+  only Blender authoring, PNG QA, workflow, register and QA documentation
+  changes. No game sprites, production manifests or gameplay files touched.
