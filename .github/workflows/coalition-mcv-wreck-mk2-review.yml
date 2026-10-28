@@ -1,0 +1,125 @@
+name: Coalition MCV MK-II Wreck Geometry — Targeted Preview
+
+# PREVIEW ONLY: download validated baseline; render only 32 destroyed facings.
+# No production assets, manifests, game code or approved atlases are touched.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/coalition-mcv-wreck-mk2-20261029
+    paths:
+      - .github/workflows/coalition-mcv-wreck-mk2-review.yml
+      - tools/blender/preview_coalition_mcv_wreck_mk2.py
+      - tools/blender/qa_coalition_mcv_wreck_mk2.py
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-coalition-mcv-wreck-mk2
+  cancel-in-progress: true
+
+jobs:
+  targeted-wreck-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated unapproved preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile scripts and install Pillow
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_mcv_32.py tools/blender/preview_coalition_mcv_wreck_mk2.py tools/blender/qa_coalition_mcv_32.py tools/blender/qa_coalition_mcv_wreck_mk2.py
+          python -m pip install --quiet Pillow
+
+      - name: Download corrected original baseline from successful Actions run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download 40769372711 --repo "$GITHUB_REPOSITORY" \
+            --name chrono-coalition-mcv-32-corrected-id \
+            --dir generated/coalition-mcv-original
+          for state in idle move deploy destroyed; do
+            test "$(find "generated/coalition-mcv-original/frames/$state" -name '*.png' | wc -l)" -eq 32
+          done
+          test -s generated/coalition-mcv-original/pixel-qa.json
+          mkdir -p generated/coalition-mcv-wreck-mk2/frames
+          for state in idle move deploy; do
+            cp -a "generated/coalition-mcv-original/frames/$state" \
+              generated/coalition-mcv-wreck-mk2/frames/
+          done
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render ONLY the 32 revised destroyed facings
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_coalition_mcv_wreck_mk2.py -- \
+            --output generated/coalition-mcv-wreck-mk2
+          test "$(find generated/coalition-mcv-wreck-mk2/frames/destroyed -name '*.png' | wc -l)" -eq 32
+
+      - name: Reopen editable Blender source and inspect actual new manifold geometry
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/coalition-mcv-wreck-mk2/coalition-mcv-wreck-mk2.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy, bmesh
+          mk2=[o for o in bpy.data.objects if o.type=="MESH" and o.get("wreck_mk2_only")]
+          shards=[o for o in mk2 if o.get("closed_fracture")]
+          original=[o for o in bpy.data.objects if o.type=="MESH" and "central armoured build deck" in o.name.lower()]
+          assert len(mk2)==10 and len(shards)==4, (len(mk2),len(shards))
+          assert len(original)==1 and not original[0].hide_render
+          assert all(o.hide_render and o.get("wreckage_only") for o in mk2)
+          for o in shards:
+              bm=bmesh.new(); bm.from_mesh(o.data)
+              assert len(bm.verts)==12 and len(bm.faces)==8
+              assert all(e.is_manifold for e in bm.edges),o.name
+              bm.free()
+          print("PASS MK-II REOPEN: 10 hidden editable wreck-only meshes, 4 manifold fracture shards, intact roof saved")
+          '
+
+      - name: Strict 128-frame and targeted 80px preservation/difference QA
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_coalition_mcv_32.py --stage generated/coalition-mcv-wreck-mk2
+          python tools/blender/qa_coalition_mcv_wreck_mk2.py \
+            --stage generated/coalition-mcv-wreck-mk2 \
+            --baseline generated/coalition-mcv-original
+          test -s generated/coalition-mcv-wreck-mk2/coalition-mcv-contact-80.png
+          test -s generated/coalition-mcv-wreck-mk2/coalition-mcv-contact-160.png
+
+      - name: Preserve source, original 96 frames, new 32 wrecks, atlases and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-coalition-mcv-wreck-mk2-preview
+          path: generated/coalition-mcv-wreck-mk2/
+          if-no-files-found: warn
+          retention-days: 30
