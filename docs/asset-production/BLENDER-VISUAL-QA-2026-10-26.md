@@ -2121,3 +2121,26 @@ coherent beam/fork geometries are parented to the emitter.
 **Status: new source, strict pixel QA, asset register and branch-scoped
 workflow in development. Blender render, saved-source reopen, actual 160/80px
 inspection, and independent measurement remain pending.**
+
+
+### First COA-VEH-006 render: real clipping failure, corrective geometry required
+
+[Targeted first run #40723343610](https://github.com/shukritobi/chrono-dominion/actions/runs/40723343610)
+successfully compiled, rendered **128 actual frames**, reopened the saved
+editable .blend and passed its topology checks, but **FAILED the predeclared
+canvas-clipping gate**. Attack facing 02 had alpha bbox
+**(33, 50, 160, 120)**, touching the right edge. Independent inspection
+of the downloaded failed artifact found clipping in ten attack facings:
+**02–06 and 18–22**. All other states were unclipped. No threshold was
+relaxed. Independent first-pass 80px comparisons (a diagnostic with
+default resize, not the final LANCZOS acceptance) were movement RGBA
+959–1387, attack RGBA 814–1273, attack alpha 51–369, wreck alpha
+337–627 and adjacent facings 1094–1526. These are **diagnostics from a
+failed render, not accepted QA results**.
+
+The original beam geometry projected too far beyond the tank in
+near-side broadside directions. Correction must physically shorten and
+re-seat the attack pulse and/or focusing prongs rather than cropping the
+PNG, altering QA margins, or changing accepted live assets. Re-render
+**only COA-VEH-006** after a source change, then independently inspect
+actual 160px/80px images and remeasure every direction.
