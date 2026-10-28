@@ -14,8 +14,12 @@ try{
   assert.equal(result.simulatedSeconds,8);
   assert.ok(result.movedStressUnits>=60,'at least half the stress units must move');
   assert.ok(result.pathQueries>0&&result.occupancyChecks>0,'real navigation exercised');
-  assert.ok(result.finitePositions&&result.saveRestored,'finite positions and v1 save compatibility');
+  assert.ok(result.finitePositions&&result.saveRestored&&result.restoredPositionsMatch,
+    'finite positions, unit identities and v1 save compatibility');
   assert.ok(Number.isFinite(result.meanMsPerTick)&&result.meanMsPerTick>=0);
+  assert.ok(Number.isFinite(result.p95TickMs)&&result.p95TickMs>=0);
+  assert.ok(Number.isFinite(result.maxTickMs)&&result.maxTickMs>=result.p95TickMs,
+    'worst tick must be no faster than the 95th percentile');
   console.log('PASS: 120-unit XL movement, pathfinding, collisions, saves and wall-time telemetry');
 }finally{
   try{unlinkSync(output);}catch{}

@@ -55,26 +55,41 @@ let pathQueries=0,occupancyChecks=0;
 const findPath=g.findPath.bind(g),occupy=g.canOccupyUnit.bind(g);
 g.findPath=(...args)=>{pathQueries++;return findPath(...args);};
 g.canOccupyUnit=(...args)=>{occupancyChecks++;return occupy(...args);};
-const ticks=40,dt=.2,start=performance.now();
-for(let i=0;i<ticks;i++)g.step(dt);
+const ticks=40,dt=.2,start=performance.now(),tickDurations=[];
+for(let i=0;i<ticks;i++){
+  const tickStart=performance.now();
+  g.step(dt);
+  tickDurations.push(performance.now()-tickStart);
+}
 const wallMs=performance.now()-start;
+const sortedTicks=[...tickDurations].sort((a,b)=>a-b);
+const p95TickMs=sortedTicks[Math.ceil(ticks*.95)-1];
+const maxTickMs=sortedTicks.at(-1);
 const moved=units.filter(u=>Math.hypot(u.x-initial.get(u.id).x,
   u.y-initial.get(u.id).y)>.25).length;
 const finitePositions=units.every(u=>Number.isFinite(u.x)&&Number.isFinite(u.y));
 const liveUnits=g.entities.filter(u=>u.type==='unit'&&u.hp>0).length;
 const beforeSave=g.entities.length;
 const saved=g.saveGame(),restored=saved&&g.loadGame();
+const restoredPositionsMatch=!!restored&&units.every(unit=>{
+  const loaded=g.entities.find(e=>e.id===unit.id);
+  return loaded&&loaded.kind===unit.kind&&loaded.owner===unit.owner&&
+    Math.abs(loaded.x-unit.x)<1e-6&&Math.abs(loaded.y-unit.y)<1e-6;
+});
 const report={
   fixture:'xl-120-unit-movement',map:'expanse',worldSize:g.worldSize,
   initialStressUnits:units.length,simulatedSeconds:ticks*dt,ticks,
   movedStressUnits:moved,liveUnits,entitiesBeforeSave:beforeSave,
   pathQueries,occupancyChecks,wallMs:Math.round(wallMs*100)/100,
   meanMsPerTick:Math.round(wallMs/ticks*100)/100,
-  finitePositions,saveRestored:!!restored,
+  p95TickMs:Math.round(p95TickMs*100)/100,
+  maxTickMs:Math.round(maxTickMs*100)/100,
+  finitePositions,saveRestored:!!restored,restoredPositionsMatch,
   entitiesAfterLoad:g.entities.length,node:process.version
 };
 assert.ok(finitePositions,'all positions must remain finite');
-assert.ok(restored&&g.entities.length===beforeSave,'XL battle must survive v1 save/load');
+assert.ok(restored&&g.entities.length===beforeSave&&restoredPositionsMatch,
+  'XL battle must preserve unit positions and identities through v1 save/load');
 assert.ok(moved>=60,'at least half the 120 stress units must move');
 assert.ok(pathQueries>0&&occupancyChecks>0,'real navigation and collision must execute');
 assert.ok(Number.isFinite(wallMs)&&wallMs>0,'wall-clock measurement must be finite');
