@@ -2581,7 +2581,7 @@
         owned('aircraft').length<2&&owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>=1&&!threatened;
       // An unfinished generator already represents paid brownout recovery.
-      // Wait for it to come online instead of buying duplicates or optional tech.
+      // Wait for it to come online rather than buying duplicate generators.
       const generatorPending=owned('generator').some(b=>!b.built);
       let choice=null;
       if(!owned('generator').length||shortage){
@@ -2644,12 +2644,6 @@
       const savingForAircraft=aviationInvestment&&
         (!built('airfield')||shortage||
           me.credits<UNITS.aircraft.cost+BUILD.generator.cost);
-      // Preserve generator funding (and a generator already under construction)
-      // while a safe, defended ore economy recovers from a brownout. A visible
-      // attack or loss of the last harvester/ground screen overrides banking.
-      const savingForPower=(!owned('generator').length||shortage)&&
-        !threatened&&owned('harvester').length>0&&
-        owned('tank').length+owned('heavy').length>0;
       // A second *paid* early harvester improves sustainable income instead
       // of leaving the AI dependent on one ore truck for the whole match.
       // Never interrupt an aviation reserve, emergency defense or brownout,
@@ -2659,7 +2653,7 @@
         built('refinery')&&owned('harvester').length===1&&
         me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
       if(!this.queues.some(q=>q.side===side)&&
-        !savingForAirfield&&!savingForAircraft&&!savingForRadar&&!savingForPower){
+        !savingForAirfield&&!savingForAircraft&&!savingForRadar){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
         else if(expandingOreEconomy)unit='harvester';
