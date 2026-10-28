@@ -1307,9 +1307,17 @@
         e.path=scoutPatrol?
           (this.scoutPath(e,{x:tx,y:ty},new Map(),e.trafficRepath?e:null)?.path||[]):
           this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null);
+        // Routine new move orders need an immediate first A* route, but
+        // identical 1.6s refresh timers synchronize large formations. Spread
+        // only the *first* non-urgent refresh by stable unit ID; subsequent
+        // refreshes retain the existing 1.6s cadence. Traffic recovery,
+        // changed destinations, harvesters, recon and combat keep their
+        // original prompt routing and timers. No new saved state is needed.
+        const staggerRoutine=!old&&e.order?.type==='move'&&
+          e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath;
         e.trafficRepath=false;
         e.pathTarget={x:tx,y:ty};e.pathGoal=e.path.length?e.path[e.path.length-1]:null;
-        e.pathRecheck=1.6;
+        e.pathRecheck=1.6+(staggerRoutine?(e.id%4)*.2:0);
       }
       e.pathRecheck-=dt;
       while(e.path?.length&&Math.hypot(e.x-e.path[0].x,e.y-e.path[0].y)<.37)e.path.shift();
