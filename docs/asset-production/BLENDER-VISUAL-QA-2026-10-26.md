@@ -2554,3 +2554,59 @@ without rerendering validated idle/move/deploy frames.
 this QA document and asset-register metadata were changed. No approved
 textures, production manifests, loaders or gameplay files were modified.
 The asset remains **preview-only, not playable or approved for publication**.
+
+
+## 2026-10-29 COA-VEH-008 Coalition MCV MK-II roof-cavity and fracture repair — PASSED
+
+**PREVIEW ONLY.** A focused original Blender geometry repair adds a real
+missing-roof state to the previously validated Coalition MCV. The damaged
+vehicle no longer retains its intact central pale roof plate. The new
+[MK-II wreck model](../../tools/blender/preview_coalition_mcv_wreck_mk2.py)
+preserves the original editable source and adds **10 separately editable
+wreck-only meshes**: a recessed dark construction-bay cavity, four asymmetric
+torn steel lips, four independently editable closed-manifold copper fracture
+wedges, and a sheared inner roof spar. The copper highlight is restrained
+rather than a large emissive fireball. The intact roof and all 10 added
+wreck-only meshes remain editable in the saved source.
+
+- [Successful targeted Blender Actions run #40778100926](https://github.com/shukritobi/chrono-dominion/actions/runs/40778100926)
+  ([complete preview artifact #12856385658](https://github.com/shukritobi/chrono-dominion/actions/runs/40778100926/artifacts/12856385658)),
+  [draft PR #122](https://github.com/shukritobi/chrono-dominion/pull/122).
+- The [targeted workflow](../../.github/workflows/coalition-mcv-wreck-mk2-review.yml)
+  downloaded the corrected source-ID baseline from successful run
+  [#40769372711](https://github.com/shukritobi/chrono-dominion/actions/runs/40769372711).
+  It copied all **96 previously validated idle, movement and deployment PNGs
+  byte-for-byte** and rerendered **only the 32 destroyed facings**. No
+  previously validated non-destroyed sprite was rerendered.
+- Headless Blender 4.2.23 reopened the actual **144,631-byte compressed editable
+  .blend**. The saved intact state contains all 10 new meshes hidden and its
+  original roof visible. All four new fracture wedges are closed manifold
+  meshes with 12 vertices and eight faces apiece. This is actual saved-source
+  verification, not a script-name inference.
+- The [strict independent 80px comparison QA](../../tools/blender/qa_coalition_mcv_wreck_mk2.py)
+  required at least 70 changed RGBA pixels at 80px and 240 at 160px in
+  **every** facing, relative to the archived original destroyed state.
+  Actual independently recomputed destroyed-state RGBA differences are
+  **494–653 pixels at 80px** and **1,516–1,974 at 160px**. All 32 facings
+  exceed both predeclared thresholds; none was lowered.
+- The existing full 128-frame QA also passed unchanged: **128 unique decoded
+  RGBA hashes**, all unclipped; updated idle-to-destroyed 80px alpha differences
+  **548–784 pixels**, 160px alpha **983–1,604 pixels**, and 80px destroyed
+  RGBA **966–1,302 pixels**. Independent Pillow/LANCZOS recomputation checked
+  160 per-facing metrics with **zero discrepancies**. The original 96
+  non-destroyed PNGs are byte-identical. The new atlas SHA-256 is
+  `15020a954e97dad9f51d1e1c2c2308435812a306326e1919c6f595f2d51e9f51`;
+  original corrected-ID atlas SHA-256 was
+  `24b0c57e5cb87ae748ca6844ea4dfbf05367392fca269f3a52c6a2f0db23fe77`.
+- Actual 160px and 80px contact sheets and the archived baseline were
+  downloaded and visually inspected side-by-side. At 80px the new orange
+  broken roof hardware is visible from all sampled eight directions and
+  the formerly intact pale upper deck is absent. At 160px the dark recessed
+  cavity and independent copper/steel fragments are distinguishable.
+  **Artistic limitation:** the lower chassis and wheels remain largely intact,
+  and several warm fragments visually overlap. A staged collapse animation
+  and physically settled wheel/axle wreckage remain future work.
+- No approved textures, published atlases, manifests, loaders, gameplay
+  source, or live site files were changed. The branch is stacked on unapproved
+  draft PR #120; **PR #122 remains draft and must not be merged or published
+  without explicit owner approval**.
