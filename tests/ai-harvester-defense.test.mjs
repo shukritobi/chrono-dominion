@@ -152,11 +152,12 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entityById(guard.id)?.order?.id,siege.id);
   assert.equal(g.entityById(worker.id)?.kind,'harvester');
   // For short-range enemies, retain the established nearest-first ranking.
-  siege.hp=0;
+  g.entityById(siege.id).hp=0;
   const rifle=g.add(0,'soldier',20,14);
   assert.ok(g.sideCanSee(1,rifle));
-  guard.order=null;infantry.order=null;
-  const shortRange=g.assignAIEngagements([guard,infantry],[],hq);
+  const currentGuard=g.entityById(guard.id),currentInfantry=g.entityById(infantry.id);
+  currentGuard.order=null;currentInfantry.order=null;
+  const shortRange=g.assignAIEngagements([currentGuard,currentInfantry],[],g.entityById(hq.id));
   assert.equal(shortRange.get(infantry.id),rifle.id,
     faction+': short-range threat remains a nearest-defender engagement');
   assert.equal(shortRange.has(guard.id),false,
