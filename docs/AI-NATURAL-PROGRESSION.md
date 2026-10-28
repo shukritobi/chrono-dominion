@@ -56,3 +56,11 @@ paid construction in all three factions, plus zero-tank and visible-invasion
 fallbacks and v1 save/load. The complete 720-second natural-progression CI
 matrix and AI economy guard must pass before merging. Do not infer actual
 aircraft production or a frame-rate improvement from these targeted tests.
+
+## Distinguishing funding stalls from lost infrastructure (28 October 2026)
+
+The archived successful main-branch run [40713565901](https://github.com/shukritobi/chrono-dominion/actions/runs/40713565901) recorded **zero naturally queued aircraft**. The artifact shows that the Verdant AI delivered its last ore at 72.2 seconds and subsequently lost both harvesters; its radar was initially operational at 27.4 seconds but was absent later. Desert built an Air Command at 184 seconds (operational at 190.2), but its maximum post-purchase observed credit balance was only 1,008, below the 2,250 aircraft-plus-generator threshold. Frostline ended with 700 credits and no harvesters. These are deterministic observations, not proof that lowering aviation costs would improve gameplay.
+
+The progression-only diagnostic now distinguishes an **initially missing** factory/radar from one that was previously operational and later lost. Pre-Air-Command funding states separate intact safe saving from brownouts, missing harvesters, missing ground cover and detected local attacks. The existing `airfield-funding` label is retained for safe saving. CI prints one concise `AI AVIATION SCENARIO` line per natural match with milestone timestamps, peak credits after Air Command and reason counts; the JSON schema, AI decisions, economy, saves and assets are unchanged. The labels are post-decision observations and can overlap earlier causes; for example, losing harvesters may follow an attack rather than cause it.
+
+Next action: use these per-scenario classifications and real ore-loss telemetry to design a narrowly scoped harvester-survival or defensive-economy improvement. Do not grant free credits, relax the economy regression guard or assert that aircraft naturally deploy without observing them.
