@@ -256,3 +256,33 @@ economy regression guard must also pass before merging. This is a targeted
 movement bug fix, **not** a claim that all three Frostline stalls or natural
 AI aircraft production are resolved; compare fresh telemetry before making
 that conclusion.
+
+## Local AI ore-truck defense (29 October 2026)
+
+A visible enemy can threaten a harvester outside the AI headquarters' eight-tile
+invasion radius. Previously, the engagement planner only explicitly assigned
+defenders to base invaders; other fighters acquired enemies opportunistically
+inside their own approximately 6.5-tile tactical detection radius. A worker
+could therefore spot an attacker without a slightly more distant friendly tank
+receiving an intercept order.
+
+The engagement planner now considers **currently visible ground threats within
+4.5 tiles of a living friendly harvester**, after assigning urgent base defenders
+and before its normal opportunistic targeting. It can divert at most **two**
+uncommitted ground fighters per decision, each within 8.5 tiles of the attacker
+and nine tiles of the threatened worker. A distant fighter already committed to
+an attack-move formation is not pulled away. Recon patrols and wounded retreat
+rules remain unchanged. Aircraft and enemy ore trucks are not escort targets.
+The planner does not use stale intelligence or unseen live enemy positions:
+its candidate list is already filtered through the AI's real shared sensors.
+
+This is a defensive **engagement-order change**, not a harvester teleport,
+automatic healing, resource grant or new save field. Existing construction,
+worker pathfinding and production costs remain unchanged. Three-faction
+regressions in `tests/ai-harvester-defense.test.mjs` cover shared visibility,
+hidden contacts, destroyed workers, base-first priorities, committed assault
+orders, the two-escort cap and legacy save/load. The complete nine-scenario
+balance and three 720-second natural matches must pass the existing economy
+guard before merging. A local escort assignment alone does **not** establish
+fewer harvester losses or natural aircraft production; compare those measured
+outcomes with the prior six-loss, 3,960 / 15,120 / 9,000-income baseline.
