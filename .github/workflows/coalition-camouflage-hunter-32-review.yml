@@ -1,0 +1,100 @@
+name: Coalition Camouflage Hunter 32-Facing Blender Preview
+
+# Original model only. Never writes published textures, game art or manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/coalition-camouflage-hunter-32-20261028
+    paths:
+      - .github/workflows/coalition-camouflage-hunter-32-review.yml
+      - tools/blender/preview_coalition_camouflage_hunter_32.py
+      - tools/blender/qa_coalition_camouflage_hunter_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-coalition-camouflage-hunter-32-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview branch
+        uses: actions/checkout@v4
+
+      - name: Syntax-check Blender source and QA; install Pillow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/blender/preview_coalition_carrier_32.py \
+            tools/blender/preview_coalition_camouflage_hunter_32.py \
+            tools/blender/qa_coalition_camouflage_hunter_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only the new original Coalition Camouflage Hunter
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_coalition_camouflage_hunter_32.py -- \
+            --output generated/coalition-camouflage-hunter-32
+
+      - name: Reopen editable Blender source and verify independently modeled geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/coalition-camouflage-hunter-32/coalition-camouflage-hunter.blend \
+            --python-exit-code 1 --python-expr \
+            'import bpy; a=list(bpy.data.objects); wreck=[x for x in a if x.type=="MESH" and x.get("fracture_closed")]; vanes=[x for x in a if "optical camouflage vane hinge" in x.name]; wheels=[x for x in a if "independently articulated roadwheel" in x.name]; cleats=[x for x in a if "segmented tread cleat" in x.name]; effects=[x for x in a if x.get("attack_only")]; assert len(wreck)==14,len(wreck); assert all(x.hide_render and len(x.data.vertices)==10 and len(x.data.polygons)==7 for x in wreck); assert len(vanes)==4,len(vanes); assert len(wheels)==8,len(wheels); assert len(cleats)==24,len(cleats); assert len(effects)==3,len(effects); assert all(x.hide_render for x in effects); print("PASS REOPEN: 14 CLOSED FRACTURES, 4 HINGED VANES, 8 WHEELS, 24 CLEATS, 3 HIDDEN ATTACK MESHES")'
+
+      - name: Inspect all 128 real 160px and 80px PNGs and pack separate preview atlas
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_coalition_camouflage_hunter_32.py \
+            --stage generated/coalition-camouflage-hunter-32
+          test -s generated/coalition-camouflage-hunter-32/coalition-camouflage-hunter-contact-160.png
+          test -s generated/coalition-camouflage-hunter-32/coalition-camouflage-hunter-contact-80.png
+          test -s generated/coalition-camouflage-hunter-32/pixel-qa.json
+
+      - name: Upload preview-only editable source, sprites, atlas and visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-coalition-camouflage-hunter-32-preview
+          path: generated/coalition-camouflage-hunter-32/
+          if-no-files-found: warn
+          retention-days: 30
