@@ -190,6 +190,11 @@ blocked.trafficRepath=true;
 game.move(blocked,28,27,.2);
 assert.ok(Math.abs(blocked.pathRecheck-1.4)<1e-6,
   'traffic-recovery A* is never delayed by routine staggering');
+const enemyMover=game.add(1,'soldier',12,25);
+enemyMover.order={type:'move',x:27,y:25};
+game.move(enemyMover,27,25,.2);
+assert.ok(Math.abs(enemyMover.pathRecheck-1.4)<1e-6,
+  'AI move orders retain the original refresh cadence and economy');
 game.findPath=originalPath;
 
 // Existing saves contain ordinary path/position state, not transient queue
