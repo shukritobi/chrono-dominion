@@ -184,9 +184,9 @@ def build():
 
     # Physically separate forward pulse geometry, hidden outside attack.
     effects=[]
-    for i,(x,length,width) in enumerate(((2.12,.44,.16),
-                                          (2.43,.39,.12),
-                                          (2.71,.30,.08))):
+    for i,(x,length,width) in enumerate(((1.92,.30,.20),
+                                          (2.13,.27,.16),
+                                          (2.32,.21,.12))):
         obj=tapered_bar("Lattice attack-only stepped coherent beam",
                         (x,0,0),(x+length,0,0),width,beam,emitter)
         obj["attack_only"]=True
@@ -195,7 +195,7 @@ def build():
     for side in (-1,1):
         arc=tapered_bar("Lattice attack-only fork arc",
                         (1.80,side*.24,.04),
-                        (2.17,side*.05,.02),.055,light,emitter)
+                        (2.05,side*.05,.02),.055,light,emitter)
         arc["attack_only"]=True
         arc.hide_render=True
         effects.append(arc)
@@ -229,7 +229,7 @@ def pose(parts,state,facing):
     chassis.location.z=.065 if state=="move" else -.10 if state=="destroyed" else 0
     chassis.rotation_euler.y=.035 if state=="move" else -.12 if state=="destroyed" else 0
     turret.rotation_euler.z=-.13 if state=="attack" else .045 if state=="move" else 0
-    emitter.location.x=.72 if state=="attack" else .51
+    emitter.location.x=.60 if state=="attack" else .51
     emitter.rotation_euler.y=-.08 if state=="attack" else 0
     for wheel in wheels:
         wheel.rotation_euler.y=.72 if state=="move" else 0
@@ -239,8 +239,8 @@ def pose(parts,state,facing):
     for i,cage in enumerate(cages):
         cage.rotation_euler.x=(.18 if i%2 else -.15) if state=="attack" else 0
     for pivot,side,height in prongs:
-        pivot.rotation_euler.z=side*(.32 if state=="attack" else -.045)
-        pivot.rotation_euler.y=height*(.23 if state=="attack" else 0)
+        pivot.rotation_euler.z=side*(.43 if state=="attack" else -.045)
+        pivot.rotation_euler.y=height*(.30 if state=="attack" else 0)
     for obj in chassis.children_recursive:
         if obj.type=="MESH":obj.hide_render=False
     for obj in effects:obj.hide_render=state!="attack"
