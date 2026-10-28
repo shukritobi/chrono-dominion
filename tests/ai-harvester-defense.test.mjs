@@ -187,4 +187,29 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entityById(worker.id)?.kind,'harvester');
   assert.equal(g.entityById(scout.id)?.kind,'recon');
 }
+
+// When a rifleman and siege tank threaten the same ore truck, the two
+// available escorts must not both chase the nearer rifleman or focus siege
+// while leaving the second visible threat entirely unchallenged.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,hq,worker,guard,enemy:rifle}=game(faction);
+  guard.x=14;guard.y=14;
+  const infantry=g.add(1,'soldier',14,16);
+  const scout=g.add(1,'recon',18,14);
+  const siege=g.add(0,'heavy',20,14);
+  assert.ok(g.sideCanSee(1,rifle)&&g.sideCanSee(1,siege),
+    faction+': both competing ore threats must be visible to AI sensors');
+  assert.ok(Math.hypot(siege.x-worker.x,siege.y-worker.y)>5,
+    faction+': siege is approaching, not already firing at the worker');
+  const assignments=g.assignAIEngagements([guard,infantry],[],hq);
+  assert.equal(assignments.size,2,faction+': two escorts cover two threats');
+  assert.equal(assignments.get(guard.id),siege.id,
+    faction+': anti-siege armour gets the higher-danger approaching tank');
+  assert.equal(assignments.get(infantry.id),rifle.id,
+    faction+': the second escort still handles the nearby rifleman');
+  assert.ok(g.saveGame()&&g.loadGame(),faction+': triaged orders survive legacy saves');
+  assert.equal(g.entityById(guard.id)?.order?.id,siege.id);
+  assert.equal(g.entityById(infantry.id)?.order?.id,rifle.id);
+  assert.equal(g.entityById(scout.id)?.kind,'recon');
+}
 console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');
