@@ -187,51 +187,34 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(queued(g,'harvester').length,1,
     faction+': replace lost income instead of banking for radar');
 
-  // A safe AI brownout must not spend its last credits on optional soldiers
-  // while it is trying to afford the 650-credit generator. This uses the
-  // actual planner, actual power consumption and normal paid construction.
+  // Brownout recovery must not pay twice for generators while a previously
+  // purchased generator is still under construction. Keep normal unit
+  // production rules unchanged; the broad credit reserve reduced ore income
+  // in the 720-second natural-match economy regression.
   reset();
   g.add(1,'factory',24,23);g.add(1,'radar',23,25);
-  g.time=180;g.players[1].credits=600;
+  g.time=180;g.players[1].credits=650;
   assert.equal(g.power(1).low,true,faction+': fixture needs a real brownout');
   const generatorsBefore=alive(g,'generator').length;
-  g.runAI();g.runAI();
-  assert.equal(g.players[1].credits,600,
-    faction+': safe brownout must preserve the generator budget');
-  assert.equal(g.queues.filter(q=>q.side===1).length,0,
-    faction+': optional recruitment cannot starve power recovery');
-  g.players[1].credits=650;
+  g.queues.push({side:1,key:'soldier',elapsed:0,total:2});
   g.runAI();
   assert.equal(alive(g,'generator').length,generatorsBefore+1,
-    faction+': a funded generator uses real construction');
+    faction+': one generator must be purchased during the brownout');
   assert.equal(g.players[1].credits,0,
     faction+': generator costs its full 650 credits');
   assert.equal(alive(g,'generator').filter(b=>!b.built).length,1,
-    faction+': power recovery is not instant');
-  g.players[1].credits=900;g.runAI();
+    faction+': recovery construction takes time');
+  g.players[1].credits=900;
+  g.runAI();g.runAI();
   assert.equal(alive(g,'generator').length,generatorsBefore+1,
-    faction+': unfinished generator prevents duplicate purchases');
+    faction+': unfinished generator must prevent duplicate purchases');
   assert.equal(g.players[1].credits,900,
-    faction+': no optional purchases before pending generator completes');
-  assert.equal(g.queues.filter(q=>q.side===1).length,0);
+    faction+': an existing production queue isolates duplicate-generator spending');
   assert.ok(g.saveGame()&&g.loadGame(),
     faction+': pending generator remains compatible with legacy saves');
   const pending=alive(g,'generator').find(b=>!b.built);
   assert.ok(pending,'pending paid generator survives load');
   pending.built=true;pending.construction=1;
   assert.equal(g.power(1).low,false,'completed generator restores normal power');
-  g.runAI();
-  assert.ok(g.queues.some(q=>q.side===1),
-    faction+': normal recruitment resumes after power restoration');
-
-  // Observed invasion overrides the savings gate; the AI may still defend.
-  reset();
-  g.add(1,'factory',24,23);g.add(1,'radar',23,25);
-  g.time=180;g.players[1].credits=600;
-  const powerHq=alive(g,'hq')[0];
-  g.add(0,'soldier',powerHq.x+1,powerHq.y+1);
-  g.runAI();
-  assert.ok(g.queues.some(q=>q.side===1),
-    faction+': visible base invasion overrides generator banking');
 }
-console.log('PASS: three-faction ore expansion, radar and brownout reserves, emergency overrides and saves');
+console.log('PASS: three-faction ore expansion, radar reserves, paid brownout construction and saves');
