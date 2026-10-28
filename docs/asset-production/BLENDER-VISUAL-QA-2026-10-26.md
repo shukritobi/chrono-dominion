@@ -1373,3 +1373,36 @@ downloaded, not rerendered. No live game art, production manifest, loader,
 runtime or gameplay file changed. This movement atlas remains **preview-only,
 not approved for publication and not playable**. Current game loader does not
 consume this separate four-phase 32-facing atlas.
+
+## 2026-10-28 PSI-VEH-004 four-stage physical destruction — render verification pending
+
+**PREVIEW ONLY; not integrated or approved.** Continue from the validated original Hallucination Drone source from [Actions #40583938655](https://github.com/shukritobi/chrono-dominion/actions/runs/40583938655) without rerendering any of its 128 baseline sprites. This independent animation extends the six-petal projector into **impact → shatter → collapse → aftermath**, with 14 individually editable closed eight-vertex/six-face 3D fracture volumes: detached amethyst petals, sheared forward psychic needles, split crown, exposed iris, broken side intakes, lower keel, outer ring and two narrow reactor fissures. The original ten wreckage meshes and five attack meshes remain in the source. Intact petals and upper housing physically disappear in successive stages rather than relying on color-only damage.
+
+- [Original physical destruction Blender generator](../../tools/blender/preview_psionic_hallucination_four_stage_destruction.py) builds the 14 separate editable volumes and saves a neutral compressed .blend with the new fragments hidden. The original geometry is not overwritten.
+- [Strict actual PNG 160px/80px QA](../../tools/blender/qa_psionic_hallucination_four_stage_destruction.py) requires 128 transparent nonempty unclipped 160×160 frames, 32 unique directions, at least 45 changed 80px RGBA pixels between successive phases, 50 aftermath-versus-old-destroyed RGBA, 50 impact-versus-idle RGBA, 40 collapse-versus-idle alpha, and 20 adjacent-impact-facing RGBA. It emits a separate 5120×640 preview atlas, actual 160px/80px contact sheets, 80px animated GIF and per-facing pixel JSON.
+- The validated original atlas SHA-256 must remain `59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d`. Workflow downloads the archived source, verifies the checksum before and after, renders **only the new destruction frames**, reopens the new saved Blender file and verifies 14 new closed hidden fracture volumes plus six preserved petal rigs, ten original wrecks and five attack-only meshes.
+- **Pending:** targeted Actions run ID, exact 80px pixel min/max/mean, source reopen result and real image inspection. Do not claim a validated result before artifact review; repair real geometry issues instead of relaxing QA thresholds. The small original gameplay-scale footprint and potentially strong reactor fissure glow are known visual risks.
+- **Publication barrier:** do not change public textures, approved atlases, production manifests, game loader, runtime or gameplay files. The new four-row 32-facing preview atlas is not compatible with the existing game loader.
+
+### Final validated Hallucination Drone four-stage destruction (28 October 2026)
+
+**PASS; supersedes the pending verification above.** [Single successful targeted Blender 4.2.23 Actions run #40613523196](https://github.com/shukritobi/chrono-dominion/actions/runs/40613523196), [downloadable preview artifact #12784700465](https://github.com/shukritobi/chrono-dominion/actions/runs/40613523196/artifacts/12784700465), and [draft stacked PR #79](https://github.com/shukritobi/chrono-dominion/pull/79). Final workflow launch commit [847640d9](https://github.com/shukritobi/chrono-dominion/commit/847640d94eff8352f9bcb70b4634fc38fbd0ee48).
+
+The workflow downloaded the previously validated original source and sprites from run #40583938655, rendered **only 128 NEW 160×160 RGBA frames** (32 facings × impact/shatter/collapse/aftermath), and passed all strict clipping and gameplay-scale pixel gates. The **124,475-byte compressed editable .blend reopened successfully** under headless Blender, verifying 14 separately editable hidden closed eight-vertex/six-face fracture volumes, six preserved independent petal rigs, ten original hidden wreckage meshes, five original hidden attack emitters and the independent neural iris. All 128 real PNG files were independently checked for RGBA mode and frame count. Alpha bounds across all frames: **x=31–129, y=61–123**, safely away from the canvas edges.
+
+The new separate **5120×640 preview atlas** SHA-256 is `e0de309d8b1882b5dd2cc0e9ca70a3c2ee017b1f49505588613f4dbca9827366`. The archived original atlas SHA-256 before and after was identical: `59e25ecc1d6f844370ff2233636b3e61ffd2e82ce09fb92e70fbde1ecf49940d`. Actual **1280×640 160px** and **640×320 80px** contact sheets were downloaded and visually inspected. The first row retains the original six-petal hovering outline; shatter displaces petals and needles; collapse exposes the luminous neural iris and fragments; aftermath shows a broken low wreck. **Visual caveat:** the drone remains small at 80px and the final neural lens is brighter than some individual fracture edges. Future polish should improve silhouette occupancy and slightly soften the core without changing the validated baseline.
+
+| Actual changed pixels at 80px, all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Impact → shatter RGBA | **618** | 767 | 703.4 |
+| Shatter → collapse RGBA | **677** | 813 | 740.3 |
+| Collapse → aftermath RGBA | **650** | 767 | 705.9 |
+| Aftermath vs archived destroyed RGBA | **479** | 591 | 543.8 |
+| Aftermath vs archived destroyed alpha | **292** | 426 | 384.6 |
+| Impact vs archived idle RGBA | **544** | 630 | 587.7 |
+| Collapse vs archived idle alpha | **643** | 769 | 693.4 |
+| Adjacent impact facings RGBA | **565** | 631 | 599.8 |
+
+**Independent image recomputation:** impact→shatter 80px RGBA differences for facings **00/07/15/23/31 = 754/698/660/716/766**, exactly matching all five corresponding uploaded JSON values. The source archive contains **134 files**: 128 new PNG frames, the saved .blend, the new preview atlas, two contact sheets, a gameplay-scale GIF and pixel-qa.json.
+
+**Publication safety:** the parent-branch diff changes exactly five development files (modeling, QA, workflow, AssetRegister, this document). No approved live textures, published atlases, manifests, loader, gameplay or runtime code were touched. **Preview-only, not playable.** No previously validated frames were rerendered and no duplicate targeted workflow was launched.
