@@ -193,5 +193,49 @@ assert.ok(aircraft&&Math.hypot(aircraft.x-secondPad.x,aircraft.y-secondPad.y)<13
   'an aircraft can deploy from a second operational friendly Air Command');
 assert.equal(g.queues.length,0);
 
+
+ // Construction placement must revalidate technology at the moment of payment.
+ // A player can select a factory and then lose the prerequisite refinery before
+ // tapping the map. The old ghost must not create a free-tech factory.
+reset();
+g.add(0,'hq',10,10);
+g.add(0,'generator',13,10);
+const prerequisite=g.add(0,'refinery',16,10);
+assert.equal(g.prereq(0,'factory'),true);
+g.chooseProduction('factory');
+assert.equal(g.placing,'factory','factory selection enters placement mode');
+const preBuildCredits=g.players[0].credits;
+prerequisite.hp=0;
+assert.equal(g.prereq(0,'factory'),false,'refinery destruction removes factory access');
+assert.equal(g.canPlace(10,16,0),true,'the intended site is otherwise legal');
+g.placeBuilding(10,16);
+assert.equal(g.placing,null,'invalid ghost is dismissed after prerequisite loss');
+assert.equal(g.players[0].credits,preBuildCredits,'rejected construction never charges credits');
+assert.equal(unitCount(0,'factory'),0,'a lost prerequisite cannot be bypassed');
+prerequisite.hp=prerequisite.maxHp;
+g.chooseProduction('factory');
+g.placeBuilding(10,16);
+assert.equal(unitCount(0,'factory'),1,'restored prerequisite permits construction');
+assert.equal(g.players[0].credits,preBuildCredits-1700,'valid construction charges exactly once');
+
+// Destroyed or sold buildings must not reserve footprint tiles or provide a
+// construction frontier while their entities await normal tick cleanup.
+reset();
+g.add(0,'hq',10,10);
+const wreck=g.add(0,'generator',14,13);
+wreck.hp=0;
+assert.equal(g.canPlace(14,13,0),true,
+  'destroyed building no longer blocks an otherwise legal rebuild site');
+wreck.hp=wreck.maxHp;
+assert.equal(g.canPlace(14,13,0),false,'living building still blocks overlapping placement');
+reset();
+const lostOutpost=g.add(0,'hq',20,20);
+lostOutpost.hp=0;
+assert.equal(g.canPlace(24,20,0),false,
+  'destroyed structures cannot extend the legal construction frontier');
+lostOutpost.hp=lostOutpost.maxHp;
+assert.equal(g.canPlace(24,20,0),true,
+  'a restored operational anchor can extend the construction frontier');
+
 g.draw();
 console.log('PASS: clear production exits, blocked queues, footprint, factory loss, refunds, save/load, enemy spawns and alternate factories/airfields');
