@@ -200,3 +200,21 @@ still expires after six seconds. Verify with
 guard. An experimental lane-aware yield-selection change (PR #73) failed the
 AI income regression gate even when restricted to player-owned trucks, so it
 remains unmerged; use these blocker IDs before another gameplay experiment.
+
+
+## Idle Guard sentry passing and aircraft altitude exclusion (28 October 2026)
+
+A targeted gameplay experiment extends the full-harvester lateral passing
+fallback to **idle Guard-position** friendly units when those units cannot
+yield. Hold sentries retain their existing special handling; actively ordered
+Guard units and other moving traffic retain the original priority rules. The
+truck uses the existing collision-checked, A*-reachable passing pocket and
+does not change the blocker’s orders. In addition, ground congestion replans
+no longer price aircraft as obstacles: aircraft already use a separate altitude
+layer and do not participate in ground collision.
+
+Regression coverage: `tests/right-of-way-v16.test.mjs` and
+`tests/navigation-v15.test.mjs`. The idle-Guard fallback is experimental
+until the nine-scenario and 720-second economy regression gate demonstrate
+that ore deliveries and airfield progression are not harmed. No save schema,
+production cost or art files change.
