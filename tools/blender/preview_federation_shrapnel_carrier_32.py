@@ -61,6 +61,7 @@ def build():
     cube("Shrapnel forward roof visor",(.85,0,1.66),(.73,1.02,.13),sand,chassis)
     cube("Shrapnel frontal narrow observation port",(1.24,0,1.31),(.09,.78,.14),glass,chassis)
     cube("Shrapnel rear turret service platform",(-.76,0,1.10),(1.48,1.50,.21),graphite,chassis)
+    wheels = []
     for side in (-1,1):
         cube("Shrapnel segmented rear track fairing",(-.72,side*.89,.76),(1.85,.24,.37),iron,chassis)
         cube("Shrapnel lower rear track rail",(-.76,side*1.04,.24),(1.95,.16,.15),graphite,chassis)
@@ -74,8 +75,6 @@ def build():
                 cube("Shrapnel rotating wheel spoke",
                      (.11*math.cos(angle),-side*.18,.11*math.sin(angle)),
                      (.13,.027,.044),iron,wheel)
-            if side == -1:
-                pass
             wheels.append(wheel)
         for x in (-1.35,-.96,-.57,-.18):
             cube("Shrapnel discrete halftrack steel cleat",
@@ -131,9 +130,7 @@ def apply_pose(parts,state,facing):
         if obj.type=="MESH":
             obj.hide_render=False
     for obj in muzzle:
-        obj.hide_render=state=="attack" and False or True
-        if state=="attack":
-            obj.hide_render=False
+        obj.hide_render=state!="attack"
     for obj in wreck:
         obj.hide_render=state!="destroyed"
     if state=="destroyed":
