@@ -2213,3 +2213,97 @@ sprites, manifests, loaders, game logic or runtime were touched.
 [Draft PR #109](https://github.com/shukritobi/chrono-dominion/pull/109)
 remains **unapproved and preview-only**. Never merge or publish without
 explicit owner approval.
+
+
+## 2026-10-29 COA-VEH-007 Citadel Assault Carrier — original source, render verification pending
+
+**PREVIEW ONLY; never merge or publish unapproved art.** A new original
+[20-vertex fortress hull model](../../tools/blender/preview_coalition_citadel_carrier_32.py)
+was authored for the missing Coalition Citadel Assault Carrier, rather than
+re-rendering any previously validated vehicle. Its armored troop citadel has
+six recessed physical gunports, four independent pivoting battlement shields,
+twin articulated side sponson cannons with four gun-parented muzzle meshes,
+ten individually articulated roadwheel pivots, a rear hydraulic ramp and
+twelve asymmetric closed 12-vertex/8-face fracture meshes.
+
+- [Predeclared strict pixel QA](../../tools/blender/qa_coalition_citadel_carrier_32.py):
+  32 facings x idle/move/attack/destroyed = 128 unique RGBA 160px frames;
+  >=2px margin; LANCZOS downsampled 80px per-facing minimum changed pixels:
+  move RGBA >=100, attack RGBA >=150, attack alpha >=55, destroyed alpha
+  >=130, adjacent idle facings RGBA >=60. **These are targets, not results.**
+- Source-reopen QA must verify 20-vertex custom hull, ten independently
+  animated wheel pivots, four roof shields, six gunports, two physical
+  cannons, four attack-only muzzle meshes attached to their gun pivots,
+  and twelve hidden closed-manifold fracture meshes.
+- Visual hypotheses: roof shields must move visibly during attack, muzzle
+  effects must remain attached to both sponson guns, the fortress roof
+  must not clip at oblique facings, and the wreck must read as a collapsed
+  troop carrier rather than a pristine vehicle with loose debris.
+- **Unverified:** No render success, pixel counts, reopened .blend or actual
+  160px/80px visual inspection is claimed until the targeted workflow runs.
+  Existing validated preview atlases and live artwork must remain unchanged.
+
+
+### First Citadel Carrier render: numerical PASS, artistic failure identified
+
+[First targeted workflow #40732792153](https://github.com/shukritobi/chrono-dominion/actions/runs/40732792153)
+passed compile, Blender 4.2.23 render, source reopen and strict per-facing
+pixel gates: 128 unique nonempty unclipped RGBA frames, minimum margin 23px.
+Actual 80px measurements: move RGBA **1212–1776**, attack RGBA **985–1483**,
+attack alpha **227–324**, destroyed alpha **740–1212**, adjacent facings
+**1356–1818**. These are **first-render metrics only**.
+
+Actual 160px/80px contact-sheet inspection revealed an important artistic
+failure **not caught by numerical gates**: dark shield apertures and cyan
+upper gunport strips remained visibly suspended above the destroyed hull
+because the wreck pose hid armored shields but not their child aperture
+meshes. The corrective geometry-state change now hides those specific
+upper hardware meshes only in destroyed, leaving their editable geometry
+intact in the saved Blender source. A second targeted render and independent
+comparison are required; do not mark the corrected visual as validated yet.
+
+
+### Corrected Citadel Carrier destroyed-state visual and independent audit — 29 October 2026 (PASSED)
+
+- [Successful corrected Blender 4.2.23 workflow #40733045548](https://github.com/shukritobi/chrono-dominion/actions/runs/40733045548)
+  and [complete 133-file preview artifact #12835951370](https://github.com/shukritobi/chrono-dominion/actions/runs/40733045548/artifacts/12835951370).
+  The saved **151,525-byte editable .blend** reopened in headless Blender;
+  source checks confirmed the 20-vertex hull, 10 wheel pivots, four hinged
+  shields, six recessed ports, two barrels, four attack-only gun-parented
+  effects and **12 closed-manifold 12-vertex/8-face wreck meshes**.
+- **Actual 160px and 80px contact sheets downloaded and visually inspected.**
+  The dark shield apertures and cyan gunport strips previously suspended
+  above the wreck are gone; the wreck reads as a lower crushed troop hull
+  with scattered armor fragments. Roof details and wheels remain subtle at
+  80px, and the wreck is still a single static beat rather than a staged
+  collapse. The attack effects read as small white flashes at this scale.
+- All **128 160x160 RGBA frames** are nonempty, unclipped and unique by
+  raw-pixel SHA-256, with **23px minimum alpha margin**. A separate
+  Pillow/NumPy/LANCZOS audit recomputed **256 per-facing measurements**
+  from the downloaded PNGs, reproducing the workflow JSON with **zero
+  discrepancies**. First-versus-corrected image-byte comparison confirmed
+  all **96 idle/move/attack frames are pixel-identical**; only the 32
+  destroyed frames changed. Thus the repair did not regress any other state.
+- Corrected atlas SHA-256:
+  `0f7d57b1be5f488e9604371839c52c2933a24f093a79bfec545252fdd10d0eda`.
+  Downloaded ZIP SHA-256:
+  `86cc24e0512d9a2714545f1c8c0c7ae2c5f7db7d98d601d730f13006e74f608c`.
+
+| Independently reproduced corrected 80px measurements, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle → move RGBA | **1,212** | 1,776 |
+| Idle → attack RGBA | **985** | 1,483 |
+| Idle → attack alpha | **227** | 324 |
+| Idle → destroyed RGBA | **1,259** | 1,808 |
+| Idle → destroyed alpha | **739** | 1,224 |
+| Idle → attack alpha at 160px | **330** | 569 |
+| Idle → destroyed alpha at 160px | **1,545** | 3,054 |
+| Adjacent idle facings RGBA at 80px | **1,356** | 1,818 |
+
+**Limits and publication boundary:** No multi-frame locomotion, fire cycle,
+collapse or troop-garrison gameplay is implemented. This is an art preview,
+not a live gameplay integration. The isolated branch changes only five
+art-production files relative to the previous unapproved Lattice preview;
+no published textures, manifests, loaders or gameplay were modified.
+[Draft PR #110](https://github.com/shukritobi/chrono-dominion/pull/110)
+remains unapproved; do not merge or publish without explicit owner approval.
