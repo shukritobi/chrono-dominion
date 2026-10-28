@@ -2328,7 +2328,11 @@
         enemy.kind!=='aircraft').map(enemy=>({
           enemy,worker:workers.reduce((best,h)=>
             !best||dist(h,enemy)<dist(best,enemy)?h:best,null)
-        })).filter(({enemy,worker})=>worker&&dist(enemy,worker)<=4.5)
+        })).filter(({enemy,worker})=>worker&&
+          // An observed siege tank can fire from beyond the old fixed 4.5-tile
+          // escort trigger. Intercept within its weapon reach plus a short
+          // response margin, but never chase beyond the local ore corridor.
+          dist(enemy,worker)<=Math.min(7,Math.max(4.5,this.stat(enemy,'range')+1.4)))
         .sort((a,b)=>dist(a.enemy,a.worker)-dist(b.enemy,b.worker)||
           a.enemy.id-b.enemy.id);
       let escorts=0;

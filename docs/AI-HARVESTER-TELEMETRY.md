@@ -295,3 +295,29 @@ The real-engine natural-match report now includes up to **12** `aiHarvesterTelem
 Enemy visibility and friendly orders are sampled **before** the simulation step that removes the worker; post-step inspection alone could miss an attacker destroyed in the same tick. These are exposure snapshots, **not actual killer attribution**, proof that a defender could intercept, or evidence that the worker was destroyed rather than removed for another reason. Zero visible threats means none were observed by the AI at that instant, not that the worker was safe. This observation-only code does not change gameplay AI, saves, combat, credits, movement or artwork.
 
 Verify with `node tests/ai-harvester-telemetry.test.mjs`, `npm run balance:progression` and `npm run balance:regression`. Inspect archived cases before trialing another defense or routing change; compare the prior six worker losses and 3,960 / 15,120 / 9,000 ore-income baseline before claiming improvement.
+
+## Ranged ore-route threat interception (29 October 2026)
+
+The production AI's local harvester escort planner previously reacted to
+sensor-visible enemy ground units only when they were within 4.5 tiles of a
+living ore truck. A Siege Tank has a five-tile weapon range, so that fixed
+trigger could leave an exposed worker inside firing range before the first
+escort assignment. The planner now uses the **actual enemy unit's weapon
+range plus 1.4 tiles**, retaining the old 4.5-tile minimum and a strict
+seven-tile maximum. This applies only to **currently visible ground
+attackers**; unseen units and aircraft do not become ground escort targets.
+
+Existing limits remain: up to two escorts per AI decision, a defender within
+8.5 tiles of the attacker and nine tiles of the worker, base defense first,
+and protection of distant attack-move formations. This does not automatically
+reposition defenders before a threat is observed or guarantee that a
+defender exists. No new save fields, resource grants, production costs,
+unit statistics, player controls or artwork were introduced.
+
+The three-faction [escort regression](../tests/ai-harvester-defense.test.mjs)
+tests a scout-spotted siege tank outside the ordinary defender acquisition
+radius, rejects more distant threats, keeps short-range infantry at the
+old trigger, and rejects targets after the only observer disappears.
+The 720-second natural-match progression and economy regression gate must
+be checked separately: passing these focused tests **does not prove** that
+harvester losses decrease, income increases, or aircraft are produced.
