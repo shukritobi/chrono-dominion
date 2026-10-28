@@ -2333,8 +2333,18 @@
           // escort trigger. Intercept within its weapon reach plus a short
           // response margin, but never chase beyond the local ore corridor.
           dist(enemy,worker)<=Math.min(7,Math.max(4.5,this.stat(enemy,'range')+1.4)))
-        .sort((a,b)=>dist(a.enemy,a.worker)-dist(b.enemy,b.worker)||
-          a.enemy.id-b.enemy.id);
+        .sort((a,b)=>{
+          // Protect the worker from the most dangerous *observed* attack first.
+          // A siege tank approaching firing range can be more dangerous than
+          // a closer rifleman. No last-known or hidden contacts are considered.
+          const danger=({enemy,worker})=>{
+            const approach=Math.max(0,dist(enemy,worker)-this.stat(enemy,'range'));
+            return this.stat(enemy,'damage')/Math.max(.5,this.stat(enemy,'rate'))-
+              approach*6;
+          };
+          return danger(b)-danger(a)||dist(a.enemy,a.worker)-dist(b.enemy,b.worker)||
+            a.enemy.id-b.enemy.id;
+        });
       let escorts=0;
       for(const {enemy,worker} of oreThreats){
         if(escorts>=2)break;
@@ -2356,7 +2366,12 @@
         // on that one threat, without exceeding the existing global escort
         // budget or pulling units away from the base. A rifle threat still
         // receives one escort; neither case uses hidden enemy information.
-        const needed=siege?2:1;
+        // Share the two-escort budget across distinct threats when several
+        // workers or attackers are endangered. Preserve two-on-one siege
+        // concentration when there is only one unassigned ore threat.
+        const otherThreats=oreThreats.some(({enemy:other})=>
+          other.id!==enemy.id&&!committed.has(other.id));
+        const needed=siege&&!otherThreats?2:1;
         for(const escort of candidates.slice(0,Math.min(needed,2-escorts))){
           assign(escort,enemy);escorts++;
         }

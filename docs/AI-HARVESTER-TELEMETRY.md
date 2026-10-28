@@ -332,3 +332,23 @@ The replacement experiment is narrower: when an **already visible** ranged siege
 ## Concentrated reactive defence against one visible siege threat (29 October 2026)
 
 A single AI-visible long-range enemy near a living harvester may now receive two **already nearby** ground escorts rather than only one. This addresses the previous mismatch where the global two-escort allowance could only be used against two separate attackers. Short-range threats still receive one escort; existing base-first allocation, fog-of-war checks, distance limits, assault-order restrictions and the total two-escort budget remain unchanged. No proactive ore-route repositioning, unit stats, save fields or art changes. `tests/ai-harvester-defense.test.mjs` covers three factions, concentration, the cap and save/load. Natural-match worker survival must be measured separately; this is not proof of fewer losses.
+
+## Multi-threat ore-route escort triage (29 October 2026)
+
+When two visible ground attackers approach an ore truck, the AI now ranks
+eligible threats by observed weapon damage per firing interval, penalized by
+remaining distance to weapon range. This avoids always handling the nearest
+rifleman before an approaching high-damage siege tank. With competing threats,
+its existing maximum of two nearby ground escorts is shared across distinct
+attackers instead of concentrating both on one siege target. A lone siege
+threat still receives up to two escorts. The AI only uses current sensor
+visibility; base-invasion response, local defender availability, committed
+assault formations, saved orders and resource costs are unchanged.
+
+Three-faction targeted regression cases verify that available armour engages
+an approaching siege tank while infantry engages a closer rifleman, and that
+legacy save/load retains both orders. The pre-existing lone-siege, fog,
+base-defense and global two-escort regressions remain in the same test file.
+This source-level behavior is **not** evidence of fewer harvester losses in
+natural matches. Require the full nine-scenario and 720-second economic
+regression gate before merging; compare actual losses separately.
