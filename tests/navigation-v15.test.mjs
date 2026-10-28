@@ -56,6 +56,64 @@ assert.ok(detour.some(p=>p.y!==15),'traffic-priced route bends around the blocke
 assert.ok(!detour.some(p=>p.x===12&&p.y===15),'route avoids occupying the blocker cell');
 assert.equal(detour.at(-1).x,16,'avoids traffic without abandoning the destination');
 
+// Air units occupy a separate altitude layer. A parked aircraft must not
+// distort ground A* traffic costs or cause unnecessary harvester detours.
+game.entities=[];
+game.water=()=>false;
+const ground=game.add(0,'harvester',8,15);
+const air=game.add(0,'aircraft',12,15);
+const airHeat=game.trafficCosts(ground);
+assert.equal(airHeat.size,0,
+  'aircraft do not generate ground-level congestion penalties');
+const clearAirRoute=game.findPath(8,15,16,15,ground);
+assert.ok(clearAirRoute.every(p=>p.y===15),
+  'ground route stays direct below an aircraft');
+const landBlocker=game.add(0,'soldier',12,15);
+const groundHeat=game.trafficCosts(ground);
+assert.ok(groundHeat.size>0,'real ground infantry still generates traffic costs');
+assert.ok(game.findPath(8,15,16,15,ground).some(p=>p.y!==15),
+  'ground traffic still causes collision-aware detours');
+
+// Regression from the 720-second Frostline telemetry: loaded harvesters at
+// (23, 20.81) with a waypoint due north repeatedly accepted an X-only step
+// of *zero distance* while friendly Guard infantry blocked the real Y step.
+// The axis fallback must skip zero components and try a legal sidestep.
+game.entities=[];
+game.water=()=>false;
+const verticalTruck=game.add(0,'harvester',23,20.81);
+verticalTruck.load=360;
+const northGuard=game.add(0,'soldier',23,20);
+northGuard.stance='guard';
+verticalTruck.path=[{x:23,y:20}];
+verticalTruck.pathGoal={x:23,y:20};
+verticalTruck.pathTarget={x:23,y:19};
+verticalTruck.pathRecheck=1.5;
+const verticalBefore={x:verticalTruck.x,y:verticalTruck.y};
+assert.ok(game.canOccupyUnit(verticalTruck,verticalTruck.x,verticalTruck.y),
+  'initial truck position is valid before testing blocked progress');
+game.move(verticalTruck,23,19,.2);
+assert.ok(Math.abs(verticalTruck.x-verticalBefore.x)>.1,
+  'a northbound truck must sidestep instead of accepting a zero-length X-only step');
+assert.ok(game.canOccupyUnit(verticalTruck,verticalTruck.x,verticalTruck.y),
+  'sidestep remains collision-safe around the guard');
+
+// Mirror the same defect for a horizontal waypoint: Y-only fallback is zero.
+game.entities=[];
+const horizontalTruck=game.add(0,'harvester',20.81,23);
+horizontalTruck.load=360;
+const westGuard=game.add(0,'soldier',20,23);
+westGuard.stance='guard';
+horizontalTruck.path=[{x:20,y:23}];
+horizontalTruck.pathGoal={x:20,y:23};
+horizontalTruck.pathTarget={x:19,y:23};
+horizontalTruck.pathRecheck=1.5;
+const horizontalBefore={x:horizontalTruck.x,y:horizontalTruck.y};
+game.move(horizontalTruck,19,23,.2);
+assert.ok(Math.abs(horizontalTruck.y-horizontalBefore.y)>.1,
+  'a westbound truck must sidestep instead of accepting a zero-length Y-only step');
+assert.ok(game.canOccupyUnit(horizontalTruck,horizontalTruck.x,horizontalTruck.y),
+  'horizontal sidestep remains collision-safe');
+
 // In a blocked approach, the watchdog must request traffic-aware replanning
 // after a sustained stall. No unit can teleport through a solid water wall.
 game.entities=[];

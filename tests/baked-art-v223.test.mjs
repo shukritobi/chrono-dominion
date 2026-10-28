@@ -62,3 +62,77 @@ assert.equal(calls.at(-1)[2],640,'damaged row');
 assert.equal(art.drawUnit(c,{kind:'unknown'}, {faction:'coalition'}),false);
 assert.equal(art.suitable({format:'not-valid',frameSize:160,entries:{}}),false);
 console.log('PASS: Blender sprite atlas decoding, direction, firing, walk, construction, damage, fallback');
+
+
+// Production acceptance: test the actual published manifest and PNG IHDRs,
+// not only the two synthetic sprites above. A missing, wrong-size or
+// cross-faction atlas would otherwise silently fall back to vector artwork.
+const published=JSON.parse(readFileSync(new URL('../art/baked-v1/manifest.json',import.meta.url),'utf8'));
+const factions=['coalition','federation','psionic'];
+const expectedKinds=['soldier','specialist','heavy','aircraft','generator','factory',
+  'radar','hq','refinery','barracks','tech','turret','beam','airfield'];
+assert.equal(published.format,'chrono-blender-v1');
+assert.equal(published.frameSize,160);
+assert.deepEqual(Object.keys(published.entries).sort(),factions.slice().sort());
+const atlasSizes=new Map();
+for(const faction of factions){
+  const entries=published.entries[faction];
+  assert.deepEqual(Object.keys(entries).sort(),expectedKinds.slice().sort(),
+    faction+': preserve all 14 published Blender atlas categories');
+  for(const [kind,spec] of Object.entries(entries)){
+    const name=faction+'-'+kind+'.png';
+    assert.equal(spec.file,name,'manifest cannot accidentally load another faction or path');
+    assert.equal(spec.directions,['soldier','specialist','heavy','aircraft'].includes(kind)?8:1,
+      name+': expected published facing count');
+    const rows=Object.values(spec.states).reduce((sum,count)=>{
+      assert.ok(Number.isInteger(count)&&count>0&&count<=12,name+': valid state frames');
+      return sum+count;
+    },0);
+    assert.ok(rows>0,name+': at least one animation frame');
+    const width=published.frameSize*spec.directions,height=published.frameSize*rows;
+    assert.deepEqual(spec.canvasSize,[width,height],name+': metadata must match packed frames');
+    assert.ok(Array.isArray(spec.pivot)&&spec.pivot.length===2&&
+      spec.pivot.every(n=>Number.isFinite(n)&&n>=0&&n<=published.frameSize),
+      name+': pivot must be within one sprite cell');
+    const bytes=readFileSync(new URL('../art/baked-v1/'+name,import.meta.url));
+    assert.ok(bytes.length>33,name+': atlas is not empty');
+    assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a',
+      name+': valid PNG signature');
+    assert.equal(bytes.toString('ascii',12,16),'IHDR',name+': PNG header exists');
+    assert.equal(bytes.readUInt32BE(16),width,name+': actual PNG width');
+    assert.equal(bytes.readUInt32BE(20),height,name+': actual PNG height');
+    assert.equal(bytes[24],8,name+': 8-bit pixels');
+    assert.equal(bytes[25],6,name+': transparent RGBA pixels');
+    atlasSizes.set(name,{width,height});
+  }
+}
+assert.equal(atlasSizes.size,42,'all published atlases must be checked');
+
+// Exercise the runtime loader against the real manifest and actual PNG
+// dimensions, while leaving browser decoding to the browser.
+class PublishedImage{
+  set src(url){
+    const size=atlasSizes.get(url.split('/').at(-1));
+    if(!size){this.onerror?.();return;}
+    this.naturalWidth=size.width;this.naturalHeight=size.height;
+    this.onload?.();
+  }
+}
+const publishedWindow={
+  Image:PublishedImage,
+  fetch:()=>Promise.resolve({ok:true,json:()=>Promise.resolve(published)})
+};
+runInNewContext(source,{window:publishedWindow,console},{timeout:3000});
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(publishedWindow.ChronoBakedArt.readyCount,42,
+  'all 42 published original Blender atlases should become renderable');
+let drawn=0;
+for(const faction of factions)for(const [kind,spec] of Object.entries(published.entries[faction])){
+  const entity={id:++drawn,kind,type:spec.directions===1?'building':'unit',
+    x:3,y:4,hp:100,maxHp:100,built:true,construction:1,worldHeading:0};
+  const render=spec.directions===1?publishedWindow.ChronoBakedArt.drawBuilding:
+    publishedWindow.ChronoBakedArt.drawUnit;
+  assert.equal(render({drawImage(){}},entity,{faction,time:2}),true,
+    faction+'/'+kind+': published atlas must be drawable');
+}
+console.log('PASS: all 42 published Blender PNG atlases match manifest dimensions, factions and runtime loader');

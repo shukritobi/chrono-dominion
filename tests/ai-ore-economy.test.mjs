@@ -186,5 +186,35 @@ for(const faction of ['coalition','federation','psionic']){
   g.runAI();
   assert.equal(queued(g,'harvester').length,1,
     faction+': replace lost income instead of banking for radar');
+
+  // Brownout recovery must not pay twice for generators while a previously
+  // purchased generator is still under construction. Keep normal unit
+  // production rules unchanged; the broad credit reserve reduced ore income
+  // in the 720-second natural-match economy regression.
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'radar',23,25);
+  g.time=180;g.players[1].credits=650;
+  assert.equal(g.power(1).low,true,faction+': fixture needs a real brownout');
+  const generatorsBefore=alive(g,'generator').length;
+  g.queues.push({side:1,key:'soldier',elapsed:0,total:2});
+  g.runAI();
+  assert.equal(alive(g,'generator').length,generatorsBefore+1,
+    faction+': one generator must be purchased during the brownout');
+  assert.equal(g.players[1].credits,0,
+    faction+': generator costs its full 650 credits');
+  assert.equal(alive(g,'generator').filter(b=>!b.built).length,1,
+    faction+': recovery construction takes time');
+  g.players[1].credits=900;
+  g.runAI();g.runAI();
+  assert.equal(alive(g,'generator').length,generatorsBefore+1,
+    faction+': unfinished generator must prevent duplicate purchases');
+  assert.equal(g.players[1].credits,900,
+    faction+': an existing production queue isolates duplicate-generator spending');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': pending generator remains compatible with legacy saves');
+  const pending=alive(g,'generator').find(b=>!b.built);
+  assert.ok(pending,'pending paid generator survives load');
+  pending.built=true;pending.construction=1;
+  assert.equal(g.power(1).low,false,'completed generator restores normal power');
 }
-console.log('PASS: three-faction paid ore expansion, radar recovery reserves, emergency overrides and saves');
+console.log('PASS: three-faction ore expansion, radar reserves, paid brownout construction and saves');

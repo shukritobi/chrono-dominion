@@ -516,8 +516,8 @@
     canPlace(x,y,side){
       if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)return false;
       for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)if(this.water(x+dx,y+dy))return false;
-      for(const e of this.entities){if(e.type==='building'&&Math.abs(e.x-x)<2.7&&Math.abs(e.y-y)<2.7)return false;}
-      return this.entities.some(e=>e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
+      for(const e of this.entities){if(e.hp>0&&e.type==='building'&&Math.abs(e.x-x)<2.7&&Math.abs(e.y-y)<2.7)return false;}
+      return this.entities.some(e=>e.hp>0&&e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
     }
     getDef(e){return BUILD[e.kind]||UNITS[e.kind];}
     veterancyRank(e){
@@ -581,7 +581,15 @@
       return true;
     }
     placeBuilding(x,y){
-      const key=this.placing,def=BUILD[key];if(!key||!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
+      const key=this.placing,def=BUILD[key];
+      if(!key)return this.notify('Invalid placement: keep structures near your base.');
+      // A prerequisite can be sold or destroyed while the placement ghost is active.
+      // Recheck before charging credits, and clear a now-impossible build order.
+      if(!this.prereq(0,key)){
+        this.placing=null;this.notify('Required technology or production building missing');
+        this.updateUI(true);return;
+      }
+      if(!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
       if(this.players[0].credits<def.cost)return this.notify('Insufficient credits');
       this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;const e=this.add(0,key,Math.round(x),Math.round(y),false);e.buildTime=3.5+def.cost/650;
       this.placing=null;this.selected=[e.id];this.audio?.play('build');this.notify(this.name(e)+' construction started');this.updateUI(true);
@@ -980,7 +988,8 @@
       // genuinely stuck. Other units remain traversable but expensive.
       const heat=new Map(),key=(x,y)=>x+','+y;
       for(const other of this.entities){
-        if(other===except||other.hp<=0||other.type!=='unit')continue;
+        if(other===except||other.hp<=0||other.type!=='unit'||
+          other.kind==='aircraft')continue;
         const radius=this.unitRadius(other)+this.unitRadius(except);
         const cx=Math.round(other.x),cy=Math.round(other.y);
         for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
@@ -1260,9 +1269,15 @@
       const mine=this.trafficPriority(unit),theirs=this.trafficPriority(blocker);
       const higher=mine>theirs||(mine===theirs&&unit.id<blocker.id);
       // Only friendly units coordinate; enemies never yield to an attack.
-      // A lower-priority mover can take the side pocket itself.
-      return higher?this.startTrafficYield(blocker,unit,vx,vy):
-        this.startTrafficYield(unit,blocker,vx,vy);
+      // A lower-priority mover can take the side pocket itself. A loaded
+      // harvester may also detour around a friendly Hold sentry, which cannot
+      // voluntarily yield. Ordinary moving traffic retains the original
+      // priority behavior: broad fallback detours harmed ore deliveries.
+      // Both attempts use the existing collision-checked lateral pockets.
+      if(!higher)return this.startTrafficYield(unit,blocker,vx,vy);
+      if(this.startTrafficYield(blocker,unit,vx,vy))return true;
+      return unit.kind==='harvester'&&unit.load>=360&&blocker.stance==='hold'?
+        this.startTrafficYield(unit,blocker,vx,vy):false;
     }
     finishYield(e){
       e.yieldOrder=null;e.yieldRetryAt=this.time+1.35;
@@ -1311,8 +1326,17 @@
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
       const clear=(x,y)=>this.canOccupyUnit(e,x,y)&&this.checkLaneEntry(e,x,y);
       if(clear(e.x+vx,e.y+vy)){this.setUnitPosition(e,e.x+vx,e.y+vy);e.stuck=0;}
-      else if(clear(e.x+vx,e.y)){this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;}
-      else if(clear(e.x,e.y+vy)){this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;}
+      // Only full-cargo harvesters skip zero-length axis fallbacks. A broad
+      // all-unit change altered contested-match combat and damaged the AI
+      // economy; retain legacy movement for other units.
+      else if((Math.abs(vx)>1e-6||e.kind!=='harvester'||e.load<360)&&
+          clear(e.x+vx,e.y)){
+        this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;
+      }
+      else if((Math.abs(vy)>1e-6||e.kind!=='harvester'||e.load<360)&&
+          clear(e.x,e.y+vy)){
+        this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;
+      }
       else {
         // Symmetric short sidesteps avoid simple head-on jams. No teleporting.
         const sign=e.id%2===0?1:-1;
@@ -1654,7 +1678,20 @@
         }
         if(q.elapsed<q.total){q.blockedReason=null;continue;}
         if((q.nextDeployAt||0)>this.time)continue;
-        const spot=this.findProductionExit(producer,q.key,q.side);
+        let spot=this.findProductionExit(producer,q.key,q.side);
+        if(!spot){
+          // A blocked primary factory/airfield must not strand a paid order
+          // when another completed, friendly producer has a safe exit.
+          // Preserve the original producer preference whenever it can deploy.
+          const home=q.side===0?{x:6,y:6}:{x:WORLD_SIZE-6,y:WORLD_SIZE-6};
+          const backups=this.entities.filter(b=>b.hp>0&&b.built&&
+            b.type==='building'&&b.owner===q.side&&b.kind===unit.from&&
+            b.id!==producer.id).sort((a,b)=>dist(a,home)-dist(b,home)||a.id-b.id);
+          for(const backup of backups){
+            spot=this.findProductionExit(backup,q.key,q.side);
+            if(spot)break;
+          }
+        }
         if(!spot){
           q.blockedReason='exit';
           q.nextDeployAt=this.time+.8;
@@ -1681,13 +1718,55 @@
       }
       return -1;
     }
+    chooseHarvesterReturn(e){
+      const refineries=this.entities.filter(b=>b.owner===e.owner&&b.type==='building'&&
+        b.kind==='refinery'&&b.hp>0&&b.built)
+        .sort((a,b)=>dist(e,a)-dist(e,b)||a.id-b.id);
+      if(!refineries.length)return null;
+      const closest=refineries[0];
+      const fallback={refinery:closest,x:closest.x+1.9,y:closest.y+1.3};
+      // Preserve established single-refinery routes and their economy.
+      if(refineries.length===1)return fallback;
+      // A truck already in unload range should never leave for another depot.
+      const inRange=refineries.find(b=>dist(e,b)<=3.6);
+      if(inRange)return {refinery:inRange,x:inRange.x+1.9,y:inRange.y+1.3};
+      // Cache route choice outside saved entities. Recheck destroyed depots
+      // immediately, and refresh reachable approaches every six seconds.
+      const cached=this.harvesterReturnRoutes?.get(e);
+      if(cached&&this.time<cached.until){
+        const live=refineries.find(b=>b.id===cached.refineryId);
+        if(live)return {refinery:live,x:cached.x,y:cached.y};
+      }
+      let best=null;
+      const approaches=[[2,0],[-2,0],[0,2],[0,-2],
+        [2,2],[2,-2],[-2,2],[-2,-2]];
+      for(const refinery of refineries)for(const [dx,dy] of approaches){
+        const x=refinery.x+dx,y=refinery.y+dy;
+        if(!this.canOccupyUnit(e,x,y,true))continue;
+        // Static A* must actually reach the unload perimeter. A* returns
+        // the nearest partial path when water/buildings cut off the goal.
+        const route=this.findPath(e.x,e.y,x,y);
+        const last=route.at(-1)||{x:e.x,y:e.y};
+        if(Math.hypot(last.x-x,last.y-y)>.6)continue;
+        const score=route.length+Math.hypot(e.x-x,e.y-y)*.02;
+        if(!best||score<best.score)best={refinery,x,y,score};
+      }
+      if(!best)return fallback;
+      this.harvesterReturnRoutes??=new WeakMap();
+      this.harvesterReturnRoutes.set(e,{
+        refineryId:best.refinery.id,x:best.x,y:best.y,until:this.time+6
+      });
+      return {refinery:best.refinery,x:best.x,y:best.y};
+    }
     processHarvester(e,dt){
       e.work-=dt;
-      const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
-        b.kind==='refinery'&&b.built);
+      const returnRoute=e.load>=360?this.chooseHarvesterReturn(e):null;
+      const refinery=returnRoute?.refinery||this.nearest(e,b=>
+        b.owner===e.owner&&b.type==='building'&&b.kind==='refinery'&&b.built);
       if(!refinery)return;
       if(e.load>=360){
-        if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
+        if(dist(e,refinery)>3.6)this.move(e,
+          returnRoute?.x??refinery.x+1.9,returnRoute?.y??refinery.y+1.3,dt);
         else if(e.work<=0){
           this.players[e.owner].credits+=e.load;
           if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
@@ -1724,6 +1803,32 @@
         e.oreLastDistance=null;e.oreProgressAt=this.time+7;
       }
     }
+    deployRefineryHarvester(refinery){
+      // A completed refinery includes one harvester. Prefer the historical
+      // (+2,+1) position when it is safe to preserve normal opening routes.
+      // If terrain or traffic blocks it, use the same collision-checked
+      // exit search as paid production rather than spawning inside an obstacle.
+      const probe={id:-1,kind:'harvester',type:'unit',hp:1};
+      const x=refinery.x+2,y=refinery.y+1,r=this.unitRadius(probe)*.8;
+      const preferred=this.canOccupyUnit(probe,x,y)&&
+        [[r,0],[-r,0],[0,r],[0,-r]].every(([dx,dy])=>
+          !this.water(x+dx,y+dy))&&
+        [[.75,0],[-.75,0],[0,.75],[0,-.75]].some(([dx,dy])=>
+          this.canOccupyUnit(probe,x+dx,y+dy));
+      const spot=preferred?{x,y}:this.findProductionExit(refinery,'harvester',refinery.owner);
+      if(!spot){
+        // Do not lose the refinery's included worker or place it in water.
+        // This pending flag lives on the building and survives v1 saves.
+        refinery.pendingHarvester=true;
+        refinery.harvesterDeployAt=this.time+.8;
+        return false;
+      }
+      const worker=this.add(refinery.owner,'harvester',spot.x,spot.y);
+      worker.order={type:'harvest'};
+      refinery.pendingHarvester=false;
+      refinery.harvesterDeployAt=0;
+      return true;
+    }
     step(dt){
       this.time+=dt;
       this.unitBuckets=new UnitBuckets().rebuild(this.entities);
@@ -1742,7 +1847,9 @@
       this.clampCamera();
       for(const e of this.entities){
         if(e.hp<=0)continue;
-        if(!e.built){e.construction+=dt/e.buildTime;if(e.construction>=1){e.construction=1;e.built=true;if(e.kind==='refinery'){const h=this.add(e.owner,'harvester',e.x+2,e.y+1);h.order={type:'harvest'};}}continue;}
+        if(!e.built){e.construction+=dt/e.buildTime;if(e.construction>=1){e.construction=1;e.built=true;if(e.kind==='refinery')this.deployRefineryHarvester(e);}continue;}
+        if(e.kind==='refinery'&&e.pendingHarvester&&
+            (e.harvesterDeployAt||0)<=this.time)this.deployRefineryHarvester(e);
         e.ready=Math.max(0,e.ready-dt);
         if((e.stunnedUntil||0)>this.time)continue;
         if(e.type==='unit'){
@@ -2573,9 +2680,13 @@
       const aviationInvestment=owned('airfield').length>0&&built('radar')&&
         owned('aircraft').length<2&&owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>=1&&!threatened;
+      // An unfinished generator already represents paid brownout recovery.
+      // Wait for it to come online rather than buying duplicate generators.
+      const generatorPending=owned('generator').some(b=>!b.built);
       let choice=null;
-      if(!owned('generator').length||shortage)choice='generator';
-      else if(!owned('refinery').length)choice='refinery';
+      if(!owned('generator').length||shortage){
+        if(!generatorPending)choice='generator';
+      }else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       else if(!owned('factory').length)choice='factory';
       // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
@@ -3281,7 +3392,8 @@
       for(const e of entities)e.type==='building'?this.drawBuilding(e):this.drawUnit(e);
       this.drawProjectiles();this.drawEffects();this.drawFog();
       if(this.placing&&this.state==='playing'){
-        const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),ok=this.canPlace(x,y,0);
+        const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),
+          ok=this.prereq(0,this.placing)&&this.canPlace(x,y,0);
         const color=ok?'#62e2a7':'#fa797f';
         for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
           const p=iso(x+dx,y+dy);

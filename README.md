@@ -8,9 +8,63 @@
 
 
 
+
 ### XL 120-unit movement and collision benchmark (post-v2.42)
 
-- Added a repeatable **120-unit, 48×48-map** production-engine stress fixture exercising pathfinding, building collision, live movement, combat ticks and v1 save/load. The report records movement progress, path/occupancy calls and machine-dependent wall-clock time. It does **not** claim browser FPS or mobile performance. Run `npm run perf:armies`; CI archives `large-army-report.json`. [Methodology](docs/LARGE-ARMY-BENCHMARK.md) · [regression](tests/large-army-perf.test.mjs).
+- A repeatable **120-unit, 48×48-map** production-engine workload exercises movement, A*, building collisions, combat updates and legacy save/load. Reports include mean, p95 and worst simulation tick times, actual movement and restored unit coordinates; these are **headless Node timings, not browser FPS**. Run `npm run perf:armies`; CI archives `large-army-report.json`. [Methodology](docs/LARGE-ARMY-BENCHMARK.md) · [regression](tests/large-army-perf.test.mjs).
+
+### Loaded harvester fallback around immovable friendly traffic (post-v2.42)
+
+- A full ore truck obstructed by a friendly **Hold-position sentry** can now attempt its **own reachable lateral passing pocket**. This only runs after a real traffic stall; Hold defenders stay in place and blocked terrain remains impassable. The normal refinery target, saved orders, costs and original assets are unchanged. [Regression](tests/right-of-way-v16.test.mjs) · [details](docs/AI-HARVESTER-TELEMETRY.md). Natural-match economy and stall frequency require CI verification.
+
+### Loaded harvester movement rejection diagnostics (post-v2.42)
+
+- The headless natural-match simulator now observes each real loaded AI harvester
+  `move()` call, classifying static occupancy rejections, dynamic unit-traffic
+  rejections, lane admission denials, empty paths and missing move calls.
+  Six-second `moveDecision` histories accompany each prolonged stall case.
+  The tracer delegates actual movement decisions without changing them; it
+  cannot by itself establish a fix. [Methodology](docs/AI-HARVESTER-TELEMETRY.md)
+  · [regression](tests/harvester-move-telemetry.test.mjs).
+
+### Loaded harvester collision-reversal diagnostics (post-v2.42)
+
+- The natural-match simulator now observes loaded ore trucks **before and after
+  unit separation**, distinguishing movement never attempted from movement
+  cancelled by collision resolution. Six-second summaries are attached to
+  individual stall cases, with aggregate counts for opposed, near-cancelled
+  and stationary frames. This is **headless telemetry only**, not a gameplay
+  fix; saves, production movement and the economic baseline are unchanged.
+  [Methodology](docs/AI-HARVESTER-TELEMETRY.md) ·
+  [regression](tests/harvester-separation-telemetry.test.mjs).
+
+### Individual AI full-cargo stall snapshots (post-v2.42)
+
+- The 720-second match report now preserves up to 12 six-second loaded-stall
+  snapshots per scenario, including truck position, operational refinery
+  distance, unload-range status, current path waypoints and traffic/yield
+  state. This distinguishes a missing refinery from approach and congestion
+  symptoms without guessing a cause. Telemetry only: no game, saves or
+  economic baseline changes. [Methodology](docs/AI-HARVESTER-TELEMETRY.md).
+
+### Actual AI ore-route and stalled-return diagnostics (post-v2.42)
+
+- Natural-match reports now measure **traveled harvester distance**, loaded
+  return distance, full-cargo immobility episodes lasting six seconds, and
+  AI-visible enemy exposure along routes away from refineries. This helps
+  distinguish long or obstructed return trips from unsafe ore destinations.
+  It is telemetry only: **no gameplay, save, asset or economic baseline
+  changes**. [Methodology](docs/AI-HARVESTER-TELEMETRY.md) ·
+  [regression tests](tests/ai-harvester-telemetry.test.mjs).
+
+### Natural-match AI economy regression gate (post-v2.42)
+
+- The 720-second CI progression laboratory now fails when **enemy-only ore income** drops more than 20% on any baseline map, deliveries fall below 75%, worker losses exceed six, or all natural AI Air Commands disappear. This protects against ore-routing changes that pass unit tests but damage actual AI survival. Run `npm run balance:regression`. No gameplay, saves or assets changed. [Guard methodology](docs/AI-ECONOMY-REGRESSION-GATE.md) · [regression tests](tests/ai-economy-guard.test.mjs).
+
+### AI harvester survival and income telemetry (post-v2.42)
+
+- The real-engine balance and 720-second natural-progression reports now measure AI harvester losses, damage observations, last-seen cargo at destruction, ore delivery ticks, longest income gaps and sensor-visible threats near workers. The simulation remains **observation-only**: no unit behavior, credits, saves or assets changed.
+- A separate wounded-harvester retreat experiment reduced natural-match airfield construction and remains unmerged. These new metrics provide a baseline for a safer future economy fix. [Regression](tests/ai-harvester-telemetry.test.mjs) · [methodology](docs/AI-HARVESTER-TELEMETRY.md).
 
 ### Natural-match AI aviation blocker diagnostics (post-v2.42)
 
