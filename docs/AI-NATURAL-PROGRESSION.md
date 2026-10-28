@@ -32,3 +32,27 @@ To address the second bottleneck, the AI also banks toward the 2,400-credit thre
 The progression mode now observes the **completed real AI planner** at each AI decision, without changing its choices or scheduling. It classifies missing factory/radar, early Air Command eligibility, airfield funding, affordable but unstarted Air Command, construction in progress, brownout, lost harvester, detected attack, lost ground screen, occupied production queue, aircraft funding, affordable but unqueued aircraft and completed wing.
 
 Each result adds `aiAviation.decisions` (counts per AI tick), `airfieldDecisionTicks`, `maxCreditsAfterAirfield` and `recent` (last 12 decision snapshots); the summary adds `aiAviationBlockers`. These labels are **observed states, not proven causes**. For example, affordable-but-unqueued can reflect a competing planner priority. All existing result fields and browser saves remain compatible. Use the telemetry to select and validate a subsequent gameplay fix rather than treating prerequisite-complete tests as evidence of natural aviation.
+
+## One-survivor Air Command saving (28 October 2026)
+
+The original Air Command saving rule required two living tanks/heavies, even
+after the AI had already paid for its factory and radar. Losing one defender
+while still safe could release the reserve and trigger cheap reconnaissance or
+tank purchases at every decision, preventing recovery to the 2,400-credit
+Air Command threshold. This is a source-level risk, **not** proof that all
+natural-match airfield funding stalls had this cause.
+
+A safe, powered AI with an operational factory/radar, an active harvester and
+**one** surviving tank/heavy now continues banking toward its first paid
+Air Command. The 1,750-credit building price, 650-credit emergency generator
+reserve, >130-second eligibility, placement, construction timer and save format
+are unchanged. A base with no armour, no harvester or a visible local attack
+does not receive the one-tank saving protection; emergency construction and
+defensive recruitment retain their priority. This aligns pre-airfield savings
+with the existing one-survivor post-airfield attrition recovery.
+
+`tests/ai-aviation-investment.test.mjs` checks the one-tank reserve and
+paid construction in all three factions, plus zero-tank and visible-invasion
+fallbacks and v1 save/load. The complete 720-second natural-progression CI
+matrix and AI economy guard must pass before merging. Do not infer actual
+aircraft production or a frame-rate improvement from these targeted tests.
