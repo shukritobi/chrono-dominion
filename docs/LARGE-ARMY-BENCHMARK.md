@@ -153,3 +153,30 @@ source path, but no browser FPS or reliable end-to-end speedup is established.
 The first-tick 120-unit A* burst still exists; this change reduces the
 per-query allocation cost rather than delaying initial orders. Compare
 matched benchmark runs before claiming a measurable improvement.
+
+## Packed congestion heat-map keys (28 October 2026)
+
+The previous A* numeric-node conversion deliberately retained string lookups
+for congestion heat: `trafficCosts()` built a map of `"x,y"` strings, and
+each weighted A* neighbor constructed another string to retrieve its penalty.
+That mismatch was necessary to avoid silently losing congestion pricing during
+the earlier packed-node trial, but continued allocating strings during traffic
+recovery. This change packs **legal integer grid cells** as
+`y * WORLD_SIZE + x` in both the heat-map producer and A* consumer.
+Out-of-grid heat-map entries retain their original string keys to avoid row
+aliasing; A* never requests those entries because `navigationWalk()` rejects
+them. Costs, the 18-point cap, air-unit exclusion, corner rules and all
+non-congestion pathfinding remain unchanged.
+
+`tests/navigation-v15.test.mjs` independently rebuilds the old string-keyed
+heat map on both 34×34 and 48×48 maps, compares every playable tile's exact
+penalty with the packed map, exercises overlapping ground traffic and a
+near-border blocker, and verifies that weighted A* still produces a route.
+The existing traffic-detour, navigation, save/load, nine-scenario balance,
+extended AI progression and economy gates must pass before merging.
+
+**Scope:** This removes coordinate-string creation from traffic-priced A*
+neighbor probes, not the ordinary first-path calculation. It should not be
+reported as a solution to the 124-query initial routing burst or a measured
+FPS improvement without controlled browser benchmarks. Traffic pricing only
+runs when a unit requests congestion recovery.
