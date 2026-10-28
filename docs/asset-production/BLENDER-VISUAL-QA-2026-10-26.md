@@ -2318,3 +2318,25 @@ remains unapproved; do not merge or publish without explicit owner approval.
 - Source reopen acceptance: exactly one 20-vertex custom hull, six independent levitation pod pivots, 18 separately modeled open crown struts, four articulated petals, 24 hidden attack-only field arcs parented to the crown, and twelve hidden manifold 12-vertex/8-face wreck meshes. Reopen the actual saved .blend, not merely the source script.
 - Visual hypotheses requiring **real 160px and 80px contact-sheet inspection**: the crown center remains visibly open (not a fake transparent solid); four petal hinges and expanding ring geometry produce physical attack silhouette changes; no pulse clips the canvas at oblique facings; destroyed hides the intact crown and reads as a collapsed neural vehicle; hover pods remain legible at 80px. Numerical QA alone is insufficient for visual approval.
 - **Not yet verified:** Blender rendering, source reopening, 128 PNG uniqueness, image measurements, visual silhouette review, atlas SHA and successful Actions link. Update this entry with actual metrics and failures after targeted CI completes. Do not claim success merely because code is committed.
+
+
+### PSI-VEH-006 final targeted Blender render and independent audit — 29 October 2026 (PASSED)
+
+- [Successful isolated Blender 4.2.23 workflow #40741738360](https://github.com/shukritobi/chrono-dominion/actions/runs/40741738360) and [complete 133-file preview artifact #12840001361](https://github.com/shukritobi/chrono-dominion/actions/runs/40741738360/artifacts/12840001361). Only **one** targeted workflow was launched. The new vehicle alone was rendered; no previously validated asset was rerendered.
+- **Saved editable Blender source reopened successfully in GitHub Actions.** The 138,344-byte compressed .blend passed independent checks for one custom 20-vertex manta hull, six levitation pod pivots, 18 physically separate arch struts, four independent petal hinges and four custom petal meshes, 24 hidden crown-parented attack-only field segments, and twelve hidden closed manifold 12-vertex/8-face wreck fragments. The compressed file uses a Zstd header; independent local inspection checked its compressed signature, while the real Blender reopen was performed by Actions.
+- **Actual 160px and 80px contact sheets downloaded and visually inspected.** The crown reads as an open skeletal structure rather than a solid dome, the 24 physical attack ring segments surround the crown and remain within the canvas, and the destroyed state removes the upper arches and petals in favor of scattered low-profile fractured components. The attack ring is bright and visually dominates the fine crown details at 80px. Some upper petal geometry is small and can overlap from front/back facings. No raycast or occlusion-proof of the crown opening was performed; visible openness is an artistic observation, not a raycast claim.
+- All **128 actual 160×160 RGBA PNGs** were independently reopened; all have distinct raw-pixel SHA-256 hashes, nonempty transparency and no clipping, with **33px minimum canvas margin**. A separate Pillow/LANCZOS audit independently recomputed **256 pixel measurements** (32 facings × seven state metrics plus 32 adjacent-facing comparisons), with **zero discrepancies** against workflow JSON. The atlas checksum also matched.
+- Preview atlas SHA-256: `8afa5629c0dc655f67a94a0d875aba9b3c1faa07b67804918d39b08dd01fcc5a`. Downloaded artifact ZIP SHA-256: `8b389d740582fe67b0f6708b7b90fef1868efbc34725967a917ccfdea9a9dffc`.
+
+| Independently verified 80px metrics, all 32 directions | Minimum | Maximum |
+|---|---:|---:|
+| Idle → move RGBA | **1,002** | 1,296 |
+| Idle → attack RGBA | **957** | 1,143 |
+| Idle → attack alpha | **428** | 491 |
+| Idle → destroyed RGBA | **956** | 1,254 |
+| Idle → destroyed alpha | **706** | 942 |
+| Idle → attack alpha at 160px | **929** | 1,168 |
+| Idle → destroyed alpha at 160px | **1,488** | 2,267 |
+| Adjacent idle facings RGBA at 80px | **1,067** | 1,282 |
+
+**Limits and safety:** The move, attack and destruction states are distinct static poses, not multi-beat animations; neural mind-control gameplay and actual levitation behavior are not implemented. The bright white-purple attack rings are more readable than the delicate open conduits at 80px. All five changed paths are development-only: new model, strict QA, isolated workflow, asset register and this ledger. No production sprites, manifests, loaders or runtime were modified. [Draft PR #112](https://github.com/shukritobi/chrono-dominion/pull/112) remains **unapproved** and must not be merged or published without owner approval.
