@@ -1290,3 +1290,82 @@ preview branch. Changes are restricted to original Blender modeling,
 pixel QA, isolated workflow, asset register and this documentation;
 **no live textures, manifests, gameplay files or published art changed**.
 Do not merge to live art or deploy without explicit approval.
+
+
+## 2026-10-28 Psionic Viper four-stage physical destruction — targeted verification
+
+**PREVIEW ONLY, NOT GAME INTEGRATED.** This branch extends the already
+validated PSI-VEH-002 Viper source from
+[Actions #40508990419](https://github.com/shukritobi/chrono-dominion/actions/runs/40508990419).
+The archived original 128-frame atlas is downloaded and SHA-checked, never
+rerendered or replaced. The separate four-stage sequence is
+**Impact → Shear → Rupture → Settle**, 32 facings per phase.
+
+- [Original editable 20-fragment Blender model](../../tools/blender/preview_psionic_viper_four_stage_destruction.py)
+  uses asymmetric closed eight-vertex solids: torn prow, snapped twin
+  mandibles, damaged gravity skids, separated weapon rails, fractured
+  neural crown and restrained violet fracture seams. Each fracture has
+  a damage-role and first-visible-phase property. The eight archived
+  wreckage meshes remain independently editable.
+- [Strict 160px and 80px PNG QA](../../tools/blender/qa_psionic_viper_four_stage_destruction.py)
+  rejects clipping, duplicate adjacent facings, invisible phase
+  transitions and insufficient alpha-silhouette change. It compares
+  against both archived idle and archived destroyed PNGs and checks
+  the exact original atlas SHA-256
+  `0c1229bd01f0e874822546a6ef53780b2f5ef1ddc41466a74cdd994176acee78`.
+- [Single targeted preview-only Blender workflow](https://github.com/shukritobi/chrono-dominion/actions/runs/40630779708)
+  loads the archived saved .blend, renders only the new 128 poses, reopens
+  the new editable .blend, validates 20 hidden closed fracture meshes,
+  two skids, two jaws and eight preserved original wreckage meshes,
+  then uploads PNG frames, 5120×640 atlas, 160px/80px contact sheets,
+  GIF and per-facing JSON. Workflow runs with read-only permissions.
+- Initial commit [`bb17296c`](https://github.com/shukritobi/chrono-dominion/commit/bb17296c7153018c0080dd3ab85bbdbd8cfd622e),
+  image QA commit [`1e74fea7`](https://github.com/shukritobi/chrono-dominion/commit/1e74fea7202a8eee305627dd12479bd7952e66e5)
+  and workflow commit [`356b5120`](https://github.com/shukritobi/chrono-dominion/commit/356b51203fd0f8aff3cf15b0ad55cc4a80fa396f).
+
+**Verified final result (28 October 2026):**
+[Successful targeted Actions run #40630779708](https://github.com/shukritobi/chrono-dominion/actions/runs/40630779708),
+[preview artifact #12791850140](https://github.com/shukritobi/chrono-dominion/actions/runs/40630779708/artifacts/12791850140),
+[draft PR #85](https://github.com/shukritobi/chrono-dominion/pull/85).
+All **128 newly rendered 160×160 RGBA frames passed** strict real-PNG
+validation, including non-clipping and all per-facing 80px phase gates.
+The new editable **128,952-byte .blend** was reopened in Blender 4.2.23
+and verified to contain **20 hidden closed eight-vertex/six-face
+fracture meshes, 8 original wreckage meshes, 2 original gravitic skids
+and 2 original crescent mandibles**.
+
+| Changed pixels at 80px across 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Impact → Shear, RGBA | **845** | 1,194 | 1,062.3 |
+| Shear → Rupture, RGBA | **988** | 1,256 | 1,159.3 |
+| Rupture → Settle, RGBA | **936** | 1,276 | 1,157.4 |
+| Impact → Shear, alpha | **632** | 910 | 766.8 |
+| Shear → Rupture, alpha | **765** | 989 | 889.5 |
+| Rupture → Settle, alpha | **675** | 898 | 805.6 |
+| Settle vs original destroyed, RGBA | **908** | 1,205 | 1,100.7 |
+| Settle vs original destroyed, alpha | **619** | 818 | 742.9 |
+| Rupture vs original idle, alpha | **819** | 1,041 | 937.3 |
+| Adjacent impact facings, RGBA | **846** | 1,168 | 1,053.5 |
+
+The original atlas SHA-256 remained exactly
+`0c1229bd01f0e874822546a6ef53780b2f5ef1ddc41466a74cdd994176acee78`
+before and after the run. The **separate new** 5120×640 four-stage
+atlas SHA-256 is
+`63dea25db3f787065de7ba3168cb83f170af49f6d96a4ecb9c7bb979795abdb7`.
+Downloaded the actual 4.8 MB artifact and inspected both the 160px and
+80px contact sheets. Independently recalculated Impact→Shear 80px
+RGBA differences for facings **00/04/08/16/24**:
+**1,102 / 1,177 / 1,066 / 1,132 / 1,044** changed pixels;
+all five matched the archived JSON report exactly.
+
+**Visual observation:** the Viper's split hover silhouette remains
+recognizable at 80px, and the final two wreckage stages are visibly
+collapsed. The first two stages are more subtle at 80px, and residual
+cyan hover slits remain conspicuous on the wreck. This is a polish
+candidate, not a claim that final art is approved.
+
+**Production safety:** branch comparison against the Viper temporal
+preview parent shows exactly five changed development files (model,
+QA, workflow, asset register and this document). No production textures,
+gameplay files or published manifests changed. The new art remains
+**preview-only and not integrated into the game**.
