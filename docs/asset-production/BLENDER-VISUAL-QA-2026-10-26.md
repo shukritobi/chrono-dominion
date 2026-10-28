@@ -1225,3 +1225,45 @@ asset register and documentation changed on
 stacked on the unmerged Lynx PR #43. No production textures, game
 manifests, live art or runtime files were modified. The animation
 remains preview-only, not playable or approved for publication.
+
+
+## 2026-10-28 COA-VEH-002 four-stage physical destruction — targeted render pending
+
+**Preview only; not integrated or approved for publication.** The original
+Coalition Lynx Battle Tank editable Blender source and 128 validated
+idle/move/attack/destroyed PNGs are reused from [successful Actions
+#40494276431](https://github.com/shukritobi/chrono-dominion/actions/runs/40494276431),
+not regenerated. This new independent destruction sequence is **impact →
+shear → rupture → settle** across 32 facings, with 18 separately editable
+asymmetric, closed eight-vertex/six-face volumetric fragments. The physical
+fragments include torn ceramic glacis, track guards, cupola visor, severed
+barrel, breech, turret cheeks, engine deck, sprockets and three restrained
+electric-blue fracture seams. It retains the eight archived wreckage meshes,
+12 roadwheel pivots and 22 track cleats.
+
+- [New Blender modeling source](../../tools/blender/preview_coalition_lynx_four_stage_destruction.py):
+  [commit `c7bc2eec`](https://github.com/shukritobi/chrono-dominion/commit/c7bc2eec0143fc2f60da862673a0810eddc44526).
+- [Strict actual PNG-level QA](../../tools/blender/qa_coalition_lynx_four_stage_destruction.py):
+  [commit `05d2226c`](https://github.com/shukritobi/chrono-dominion/commit/05d2226c19e35e5a8ecea4a5430c33cfa5b67253).
+- [Targeted preview-only workflow](../../.github/workflows/coalition-lynx-four-stage-destruction-review.yml):
+  [commit `8f8457ff`](https://github.com/shukritobi/chrono-dominion/commit/8f8457ffa5dbd504afc92cacbdd3da335d096bbb).
+  Workflow reopens the saved compressed .blend, verifies all 18 new
+  closed 3D fragments plus preserved original parts, and renders only
+  **128 new transparent 160×160 RGBA frames**. A separate 5120×640
+  review atlas, 160px/80px contact sheets, 80px animated GIF and
+  per-facing JSON are produced. The archived atlas is SHA-256 checked
+  before and after without modification.
+- **80px acceptance gates (unchanged after launch):** ≥60 changed RGBA
+  pixels for each adjacent destruction phase; ≥50 settled-vs-archived
+  destroyed RGBA; ≥50 impact-vs-archived idle RGBA; ≥40 rupture-vs-idle
+  alpha; ≥20 adjacent impact facing RGBA. All 128 160px frames must be
+  nonempty, RGBA, and unclipped with at least 2px alpha margin.
+- **Verification pending:** No successful Actions run, actual PNG counts,
+  source-reopen result, or human 80px visual inspection is claimed until
+  the artifact has been downloaded and reviewed. Fix geometry, not
+  acceptance thresholds, if any real image gate fails.
+
+**Production barrier:** This branch contains only the new modeling script,
+strict PNG QA, isolated workflow, AssetRegister update and this QA document.
+No `public/` textures, live atlases, manifests, loader, runtime, or gameplay
+files may be written. The separate destruction atlas is **not playable**.
