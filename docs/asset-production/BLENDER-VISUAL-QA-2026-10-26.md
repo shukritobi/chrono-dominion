@@ -2576,8 +2576,8 @@ wreck-only meshes remain editable in the saved source.
   downloaded the corrected source-ID baseline from successful run
   [#40769372711](https://github.com/shukritobi/chrono-dominion/actions/runs/40769372711).
   It copied all **96 previously validated idle, movement and deployment PNGs
-  byte-for-byte** and rendered **only the 32 destroyed facings**. No previously
-  validated sprite was rerendered.
+  byte-for-byte** and rerendered **only the 32 destroyed facings**. No
+  previously validated non-destroyed sprite was rerendered.
 - Headless Blender 4.2.23 reopened the actual **144,631-byte compressed editable
   .blend**. The saved intact state contains all 10 new meshes hidden and its
   original roof visible. All four new fracture wedges are closed manifold
