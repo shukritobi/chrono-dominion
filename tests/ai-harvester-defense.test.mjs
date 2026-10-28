@@ -131,4 +131,37 @@ for(const faction of ['coalition','federation','psionic']){
       !assignments.has(guard.id));
   }
 }
+// A rifle squad closer to a visible siege threat should not always crowd
+// out a nearby tank that can return meaningful ranged fire.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,hq,worker,guard,enemy}=game(faction);
+  enemy.hp=0;
+  guard.x=13;guard.y=16;
+  const infantry=g.add(1,'soldier',15,14);
+  const scout=g.add(1,'recon',18,14);
+  const siege=g.add(0,'heavy',20,14);
+  assert.ok(g.sideCanSee(1,siege),faction+': scout genuinely spots siege tank');
+  assert.ok(Math.hypot(guard.x-siege.x,guard.y-siege.y)>6.5,
+    faction+': tank cannot acquire siege through ordinary local combat');
+  const result=g.assignAIEngagements([guard,infantry],[],hq);
+  assert.equal(result.get(guard.id),siege.id,
+    faction+': prioritise available armour against an outranging siege threat');
+  assert.equal(guard.order?.type,'attack');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': armour response uses existing serializable attack order');
+  assert.equal(g.entityById(guard.id)?.order?.id,siege.id);
+  assert.equal(g.entityById(worker.id)?.kind,'harvester');
+  // For short-range enemies, retain the established nearest-first ranking.
+  g.entityById(siege.id).hp=0;
+  const rifle=g.add(0,'soldier',20,14);
+  assert.ok(g.sideCanSee(1,rifle));
+  const currentGuard=g.entityById(guard.id),currentInfantry=g.entityById(infantry.id);
+  currentGuard.order=null;currentInfantry.order=null;
+  const shortRange=g.assignAIEngagements([currentGuard,currentInfantry],[],g.entityById(hq.id));
+  assert.equal(shortRange.get(infantry.id),rifle.id,
+    faction+': short-range threat remains a nearest-defender engagement');
+  assert.equal(shortRange.has(guard.id),false,
+    faction+': distant armour is not needlessly recalled for rifle threats');
+  assert.equal(scout.hp>0,true);
+}
 console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');
