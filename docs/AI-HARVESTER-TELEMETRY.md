@@ -321,3 +321,10 @@ old trigger, and rejects targets after the only observer disappears.
 The 720-second natural-match progression and economy regression gate must
 be checked separately: passing these focused tests **does not prove** that
 harvester losses decrease, income increases, or aircraft are produced.
+
+
+## Reactive siege escort prioritisation (29 October 2026)
+
+A proactive pre-contact armour screen was trialled and **rejected**, not deployed: its first full progression run reduced Frostline AI ore from 9,000 to 6,120, and a wider lateral-pocket revision further reduced it to 5,040. The existing economy guard caught both failures (closed PR #116; workflow runs 40760357571 and 40760877277). Staging additional tanks near ore traffic is not safe without stronger route separation.
+
+The replacement experiment is narrower: when an **already visible** ranged siege threat endangers a worker and more than one eligible local defender is available, rank the candidates using weapon reach and damage as well as travel distance. Short-range enemies retain the original nearest-first ranking. Existing two-escort cap, base-first assignment, fog restrictions, active assault protection, saved attack orders and unit statistics are unchanged. Regression tests exercise all three factions and verify that a tank outside ordinary local acquisition range can be chosen ahead of a closer rifle squad against a siege tank, while short-range contacts still use nearest-first logic. This is a targeted tactical improvement; reduced worker losses in natural matches remain **unproven** until the full economy regression workflow passes.

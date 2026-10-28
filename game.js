@@ -2342,7 +2342,17 @@
         const escort=[...available.values()].filter(u=>
           dist(u,enemy)<=8.5&&dist(u,worker)<=9&&
           (u.order?.type!=='attackMove'||dist(u,enemy)<=4.5))
-          .sort((a,b)=>dist(a,enemy)-dist(b,enemy)||a.id-b.id)[0];
+          .sort((a,b)=>{
+            // A siege tank outranges rifle squads. If two defenders can
+            // respond promptly, prefer the one with the reach and firepower
+            // to contest its firing line; keep nearest-first for short-range
+            // threats. This only ranks already-eligible, AI-visible escorts.
+            const siege=this.stat(enemy,'range')>=4.5;
+            const score=u=>dist(u,enemy)-(siege?Math.min(3.5,
+              Math.max(0,this.stat(u,'range')-3)*1.4+
+              this.stat(u,'damage')/16):0);
+            return score(a)-score(b)||dist(a,enemy)-dist(b,enemy)||a.id-b.id;
+          })[0];
         if(escort){assign(escort,enemy);escorts++;}
       }
       // Remaining combatants share target intentions. Prefer vulnerable,
