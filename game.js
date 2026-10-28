@@ -980,7 +980,8 @@
       // genuinely stuck. Other units remain traversable but expensive.
       const heat=new Map(),key=(x,y)=>x+','+y;
       for(const other of this.entities){
-        if(other===except||other.hp<=0||other.type!=='unit')continue;
+        if(other===except||other.hp<=0||other.type!=='unit'||
+          other.kind==='aircraft')continue;
         const radius=this.unitRadius(other)+this.unitRadius(except);
         const cx=Math.round(other.x),cy=Math.round(other.y);
         for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
@@ -1267,7 +1268,9 @@
       // Both attempts use the existing collision-checked lateral pockets.
       if(!higher)return this.startTrafficYield(unit,blocker,vx,vy);
       if(this.startTrafficYield(blocker,unit,vx,vy))return true;
-      return unit.kind==='harvester'&&unit.load>=360&&blocker.stance==='hold'?
+      return unit.kind==='harvester'&&unit.load>=360&&
+        (blocker.stance==='hold'||
+          (blocker.stance==='guard'&&!blocker.order))?
         this.startTrafficYield(unit,blocker,vx,vy):false;
     }
     finishYield(e){
