@@ -1,0 +1,121 @@
+name: Three-Faction Airfield Extended-State Blender Review
+
+# Preview-only: never write live art or production manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches: [asset-preview/three-faction-airfield-extended-states-20261028]
+    paths:
+      - ".github/workflows/airfield-extended-states-review.yml"
+      - "tools/blender/preview_airfield_extended_states.py"
+      - "tools/blender/qa_airfield_extended_states.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-airfield-three-faction-extra-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout original Blender source
+        uses: actions/checkout@v4
+
+      - name: Install Pillow and compile Python source
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow
+          python -m py_compile tools/blender/animated_assets.py \
+            tools/blender/building_architecture.py \
+            tools/blender/preview_airfield_extended_states.py \
+            tools/blender/qa_airfield_extended_states.py \
+            tools/blender/pack_animated.py
+
+      - name: Cache verified official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only three previously unvalidated faction airfields
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/airfield-extra-preview
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/animated_assets.py -- \
+            --output "$stage" --kinds airfield \
+            --factions coalition,federation,psionic --size 160
+          python tools/blender/pack_animated.py \
+            --input "$stage" --output "$stage/packed" --size 160
+          test -s "$stage/packed/coalition-airfield.png"
+          test -s "$stage/packed/federation-airfield.png"
+          test -s "$stage/packed/psionic-airfield.png"
+          sha256sum "$stage"/packed/*-airfield.png > "$stage/original-atlases.sha256"
+
+      - name: Create separate critical destroyed and power-out previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/airfield-extra-preview
+          for faction in coalition federation psionic; do
+            blender --background --threads 4 \
+              "$stage/sources/$faction-airfield.blend" \
+              --python-exit-code 1 \
+              --python tools/blender/preview_airfield_extended_states.py -- \
+              --faction "$faction" --output "$stage/extra/$faction"
+          done
+
+      - name: Reopen all three editable Blender wreckage sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/airfield-extra-preview
+          for faction in coalition federation psionic; do
+            blender --background --threads 2 \
+              "$stage/extra/$faction/$faction-airfield-extended-states.blend" \
+              --python-exit-code 1 --python-expr \
+              'import bpy; a=[o for o in bpy.data.objects if o.type=="MESH" and (o.name.startswith("Critical-only") or o.name.startswith("Destroyed-only"))]; assert len(a)==9,(len(a),[o.name for o in a]); assert all(o.hide_render for o in a); print("REOPENED NINE EDITABLE HIDDEN AIRFIELD WRECKAGE MESHES")'
+          done
+
+      - name: Inspect 160px and 80px actual PNG pixels and untouched atlases
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage=generated/airfield-extra-preview
+          python tools/blender/qa_airfield_extended_states.py --stage "$stage"
+          sha256sum --check "$stage/original-atlases.sha256"
+
+      - name: Upload preview-only Blender models and quantitative contact sheets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-three-faction-airfield-extra-state-pilot
+          path: generated/airfield-extra-preview/
+          if-no-files-found: error
+          retention-days: 30

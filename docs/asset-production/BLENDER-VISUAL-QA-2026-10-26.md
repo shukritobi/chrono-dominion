@@ -532,3 +532,32 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+## 2026-10-28 Three-faction airfield extended-state pilot — pending real render
+
+**Preview-only, not approved.** Initial source audit found the airfields in
+`tools/blender/building_architecture.py` had faction-specific but unvalidated
+five-frame first-pass geometry. This isolated pilot generates just those three
+airfields (no already validated vehicle/building rerenders), saves each editable
+original .blend and five-frame 160x800 RGBA atlas, then independently adds
+critical, destroyed and power-out geometry in a second editable .blend.
+
+- [Airfield damage modeling](../../tools/blender/preview_airfield_extended_states.py)
+  creates **nine original closed fracture volumes per faction** (three
+  critical, six destroyed), preserving the intact meshes in the saved source.
+- [Strict image QA](../../tools/blender/qa_airfield_extended_states.py)
+  requires pixel-exact original idle/source baseline, >=35 critical and >=90
+  destroyed changed alpha pixels at 80px, exactly zero power-out silhouette
+  change, >=200 power-out RGBA changes, transparent unclipped PNGs, and
+  unchanged atlas checksums. Failed gates must be corrected in geometry, not
+  lowered to force a pass.
+- [Targeted airfield workflow](../../.github/workflows/airfield-extended-states-review.yml)
+  reopens all three editable extended .blend files, validates nine hidden
+  independent damage meshes per faction and uploads real 160/80px sheets.
+- **Status at commit:** awaiting workflow evidence. No pixel measurements,
+  visual inspection or render success claimed before Actions completes.
+- **Risk:** original Blender .blend snapshots precede animation state setup;
+  the pilot explicitly hides idle beacon and sets emission to .75 before
+  baseline render, and fails closed on any atlas/source mismatch.
+- **Publication:** no files under art/baked-v1, art/rendered, manifests or
+  game code are changed. Keep these states separate until explicitly approved.
