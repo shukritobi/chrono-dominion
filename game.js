@@ -993,7 +993,12 @@
     trafficCosts(except){
       // Create a coarse, per-request heat map only when a moving unit is
       // genuinely stuck. Other units remain traversable but expensive.
-      const heat=new Map(),key=(x,y)=>x+','+y;
+      // A* probes only legal integer tiles. Pack those keys to match its
+      // node identifiers; preserve legacy string identity for edge/outside
+      // cells so the heat map never aliases two different coordinates.
+      const heat=new Map(),key=(x,y)=>x>=1&&y>=1&&
+        x<=WORLD_SIZE-2&&y<=WORLD_SIZE-2?
+        y*WORLD_SIZE+x:x+','+y;
       for(const other of this.entities){
         if(other===except||other.hp<=0||other.type!=='unit'||
           other.kind==='aircraft')continue;
@@ -1087,7 +1092,7 @@
           const hazard=extraCost?Math.max(0,Number(extraCost({x,y}))||0):0;
           // Congestion heat is independently keyed by coordinate strings;
           // only A*'s internal node bookkeeping uses packed integer keys.
-          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(x+','+y)||0)+hazard;
+          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0)+hazard;
           const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
