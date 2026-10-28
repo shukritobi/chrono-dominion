@@ -532,3 +532,41 @@ front wall visibly fractured without making the pose clip its frame.
 [Download successful preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40424902726/artifacts/12698528405).
 **Preview-only; no live textures or production manifests modified.**
 Next priority: airfields and beam defenses, then unfinished vehicles.
+
+## 2026-10-28 FED-VEH-002 Federation Bull four-stage physical destruction — pending rendered QA
+
+**PREVIEW ONLY; never publish or replace live game art.** Reuse the validated
+Federation Bull 32-facing original Blender source and 128 PNGs from
+[successful Actions #40501761698](https://github.com/shukritobi/chrono-dominion/actions/runs/40501761698).
+The separate physical-destruction extension creates **20 original closed
+asymmetric editable 3D fracture meshes**, including sheared glacis, torn
+track armour, broken electrothermal cannon, collapsed turret, split engine
+roof, detached exhaust and three restrained copper-orange fracture seams.
+The four states are **impact → shear → rupture → settle**, each rendered in
+32 facings (128 NEW RGBA 160px PNGs). Original 14 wheel pivots, 24 tread
+cleats and eight wreckage meshes are preserved.
+
+- [New Blender modeling source](../../tools/blender/preview_federation_bull_four_stage_destruction.py)
+  uses the previously saved source; it never regenerates the original atlas.
+- [Actual 160px/80px PNG QA](../../tools/blender/qa_federation_bull_four_stage_destruction.py)
+  validates all 128 images, rejects clipping, measures every facing's phase
+  differences and checks the original atlas SHA-256 before/after.
+- [Targeted preview-only workflow](../../.github/workflows/federation-bull-four-stage-destruction-review.yml)
+  downloads only the validated source, reopens the extended editable .blend
+  and verifies 20 closed hidden fracture meshes, eight original wrecks,
+  14 wheel pivots and 24 tread cleats. It produces separate 5120×640 atlas,
+  actual 160px and 80px contact sheets, animated 80px GIF and per-facing JSON.
+- **Fixed acceptance gates:** ≥60 changed 80px RGBA pixels for each adjacent
+  destruction phase; ≥50 settled-vs-archived-destroyed RGBA; ≥50 impact-vs-idle
+  RGBA; ≥40 rupture-vs-idle alpha; ≥20 adjacent-facing RGBA. All frames must
+  have at least 2px transparent margin. **Do not relax thresholds if the
+  model fails: correct its physical geometry and rerun only this workflow.**
+- **Current status:** source/QA/workflow authored; no successful render,
+  pixel metrics, editable-source reopen or 80px visual inspection is claimed
+  until the actual Actions artifact is checked. The validated baseline atlas
+  SHA-256 from earlier Bull review is
+  `22901bc4065a57ac2cce09c615c5c0fc1a85353cec1eeb392bf31c63da6eacc1`.
+
+**Safety:** No production sprite atlas, manifest, gameplay code or published
+textures may be modified. The new destruction frames remain unapproved,
+preview-only and not playable.
