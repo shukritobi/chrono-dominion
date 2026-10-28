@@ -1,0 +1,115 @@
+name: Coalition Lattice Beam Tank 32-Facing Original Blender Preview
+
+# Isolated original geometry review only. Never publish game textures/manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/coalition-lattice-beam-32-20261029
+    paths:
+      - .github/workflows/coalition-lattice-beam-32-review.yml
+      - tools/blender/preview_coalition_lattice_beam_32.py
+      - tools/blender/qa_coalition_lattice_beam_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-coalition-lattice-beam-32-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile source and install strict image QA
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_carrier_32.py tools/blender/preview_coalition_lattice_beam_32.py tools/blender/qa_coalition_lattice_beam_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-$version-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only COA-VEH-006 original 32-facing preview
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_coalition_lattice_beam_32.py -- \
+            --output generated/coalition-lattice-beam-32
+
+      - name: Reopen editable Blender source and verify independent geometry
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/coalition-lattice-beam-32/coalition-lattice-beam-tank.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy, bmesh
+          objects=list(bpy.data.objects)
+          shards=[o for o in objects if o.type=="MESH" and o.get("closed_fracture")]
+          assert len(shards)==12,len(shards)
+          assert all(o.hide_render and o.get("wreckage_only") for o in shards)
+          for o in shards:
+              bm=bmesh.new();bm.from_mesh(o.data)
+              assert len(bm.verts)==12 and len(bm.faces)==8,(o.name,len(bm.verts),len(bm.faces))
+              assert all(e.is_manifold for e in bm.edges),o.name
+              bm.free()
+          hull=[o for o in objects if o.type=="MESH" and o.get("custom_hull")]
+          turret=[o for o in objects if o.type=="MESH" and o.get("custom_turret")]
+          prongs=[o for o in objects if "independently hinged focusing prong" in o.name.lower()]
+          cages=[o for o in objects if "independent open diamond focusing cage" in o.name.lower()]
+          wheels=[o for o in objects if "independent roadwheel pivot" in o.name.lower()]
+          links=[o for o in objects if o.type=="MESH" and o.get("track_link")]
+          effects=[o for o in objects if o.type=="MESH" and o.get("attack_only")]
+          emitter=[o for o in objects if "articulated open-beam carriage" in o.name.lower()]
+          assert len(hull)==1 and len(hull[0].data.vertices)==16
+          assert len(turret)==1 and len(turret[0].data.vertices)==12
+          assert (len(prongs),len(cages),len(wheels),len(links),len(effects),len(emitter))==(4,3,10,26,5,1),(len(prongs),len(cages),len(wheels),len(links),len(effects),len(emitter))
+          assert all(o.parent==emitter[0] and o.hide_render for o in effects)
+          for cage in cages:
+              bars=[o for o in cage.children if "open diamond cage edge" in o.name.lower()]
+              assert len(bars)==4,(cage.name,len(bars))
+          print("PASS REOPEN: 16-vertex hull, three open cages, four hinged prongs, 10 wheels, 26 cleats, 12 closed manifold fractures")
+          '
+
+      - name: Check actual 160px and 80px pixels and build preview sheets
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_coalition_lattice_beam_32.py --stage generated/coalition-lattice-beam-32
+          test -s generated/coalition-lattice-beam-32/pixel-qa.json
+          test -s generated/coalition-lattice-beam-32/coalition-lattice-beam-contact-160.png
+          test -s generated/coalition-lattice-beam-32/coalition-lattice-beam-contact-80.png
+
+      - name: Upload source, separate PNGs, atlas and QA without publishing
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-coalition-lattice-beam-32-preview
+          path: generated/coalition-lattice-beam-32/
+          if-no-files-found: warn
+          retention-days: 30

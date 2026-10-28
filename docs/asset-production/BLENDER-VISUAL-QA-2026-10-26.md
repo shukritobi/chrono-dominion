@@ -2076,3 +2076,140 @@ and this QA document. **No production texture, manifest, loader, or
 gameplay file was modified; the draft PR remains unapproved.**
 
 Review links: [draft PR #106](https://github.com/shukritobi/chrono-dominion/pull/106), [final quantitative QA documentation commit 262d34f](https://github.com/shukritobi/chrono-dominion/commit/262d34f6a89a862397a0dfb1847c8dec27ff4e14), and [successful corrected render #40713457651](https://github.com/shukritobi/chrono-dominion/actions/runs/40713457651). No owner approval or live integration is implied.
+
+
+## 2026-10-29 COA-VEH-006 Coalition Lattice Beam Tank — original Blender source (verification pending)
+
+**PREVIEW ONLY; do not merge, publish, or alter gameplay.** The missing
+Coalition Lattice Beam Tank has a new purpose-authored Blender geometry source
+at [preview_coalition_lattice_beam_32.py](../../tools/blender/preview_coalition_lattice_beam_32.py).
+This is **not** a re-render of the validated Lynx, Hunter or Federation
+vehicles. It defines a custom sixteen-vertex arrowhead armored hull, ten
+independently rotating roadwheel pivots, twenty-six indexed track cleats, an
+independently traversing emitter saddle, three physically open diamond
+focusing cages, four individually hinged tapered focusing prongs, and
+twelve independent closed irregular fracture meshes. Five separate attack-only
+coherent beam/fork geometries are parented to the emitter.
+
+- **Unverified until render:** 32 facings x idle/move/attack/destroyed =
+  128 separate 160x160 transparent RGBA frames, a 5120x640 preview atlas,
+  actual 160px and 80px contact sheets, editable .blend and machine-readable
+  pixel QA. No existing asset or production path should be rendered or written.
+- [Strict independent image QA](../../tools/blender/qa_coalition_lattice_beam_32.py)
+  declares the following minimum per-facing 80px changed pixels **before
+  rendering**: movement RGBA 65; attack RGBA 130; attack alpha 45;
+  destroyed alpha 110; adjacent idle facings RGBA 50. Every one of the
+  128 PNGs must be unique, nonempty, RGBA, 160x160 and have >=2px canvas
+  margin. These are **acceptance thresholds, not measured achievements**.
+- The isolated workflow must reopen the saved editable Blender file and
+  independently confirm the closed-manifold 12-vertex/8-face topology of
+  all twelve hidden wreck meshes, one 16-vertex original hull, one
+  twelve-vertex original turret, four hinged focusing prongs, three open
+  diamond cages, ten wheel pivots, twenty-six track cleats, and five
+  attack-only meshes parented to the moving emitter.
+- **Visual hypotheses to check at real gameplay scale:** the physical
+  fork should visibly widen on attack; diamond cages should remain open
+  rather than appearing as a solid glowing block; the beam should connect
+  to its emitter and not float ahead of the muzzle; the wreck should read
+  as a collapsed tank rather than loose airborne fragments. If a threshold
+  or visual gate fails, correct the geometry or framing; do not relax gates.
+- Branch is stacked on the existing **unapproved** Federation MCV preview
+  branch to preserve the ongoing source/QA ledger. Existing validated
+  sprites must remain unchanged. No production sprite manifest, loader,
+  runtime or gameplay integration is authorized.
+
+**Status: new source, strict pixel QA, asset register and branch-scoped
+workflow in development. Blender render, saved-source reopen, actual 160/80px
+inspection, and independent measurement remain pending.**
+
+
+### First COA-VEH-006 render: real clipping failure, corrective geometry required
+
+[Targeted first run #40723343610](https://github.com/shukritobi/chrono-dominion/actions/runs/40723343610)
+successfully compiled, rendered **128 actual frames**, reopened the saved
+editable .blend and passed its topology checks, but **FAILED the predeclared
+canvas-clipping gate**. Attack facing 02 had alpha bbox
+**(33, 50, 160, 120)**, touching the right edge. Independent inspection
+of the downloaded failed artifact found clipping in ten attack facings:
+**02–06 and 18–22**. All other states were unclipped. No threshold was
+relaxed. Independent first-pass 80px comparisons (a diagnostic with
+default resize, not the final LANCZOS acceptance) were movement RGBA
+959–1387, attack RGBA 814–1273, attack alpha 51–369, wreck alpha
+337–627 and adjacent facings 1094–1526. These are **diagnostics from a
+failed render, not accepted QA results**.
+
+The original beam geometry projected too far beyond the tank in
+near-side broadside directions. Correction must physically shorten and
+re-seat the attack pulse and/or focusing prongs rather than cropping the
+PNG, altering QA margins, or changing accepted live assets. Re-render
+**only COA-VEH-006** after a source change, then independently inspect
+actual 160px/80px images and remeasure every direction.
+
+
+### Final COA-VEH-006 physical beam correction and independent 80px/160px audit — 29 October 2026 (PASSED)
+
+- [First failed render #40723343610](https://github.com/shukritobi/chrono-dominion/actions/runs/40723343610)
+  successfully produced 128 PNGs and reopened its source but clipped
+  **ten attack directions** (02–06, 18–22). The original beam extended
+  beyond the 160px alpha boundary. This failure was **not** ignored.
+- **Geometry correction:** shortened all three physical stepped coherent
+  beam meshes (furthest endpoint 3.01 -> 2.53 in emitter-local x),
+  shortened both fork arcs, moved the attacking emitter rearward
+  (x .72 -> .60), and increased the four physical prong rotations
+  (lateral .32 -> .43 rad; vertical .23 -> .30 rad) to retain readable
+  attack silhouette. No alpha cropping, resized canvas or reduced QA
+  threshold was used.
+- [Corrected successful Blender 4.2.23 workflow #40723712313](https://github.com/shukritobi/chrono-dominion/actions/runs/40723712313)
+  and [complete artifact #12831717821](https://github.com/shukritobi/chrono-dominion/actions/runs/40723712313/artifacts/12831717821).
+  Source reopened successfully at **162,598 bytes**, with the custom
+  16-vertex hull, custom 12-vertex turret, three genuinely open
+  four-edge diamond cages, four separate hinged focusing prongs, ten
+  independent roadwheel pivots, 26 indexed cleats, five attack-only
+  emitter-child meshes and **12 closed manifold 12-vertex/8-face wreck
+  meshes** independently verified.
+- **All 128 actual 160x160 RGBA frames** were downloaded, reopened and
+  checked by a separate Pillow audit. All 128 raw-pixel SHA-256 hashes
+  are unique; all frames are nonempty and unclipped with **8px minimum
+  alpha margin**. Actual **160px and 80px labeled contact sheets** were
+  inspected. Attack flashes remain physically attached to the emitter
+  and no longer leave the frame. The wreck removes the intact turret and
+  upper hull in favor of asymmetric broken physical meshes.
+- Independent Pillow/LANCZOS recomputation of **32 facings x eight
+  metrics = 256 measurements** reproduced the workflow JSON with
+  **zero discrepancies**. Comparing actual first/corrected render
+  artifacts confirmed **96/96 idle/move/destroyed frames are
+  pixel-identical**, while all **32 attack frames changed**. The
+  correction did not disturb the other three gameplay states or
+  rerender any different asset.
+- Corrected atlas SHA-256:
+  c85615e92f4d49290409344e0deddc044c2305b0f01ad46088bd0c4e8ba21bba.
+  Downloaded artifact ZIP SHA-256:
+  b3ef3dbe09d040dbd8c12e1a4583dd62d5e5d3536715e0890e188919dc9d3129.
+
+| Independently reproduced 80px measurements, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle -> move RGBA | **1,045** | 1,552 |
+| Idle -> attack RGBA | **894** | 1,338 |
+| Idle -> attack alpha | **86** | 454 |
+| Idle -> destroyed RGBA | **1,036** | 1,492 |
+| Idle -> destroyed alpha | **467** | 777 |
+| Idle -> attack alpha at 160px | **92** | 883 |
+| Idle -> destroyed alpha at 160px | **1,074** | 2,137 |
+| Adjacent idle facing RGBA at 80px | **1,228** | 1,727 |
+
+**Visual limitations:** at 80px, the diamond cage openings and individual
+prong edges remain subtle, and the vehicle can resemble a conventional
+rail-gun tank when seen from a broadside angle. The beam attack is one
+static pulse, not a charge/focus/fire/cooldown animation; track motion
+and destruction are also single poses. No gameplay lattice chaining or
+damage behavior is implemented. Future artistic polish should increase
+cage readability **without** compromising the validated silhouette
+margin or rerendering unrelated assets.
+
+**Publication boundary:** only the new modeling script, strict pixel QA,
+branch-scoped read-only workflow, asset register and this QA document
+differ from the stacked unapproved MCV preview parent. No production
+sprites, manifests, loaders, game logic or runtime were touched.
+[Draft PR #109](https://github.com/shukritobi/chrono-dominion/pull/109)
+remains **unapproved and preview-only**. Never merge or publish without
+explicit owner approval.
