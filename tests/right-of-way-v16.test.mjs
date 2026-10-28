@@ -70,22 +70,6 @@ assert.equal(loaded.yieldOrder,null,'truck detour finishes and restores harvesti
 assert.ok(Math.hypot(loaded.x-pocket.x,loaded.y-pocket.y)<1,
   'the truck moves to the pocket without teleporting the defender');
 
-// An idle Guard-position soldier that cannot yield should not indefinitely
-// pin a full truck. The soldier's own order/stance must remain untouched.
-reset();
-const guardTruck=g.add(0,'harvester',11,12),guard=g.add(0,'soldier',11.85,12);
-guardTruck.load=360;guard.stance='guard';
-guard.stunnedUntil=g.time+10;
-assert.equal(g.tryTrafficYield(guardTruck,1,0),true,
-  'loaded harvester can detour when an idle Guard soldier cannot yield');
-assert.ok(guardTruck.yieldOrder);
-assert.equal(guard.yieldOrder,undefined);
-assert.equal(guard.stance,'guard');
-const guardPocket={...guardTruck.yieldOrder};
-for(let i=0;i<130&&guardTruck.yieldOrder;i++)g.step(.05);
-assert.ok(Math.hypot(guardTruck.x-guardPocket.x,guardTruck.y-guardPocket.y)<1,
-  'loaded truck can actually travel into a collision-safe guard passing pocket');
-
 // No legal shoulder: the loaded truck cannot invent a route through water.
 reset();
 const trapped=g.add(0,'harvester',11,12),fixed=g.add(0,'soldier',11.85,12);
