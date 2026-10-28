@@ -2242,3 +2242,22 @@ twelve asymmetric closed 12-vertex/8-face fracture meshes.
 - **Unverified:** No render success, pixel counts, reopened .blend or actual
   160px/80px visual inspection is claimed until the targeted workflow runs.
   Existing validated preview atlases and live artwork must remain unchanged.
+
+
+### First Citadel Carrier render: numerical PASS, artistic failure identified
+
+[First targeted workflow #40732792153](https://github.com/shukritobi/chrono-dominion/actions/runs/40732792153)
+passed compile, Blender 4.2.23 render, source reopen and strict per-facing
+pixel gates: 128 unique nonempty unclipped RGBA frames, minimum margin 23px.
+Actual 80px measurements: move RGBA **1212–1776**, attack RGBA **985–1483**,
+attack alpha **227–324**, destroyed alpha **740–1212**, adjacent facings
+**1356–1818**. These are **first-render metrics only**.
+
+Actual 160px/80px contact-sheet inspection revealed an important artistic
+failure **not caught by numerical gates**: dark shield apertures and cyan
+upper gunport strips remained visibly suspended above the destroyed hull
+because the wreck pose hid armored shields but not their child aperture
+meshes. The corrective geometry-state change now hides those specific
+upper hardware meshes only in destroyed, leaving their editable geometry
+intact in the saved Blender source. A second targeted render and independent
+comparison are required; do not mark the corrected visual as validated yet.
