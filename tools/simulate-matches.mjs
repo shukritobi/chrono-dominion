@@ -14,7 +14,7 @@ import {readFileSync,writeFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
 import {newHarvesterTelemetry,observeHarvesterStep,
-  observeHarvesterThreatSample} from './ai-harvester-telemetry.mjs';
+  observeHarvesterThreatSample,inspectHarvesterLoss} from './ai-harvester-telemetry.mjs';
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
 import {newHarvesterSeparationTelemetry,observeHarvesterSeparationStep,
   summarizeHarvesterSeparation} from './harvester-separation-telemetry.mjs';
@@ -237,6 +237,20 @@ function runScenario(map,difficulty,mi,di){
       .map(e=>({id:e.id,hp:e.hp,load:e.load,x:e.x,y:e.y,
         stunnedUntil:e.stunnedUntil}));
     tickStartHarvesters=beforeHarvesters;
+    // Preserve pre-step sensor visibility and defense orders: a lethal tick
+    // can remove both worker and attacker before post-step inspection.
+    const beforeVisibleHostiles=beforeHarvesters.length?
+      g.entities.filter(e=>e.owner===0&&e.hp>0&&e.type==='unit'&&
+        e.kind!=='harvester'&&g.sideCanSee(1,e))
+        .map(e=>({id:e.id,kind:e.kind,type:e.type,hp:e.hp,x:e.x,y:e.y})):[];
+    const beforeDefenders=beforeHarvesters.length?
+      g.entities.filter(e=>e.owner===1&&e.hp>0&&e.type==='unit'&&
+        !['harvester','recon','aircraft'].includes(e.kind))
+        .map(e=>({id:e.id,kind:e.kind,type:e.type,hp:e.hp,x:e.x,y:e.y,
+          order:e.order?{type:e.order.type,id:e.order.id}:null})):[];
+    const beforeRefineries=g.entities.filter(e=>e.owner===1&&
+      e.kind==='refinery'&&e.hp>0&&e.built)
+      .map(e=>({id:e.id,x:e.x,y:e.y,hp:e.hp,built:e.built}));
     const oreBefore=g.stats[1].oreHarvested;
     g.step(frame);
     const afterHarvesters=g.entities.filter(e=>
@@ -250,7 +264,9 @@ function runScenario(map,difficulty,mi,di){
         separationMotion:summarizeHarvesterSeparation(
           aiHarvesterSeparation,truck.id,g.time),
         moveDecision:summarizeHarvesterMove(aiHarvesterMove,truck.id,g.time)
-      }));
+      }),
+      prior=>inspectHarvesterLoss(prior,beforeVisibleHostiles,beforeDefenders,
+        beforeRefineries,g.time));
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0).length);
@@ -362,6 +378,10 @@ const report={
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     casesWithAIMultiHarvesters:results.filter(r=>r.peakAIHarvesters>=2).length,
     aiHarvesterLosses:results.reduce((n,r)=>n+r.aiHarvesterTelemetry.lost,0),
+    aiHarvesterLossCasesCaptured:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.lossCases.length,0),
+    aiHarvesterLossCasesOmitted:results.reduce((n,r)=>
+      n+r.aiHarvesterTelemetry.lossCasesOmitted,0),
     aiHarvesterDamageObservations:results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.damageObservations,0),
     aiCargoAtHarvesterLoss:results.reduce((n,r)=>
@@ -465,6 +485,9 @@ for(const r of results){
 assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
 assert.ok(results.every(r=>r.aiHarvesterTelemetry.deliveredOre===r.harvest[1]&&
   r.aiHarvesterTelemetry.lost>=0&&r.aiHarvesterTelemetry.cargoAtLoss>=0&&
+  r.aiHarvesterTelemetry.lossCases.length<=12&&
+  r.aiHarvesterTelemetry.lossCases.length+
+    r.aiHarvesterTelemetry.lossCasesOmitted===r.aiHarvesterTelemetry.lost&&
   r.aiHarvesterTelemetry.threatenedSamples<=r.aiHarvesterTelemetry.harvesterSamples&&
   r.aiHarvesterTelemetry.longestDeliveryGapSeconds<=r.seconds+1&&
   r.aiHarvesterTelemetry.travelTiles>=r.aiHarvesterTelemetry.loadedTravelTiles&&
