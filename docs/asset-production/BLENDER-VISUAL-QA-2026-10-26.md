@@ -2460,3 +2460,25 @@ state, preserving the dark thruster housings and editable source objects.
 The rerender must be independently compared against the first 128-frame
 baseline: only destroyed frames are authorized to change. The numerical
 thresholds are unchanged. Full animation cycles remain future work.
+
+
+### PSI-VEH-007 corrected final Blender render and independent 80px audit — 29 October 2026 (PASSED)
+
+- [Initial successful but artistically imperfect run #40760614759](https://github.com/shukritobi/chrono-dominion/actions/runs/40760614759) rendered the original 128 frames and reopened the source, but independent **actual 80px and 160px image inspection** found six energized mint hover annuli still shining on the destroyed wreck. This was not caught by the numeric gates. [Geometry correction commit 5d462a0](https://github.com/shukritobi/chrono-dominion/commit/5d462a00a6976d68be2dec9a9cf471497fe3ac5a) hides those six emissive annuli only during destruction; the objects remain separately editable in the saved Blender file.
+- [Successful corrected targeted Blender 4.2.23 run #40760899618](https://github.com/shukritobi/chrono-dominion/actions/runs/40760899618) and [full 133-file preview artifact #12848675338](https://github.com/shukritobi/chrono-dominion/actions/runs/40760899618/artifacts/12848675338). The actual **133,660-byte editable .blend** reopened successfully in GitHub Actions: one custom 24-vertex hull, six independent hover pivots, three articulated fabrication petals, three independent anchor pivots, twelve open gantry ring struts, ≥10 deploy-only meshes, and twelve hidden, separately editable, closed manifold 12-vertex/8-face wreck meshes were checked. The source was reopened with Blender/bmesh, not inferred from the script.
+- All **128 real 160×160 RGBA frames** are populated, unclipped, and unique by raw RGBA SHA-256, with **23px minimum canvas margin**. A second independent Pillow/LANCZOS audit recomputed **256/256** per-facing metrics directly from the downloaded frames with **zero discrepancies** against Actions JSON. Both real 160px and 80px sheets were inspected: the three anchors visibly extend, the fabrication petals separate, and the central gantry rises. The corrected destroyed state now has unpowered dark thrusters, torn purple armor and pink fractured core; no bright powered hover disks remain. The transport ring is low, and deployment has a distinct taller silhouette.
+- Independently compared all **128 decoded RGBA frames** against the first run: **96/96 idle, movement and deployment frames remained pixel-identical**, and **32/32 destroyed frames changed** (1,889–2,437 changed 160px RGBA pixels per direction). No unrelated asset was rendered. Numerical acceptance thresholds were **not relaxed**.
+- Corrected atlas SHA-256: `c3dbcfc06fedbc745ec70d66122308d612578d12124c2ea9622a578d34caf0c7`. Downloaded corrected ZIP SHA-256: `ae8ec26296c9e5a512137fb358aa557596fe72d6d34a5c7b8258ee89986ad070`.
+
+| Independently verified actual differences, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle → movement RGBA at 80px | **940** | 1,193 |
+| Idle → deployment RGBA at 80px | **1,092** | 1,304 |
+| Idle → deployment alpha at 80px | **592** | 743 |
+| Idle → destroyed RGBA at 80px | **947** | 1,186 |
+| Idle → destroyed alpha at 80px | **729** | 888 |
+| Idle → deployment alpha at 160px | **1,151** | 1,733 |
+| Idle → destroyed alpha at 160px | **1,599** | 2,206 |
+| Adjacent idle directions RGBA at 80px | **946** | 1,210 |
+
+**Visual limitations / untested claims:** movement uses a single hover-bob/tilt pose, not a multi-frame propulsion cycle; at 80px its articulation is subtler than the numerical differences suggest. The open ring is built from twelve separate meshes, but no independent raycast proof of the empty center was performed. Construction deployment and wreckage are each a single static beat, not full animation. Actual MCV construction gameplay and terrain anchoring are **not implemented**. This is original **preview-only art**, not integrated or approved. The branch changes only five art-production paths compared with the prior Hallucination Drone preview, and [draft PR #117](https://github.com/shukritobi/chrono-dominion/pull/117) must remain unmerged pending owner approval. No published textures, manifests, loaders or gameplay files were modified.
