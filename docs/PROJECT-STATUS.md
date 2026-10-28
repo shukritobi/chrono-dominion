@@ -3,6 +3,8 @@
 **Last source audit:** 27 October 2026  
 **Current prototype:** v2.42.0 (animated visual roster and preliminary strike aircraft; see [v2.21 art release notes](RELEASE-2.21-ART.md)).
 
+Post-v2.42 multi-producer deployment: a completed paid unit queue now tries another operational friendly factory, barracks, refinery or Air Command only when the preferred producer has no legal exit. Original spawn preference, cost, queue retention, save schema and refund behavior remain unchanged. [Regression](../tests/production-v17.test.mjs) · [notes](PRODUCTION-EXIT-FAILOVER.md). Natural Frostline harvester stalls and natural-match aircraft deployment remain unresolved.
+
 Post-v2.42 loaded harvester movement rejection tracing: the natural-match simulator now observes the production move() calls, static/dynamic occupancy probes and lane denials without changing movement or saved state. Per-stall six-second decision summaries distinguish calls that made no progress from frames with no move call. The underlying Frostline stall and natural AI aviation problems remain unresolved. [Methodology](AI-HARVESTER-TELEMETRY.md).
 
 Post-v2.42 early economy expansion: AI may buy a second paid ore harvester in the first 120 seconds when safe and solvent, retaining a generator reserve and honoring aviation saving. The simulation reports peak AI harvesters and multi-harvester scenarios. This targets a single-harvester income bottleneck, not a guaranteed natural aircraft milestone. [Tests](../tests/ai-ore-economy.test.mjs) · [notes](AI-ORE-ECONOMY.md).
