@@ -1,0 +1,121 @@
+name: Psionic Indenture Mining Crawler — Original 32-Facing Preview
+
+# Unapproved original art. This workflow never publishes or modifies game art.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/psionic-indenture-crawler-32-20261029
+    paths:
+      - .github/workflows/psionic-indenture-crawler-32-review.yml
+      - tools/blender/preview_psionic_indenture_crawler_32.py
+      - tools/blender/qa_psionic_indenture_crawler_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-psionic-indenture-crawler-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated unapproved preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile source and pixel QA; install Pillow
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_carrier_32.py tools/blender/preview_psionic_indenture_crawler_32.py tools/blender/qa_psionic_indenture_crawler_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render ONLY the new Psionic mining crawler
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_psionic_indenture_crawler_32.py -- \
+            --output generated/psionic-indenture-crawler-32
+
+      - name: Reopen saved editable source and verify original geometry
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/psionic-indenture-crawler-32/psionic-indenture-crawler.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy, bmesh
+          from mathutils import Vector
+          hull=[o for o in bpy.data.objects if o.type=="MESH" and o.get("custom_hull")]
+          wheels=[o for o in bpy.data.objects if "independently rotating track roadwheel pivot" in o.name.lower()]
+          booms=[o for o in bpy.data.objects if "independent mining boom hydraulic hinge" in o.name.lower()]
+          cutters=[o for o in bpy.data.objects if "independent rotary cutter axle" in o.name.lower()]
+          teeth=[o for o in bpy.data.objects if o.type=="MESH" and o.get("cutter_tooth")]
+          cleats=[o for o in bpy.data.objects if o.type=="MESH" and o.get("track_cleat")]
+          walls=[o for o in bpy.data.objects if o.type=="MESH" and "open hopper" in o.name.lower() and "wall" in o.name.lower()]
+          ore=[o for o in bpy.data.objects if o.type=="MESH" and o.get("ore_payload")]
+          wreck=[o for o in bpy.data.objects if o.type=="MESH" and o.get("closed_fracture")]
+          harvest=[o for o in bpy.data.objects if o.type=="MESH" and o.get("harvest_only")]
+          assert len(hull)==1 and len(hull[0].data.vertices)==20
+          assert (len(wheels),len(booms),len(cutters),len(teeth),len(cleats))==(8,2,2,20,24)
+          assert len(walls)==4 and len(ore)==3 and len(wreck)==12 and len(harvest)>=4
+          assert all(o.hide_render for o in wreck+harvest)
+          assert all(not o.hide_render for o in ore)
+          for o in wreck:
+              bm=bmesh.new();bm.from_mesh(o.data)
+              assert len(bm.verts)==12 and len(bm.faces)==8
+              assert all(e.is_manifold for e in bm.edges),o.name
+              bm.free()
+          for o in teeth:
+              bm=bmesh.new();bm.from_mesh(o.data)
+              assert len(bm.verts)==6 and len(bm.faces)==5
+              assert all(e.is_manifold for e in bm.edges),o.name
+              bm.free()
+          dg=bpy.context.evaluated_depsgraph_get()
+          hit,loc,norm,idx,obj,matrix=bpy.context.scene.ray_cast(
+              dg,Vector((-.66,0,2.5)),Vector((0,0,-1)),distance=3.0)
+          assert hit and ("hopper dark floor" in obj.name.lower() or "crystalline payload" in obj.name.lower()),(hit,obj.name if hit else None)
+          print("PASS SOURCE REOPEN: custom 20-vertex hull, 8 wheels, 2 booms, 2 cutters, 20 closed teeth, 24 cleats, open hopper raycast, 12 manifold wrecks")
+          '
+
+      - name: Validate real 160px and downsampled 80px sprite QA
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_psionic_indenture_crawler_32.py --stage generated/psionic-indenture-crawler-32
+          test -s generated/psionic-indenture-crawler-32/pixel-qa.json
+          test -s generated/psionic-indenture-crawler-32/psionic-indenture-crawler-contact-80.png
+          test -s generated/psionic-indenture-crawler-32/psionic-indenture-crawler-contact-160.png
+
+      - name: Upload editable source, 128 frames, atlas, contact sheets and QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-indenture-crawler-32-preview
+          path: generated/psionic-indenture-crawler-32/
+          if-no-files-found: warn
+          retention-days: 30
