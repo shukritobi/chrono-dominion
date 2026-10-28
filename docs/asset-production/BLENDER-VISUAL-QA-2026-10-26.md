@@ -2076,3 +2076,48 @@ and this QA document. **No production texture, manifest, loader, or
 gameplay file was modified; the draft PR remains unapproved.**
 
 Review links: [draft PR #106](https://github.com/shukritobi/chrono-dominion/pull/106), [final quantitative QA documentation commit 262d34f](https://github.com/shukritobi/chrono-dominion/commit/262d34f6a89a862397a0dfb1847c8dec27ff4e14), and [successful corrected render #40713457651](https://github.com/shukritobi/chrono-dominion/actions/runs/40713457651). No owner approval or live integration is implied.
+
+
+## 2026-10-29 COA-VEH-006 Coalition Lattice Beam Tank — original Blender source (verification pending)
+
+**PREVIEW ONLY; do not merge, publish, or alter gameplay.** The missing
+Coalition Lattice Beam Tank has a new purpose-authored Blender geometry source
+at [preview_coalition_lattice_beam_32.py](../../tools/blender/preview_coalition_lattice_beam_32.py).
+This is **not** a re-render of the validated Lynx, Hunter or Federation
+vehicles. It defines a custom sixteen-vertex arrowhead armored hull, ten
+independently rotating roadwheel pivots, twenty-six indexed track cleats, an
+independently traversing emitter saddle, three physically open diamond
+focusing cages, four individually hinged and notched focusing prongs, and
+twelve independent closed irregular fracture meshes. Five separate attack-only
+coherent beam/fork geometries are parented to the emitter.
+
+- **Unverified until render:** 32 facings x idle/move/attack/destroyed =
+  128 separate 160x160 transparent RGBA frames, a 5120x640 preview atlas,
+  actual 160px and 80px contact sheets, editable .blend and machine-readable
+  pixel QA. No existing asset or production path should be rendered or written.
+- [Strict independent image QA](../../tools/blender/qa_coalition_lattice_beam_32.py)
+  declares the following minimum per-facing 80px changed pixels **before
+  rendering**: movement RGBA 65; attack RGBA 130; attack alpha 45;
+  destroyed alpha 110; adjacent idle facings RGBA 50. Every one of the
+  128 PNGs must be unique, nonempty, RGBA, 160x160 and have >=2px canvas
+  margin. These are **acceptance thresholds, not measured achievements**.
+- The isolated workflow must reopen the saved editable Blender file and
+  independently confirm the closed-manifold 12-vertex/8-face topology of
+  all twelve hidden wreck meshes, one 16-vertex original hull, one
+  twelve-vertex original turret, four hinged focusing prongs, three open
+  diamond cages, ten wheel pivots, twenty-six track cleats, and five
+  attack-only meshes parented to the moving emitter.
+- **Visual hypotheses to check at real gameplay scale:** the physical
+  fork should visibly widen on attack; diamond cages should remain open
+  rather than appearing as a solid glowing block; the beam should connect
+  to its emitter and not float ahead of the muzzle; the wreck should read
+  as a collapsed tank rather than loose airborne fragments. If a threshold
+  or visual gate fails, correct the geometry or framing; do not relax gates.
+- Branch is stacked on the existing **unapproved** Federation MCV preview
+  branch to preserve the ongoing source/QA ledger. Existing validated
+  sprites must remain unchanged. No production sprite manifest, loader,
+  runtime or gameplay integration is authorized.
+
+**Status: new source, strict pixel QA, asset register and branch-scoped
+workflow in development. Blender render, saved-source reopen, actual 160/80px
+inspection, and independent measurement remain pending.**
