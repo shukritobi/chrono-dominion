@@ -200,3 +200,23 @@ still expires after six seconds. Verify with
 guard. An experimental lane-aware yield-selection change (PR #73) failed the
 AI income regression gate even when restricted to player-owned trucks, so it
 remains unmerged; use these blocker IDs before another gameplay experiment.
+
+
+## Airborne units excluded from ground traffic cost (28 October 2026)
+
+The ground traffic-cost heat map previously included aircraft, even though
+aircraft operate on a separate altitude layer and do not block ground units.
+Congestion-aware A* now excludes aircraft, avoiding unnecessary detours when
+planes fly over a harvester or infantry route. Ground vehicles and infantry
+continue to incur the original traffic penalties. No save format, flight
+behavior, production cost or art assets change.
+
+A separate trial allowing full harvesters to detour around idle Guard sentries
+failed the three-map natural-match economy gate (Verdant 3,240; Desert 9,360;
+Frostline 5,040 enemy ore, compared with 3,960 / 15,120 / 9,000 baseline;
+49 vs 78 ore delivery ticks). The Guard change was **reverted** and not merged.
+The three Frostline Guard blockers remain a separate unresolved issue.
+
+Regression: `tests/navigation-v15.test.mjs` verifies aircraft do not add
+congestion cost or bend a clear ground route, while a real ground soldier
+still triggers a traffic-aware detour.

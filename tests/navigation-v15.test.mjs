@@ -56,6 +56,24 @@ assert.ok(detour.some(p=>p.y!==15),'traffic-priced route bends around the blocke
 assert.ok(!detour.some(p=>p.x===12&&p.y===15),'route avoids occupying the blocker cell');
 assert.equal(detour.at(-1).x,16,'avoids traffic without abandoning the destination');
 
+// Air units occupy a separate altitude layer. A parked aircraft must not
+// distort ground A* traffic costs or cause unnecessary harvester detours.
+game.entities=[];
+game.water=()=>false;
+const ground=game.add(0,'harvester',8,15);
+const air=game.add(0,'aircraft',12,15);
+const airHeat=game.trafficCosts(ground);
+assert.equal(airHeat.size,0,
+  'aircraft do not generate ground-level congestion penalties');
+const clearAirRoute=game.findPath(8,15,16,15,ground);
+assert.ok(clearAirRoute.every(p=>p.y===15),
+  'ground route stays direct below an aircraft');
+const landBlocker=game.add(0,'soldier',12,15);
+const groundHeat=game.trafficCosts(ground);
+assert.ok(groundHeat.size>0,'real ground infantry still generates traffic costs');
+assert.ok(game.findPath(8,15,16,15,ground).some(p=>p.y!==15),
+  'ground traffic still causes collision-aware detours');
+
 // In a blocked approach, the watchdog must request traffic-aware replanning
 // after a sustained stall. No unit can teleport through a solid water wall.
 game.entities=[];

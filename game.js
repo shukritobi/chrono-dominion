@@ -980,7 +980,8 @@
       // genuinely stuck. Other units remain traversable but expensive.
       const heat=new Map(),key=(x,y)=>x+','+y;
       for(const other of this.entities){
-        if(other===except||other.hp<=0||other.type!=='unit')continue;
+        if(other===except||other.hp<=0||other.type!=='unit'||
+          other.kind==='aircraft')continue;
         const radius=this.unitRadius(other)+this.unitRadius(except);
         const cx=Math.round(other.x),cy=Math.round(other.y);
         for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
