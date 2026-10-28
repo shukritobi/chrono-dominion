@@ -1267,3 +1267,62 @@ electric-blue fracture seams. It retains the eight archived wreckage meshes,
 strict PNG QA, isolated workflow, AssetRegister update and this QA document.
 No `public/` textures, live atlases, manifests, loader, runtime, or gameplay
 files may be written. The separate destruction atlas is **not playable**.
+
+
+### Final validated Coalition Lynx four-stage destruction (28 October 2026)
+
+**PASS; supersedes the pending verification above.** [Single successful
+targeted Blender 4.2.23 Actions run #40610151237](https://github.com/shukritobi/chrono-dominion/actions/runs/40610151237),
+[preview artifact #12783370161](https://github.com/shukritobi/chrono-dominion/actions/runs/40610151237/artifacts/12783370161)
+and [draft stacked PR #77](https://github.com/shukritobi/chrono-dominion/pull/77).
+The workflow downloaded the already validated original Lynx source from
+run #40494276431 and rendered **only 128 NEW** transparent 160×160 RGBA
+destruction frames. All workflow steps passed, including compilation,
+checksum-verified Blender installation, saved source reopen, all 128 PNG
+clipping checks, 80px per-facing pixel gates and immutable baseline SHA.
+
+The saved **150,825-byte editable .blend reopened successfully**, verifying
+18 new hidden independent closed eight-vertex/six-face fracture volumes,
+including three restrained electric-blue seams, plus all eight original
+wreckage meshes, 12 roadwheel pivots and 22 tread cleats. The new separate
+**5120×640 RGBA preview atlas** has SHA-256
+`321021eae953f62fe74eab28d376f2ea2569694dd186f13d4d068d5afcd00889`.
+The original baseline atlas SHA-256 before and after was identically
+`4e7e21b95c96b29dd94e672671766b52772580d4ea22633cabe1151f24e2af7a`.
+
+Downloaded and visually inspected **actual 1280×640 160px** and
+**640×320 80px** contact sheets. At 80px the impact retains the Lynx's
+recognizable single-gun silhouette; shear exposes detached guard and
+cupola fragments; rupture removes the turret roof and exposes damaged
+components; settle presents a collapsed, fragmented wreck. The tank
+remains readable at gameplay scale. The existing orange reactor glow
+is more prominent than the new restrained blue fracture seams; reduce
+that legacy glow only in a future specifically targeted polish run.
+
+| Actual 80px changed pixels across all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Impact → shear RGBA | **1,049** | 1,425 | 1,268.0 |
+| Shear → rupture RGBA | **1,025** | 1,424 | 1,286.0 |
+| Rupture → settle RGBA | **997** | 1,429 | 1,268.1 |
+| Impact → shear alpha | **524** | 798 | 678.4 |
+| Shear → rupture alpha | **603** | 852 | 713.6 |
+| Rupture → settle alpha | **521** | 722 | 636.1 |
+| Settle vs archived destroyed RGBA | **987** | 1,374 | 1,231.2 |
+| Settle vs archived destroyed alpha | **529** | 721 | 629.1 |
+| Impact vs archived idle RGBA | **941** | 1,365 | 1,195.4 |
+| Rupture vs archived idle alpha | **660** | 897 | 785.1 |
+| Adjacent impact facings RGBA | **1,026** | 1,392 | 1,253.1 |
+
+**Independent actual PNG verification:** impact→shear changed RGBA pixels
+at 80px for facings **00/07/15/23/31 = 1320/1349/1273/1296/1245**.
+All five independently recalculated counts matched the uploaded JSON
+exactly. All 128 real PNGs were inspected for dimensions, RGBA mode,
+nonempty silhouettes and clipping; global alpha bounds were x=18–142
+and y=38–136 within the 160px frame. The 80px animated GIF was also
+produced from actual frames, not generated or synthetic artwork.
+
+**Production safety:** comparison against parent preview PR #57 changes
+exactly five development files: Blender modeling, PNG QA, isolated workflow,
+AssetRegister and this document. No live game textures, manifests, loader,
+runtime, or gameplay files changed. No existing validated sprite was
+rerendered. **Preview only; not integrated or approved for publication.**
