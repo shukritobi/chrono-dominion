@@ -1,0 +1,108 @@
+name: Federation MCV 32-Facing Original Blender Preview
+
+# Branch-scoped PREVIEW ONLY; no publication, no game texture or manifest writes.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/federation-mcv-32-20261028
+    paths:
+      - .github/workflows/federation-mcv-32-review.yml
+      - tools/blender/preview_federation_mcv_32.py
+      - tools/blender/qa_federation_mcv_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-federation-mcv-32-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile Python and install Pillow
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_carrier_32.py tools/blender/preview_federation_mcv_32.py tools/blender/qa_federation_mcv_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render ONLY the new Federation MCV
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_federation_mcv_32.py -- \
+            --output generated/federation-mcv-32
+
+      - name: Reopen editable Blender source and validate original topology
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/federation-mcv-32/federation-mcv.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy, bmesh
+          shards=[o for o in bpy.data.objects if o.type=="MESH" and o.get("closed_fracture")]
+          assert len(shards)==12,("fracture count",len(shards))
+          assert all(o.hide_render and o.get("wreckage_only") for o in shards)
+          for o in shards:
+              bm=bmesh.new();bm.from_mesh(o.data)
+              assert len(bm.verts)==12 and len(bm.faces)==8,(o.name,len(bm.verts),len(bm.faces))
+              assert all(e.is_manifold for e in bm.edges),o.name
+              bm.free()
+          hull=[o for o in bpy.data.objects if o.type=="MESH" and o.get("custom_hull")]
+          wheels=[o for o in bpy.data.objects if "independent eight-wheel drive pivot" in o.name.lower()]
+          jacks=[o for o in bpy.data.objects if "independent telescopic stabilizer pivot" in o.name.lower()]
+          arms=[o for o in bpy.data.objects if "independent left-right unfolding gantry arm" in o.name.lower()]
+          leaves=[o for o in bpy.data.objects if "independently folding roof leaf hinge" in o.name.lower()]
+          deploy=[o for o in bpy.data.objects if o.type=="MESH" and o.get("deployment_only")]
+          assert len(hull)==1 and len(hull[0].data.vertices)==20
+          assert (len(wheels),len(jacks),len(arms),len(leaves))==(8,4,2,2)
+          assert len(deploy)>=18 and all(o.hide_render for o in deploy)
+          print("PASS REOPEN: 20-vertex original hull, 8 wheel pivots, 4 stabilizers, 2 gantry arms, 2 roof hinges, 12 closed manifold wreckage meshes")
+          '
+
+      - name: Validate real 160px and 80px PNGs, contact sheets and atlas
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_federation_mcv_32.py --stage generated/federation-mcv-32
+          test -s generated/federation-mcv-32/pixel-qa.json
+          test -s generated/federation-mcv-32/federation-mcv-contact-80.png
+          test -s generated/federation-mcv-32/federation-mcv-contact-160.png
+
+      - name: Upload editable source, all frames, atlas and pixel QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-federation-mcv-32-preview
+          path: generated/federation-mcv-32/
+          if-no-files-found: warn
+          retention-days: 30
