@@ -1965,3 +1965,114 @@ never merge/publish this art without owner approval.**
 | Adjacent idle facings RGBA | **1,393** | 1,881 |
 
 **Safety and limitations:** This pass changes only the new Mammoth source, its isolated workflow, strict QA, asset-register entry and QA documentation relative to its stacked Spider Drone preview parent. **No published texture, manifest, loader, gameplay or runtime file was changed.** The new artwork is preview-only, not playable, and the draft PR must not be merged without explicit owner approval. Current four states are single poses rather than full multi-beat track movement, cannon cycling or destruction animations. Next priority: missing Federation/Coalition/Psionic vehicles or remaining building damage states, not needless rerenders of already validated art.
+
+
+## 2026-10-28 FED-VEH-007 Federation MCV — original deployable Blender model (verification pending)
+
+**PREVIEW ONLY. No live texture, manifest, runtime, loader, or gameplay modification.**
+This original Federation Mobile Construction Vehicle uses a custom closed
+20-vertex sloped deployer hull, eight independently animated traction wheels,
+two hinged armored roof leaves, an articulated central construction gantry
+with two independent telescopic side jibs, and four physically grounded
+deployable hydraulic stabilizers. Its wreck uses twelve separate closed
+asymmetric fracture meshes. The semantic action state is **deploy**, not
+weapon fire: this is a construction vehicle. All source geometry is editable
+in the saved Blender file.
+
+- [Original Blender modeling script](../../tools/blender/preview_federation_mcv_32.py)
+  and [isolated render workflow](../../.github/workflows/federation-mcv-32-review.yml).
+- [Predeclared strict 80px pixel QA](../../tools/blender/qa_federation_mcv_32.py)
+  requires every one of 32 facings to change at least **65 move RGBA,
+  130 deployment RGBA, 85 deployment alpha, 110 destroyed alpha, and 50
+  adjacent-facing RGBA pixels**. All 128 RGBA frames must be unique,
+  nonempty, 160x160, and at least two pixels clear of the canvas edge.
+  Deployment alpha difference is explicitly checked so changing only
+  warning lights cannot pass.
+- The Blender reopen gate independently verifies the 20-vertex original
+  hull, eight wheel pivots, four stabilizer pivots, two gantry arms, two
+  hinged roof leaves, at least 18 hidden deployment-only meshes, and
+  twelve hidden closed manifold 12-vertex/8-face fracture meshes.
+- [Targeted preview-only GitHub Actions run #40713056869](https://github.com/shukritobi/chrono-dominion/actions/runs/40713056869).
+  **Do not claim success until the run completes, its saved .blend reopens,
+  the actual 160px and 80px contact sheets are inspected, and the pixel
+  metrics are independently reproduced.**
+- This branch is stacked on the validated but **unapproved** Federation
+  Mammoth preview branch. It does not rerender any older asset and must not
+  be merged into live artwork without owner approval.
+
+**Visual hypotheses, not yet verified:** the gantry, folding leaves and
+four outriggers should produce a visibly broader deployed silhouette at
+80px; destruction should remove the upper architecture rather than merely
+tint it; small hydraulic details may remain too subtle at game scale.
+If a numeric or artistic gate fails, correct the geometry rather than
+relaxing acceptance thresholds.
+
+
+### FED-VEH-007 final corrected MCV source-reopen and 80px/160px audit — 28 October 2026 (PASSED)
+
+- [Initial numerically successful workflow #40713056869](https://github.com/shukritobi/chrono-dominion/actions/runs/40713056869)
+  rendered all 128 frames, but **manual visual review identified an artistic
+  failure**: the large construction gantry stood upright in transport mode,
+  making idle and deploy silhouettes conceptually too similar even though
+  stabilizers and roof changes passed the pixel gates. Numerical success
+  alone was not accepted as visual completion.
+- **Physical correction:** the entire gantry mast now folds by **1.25 rad**
+  above the transport roof, its two side jibs fold by **±0.95 rad**, and
+  deployment lifts the mast to **-0.08 rad** while opening the jibs to
+  **±0.25 rad**. Four separate hydraulic stabilizers deploy and contact
+  the ground. This changes actual editable object transforms, not a
+  transparency trick or a brighter material. The accidental intermediate
+  workflow [#40713421096](https://github.com/shukritobi/chrono-dominion/actions/runs/40713421096)
+  was **cancelled** by the concurrency group during an immediate Python
+  newline fix; it is not claimed as a successful render.
+- [Final corrected Blender workflow #40713457651](https://github.com/shukritobi/chrono-dominion/actions/runs/40713457651)
+  **passed**, including Python compilation, all 128 new 160x160 RGBA
+  frames, 32-direction 80px QA, saved-source reopen, fracture manifold
+  topology, and artifact upload.
+  [Download artifact #12826469237](https://github.com/shukritobi/chrono-dominion/actions/runs/40713457651/artifacts/12826469237).
+- The saved **140,611-byte editable .blend** reopened in Blender 4.2.23.
+  Reopened-source checks found **one 20-vertex custom hull, eight wheel
+  pivots, four telescopic stabilizer pivots, two independent gantry arms,
+  two folding roof hinges, at least 18 hidden deployment-only meshes,
+  and twelve hidden 12-vertex/8-face closed manifold wreckage meshes**.
+- All **128 actual PNGs were downloaded and independently reopened**.
+  Every raw-pixel hash was unique; every frame had nonempty transparency,
+  no clipping and a minimum **14px alpha margin** at 160px. The actual
+  160px and 80px contact sheets were inspected. Transport now reads as
+  a low-profile heavy construction vehicle, deployment visibly raises
+  the central gantry and spreads four grounded outriggers, and destroyed
+  removes the original upper hull in favor of asymmetric broken hardware.
+- Independent Pillow recalculation of **32 facings × 7 state metrics
+  plus 32 adjacent-facing metrics = 256 measurements** matched the
+  workflow JSON exactly (**zero discrepancies**). An additional upper
+  40px crop at 80px, excluding most stabilizer hardware, showed **394–586
+  changed alpha pixels** between idle and deployment; this supports the
+  physical gantry silhouette change independently of the outriggers.
+
+| Corrected FED-VEH-007 independent 80px measurements, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle → move RGBA | **974** | 1,364 |
+| Idle → deploy RGBA | **1,454** | 1,617 |
+| Idle → deploy alpha | **535** | 982 |
+| Idle → destroyed RGBA | **1,121** | 1,456 |
+| Idle → destroyed alpha | **736** | 950 |
+| Idle → deploy alpha at 160px | **1,242** | 2,354 |
+| Idle → destroyed alpha at 160px | **1,505** | 2,093 |
+| Adjacent idle facings RGBA at 80px | **1,114** | 1,430 |
+
+Corrected preview atlas SHA-256:
+`aa8b78a77e261d572156eb789b3b8b5dd701cd79ebb7960e0b009643cf4497d7`.
+Downloaded ZIP SHA-256:
+`f7290024d28f68a7bdbaad408d1800e2cf37c6c3dff09e65c73944761ea81fd4`.
+
+**Remaining limitations:** individual wheel spokes and hydraulic rods are
+subtle at 80px; some wreckage fragments appear suspended above the chassis.
+The movement and destruction poses are single beats, not full multi-phase
+animations. The construction deployment has no gameplay behavior, hitbox
+transition, or production integration. This work modifies exactly five
+development files relative to the stacked Mammoth preview branch: the
+new Blender source, new pixel QA, new isolated workflow, asset register,
+and this QA document. **No production texture, manifest, loader, or
+gameplay file was modified; the draft PR remains unapproved.**
+
+Review links: [draft PR #106](https://github.com/shukritobi/chrono-dominion/pull/106), [final quantitative QA documentation commit 262d34f](https://github.com/shukritobi/chrono-dominion/commit/262d34f6a89a862397a0dfb1847c8dec27ff4e14), and [successful corrected render #40713457651](https://github.com/shukritobi/chrono-dominion/actions/runs/40713457651). No owner approval or live integration is implied.
