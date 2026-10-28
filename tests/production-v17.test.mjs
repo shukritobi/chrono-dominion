@@ -141,7 +141,7 @@ reset();
 const blockedFactory=g.add(0,'factory',7,7);
 const openFactory=g.add(0,'factory',25,25);
 queue(0,'tank',2,2);
-g.water=(x,y)=>Math.hypot(x-blockedFactory.x,y-blockedFactory.y)<10;
+g.water=(x,y)=>Math.hypot(x-blockedFactory.x,y-blockedFactory.y)<14;
 assert.equal(g.productionBuilding(0,'tank').id,blockedFactory.id,
   'the original producer preference is the obstructed factory');
 assert.equal(g.findProductionExit(blockedFactory,'tank',0),null,
@@ -163,7 +163,7 @@ const enclosed=g.add(0,'factory',7,7);
 g.add(1,'factory',26,8);
 const unfinished=g.add(0,'factory',25,25,false);
 const stalled=queue(0,'heavy',2,2);
-g.water=(x,y)=>Math.hypot(x-enclosed.x,y-enclosed.y)<10;
+g.water=(x,y)=>Math.hypot(x-enclosed.x,y-enclosed.y)<14;
 g.advanceProduction(.1);
 assert.equal(stalled.blockedReason,'exit',
   'enemy and unfinished producers cannot bypass a blocked exit');
@@ -173,7 +173,7 @@ assert.ok(g.saveGame()&&g.loadGame(),'blocked alternate-production queue survive
 const recovered=g.queues[0];
 assert.equal(recovered.blockedReason,'exit');
 g.entityById(unfinished.id).built=true;
-g.water=(x,y)=>Math.hypot(x-enclosed.x,y-enclosed.y)<10;
+g.water=(x,y)=>Math.hypot(x-enclosed.x,y-enclosed.y)<14;
 g.time=(recovered.nextDeployAt||g.time)+.01;
 g.advanceProduction(.1);
 assert.equal(unitCount(0,'heavy'),1,
@@ -185,7 +185,7 @@ reset();
 const firstPad=g.add(0,'airfield',7,7);
 const secondPad=g.add(0,'airfield',25,25);
 queue(0,'aircraft',2,2);
-g.water=(x,y)=>Math.hypot(x-firstPad.x,y-firstPad.y)<10;
+g.water=(x,y)=>Math.hypot(x-firstPad.x,y-firstPad.y)<14;
 assert.equal(g.findProductionExit(firstPad,'aircraft',0),null);
 g.advanceProduction(.1);
 const aircraft=g.entities.find(e=>e.owner===0&&e.kind==='aircraft');
