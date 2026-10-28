@@ -1587,3 +1587,36 @@ were modified. No approved atlas, game texture, manifest, loader, runtime
 or gameplay source was edited. Do **not** merge or publish without art
 approval. Next: genuine four-phase optical camouflage deployment/movement,
 then remaining faction vehicles and outstanding building polish.
+
+## 2026-10-28 Coalition Camouflage Hunter four-beat optical deployment — QA PENDING
+
+**PREVIEW ONLY; not approved or integrated.** This pass follows the
+[validated four-stage Hunter destruction](https://github.com/shukritobi/chrono-dominion/actions/runs/40654743132)
+but deliberately loads the **original saved Hunter pilot .blend** from
+[workflow 40648427473](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473)
+instead of rerendering any of its 128 validated original sprites.
+
+- [Original procedural modeling](../../tools/blender/preview_coalition_hunter_four_phase_optics.py)
+  adds **16 independently editable closed optical solids**: four tapered
+  diffraction sails, eight narrow ceramic diffraction ribs and four small
+  physical projector shutters, all parented to existing articulated hardware.
+  Original four vane hinges, eight wheel pivots and 24 cleats also move across
+  the four distinct beats: **fold → spread → refract → glide**.
+- [Strict 160px/80px image QA](../../tools/blender/qa_coalition_hunter_four_phase_optics.py)
+  checks 128 real RGBA PNGs, per-facing alpha-silhouette changes separately
+  from RGB changes, adjacent facings, clipping, unique pixel hashes and
+  SHA-256 immutability of the original atlas.
+- [Read-only isolated preview workflow](../../.github/workflows/coalition-hunter-four-phase-optics-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved editable .blend,
+  and uploads all preview artifacts even if QA fails.
+- [Initial targeted Actions run #40662180954](https://github.com/shukritobi/chrono-dominion/actions/runs/40662180954);
+  [draft PR #94](https://github.com/shukritobi/chrono-dominion/pull/94).
+  **No render success, source-reopen success or pixel metrics are claimed yet.**
+  Record actual results and any failed gate here after inspecting the artifact.
+- Original Hunter preview atlas SHA-256 must remain
+  `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`.
+  This is physical silhouette deployment, **not** a claim that true optical
+  invisibility or gameplay camouflage is implemented.
+- Publication boundary: **do not merge, publish, replace textures/manifests
+  or integrate into gameplay without owner approval**. This preview branch
+  is stacked on an unmerged Hunter destruction branch.
