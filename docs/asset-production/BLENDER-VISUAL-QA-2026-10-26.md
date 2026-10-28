@@ -1965,3 +1965,44 @@ never merge/publish this art without owner approval.**
 | Adjacent idle facings RGBA | **1,393** | 1,881 |
 
 **Safety and limitations:** This pass changes only the new Mammoth source, its isolated workflow, strict QA, asset-register entry and QA documentation relative to its stacked Spider Drone preview parent. **No published texture, manifest, loader, gameplay or runtime file was changed.** The new artwork is preview-only, not playable, and the draft PR must not be merged without explicit owner approval. Current four states are single poses rather than full multi-beat track movement, cannon cycling or destruction animations. Next priority: missing Federation/Coalition/Psionic vehicles or remaining building damage states, not needless rerenders of already validated art.
+
+
+## 2026-10-28 FED-VEH-007 Federation MCV — original deployable Blender model (verification pending)
+
+**PREVIEW ONLY. No live texture, manifest, runtime, loader, or gameplay modification.**
+This original Federation Mobile Construction Vehicle uses a custom closed
+20-vertex sloped deployer hull, eight independently animated traction wheels,
+two hinged armored roof leaves, an articulated central construction gantry
+with two independent telescopic side jibs, and four physically grounded
+deployable hydraulic stabilizers. Its wreck uses twelve separate closed
+asymmetric fracture meshes. The semantic action state is **deploy**, not
+weapon fire: this is a construction vehicle. All source geometry is editable
+in the saved Blender file.
+
+- [Original Blender modeling script](../../tools/blender/preview_federation_mcv_32.py)
+  and [isolated render workflow](../../.github/workflows/federation-mcv-32-review.yml).
+- [Predeclared strict 80px pixel QA](../../tools/blender/qa_federation_mcv_32.py)
+  requires every one of 32 facings to change at least **65 move RGBA,
+  130 deployment RGBA, 85 deployment alpha, 110 destroyed alpha, and 50
+  adjacent-facing RGBA pixels**. All 128 RGBA frames must be unique,
+  nonempty, 160x160, and at least two pixels clear of the canvas edge.
+  Deployment alpha difference is explicitly checked so changing only
+  warning lights cannot pass.
+- The Blender reopen gate independently verifies the 20-vertex original
+  hull, eight wheel pivots, four stabilizer pivots, two gantry arms, two
+  hinged roof leaves, at least 18 hidden deployment-only meshes, and
+  twelve hidden closed manifold 12-vertex/8-face fracture meshes.
+- [Targeted preview-only GitHub Actions run #40713056869](https://github.com/shukritobi/chrono-dominion/actions/runs/40713056869).
+  **Do not claim success until the run completes, its saved .blend reopens,
+  the actual 160px and 80px contact sheets are inspected, and the pixel
+  metrics are independently reproduced.**
+- This branch is stacked on the validated but **unapproved** Federation
+  Mammoth preview branch. It does not rerender any older asset and must not
+  be merged into live artwork without owner approval.
+
+**Visual hypotheses, not yet verified:** the gantry, folding leaves and
+four outriggers should produce a visibly broader deployed silhouette at
+80px; destruction should remove the upper architecture rather than merely
+tint it; small hydraulic details may remain too subtle at game scale.
+If a numeric or artistic gate fails, correct the geometry rather than
+relaxing acceptance thresholds.
