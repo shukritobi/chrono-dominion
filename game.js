@@ -1661,7 +1661,20 @@
         }
         if(q.elapsed<q.total){q.blockedReason=null;continue;}
         if((q.nextDeployAt||0)>this.time)continue;
-        const spot=this.findProductionExit(producer,q.key,q.side);
+        let spot=this.findProductionExit(producer,q.key,q.side);
+        if(!spot){
+          // A blocked primary factory/airfield must not strand a paid order
+          // when another completed, friendly producer has a safe exit.
+          // Preserve the original producer preference whenever it can deploy.
+          const home=q.side===0?{x:6,y:6}:{x:WORLD_SIZE-6,y:WORLD_SIZE-6};
+          const backups=this.entities.filter(b=>b.hp>0&&b.built&&
+            b.type==='building'&&b.owner===q.side&&b.kind===unit.from&&
+            b.id!==producer.id).sort((a,b)=>dist(a,home)-dist(b,home)||a.id-b.id);
+          for(const backup of backups){
+            spot=this.findProductionExit(backup,q.key,q.side);
+            if(spot)break;
+          }
+        }
         if(!spot){
           q.blockedReason='exit';
           q.nextDeployAt=this.time+.8;

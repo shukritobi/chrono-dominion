@@ -134,5 +134,64 @@ const enemyScout=g.entities.find(e=>e.owner===1&&e.kind==='recon');
 assert.ok(enemyScout);
 assert.ok(g.canOccupyUnit(enemyScout,enemyScout.x,enemyScout.y));
 assert.equal(g.queues.length,0);
+// A finished, already-paid order must use another friendly factory when the
+// preferred factory has no legal exit. An unblocked preferred factory retains
+// its existing deterministic spawn choice (covered above).
+reset();
+const blockedFactory=g.add(0,'factory',7,7);
+const openFactory=g.add(0,'factory',25,25);
+queue(0,'tank',2,2);
+g.water=(x,y)=>Math.hypot(x-blockedFactory.x,y-blockedFactory.y)<14;
+assert.equal(g.productionBuilding(0,'tank').id,blockedFactory.id,
+  'the original producer preference is the obstructed factory');
+assert.equal(g.findProductionExit(blockedFactory,'tank',0),null,
+  'primary factory has no legal exit');
+g.advanceProduction(.1);
+const diverted=g.entities.find(e=>e.owner===0&&e.kind==='tank');
+assert.ok(diverted,'an open secondary factory deploys the paid tank');
+assert.ok(Math.hypot(diverted.x-openFactory.x,diverted.y-openFactory.y)<13,
+  'the unit actually spawns near the alternate producer');
+assert.ok(g.canOccupyUnit(diverted,diverted.x,diverted.y),
+  'alternate deployment uses the same collision-checked exit');
+assert.equal(g.queues.length,0,'fallback consumes the queue exactly once');
+
+// Enemy factories and unfinished friendly factories are never eligible.
+// The blocked queue and its original cost survive a v1 save/load, then
+// deploy as soon as a friendly backup finishes construction.
+reset();
+const enclosed=g.add(0,'factory',7,7);
+g.add(1,'factory',26,8);
+const unfinished=g.add(0,'factory',25,25,false);
+const stalled=queue(0,'heavy',2,2);
+g.water=(x,y)=>Math.hypot(x-enclosed.x,y-enclosed.y)<14;
+g.advanceProduction(.1);
+assert.equal(stalled.blockedReason,'exit',
+  'enemy and unfinished producers cannot bypass a blocked exit');
+assert.equal(unitCount(0,'heavy'),0);
+assert.equal(g.queues.length,1);
+assert.ok(g.saveGame()&&g.loadGame(),'blocked alternate-production queue survives a v1 save');
+const recovered=g.queues[0];
+assert.equal(recovered.blockedReason,'exit');
+g.entityById(unfinished.id).built=true;
+g.water=(x,y)=>Math.hypot(x-enclosed.x,y-enclosed.y)<14;
+g.time=(recovered.nextDeployAt||g.time)+.01;
+g.advanceProduction(.1);
+assert.equal(unitCount(0,'heavy'),1,
+  'a completed backup resumes the same paid queue after loading');
+assert.equal(g.queues.length,0,'recovered order deploys exactly once');
+
+// Air Commands use the same fallback without placing a plane at an enemy pad.
+reset();
+const firstPad=g.add(0,'airfield',7,7);
+const secondPad=g.add(0,'airfield',25,25);
+queue(0,'aircraft',2,2);
+g.water=(x,y)=>Math.hypot(x-firstPad.x,y-firstPad.y)<14;
+assert.equal(g.findProductionExit(firstPad,'aircraft',0),null);
+g.advanceProduction(.1);
+const aircraft=g.entities.find(e=>e.owner===0&&e.kind==='aircraft');
+assert.ok(aircraft&&Math.hypot(aircraft.x-secondPad.x,aircraft.y-secondPad.y)<13,
+  'an aircraft can deploy from a second operational friendly Air Command');
+assert.equal(g.queues.length,0);
+
 g.draw();
-console.log('PASS: clear production exits, blocked queues, footprint, factory loss, refunds, save/load and enemy spawns');
+console.log('PASS: clear production exits, blocked queues, footprint, factory loss, refunds, save/load, enemy spawns and alternate factories/airfields');
