@@ -1810,3 +1810,25 @@ All **32/32 facings** in each beat exceed the predeclared 12-alpha-pixel minimum
 **Visual critique and remaining work:** the 160px chamfered shells are more faceted and less box-like; the 80px silhouette is measurably different but the actual notches are still subtle at gameplay scale. The unit remains a small first-pass vehicle; the optical deployment is **not** true invisibility or gameplay stealth. Prioritize remaining faction vehicles and building damage-state polish rather than indefinite Hunter iteration.
 
 **Publication boundary:** original Hunter atlas SHA-256 `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`, MK-II atlas SHA-256 `7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6`, both unchanged. No production texture, manifest, loader, runtime or gameplay file was modified. **Draft PR #98 must not be merged or published without owner approval.**
+
+## 2026-10-28 Federation Shrapnel Carrier FED-VEH-003 — original 32-facing preview (QA pending)
+
+**PREVIEW ONLY; never published.** This new P2 vehicle was confirmed missing
+from the stacked preview branch before modeling. Unlike the previously
+validated Coalition Hunter, this is a distinct Iron Federation anti-air
+halftrack: original raked driver cab, six independent wheels, separate rear
+flak turntable, two physically modeled cannon barrels, ammunition feed,
+ventilated cooling collars, and eight closed asymmetric wreck fragments.
+The targeted branch-scoped workflow
+[`federation-shrapnel-carrier-32-review.yml`](../../.github/workflows/federation-shrapnel-carrier-32-review.yml)
+renders only this new model (32 facings × idle/move/attack/destroyed);
+the [source](../../tools/blender/preview_federation_shrapnel_carrier_32.py)
+and [pixel QA](../../tools/blender/qa_federation_shrapnel_carrier_32.py)
+do not write live game assets. Predeclared 80px gates per facing:
+move RGBA >=30; attack RGBA >=80 and alpha >=10;
+destroyed alpha >=70; adjacent idle facing RGBA >=35.
+The saved .blend must reopen with eight manifold closed fracture meshes,
+six articulated wheel pivots and two flak barrels. Every one of the
+128 PNGs must be nonempty, unclipped, RGBA and pixel-hash unique.
+**No pass or measured metrics claimed until the workflow finishes and the
+actual 160px/80px PNGs are independently inspected.**
