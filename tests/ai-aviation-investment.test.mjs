@@ -66,6 +66,51 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='turret').length,0,
     faction+': optional turret must not consume the aviation reserve');
 
+  // Real matches can lose a tank after the factory and radar are paid for.
+  // One surviving armoured defender must preserve Air Command savings
+  // without bypassing construction costs, power or the existing queue.
+  reset();prerequisites();
+  for(const u of g.entities.filter(e=>e.owner===1&&
+    ['tank','heavy'].includes(e.kind)))u.hp=0;
+  const loneTank=g.add(1,'tank',24,20);
+  g.time=150;g.players[1].credits=1800;g.queues=[];
+  assert.equal(g.power(1).low,false,faction+': single-tank base must be powered');
+  g.runAI();
+  assert.equal(g.players[1].credits,1800,
+    faction+': one surviving tank must preserve the Air Command reserve');
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': optional ground recruitment must pause with one tank');
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,0,
+    faction+': cannot buy Air Command before the full 2400-credit threshold');
+  assert.ok(g.saveGame()&&g.loadGame(),faction+': saving state must survive v1 save/load');
+  assert.equal(g.players[1].credits,1800,
+    faction+': saving must not create credits or saved-state changes');
+  g.players[1].credits=2400;
+  g.runAI();
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield'&&e.hp>0).length,1,
+    faction+': funded single-tank base must buy an actual Air Command');
+  assert.equal(g.players[1].credits,650,
+    faction+': paid construction must retain generator reserve');
+
+  reset();prerequisites();
+  for(const u of g.entities.filter(e=>e.owner===1&&
+    ['tank','heavy'].includes(e.kind)))u.hp=0;
+  g.time=150;g.players[1].credits=1800;g.queues=[];
+  g.runAI();
+  assert.ok(g.queues.some(q=>q.side===1&&q.key!=='aircraft'),
+    faction+': losing all armour must release savings for ground recruitment');
+
+  reset();prerequisites();
+  for(const u of g.entities.filter(e=>e.owner===1&&
+    ['tank','heavy'].includes(e.kind)))u.hp=0;
+  g.add(1,'tank',24,20);
+  const hq=g.entities.find(e=>e.owner===1&&e.kind==='hq');
+  g.add(0,'soldier',hq.x+1,hq.y+1);
+  g.time=150;g.players[1].credits=1800;g.queues=[];
+  g.runAI();
+  assert.ok(g.queues.some(q=>q.side===1&&q.key!=='aircraft'),
+    faction+': visible local attack must override single-tank saving');
+
   reset();prerequisites();g.time=150;g.players[1].credits=2399;
   g.runAI();
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,0,
