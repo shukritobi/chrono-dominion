@@ -191,7 +191,7 @@ def pose(parts,state,facing):
         pivot.rotation_euler.z=side*(.16 if state=="attack" else 0)
     for o in chassis.children_recursive:
         if o.type=="MESH":o.hide_render=False
-    for e in effects:e.hide_render=state=="attack" and False
+    for e in effects:e.hide_render=state!="attack"
     for o in wreck:o.hide_render=state!="destroyed"
     if state=="destroyed":
         hull.hide_render=True
