@@ -1,0 +1,96 @@
+name: Psionic Spindle Cannon Tank 32-Facing Blender Preview
+
+# Original asset only; no production manifests, textures or gameplay writes.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/psionic-spindle-cannon-32-20261028
+    paths:
+      - .github/workflows/psionic-spindle-32-review.yml
+      - tools/blender/preview_psionic_spindle_32.py
+      - tools/blender/qa_psionic_spindle_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-psionic-spindle-32-review
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout preview-only development branch
+        uses: actions/checkout@v4
+
+      - name: Syntax-check modeling and PNG QA; install Pillow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_carrier_32.py tools/blender/preview_psionic_spindle_32.py tools/blender/qa_psionic_spindle_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 \
+              --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 \
+            "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | \
+            (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only the new original Psionic Spindle Cannon
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_psionic_spindle_32.py -- \
+            --output generated/psionic-spindle-32
+
+      - name: Reopen editable Blender source and check original physical geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/psionic-spindle-32/psionic-spindle-cannon-tank.blend \
+            --python-exit-code 1 --python-expr \
+            'import bpy; o=list(bpy.data.objects); wreck=[x for x in o if x.type=="MESH" and x.get("wreckage_only")]; barrels=[x for x in o if x.type=="MESH" and "independent rifled barrel" in x.name]; outriggers=[x for x in o if "articulated lateral gravity outrigger" in x.name]; rings=[x for x in o if x.type=="MESH" and "retaining collar" in x.name]; assert len(wreck)==12,(len(wreck),[x.name for x in wreck]); assert all(x.hide_render for x in wreck); assert len(barrels)==6,len(barrels); assert len(outriggers)==2,len(outriggers); assert len(rings)==2,len(rings); assert all(len(x.data.vertices)>=8 for x in wreck); print("PASS REOPEN: 12 EDITABLE HIDDEN WRECKAGE, 6 ROTATING BARRELS, 2 OUTRIGGERS, 2 COLLARS")'
+
+      - name: Inspect all 128 actual 160px and 80px sprites and pack separate preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_psionic_spindle_32.py --stage generated/psionic-spindle-32
+          test -s generated/psionic-spindle-32/psionic-spindle-contact-160.png
+          test -s generated/psionic-spindle-32/psionic-spindle-contact-80.png
+          test -s generated/psionic-spindle-32/pixel-qa.json
+
+      - name: Upload preview-only source, 128 PNGs, atlas and quantitative QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-spindle-32-preview
+          path: generated/psionic-spindle-32/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1369,3 +1369,69 @@ preview parent shows exactly five changed development files (model,
 QA, workflow, asset register and this document). No production textures,
 gameplay files or published manifests changed. The new art remains
 **preview-only and not integrated into the game**.
+
+## 2026-10-28 Psionic Spindle Cannon Tank — validated original 32-facing pilot
+
+**PREVIEW ONLY; not approved, merged, published or game-integrated.** The
+registered PSI-VEH-003 Spindle Cannon Tank was still unmodeled in the
+AssetRegister when this work started. Its new original Blender script
+[preview_psionic_spindle_32.py](../../tools/blender/preview_psionic_spindle_32.py)
+builds a physically articulated six-tube rotating cannon on a traversing
+pedestal, a compact suspended hull, two independently movable gravity
+outriggers, exposed barrel retainers and **12 independent asymmetric
+wreckage solids**. Each state is real 3D geometry, not image substitution.
+
+- Source modeling commit [0aca302d](https://github.com/shukritobi/chrono-dominion/commit/0aca302d21d53b467e81e6cc94972cc5758bca38).
+- Independent strict-PNG QA commit [cf9b18b1](https://github.com/shukritobi/chrono-dominion/commit/cf9b18b1703a59b5b66346d2ca5ec1e01dbda153).
+- [PNG acceptance](../../tools/blender/qa_psionic_spindle_32.py)
+  requires 128 populated unclipped 160×160 RGBA frames, all 32 unique
+  adjacent 80px facings, and movement / firing / destroyed 80px
+  differences. It packs a **separate** 5120×640 preview atlas, both
+  160px and 80px contact sheets, and per-facing JSON.
+- Source-reopen checks require six independent barrel tubes, two
+  separately articulated gravity outriggers and 12 hidden editable
+  fracture objects. Targeted render workflow is read-only and stores
+  artifacts for review.
+- **Verified success:** [single targeted Actions #40636135162](https://github.com/shukritobi/chrono-dominion/actions/runs/40636135162),
+  [downloadable preview artifact #12793443046](https://github.com/shukritobi/chrono-dominion/actions/runs/40636135162/artifacts/12793443046),
+  [draft PR #86](https://github.com/shukritobi/chrono-dominion/pull/86).
+  Blender 4.2.23 reopened the **137,852-byte editable .blend** and verified
+  12 hidden editable eight-vertex wreckage solids, six independent
+  barrel meshes, two articulated gravity outriggers and two physical
+  barrel-retaining torus collars. All 128 original 160px RGBA frames
+  passed nonempty, clipping and 32-direction checks. The **separate**
+  5120×640 preview atlas SHA-256 is
+  `f195cd1500db86816e59accdce8d7cd11aae7010fc19e4049455bedc7777c36f`.
+  Artifact ZIP is 4,420,660 bytes and contains 133 files.
+
+| Real PNG differences across all 32 facings | 80px min | 80px max |
+|---|---:|---:|
+| Idle → Move, RGBA | **762** | 1,056 |
+| Idle → Attack, RGBA | **612** | 896 |
+| Idle → Destroyed, RGBA | **864** | 1,082 |
+| Idle → Destroyed, alpha | **595** | 778 |
+| Adjacent idle facings, RGBA | **781** | 1,031 |
+
+At 160px, destroyed alpha changes span **1,291–1,886 pixels**.
+Downloaded and visually inspected the actual 160px and 80px contact
+sheets. Independently recalculated Idle→Attack 80px RGBA changes for
+facings **00/04/08/16/24** as **755 / 883 / 752 / 793 / 776**;
+all five match the archived JSON exactly. Independent Idle→Destroyed
+alpha checks also matched at the same five facings:
+**689 / 778 / 724 / 714 / 653**. The movement, attack and wreckage
+silhouettes remain distinct at gameplay scale.
+
+**Observed visual limitation:** the tank occupies a relatively small
+part of each 80px sprite; the bright cyan-white attack pressure ring
+is more legible than the six individual barrel bores. Some wreckage
+fragments overlap the near-side hover structure, but the broken gun
+silhouette remains visible. Increase physical barrel separation or
+adjust ortho scale only after another strict clipping/80px review;
+do not enlarge emissive effects to hide weak geometry.
+
+**Safety:** comparison against the Viper preview parent found exactly
+five development-only changed files: Blender model, strict pixel QA,
+isolated read-only workflow, asset register and this QA document.
+Existing validated Viper, Warden and other preview atlases were not
+rerendered. No production textures, manifests or gameplay code were
+changed; the model is **preview-only, not game-integrated or approved**.
