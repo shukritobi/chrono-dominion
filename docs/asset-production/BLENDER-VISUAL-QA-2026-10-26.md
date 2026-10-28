@@ -2482,3 +2482,39 @@ thresholds are unchanged. Full animation cycles remain future work.
 | Adjacent idle directions RGBA at 80px | **946** | 1,210 |
 
 **Visual limitations / untested claims:** movement uses a single hover-bob/tilt pose, not a multi-frame propulsion cycle; at 80px its articulation is subtler than the numerical differences suggest. The open ring is built from twelve separate meshes, but no independent raycast proof of the empty center was performed. Construction deployment and wreckage are each a single static beat, not full animation. Actual MCV construction gameplay and terrain anchoring are **not implemented**. This is original **preview-only art**, not integrated or approved. The branch changes only five art-production paths compared with the prior Hallucination Drone preview, and [draft PR #117](https://github.com/shukritobi/chrono-dominion/pull/117) must remain unmerged pending owner approval. No published textures, manifests, loaders or gameplay files were modified.
+
+## 2026-10-29 Coalition MCV original 32-facing preview (COA-VEH-007)
+
+**PREVIEW ONLY — not approved for live game art.** This isolated branch adds
+[original Blender source](../../tools/blender/preview_coalition_mcv_32.py),
+[32-facing strict 160px/80px pixel QA](../../tools/blender/qa_coalition_mcv_32.py)
+and a [branch-scoped targeted render workflow](../../.github/workflows/coalition-mcv-32-review.yml).
+[Draft PR #120](https://github.com/shukritobi/chrono-dominion/pull/120)
+is based on the previously validated Psionic MCV preview branch, not main.
+
+The new Coalition machine is distinct from both prior MCVs: a custom
+**20-vertex chamfered armored hull**, **eight separately pivoted wheels**,
+**four physically extending ground outriggers**, a **folding twin-rail
+construction gantry** with hydraulic pistons, a deployment-only worktable
+and **twelve individually editable closed-manifold asymmetric wreck meshes**.
+The crane folds nearly horizontal for transport and rises for deployment.
+State and heading controls produce idle/move/deploy/destroyed at 32 facings;
+only this new asset is scheduled to render.
+
+**Predeclared pixel gates**: all 128 frames must be 160×160 RGBA, populated,
+unclipped with >=2px margin, and hash-unique; at 80px, each facing must
+change >=90 movement RGBA pixels, >=180 deployment RGBA pixels, >=100
+deployment alpha pixels, >=140 destroyed alpha pixels, and >=65 adjacent
+idle-direction RGBA pixels. Reopen the saved .blend and verify 20 hull
+vertices, eight wheel pivots, four outrigger pivots, one folding gantry,
+twelve 12-vertex/8-face watertight fracture meshes and hidden deployment
+and wreckage objects. Failed thresholds require geometry corrections, not
+threshold reductions.
+
+[First targeted render run #40768964885](https://github.com/shukritobi/chrono-dominion/actions/runs/40768964885)
+was confirmed **in progress** after Python compilation and official Blender
+installation passed. **No final pixel metrics or visual acceptance are claimed
+until the workflow completes and the actual 160px and 80px images are
+downloaded and independently inspected.** The workflow uploads the editable
+.blend, 128 PNGs, contact sheets, atlas and JSON measurements. No approved
+textures, production manifests, loaders or gameplay files were modified.
