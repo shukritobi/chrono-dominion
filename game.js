@@ -1268,9 +1268,7 @@
       // Both attempts use the existing collision-checked lateral pockets.
       if(!higher)return this.startTrafficYield(unit,blocker,vx,vy);
       if(this.startTrafficYield(blocker,unit,vx,vy))return true;
-      return unit.kind==='harvester'&&unit.load>=360&&
-        (blocker.stance==='hold'||
-          (blocker.stance==='guard'&&!blocker.order))?
+      return unit.kind==='harvester'&&unit.load>=360&&blocker.stance==='hold'?
         this.startTrafficYield(unit,blocker,vx,vy):false;
     }
     finishYield(e){
