@@ -2580,9 +2580,13 @@
       const aviationInvestment=owned('airfield').length>0&&built('radar')&&
         owned('aircraft').length<2&&owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>=1&&!threatened;
+      // An unfinished generator already represents paid brownout recovery.
+      // Wait for it to come online rather than buying duplicate generators.
+      const generatorPending=owned('generator').some(b=>!b.built);
       let choice=null;
-      if(!owned('generator').length||shortage)choice='generator';
-      else if(!owned('refinery').length)choice='refinery';
+      if(!owned('generator').length||shortage){
+        if(!generatorPending)choice='generator';
+      }else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       else if(!owned('factory').length)choice='factory';
       // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
