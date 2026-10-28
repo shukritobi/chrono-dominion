@@ -1326,8 +1326,17 @@
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
       const clear=(x,y)=>this.canOccupyUnit(e,x,y)&&this.checkLaneEntry(e,x,y);
       if(clear(e.x+vx,e.y+vy)){this.setUnitPosition(e,e.x+vx,e.y+vy);e.stuck=0;}
-      else if(clear(e.x+vx,e.y)){this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;}
-      else if(clear(e.x,e.y+vy)){this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;}
+      // Only full-cargo harvesters skip zero-length axis fallbacks. A broad
+      // all-unit change altered contested-match combat and damaged the AI
+      // economy; retain legacy movement for other units.
+      else if((Math.abs(vx)>1e-6||e.kind!=='harvester'||e.load<360)&&
+          clear(e.x+vx,e.y)){
+        this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;
+      }
+      else if((Math.abs(vy)>1e-6||e.kind!=='harvester'||e.load<360)&&
+          clear(e.x,e.y+vy)){
+        this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;
+      }
       else {
         // Symmetric short sidesteps avoid simple head-on jams. No teleporting.
         const sign=e.id%2===0?1:-1;

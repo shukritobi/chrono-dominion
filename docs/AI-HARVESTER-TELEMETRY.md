@@ -220,3 +220,39 @@ The three Frostline Guard blockers remain a separate unresolved issue.
 Regression: `tests/navigation-v15.test.mjs` verifies aircraft do not add
 congestion cost or bend a clear ground route, while a real ground soldier
 still triggers a traffic-aware detour.
+
+## Zero-displacement axis fallback correction (28 October 2026)
+
+The archived 720-second Frostline report from the verified main-branch run
+[40636530796](https://github.com/shukritobi/chrono-dominion/actions/runs/40636530796)
+records three full-cargo stalls. Two are especially diagnostic: at times
+430.2 and 495.2 seconds, trucks sit at approximately **(23, 20.81)** with
+next waypoint **(23, 20)**, while friendly Guard infantry block the northward
+step. In both six-second histories, the engine accepts 31 lane checks but
+makes no meaningful forward progress. A third stall at 146.6 seconds involves
+two Guard soldiers and a diagonal waypoint; this separate case is not covered
+by the same direct-axis mechanism.
+
+The production `move()` fallback previously tried the X-only position after
+a blocked diagonal step even when `vx === 0`. That probe is simply the
+unit's current position, so it usually passes occupancy and lane checks,
+resets the stuck timer, and prevents the symmetric lateral sidesteps from
+running. A due-east/west movement similarly risks accepting a zero-length
+Y-only fallback. The correction skips an axis fallback when its displacement
+is effectively zero (`<= 1e-6`) **only for fully loaded harvesters**, allowing
+the existing collision-checked alternative axis or lateral sidestep to run.
+An initial all-unit experiment passed the targeted tests but **failed** the
+natural economy gate: Desert AI ore fell to 5,400 (baseline 15,120), deliveries
+to 53 (baseline 78), and operational AI airfields to zero (baseline one).
+That broad change was rejected; ordinary ground units retain their existing
+movement fallback. The scoped version still requires independent CI verification.
+It does **not** force another unit to yield, change pathfinding goals, ignore
+water, alter save fields, or add a new navigation rule.
+
+`tests/navigation-v15.test.mjs` reproduces the northbound and westbound
+cases with real harvesters, Guard soldiers and engine collision checks. The
+nine-map balance test, three 720-second natural matches and unchanged AI
+economy regression guard must also pass before merging. This is a targeted
+movement bug fix, **not** a claim that all three Frostline stalls or natural
+AI aircraft production are resolved; compare fresh telemetry before making
+that conclusion.
