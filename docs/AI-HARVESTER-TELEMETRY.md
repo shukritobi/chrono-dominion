@@ -202,19 +202,21 @@ AI income regression gate even when restricted to player-owned trucks, so it
 remains unmerged; use these blocker IDs before another gameplay experiment.
 
 
-## Idle Guard sentry passing and aircraft altitude exclusion (28 October 2026)
+## Airborne units excluded from ground traffic cost (28 October 2026)
 
-A targeted gameplay experiment extends the full-harvester lateral passing
-fallback to **idle Guard-position** friendly units when those units cannot
-yield. Hold sentries retain their existing special handling; actively ordered
-Guard units and other moving traffic retain the original priority rules. The
-truck uses the existing collision-checked, A*-reachable passing pocket and
-does not change the blocker’s orders. In addition, ground congestion replans
-no longer price aircraft as obstacles: aircraft already use a separate altitude
-layer and do not participate in ground collision.
+The ground traffic-cost heat map previously included aircraft, even though
+aircraft operate on a separate altitude layer and do not block ground units.
+Congestion-aware A* now excludes aircraft, avoiding unnecessary detours when
+planes fly over a harvester or infantry route. Ground vehicles and infantry
+continue to incur the original traffic penalties. No save format, flight
+behavior, production cost or art assets change.
 
-Regression coverage: `tests/right-of-way-v16.test.mjs` and
-`tests/navigation-v15.test.mjs`. The idle-Guard fallback is experimental
-until the nine-scenario and 720-second economy regression gate demonstrate
-that ore deliveries and airfield progression are not harmed. No save schema,
-production cost or art files change.
+A separate trial allowing full harvesters to detour around idle Guard sentries
+failed the three-map natural-match economy gate (Verdant 3,240; Desert 9,360;
+Frostline 5,040 enemy ore, compared with 3,960 / 15,120 / 9,000 baseline;
+49 vs 78 ore delivery ticks). The Guard change was **reverted** and not merged.
+The three Frostline Guard blockers remain a separate unresolved issue.
+
+Regression: `tests/navigation-v15.test.mjs` verifies aircraft do not add
+congestion cost or bend a clear ground route, while a real ground soldier
+still triggers a traffic-aware detour.
