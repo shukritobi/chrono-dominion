@@ -51,20 +51,38 @@ for(const side of [0,1]){
     'fixture must spawn exactly 60 legal units for side '+side);
 }
 const initial=new Map(units.map(u=>[u.id,{x:u.x,y:u.y}]));
-let pathQueries=0,occupancyChecks=0;
+let pathQueries=0,occupancyChecks=0,pathTimeMs=0;
 const findPath=g.findPath.bind(g),occupy=g.canOccupyUnit.bind(g);
-g.findPath=(...args)=>{pathQueries++;return findPath(...args);};
+// Attribute expensive simulation ticks to the actual production A* calls.
+// This is headless diagnostic instrumentation, not an engine modification.
+g.findPath=(...args)=>{
+  pathQueries++;
+  const started=performance.now();
+  try{return findPath(...args);}
+  finally{pathTimeMs+=performance.now()-started;}
+};
 g.canOccupyUnit=(...args)=>{occupancyChecks++;return occupy(...args);};
-const ticks=40,dt=.2,start=performance.now(),tickDurations=[];
+const ticks=40,dt=.2,start=performance.now(),tickMetrics=[];
 for(let i=0;i<ticks;i++){
+  const beforePaths=pathQueries,beforeOccupancy=occupancyChecks,beforePathMs=pathTimeMs;
   const tickStart=performance.now();
   g.step(dt);
-  tickDurations.push(performance.now()-tickStart);
+  tickMetrics.push({
+    tick:i+1,simulatedSeconds:Math.round((i+1)*dt*100)/100,
+    wallMs:performance.now()-tickStart,
+    pathQueries:pathQueries-beforePaths,
+    occupancyChecks:occupancyChecks-beforeOccupancy,
+    pathMs:pathTimeMs-beforePathMs
+  });
 }
 const wallMs=performance.now()-start;
-const sortedTicks=[...tickDurations].sort((a,b)=>a-b);
+const sortedTicks=tickMetrics.map(t=>t.wallMs).sort((a,b)=>a-b);
 const p95TickMs=sortedTicks[Math.ceil(ticks*.95)-1];
 const maxTickMs=sortedTicks.at(-1);
+const round=n=>Math.round(n*100)/100;
+const slowestTicks=[...tickMetrics].sort((a,b)=>b.wallMs-a.wallMs||a.tick-b.tick)
+  .slice(0,5).map(t=>({...t,wallMs:round(t.wallMs),pathMs:round(t.pathMs)}));
+const tickProfile=tickMetrics.map(t=>({...t,wallMs:round(t.wallMs),pathMs:round(t.pathMs)}));
 const moved=units.filter(u=>Math.hypot(u.x-initial.get(u.id).x,
   u.y-initial.get(u.id).y)>.25).length;
 const finitePositions=units.every(u=>Number.isFinite(u.x)&&Number.isFinite(u.y));
@@ -80,10 +98,16 @@ const report={
   fixture:'xl-120-unit-movement',map:'expanse',worldSize:g.worldSize,
   initialStressUnits:units.length,simulatedSeconds:ticks*dt,ticks,
   movedStressUnits:moved,liveUnits,entitiesBeforeSave:beforeSave,
-  pathQueries,occupancyChecks,wallMs:Math.round(wallMs*100)/100,
-  meanMsPerTick:Math.round(wallMs/ticks*100)/100,
-  p95TickMs:Math.round(p95TickMs*100)/100,
-  maxTickMs:Math.round(maxTickMs*100)/100,
+  pathQueries,occupancyChecks,wallMs:round(wallMs),
+  meanMsPerTick:round(wallMs/ticks),
+  p95TickMs:round(p95TickMs),
+  maxTickMs:round(maxTickMs),
+  pathTimeMs:round(pathTimeMs),
+  pathTimeSharePercent:round(pathTimeMs/Math.max(wallMs,Number.EPSILON)*100),
+  ticksWithPathQueries:tickMetrics.filter(t=>t.pathQueries>0).length,
+  maxPathQueriesPerTick:Math.max(...tickMetrics.map(t=>t.pathQueries)),
+  maxOccupancyChecksPerTick:Math.max(...tickMetrics.map(t=>t.occupancyChecks)),
+  slowestTicks,tickProfile,
   finitePositions,saveRestored:!!restored,restoredPositionsMatch,
   entitiesAfterLoad:g.entities.length,node:process.version
 };
@@ -93,6 +117,12 @@ assert.ok(restored&&g.entities.length===beforeSave&&restoredPositionsMatch,
 assert.ok(moved>=60,'at least half the 120 stress units must move');
 assert.ok(pathQueries>0&&occupancyChecks>0,'real navigation and collision must execute');
 assert.ok(Number.isFinite(wallMs)&&wallMs>0,'wall-clock measurement must be finite');
+assert.equal(tickMetrics.reduce((sum,t)=>sum+t.pathQueries,0),pathQueries,
+  'tick path-query totals must account for every simulation query');
+assert.equal(tickMetrics.reduce((sum,t)=>sum+t.occupancyChecks,0),occupancyChecks,
+  'tick collision totals must account for every simulation occupancy check');
+assert.ok(tickMetrics.every(t=>t.pathMs>=0&&t.pathMs<=t.wallMs+1),
+  'A* time must be finite and bounded by its enclosing simulation tick');
 const out=process.argv.find(a=>a.startsWith('--out='));
 if(out)writeFileSync(out.slice(6),JSON.stringify(report,null,2)+'\n');
 console.log('LARGE ARMY SUMMARY:',JSON.stringify(report));
