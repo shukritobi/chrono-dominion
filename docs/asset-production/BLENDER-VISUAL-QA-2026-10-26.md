@@ -2631,7 +2631,8 @@ pieces are only visible in the harvest pose.
   The actual .blend was reopened in headless Blender 4.2.23. Verification
   counted 8 wheel pivots, 2 articulated booms, 2 cutter axles, 20 manifold
   tooth meshes, 24 track cleats, 4 hopper walls, 3 ore payload meshes and
-  12 closed-manifold hidden wreck fragments. The original compressed editable\n  source was **143,418 bytes**. A downward **raycast through
+  12 closed-manifold hidden wreck fragments. The original compressed editable
+  source was **143,418 bytes**. A downward **raycast through
   the hopper's center** hit its floor or ore rather than a fake opaque lid.
 - **Independent 160px/80px visual inspection found a real artistic defect:**
   the intact glowing rotary cutting drums and cyan hubs remained visible
@@ -2642,7 +2643,8 @@ pieces are only visible in the harvest pose.
   removes those intact cutter drums **only in the destroyed state** and
   introduces **four new independently editable, closed-manifold, asymmetric
   sheared-cutter fragments**. The corrected .blend reopened successfully;
-  the corrected compressed editable source was **147,127 bytes**.\n  All four new 12-vertex/8-face manifold fragments are hidden in the saved
+  the corrected compressed editable source was **147,127 bytes**.
+  All four new 12-vertex/8-face manifold fragments are hidden in the saved
   intact state and the four intact cutter-drum meshes remain editable.
   Only the **32 destroyed directions** were rerendered. All **96 original
   idle/move/harvest PNGs were reused byte-for-byte** and verified by SHA-256.
