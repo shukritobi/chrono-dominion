@@ -631,3 +631,9 @@ during rupture/settle without weakening the damage silhouette. The branch
 currently trails concurrent `main` work by three commits; reconcile that
 drift before any eventual merge. Do not rerender validated frames merely
 to reconcile source control.
+
+**Development commit trail:** [original fracture geometry `9f186a37`](https://github.com/shukritobi/chrono-dominion/commit/9f186a377e9a3d05caccf40525e9d7741c2ed3a1),
+[strict PNG QA `02879f40`](https://github.com/shukritobi/chrono-dominion/commit/02879f401e3d15029aef8ce633917a46cce0a396),
+[AssetRegister `7e25f378`](https://github.com/shukritobi/chrono-dominion/commit/7e25f378758b526d0a493213fb895b0a5737a2b0),
+[isolated workflow `937f05eb`](https://github.com/shukritobi/chrono-dominion/commit/937f05ebc847d50b53a1f522a11fd75b28ca1ef3),
+and [validated QA addendum `fe73d2b7`](https://github.com/shukritobi/chrono-dominion/commit/fe73d2b78a3b549d983f0b3af0c7405de79953d1).
