@@ -113,6 +113,8 @@ jobs:
           node tests/harvester-separation-telemetry.test.mjs
           node tests/harvester-move-telemetry.test.mjs
           node tests/ai-economy-guard.test.mjs
+          node tests/large-army-perf.test.mjs
+          node tools/benchmark-large-armies.mjs --out=large-army-report.json
           node --check maps/map-core.js
           node --check maps/map-editor.js
           node tools/maps/build.mjs --check
@@ -126,6 +128,7 @@ jobs:
             balance-report.json
             progression-report.json
             air-report.json
+            large-army-report.json
           if-no-files-found: warn
           retention-days: 21
       - name: Verify required files

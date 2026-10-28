@@ -9,6 +9,10 @@
 
 
 
+### XL 120-unit movement and collision benchmark (post-v2.42)
+
+- A repeatable **120-unit, 48×48-map** production-engine workload exercises movement, A*, building collisions, combat updates and legacy save/load. Reports include mean, p95 and worst simulation tick times, actual movement and restored unit coordinates; these are **headless Node timings, not browser FPS**. Run `npm run perf:armies`; CI archives `large-army-report.json`. [Methodology](docs/LARGE-ARMY-BENCHMARK.md) · [regression](tests/large-army-perf.test.mjs).
+
 ### Loaded harvester fallback around immovable friendly traffic (post-v2.42)
 
 - A full ore truck obstructed by a friendly **Hold-position sentry** can now attempt its **own reachable lateral passing pocket**. This only runs after a real traffic stall; Hold defenders stay in place and blocked terrain remains impassable. The normal refinery target, saved orders, costs and original assets are unchanged. [Regression](tests/right-of-way-v16.test.mjs) · [details](docs/AI-HARVESTER-TELEMETRY.md). Natural-match economy and stall frequency require CI verification.
