@@ -67,7 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           blender --background --threads 2 \
-            generated/psionic-hallucination-drone-32/psionic-hallucination-drone-tank.blend \
+            generated/psionic-hallucination-drone-32/psionic-hallucination-drone.blend \
             --python-exit-code 1 --python-expr '
           import bpy, bmesh
           objs=list(bpy.data.objects)
