@@ -64,6 +64,28 @@ assert.equal(art.suitable({format:'not-valid',frameSize:160,entries:{}}),false);
 console.log('PASS: Blender sprite atlas decoding, direction, firing, walk, construction, damage, fallback');
 
 
+
+// Full 32-facing authored tanks must retain the correct frame selection in-game.
+const tankSprite={coalition:{tank:{file:'coalition-tank.png',directions:32,
+  states:{idle:1,move:1,attack:1,destroyed:1},pivot:[80,141]}}};
+class TankImage{
+  set src(_url){this.naturalWidth=5120;this.naturalHeight=640;this.onload?.();}
+}
+const tankWindow={Image:TankImage,fetch:()=>Promise.resolve({ok:true,json:()=>
+  Promise.resolve({format:'chrono-blender-v1',frameSize:160,entries:tankSprite})})};
+runInNewContext(source,{window:tankWindow,console},{timeout:3000});
+await new Promise(resolve=>setImmediate(resolve));
+const tankCalls=[];
+const tankEntity={id:140,kind:'tank',type:'unit',x:0,y:0,hp:100,maxHp:100,
+  worldHeading:Math.PI/2,engaging:false,ready:0};
+assert.equal(tankWindow.ChronoBakedArt.drawUnit({drawImage(...xs){tankCalls.push(xs);}},
+  tankEntity,{faction:'coalition',time:1}),true);
+assert.equal(tankCalls.at(-1)[1],8*160,'quarter-turn must index 8/32 atlas columns');
+tankEntity.engaging=true;tankEntity.ready=1;
+tankWindow.ChronoBakedArt.drawUnit({drawImage(...xs){tankCalls.push(xs);}},
+  tankEntity,{faction:'coalition',time:2});
+assert.equal(tankCalls.at(-1)[2],2*160,'tank attacks use authored attack state');
+
 // Production acceptance: test the actual published manifest and PNG IHDRs,
 // not only the two synthetic sprites above. A missing, wrong-size or
 // cross-faction atlas would otherwise silently fall back to vector artwork.
@@ -71,19 +93,28 @@ const published=JSON.parse(readFileSync(new URL('../art/baked-v1/manifest.json',
 const factions=['coalition','federation','psionic'];
 const expectedKinds=['soldier','specialist','heavy','aircraft','generator','factory',
   'radar','hq','refinery','barracks','tech','turret','beam','airfield'];
+const vehicleKinds=['tank','recon','harvester'];
+const releasedVehicleCount=factions.reduce((n,faction)=>n+vehicleKinds.filter(
+  kind=>Object.hasOwn(published.entries[faction],kind)).length,0);
+assert.ok([0,9].includes(releasedVehicleCount),
+  'vehicle wave is all-or-nothing across 3 factions and 3 kinds');
+const activeKinds=releasedVehicleCount===9?[...expectedKinds,...vehicleKinds]:expectedKinds;
 assert.equal(published.format,'chrono-blender-v1');
 assert.equal(published.frameSize,160);
 assert.deepEqual(Object.keys(published.entries).sort(),factions.slice().sort());
 const atlasSizes=new Map();
 for(const faction of factions){
   const entries=published.entries[faction];
-  assert.deepEqual(Object.keys(entries).sort(),expectedKinds.slice().sort(),
-    faction+': preserve all 14 published Blender atlas categories');
+  assert.deepEqual(Object.keys(entries).sort(),activeKinds.slice().sort(),
+    faction+': retain every approved Blender atlas, including complete vehicle wave');
   for(const [kind,spec] of Object.entries(entries)){
     const name=faction+'-'+kind+'.png';
     assert.equal(spec.file,name,'manifest cannot accidentally load another faction or path');
-    assert.equal(spec.directions,['soldier','specialist','heavy','aircraft'].includes(kind)?8:1,
-      name+': expected published facing count');
+    const directions=kind==='tank'?32:
+      ['soldier','specialist','heavy','aircraft','recon','harvester'].includes(kind)?8:1;
+    assert.equal(spec.directions,directions,name+': expected Blender facing count');
+    if(kind==='tank')assert.deepEqual(spec.states,{idle:1,move:1,attack:1,destroyed:1},
+      name+': preserve four real 32-facing tank states');
     const rows=Object.values(spec.states).reduce((sum,count)=>{
       assert.ok(Number.isInteger(count)&&count>0&&count<=12,name+': valid state frames');
       return sum+count;
@@ -106,7 +137,8 @@ for(const faction of factions){
     atlasSizes.set(name,{width,height});
   }
 }
-assert.equal(atlasSizes.size,42,'all published atlases must be checked');
+assert.equal(atlasSizes.size,42+releasedVehicleCount,
+  'all published atlases must be checked without allowing partial releases');
 
 // Exercise the runtime loader against the real manifest and actual PNG
 // dimensions, while leaving browser decoding to the browser.
@@ -124,8 +156,8 @@ const publishedWindow={
 };
 runInNewContext(source,{window:publishedWindow,console},{timeout:3000});
 await new Promise(resolve=>setImmediate(resolve));
-assert.equal(publishedWindow.ChronoBakedArt.readyCount,42,
-  'all 42 published original Blender atlases should become renderable');
+assert.equal(publishedWindow.ChronoBakedArt.readyCount,42+releasedVehicleCount,
+  'every published original Blender atlas should become renderable');
 let drawn=0;
 for(const faction of factions)for(const [kind,spec] of Object.entries(published.entries[faction])){
   const entity={id:++drawn,kind,type:spec.directions===1?'building':'unit',
@@ -135,4 +167,5 @@ for(const faction of factions)for(const [kind,spec] of Object.entries(published.
   assert.equal(render({drawImage(){}},entity,{faction,time:2}),true,
     faction+'/'+kind+': published atlas must be drawable');
 }
-console.log('PASS: all 42 published Blender PNG atlases match manifest dimensions, factions and runtime loader');
+console.log('PASS: all '+(42+releasedVehicleCount)+
+  ' published Blender PNG atlases match manifest dimensions, factions and runtime loader');

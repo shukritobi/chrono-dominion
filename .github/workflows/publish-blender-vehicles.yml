@@ -1,0 +1,106 @@
+name: Publish approved Blender vehicle wave
+# Owner-approved: one-shot promotion of already verified sprites and 6 missing models.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-blender-vehicles.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: chrono-blender-vehicle-release
+  cancel-in-progress: false
+
+jobs:
+  stage-missing-units:
+    name: Blender ${{ matrix.faction }} / ${{ matrix.kind }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        faction: [coalition, federation, psionic]
+        kind: [recon, harvester]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install headless Blender and Pillow
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-pil
+          blender --version | head -2
+      - name: Render missing model, movement and firing states
+        run: |
+          blender --background --threads 4 --python-exit-code 1 --python tools/blender/animated_assets.py -- --output generated/stage --kinds "${{ matrix.kind }}" --factions "${{ matrix.faction }}" --size 160
+          python3 tools/blender/pack_animated.py --input generated/stage --output generated/stage/packed --size 160
+          python3 tools/blender/asset_studio.py validate --stage generated/stage --faction "${{ matrix.faction }}" --kind "${{ matrix.kind }}"
+      - name: Save verified sprite and editable Blender source
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-${{ matrix.faction }}-${{ matrix.kind }}
+          path: |
+            generated/stage/packed/
+            generated/stage/sources/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Promote three 32-facing tanks plus six new unit sheets
+    needs: stage-missing-units
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install image validator
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends python3-pil
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: studio-*
+          path: generated/release/
+          merge-multiple: false
+      - name: Retrieve immutable QA-passed 32-facing tank preview artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p generated/release/tanks/coalition generated/release/tanks/federation generated/release/tanks/psionic
+          gh run download 40494276431 -R "$GITHUB_REPOSITORY" -n chrono-coalition-lynx-battle-tank-32-preview -D generated/release/tanks/coalition
+          gh run download 40501761698 -R "$GITHUB_REPOSITORY" -n chrono-federation-bull-heavy-tank-32-preview -D generated/release/tanks/federation
+          gh run download 40508990419 -R "$GITHUB_REPOSITORY" -n chrono-psionic-viper-light-tank-32-preview -D generated/release/tanks/psionic
+          for faction in coalition federation psionic; do
+            test -s "generated/release/tanks/$faction/frames/idle/00.png"
+            test -s "generated/release/tanks/$faction/frames/destroyed/31.png"
+          done
+      - name: Validate and package nine original playable atlases
+        run: |
+          python3 tools/blender/publish_vehicle_batch.py --stage generated/release --repo .
+          node tests/baked-art-v223.test.mjs
+          node --check game.js
+          node --check art/baked-atlas-loader.js
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("art/baked-v1/manifest.json").read_text())
+          assert sum(len(x) for x in data["entries"].values()) == 51
+          for faction in ("coalition","federation","psionic"):
+              assert data["entries"][faction]["tank"]["directions"] == 32
+          print("VERIFIED: 51 playable Blender atlases, all tanks 32-facing")
+          PY
+      - name: Commit only published art (no preview branch merges)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Chrono Dominion Art Release"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/baked-v1/ art/sources/blender/
+          git diff --cached --quiet && { echo "::error::Expected nine new assets"; exit 1; }
+          git commit -m "Publish nine original Blender vehicle atlases and 32-facing faction tanks"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "SUCCESS: artwork committed; GitHub Pages deploy runs on this push."
