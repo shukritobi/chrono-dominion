@@ -51,6 +51,35 @@ for(const point of path){
   prev=point;
 }
 
+// A* must remain optimal with the tighter eight-direction octile heuristic.
+// A single-cell opening near the direct route is shorter, but a sufficiently
+// costly traffic/hazard opening must select the farther reachable gate.
+const gateWall=new Set();
+for(let y=1;y<47;y++)if(y!==10&&y!==23)gateWall.add('12,'+y);
+g.walkable=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
+  x>0&&y>0&&x<47&&y<47&&!gateWall.has(x+','+y);
+const nearGate=g.findPath(6,11,20,11);
+assert.ok(nearGate.some(p=>p.x===12&&p.y===10),
+  'unweighted A* uses the shorter northern gate');
+const costlyGate=g.findPath(6,11,20,11,null,
+  p=>p.x===12&&p.y===10?200:0);
+assert.ok(costlyGate.some(p=>p.x===12&&p.y===23),
+  'nonnegative hazards still produce the cheaper southern detour');
+assert.ok(!costlyGate.some(p=>p.x===12&&p.y===10),
+  'a high-cost opening must not be chosen by an overestimating heuristic');
+for(const route of [nearGate,costlyGate]){
+  assert.equal(route.at(-1)?.x,20);
+  assert.equal(route.at(-1)?.y,11);
+  let previous={x:6,y:11};
+  for(const point of route){
+    assert.ok(g.walkable(point.x,point.y),'weighted route stays traversable');
+    if(point.x!==previous.x&&point.y!==previous.y)
+      assert.ok(g.walkable(point.x,previous.y)&&g.walkable(previous.x,point.y),
+        'weighted detour cannot cut blocked diagonal corners');
+    previous=point;
+  }
+}
+
 // A genuinely unreachable target still returns a safe partial route.
 g.walkable=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
   x>0&&y>0&&x<47&&y<47&&x!==24;

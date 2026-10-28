@@ -78,3 +78,19 @@ FPS, and staggering is not a guaranteed end-to-end speedup.
 ### Failed broad trial and narrower retest
 
 The first branch CI run [40669822587](https://github.com/shukritobi/chrono-dominion/actions/runs/40669822587) **failed** the AI economy regression gate: Desert enemy ore income dropped to 10,800 versus the 15,120 reference (below the required 80% floor); aggregate delivery ticks fell to 65. This broad player+AI staggering experiment was **not merged**. The revised experiment excludes all AI-owned units, preserving their existing movement timers. It still requires full CI verification before any merge; a player-only change is not automatically safe for contested matches.
+
+## Eight-way octile A* heuristic trial (28 October 2026)
+
+The existing A* expanded nodes using Euclidean distance to the destination even
+though its permitted moves cost 1 orthogonally and √2 diagonally. The proposed
+heuristic uses the tighter octile lower bound `max(dx,dy) + (√2−1) min(dx,dy)`.
+It remains admissible and consistent for this grid, including nonnegative
+traffic and hazard penalties. The search still computes first paths immediately,
+keeps the existing nearest-partial-route fallback, and preserves corner checks.
+No unit statistics, saved fields, orders, art or AI policy are changed.
+
+A new XL pathfinding regression exercises a two-gate barrier both without
+hazards and with a prohibitively expensive short gate. The existing serpentine,
+partial-route, corner, movement and save tests remain in place. Measure path
+processing and the 120-unit fixture in CI; do not infer browser FPS from Node
+wall times, or merge if the natural-match economy gate regresses.

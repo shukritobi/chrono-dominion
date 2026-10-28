@@ -1036,6 +1036,14 @@
       const costs=new Map([[begin,0]]),came=new Map(),closed=new Set();
       const traffic=avoidUnit?this.trafficCosts(avoidUnit):null;
       const moves=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      // Octile distance is the exact obstacle-free lower bound for our
+      // eight-way grid (orthogonal cost 1, diagonal cost sqrt(2)). Unlike
+      // Euclidean distance it stays admissible while expanding fewer tiles
+      // on long mixed-axis routes; congestion/hazard costs are nonnegative.
+      const heuristic=(x,y)=>{
+        const dx=Math.abs(goal.x-x),dy=Math.abs(goal.y-y);
+        return Math.max(dx,dy)+(Math.SQRT2-1)*Math.min(dx,dy);
+      };
       let nearest=begin,nearestDist=Math.hypot(start.x-tx,start.y-ty),nearestCost=0;
       const trace=(end)=>{
         const path=[];let k=end;
@@ -1069,7 +1077,7 @@
           const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
-          push({x,y,key:k,f:candidate+Math.hypot(goal.x-x,goal.y-y)});
+          push({x,y,key:k,f:candidate+heuristic(x,y)});
         }
       }
       return trace(nearest);
