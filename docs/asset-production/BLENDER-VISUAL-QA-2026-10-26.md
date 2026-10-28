@@ -1777,3 +1777,12 @@ stacked preview parent. **No published textures, manifests, loaders,
 runtime or gameplay files were touched.** Do not merge or publish
 without explicit owner art approval. Next: refine sail outline,
 then return to missing vehicle models and remaining building-state polish.
+
+
+## 2026-10-28 Coalition Hunter MK-III dual-notch beveled sails — QA PENDING
+
+**Preview only; not approved or integrated.** This revision addresses blocky optical panels in validated [MK-II workflow #40670200185](https://github.com/shukritobi/chrono-dominion/actions/runs/40670200185). Four sail wedges are replaced by original dual-notch concave outlines and 14-quad bevel rings (42 vertices, 30 faces, 70 manifold edges per sail), with restrained ceramic chamfer material. Eight ribs, four shutters, four original hinges, 14 wreck meshes and three attack effects are preserved.
+
+The isolated workflow downloads the immutable original Hunter .blend from #40648427473 and MK-II optical preview from #40670200185. It does not rerender either baseline; only 128 new MK-III poses plus four fixed-hull diagnostics. QA requires actual 160px/80px transparent PNGs, 32 facings, unique hashes, unclipped silhouettes, reopened watertight editable meshes, stationary-hull shape changes against MK-II and unchanged archived atlas SHA-256 checksums. Original atlas SHA-256 `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`; MK-II SHA-256 `7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6`.
+
+**Status at commit:** render, source reopen, pixel QA and actual image inspection pending. No metrics claimed until artifacts inspected. No live texture, manifest or gameplay file changed.
