@@ -570,3 +570,64 @@ cleats and eight wreckage meshes are preserved.
 **Safety:** No production sprite atlas, manifest, gameplay code or published
 textures may be modified. The new destruction frames remain unapproved,
 preview-only and not playable.
+
+### Final validated FED-VEH-002 Bull four-stage destruction — 28 October 2026
+
+**PASS; supersedes the pending status above.** [One successful targeted Blender
+Actions run #40619382153](https://github.com/shukritobi/chrono-dominion/actions/runs/40619382153),
+[preview artifact #12785739328](https://github.com/shukritobi/chrono-dominion/actions/runs/40619382153/artifacts/12785739328)
+and [draft PR #81](https://github.com/shukritobi/chrono-dominion/pull/81).
+The workflow reused the original saved Bull model and its 128 baseline PNGs
+from Actions #40501761698, and rendered **only 128 NEW 160×160 RGBA**
+destruction frames. Compilation, archived-artifact download, checksum-verified
+Blender 4.2.23 installation, editable-source reopen, actual-PNG 80px/160px
+gates and artifact upload all passed.
+
+The saved **155,994-byte editable .blend** reopened in headless Blender and
+verified **20 independent closed eight-vertex/six-face fracture volumes**,
+including **three restrained molten-copper fracture seams**, plus the original
+eight wreckage meshes, 14 independent roadwheel pivots and 24 tread cleats.
+The new separate **5120×640 RGBA** preview atlas SHA-256 is
+`c998d90546fcda133cd7ac4788f0edf0488f19dde23483d7c8e9dc486de7a7d5`.
+The archived baseline atlas SHA-256 was unchanged before and after:
+`22901bc4065a57ac2cce09c615c5c0fc1a85353cec1eeb392bf31c63da6eacc1`.
+
+Actual **1280×640 160px** and **640×320 80px** contact sheets were downloaded
+and visually inspected. The impact frame retains the recognizable broad Bull
+chassis and oversized cannon; shear visibly removes the turret roof and track
+shrouds; rupture splits the gun and exposes the orange reactor cavity; settle
+collapses the upper machinery into a low, physically fragmented wreck. The
+four states read at 80px, though the reactor's existing hot orange glow remains
+stronger than the new restrained fracture seams.
+
+| Actual 80px changed pixels, all 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Impact → shear RGBA | **1,221** | 1,735 | 1,526.8 |
+| Shear → rupture RGBA | **1,113** | 1,637 | 1,467.8 |
+| Rupture → settle RGBA | **1,082** | 1,616 | 1,431.5 |
+| Impact → shear alpha | **585** | 907 | 761.2 |
+| Shear → rupture alpha | **587** | 827 | 711.9 |
+| Rupture → settle alpha | **526** | 762 | 677.7 |
+| Settle vs archived destroyed RGBA | **1,017** | 1,515 | 1,353.8 |
+| Settle vs archived destroyed alpha | **452** | 707 | 606.6 |
+| Impact vs archived idle RGBA | **1,154** | 1,638 | 1,448.2 |
+| Rupture vs archived idle alpha | **706** | 952 | 836.5 |
+| Adjacent impact facings RGBA | **1,263** | 1,712 | 1,533.5 |
+
+**Independent actual PNG recount:** impact→shear changed RGBA pixels at 80px
+for facings **00/07/15/23/31 = 1618/1640/1525/1568/1538**. All five
+independently recomputed counts matched the uploaded JSON exactly.
+All **128 actual PNGs** were checked for 160×160 size, RGBA mode, nonempty
+alpha and clipping. Global alpha bounds were **x=17–143, y=34–139**, leaving
+more than the required two-pixel transparent margin. An 80px four-stage GIF
+was also produced from actual Blender frames.
+
+**Safety and blockers:** PR #81 changes exactly five development files
+(modeling, PNG QA, targeted workflow, AssetRegister and this QA doc). No
+production texture, atlas, manifest, loader, runtime or gameplay file changed.
+The preview is **not integrated, not playable and not approved for release**.
+The visual polish opportunity is to reduce the existing bright reactor glow
+during rupture/settle without weakening the damage silhouette. The branch
+currently trails concurrent `main` work by three commits; reconcile that
+drift before any eventual merge. Do not rerender validated frames merely
+to reconcile source control.
