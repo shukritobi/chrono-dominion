@@ -2318,6 +2318,29 @@
         const cap=Math.min(2,defenders.length);
         for(let i=0;i<cap;i++)assign(defenders[i],enemy);
       }
+      // A distant ore truck is outside the HQ's invasion radius. Give up to
+      // two nearby, uncommitted ground defenders a chance to intercept threats
+      // the AI can CURRENTLY see near a living worker. Base defense above
+      // always gets first claim; do not strip distant assault formations.
+      const workers=this.entities.filter(e=>e.owner===side&&e.kind==='harvester'&&
+        e.type==='unit'&&e.hp>0&&e.built);
+      const oreThreats=visible.filter(enemy=>enemy.kind!=='harvester'&&
+        enemy.kind!=='aircraft').map(enemy=>({
+          enemy,worker:workers.reduce((best,h)=>
+            !best||dist(h,enemy)<dist(best,enemy)?h:best,null)
+        })).filter(({enemy,worker})=>worker&&dist(enemy,worker)<=4.5)
+        .sort((a,b)=>dist(a.enemy,a.worker)-dist(b.enemy,b.worker)||
+          a.enemy.id-b.enemy.id);
+      let escorts=0;
+      for(const {enemy,worker} of oreThreats){
+        if(escorts>=2)break;
+        if(committed.has(enemy.id))continue;
+        const escort=[...available.values()].filter(u=>
+          dist(u,enemy)<=8.5&&dist(u,worker)<=9&&
+          (u.order?.type!=='attackMove'||dist(u,enemy)<=4.5))
+          .sort((a,b)=>dist(a,enemy)-dist(b,enemy)||a.id-b.id)[0];
+        if(escort){assign(escort,enemy);escorts++;}
+      }
       // Remaining combatants share target intentions. Prefer vulnerable,
       // threatening contacts while penalising projected overkill and the
       // number of assigned attackers. Never replace a completed squad rally
