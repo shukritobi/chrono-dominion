@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""COA-VEH-007 original Coalition MCV: folding dual-rail field constructor.
+"""COA-VEH-008 original Coalition MCV: folding dual-rail field constructor.
 
 PREVIEW ONLY. Ten-point custom armored hull (20 vertices), eight individually
 pivoted wheels, four physical ground outriggers, folding dual-rail crane,
@@ -55,7 +55,7 @@ def build():
     gold = mat("MCV copper hydraulic hardware", (.82,.52,.21,1), .64)
     cyan = mat("MCV illuminated construction scanner", (.13,.87,1,1), .08, 1.7)
     fracture = mat("MCV bright torn metal fracture edges", (.96,.51,.18,1), .24, .25)
-    root = empty("COA-VEH-007 ORIGINAL Coalition mobile construction yard")
+    root = empty("COA-VEH-008 ORIGINAL Coalition mobile construction yard")
     chassis = empty("MCV independent rolling suspension", root)
     outline = [(1.90,-.48),(1.73,.57),(1.15,.85),(.23,.92),
                (-1.16,.81),(-1.91,.42),(-1.91,-.42),
