@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""COA-VEH-007 independent pixel-level 32-facing QA, preview ONLY."""
+"""COA-VEH-008 independent pixel-level 32-facing QA, preview ONLY."""
 import argparse
 import hashlib
 import json
@@ -27,7 +27,7 @@ def main():
     images={state:{} for state in STATES}
     hashes=set()
     atlas=Image.new("RGBA",(5120,640))
-    report={"asset_id":"COA-VEH-007","asset":"Coalition MCV",
+    report={"asset_id":"COA-VEH-008","asset":"Coalition MCV",
             "preview_only":True,"facings":32,"states":list(STATES),
             "frame_size":[160,160],"minimum_thresholds":MIN,
             "directions":{},"adjacent_rgba_80":{},
@@ -98,7 +98,7 @@ def main():
     }
     report["atlas_sha256"]=hashlib.sha256(atlas_path.read_bytes()).hexdigest()
     (stage/"pixel-qa.json").write_text(json.dumps(report,indent=2)+"\n")
-    print("PASS COA-VEH-007: 128 unique unclipped RGBA sprites; "
+    print("PASS COA-VEH-008: 128 unique unclipped RGBA sprites; "
           "all 32 movement, physical deployment, wreckage and facing gates")
     print(json.dumps(report["ranges"],sort_keys=True))
 
