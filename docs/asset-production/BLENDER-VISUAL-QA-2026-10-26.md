@@ -2144,3 +2144,72 @@ re-seat the attack pulse and/or focusing prongs rather than cropping the
 PNG, altering QA margins, or changing accepted live assets. Re-render
 **only COA-VEH-006** after a source change, then independently inspect
 actual 160px/80px images and remeasure every direction.
+
+
+### Final COA-VEH-006 physical beam correction and independent 80px/160px audit — 29 October 2026 (PASSED)
+
+- [First failed render #40723343610](https://github.com/shukritobi/chrono-dominion/actions/runs/40723343610)
+  successfully produced 128 PNGs and reopened its source but clipped
+  **ten attack directions** (02–06, 18–22). The original beam extended
+  beyond the 160px alpha boundary. This failure was **not** ignored.
+- **Geometry correction:** shortened all three physical stepped coherent
+  beam meshes (furthest endpoint 3.01 -> 2.53 in emitter-local x),
+  shortened both fork arcs, moved the attacking emitter rearward
+  (x .72 -> .60), and increased the four physical prong rotations
+  (lateral .32 -> .43 rad; vertical .23 -> .30 rad) to retain readable
+  attack silhouette. No alpha cropping, resized canvas or reduced QA
+  threshold was used.
+- [Corrected successful Blender 4.2.23 workflow #40723712313](https://github.com/shukritobi/chrono-dominion/actions/runs/40723712313)
+  and [complete artifact #12831717821](https://github.com/shukritobi/chrono-dominion/actions/runs/40723712313/artifacts/12831717821).
+  Source reopened successfully at **162,598 bytes**, with the custom
+  16-vertex hull, custom 12-vertex turret, three genuinely open
+  four-edge diamond cages, four separate hinged focusing prongs, ten
+  independent roadwheel pivots, 26 indexed cleats, five attack-only
+  emitter-child meshes and **12 closed manifold 12-vertex/8-face wreck
+  meshes** independently verified.
+- **All 128 actual 160x160 RGBA frames** were downloaded, reopened and
+  checked by a separate Pillow audit. All 128 raw-pixel SHA-256 hashes
+  are unique; all frames are nonempty and unclipped with **8px minimum
+  alpha margin**. Actual **160px and 80px labeled contact sheets** were
+  inspected. Attack flashes remain physically attached to the emitter
+  and no longer leave the frame. The wreck removes the intact turret and
+  upper hull in favor of asymmetric broken physical meshes.
+- Independent Pillow/LANCZOS recomputation of **32 facings x eight
+  metrics = 256 measurements** reproduced the workflow JSON with
+  **zero discrepancies**. Comparing actual first/corrected render
+  artifacts confirmed **96/96 idle/move/destroyed frames are
+  pixel-identical**, while all **32 attack frames changed**. The
+  correction did not disturb the other three gameplay states or
+  rerender any different asset.
+- Corrected atlas SHA-256:
+  c85615e92f4d49290409344e0deddc044c2305b0f01ad46088bd0c4e8ba21bba.
+  Downloaded artifact ZIP SHA-256:
+  b3ef3dbe09d040dbd8c12e1a4583dd62d5e5d3536715e0890e188919dc9d3129.
+
+| Independently reproduced 80px measurements, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle -> move RGBA | **1,045** | 1,552 |
+| Idle -> attack RGBA | **894** | 1,338 |
+| Idle -> attack alpha | **86** | 454 |
+| Idle -> destroyed RGBA | **1,036** | 1,492 |
+| Idle -> destroyed alpha | **467** | 777 |
+| Idle -> attack alpha at 160px | **92** | 883 |
+| Idle -> destroyed alpha at 160px | **1,074** | 2,137 |
+| Adjacent idle facing RGBA at 80px | **1,228** | 1,727 |
+
+**Visual limitations:** at 80px, the diamond cage openings and individual
+prong edges remain subtle, and the vehicle can resemble a conventional
+rail-gun tank when seen from a broadside angle. The beam attack is one
+static pulse, not a charge/focus/fire/cooldown animation; track motion
+and destruction are also single poses. No gameplay lattice chaining or
+damage behavior is implemented. Future artistic polish should increase
+cage readability **without** compromising the validated silhouette
+margin or rerendering unrelated assets.
+
+**Publication boundary:** only the new modeling script, strict pixel QA,
+branch-scoped read-only workflow, asset register and this QA document
+differ from the stacked unapproved MCV preview parent. No production
+sprites, manifests, loaders, game logic or runtime were touched.
+[Draft PR #109](https://github.com/shukritobi/chrono-dominion/pull/109)
+remains **unapproved and preview-only**. Never merge or publish without
+explicit owner approval.
