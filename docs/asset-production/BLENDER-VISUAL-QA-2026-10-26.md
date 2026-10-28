@@ -1502,3 +1502,88 @@ without owner art approval. The game loader does not yet consume this
 separate 32-facing preview atlas. Next: improve optical camouflage
 readability and build a genuine multi-phase movement/destruction sequence
 before considering art integration.
+
+## 2026-10-28 Coalition Camouflage Hunter four-stage destruction — VERIFIED preview only
+
+**COA-VEH-005.** Original, editable physical destruction built on the already
+validated [Hunter 32-facing pilot](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473),
+not by rerendering that original pilot. Four separate destruction stages
+(**impact → shear → rupture → settle**) × 32 facings produced **128 new
+160×160 transparent RGBA PNGs** and a separate **5120×640 preview atlas**.
+This artwork is **not approved, published, or integrated into gameplay**.
+
+- [Successful targeted Blender 4.2.23 workflow #40654743132](https://github.com/shukritobi/chrono-dominion/actions/runs/40654743132)
+  completed all steps on **28 October 2026**, including original artifact
+  download, SHA verification, new geometry, rendering, editable source
+  reopen, strict 80px/160px pixel QA and artifact upload.
+- [134-file preview artifact #12801355896](https://github.com/shukritobi/chrono-dominion/actions/runs/40654743132/artifacts/12801355896)
+  is **5,163,666 bytes**, ZIP SHA-256
+  `61adb96b2849c017d8050f136a71ef28533f70982b2db96423b312d3d73ffed3`.
+  It contains the **144,092-byte editable .blend**, 128 independent
+  state/facing PNGs, new atlas, actual 160px and 80px contact sheets,
+  an 80px four-beat GIF and per-facing JSON.
+- [Original physical fracture geometry](../../tools/blender/preview_coalition_hunter_four_stage_destruction.py)
+  adds **18 individually editable, CLOSED, irregular pentagonal extrusions**,
+  each with 10 vertices and seven faces. Fifteen are broken vanes,
+  projector, canopy, turret, track, prow, engine and armor pieces; three
+  are narrow, deliberately restrained physical spectral fracture seams.
+  The 14 original Hunter wreckage meshes remain intact and editable.
+  Physical original canopy, emitter, vanes, track skirts and engine hardware
+  are selectively hidden by phase, while fragments detach and settle.
+- The saved source **reopened successfully in headless Blender** with all
+  18 new hidden fracture solids, **14 preserved hidden wreckage meshes,
+  four independent vane hinges, eight roadwheel pivots, 24 track cleats
+  and three hidden attack effects**. The saved pose is intact and non-firing.
+- [Strict per-facing image QA](../../tools/blender/qa_coalition_hunter_four_stage_destruction.py)
+  enforces separate RGBA and *alpha-silhouette* differences at actual 80px
+  scale, 160px transparency/clipping, distinct frame hashes, adjacent-facing
+  differences, and immutability of the archived original atlas. No thresholds
+  were relaxed after observing the renders.
+
+| Actual 80px PNG comparison, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Impact → Shear, RGBA changed pixels | **1,119** | 1,366 |
+| Shear → Rupture, RGBA changed pixels | **1,106** | 1,359 |
+| Rupture → Settle, RGBA changed pixels | **1,017** | 1,411 |
+| Impact → Shear, alpha changed pixels | **614** | 805 |
+| Shear → Rupture, alpha changed pixels | **716** | 839 |
+| Rupture → Settle, alpha changed pixels | **609** | 795 |
+| Settled vs original destroyed, RGBA changed | **947** | 1,343 |
+| Settled vs original destroyed, alpha changed | **580** | 732 |
+| Impact vs original idle, RGBA changed | **961** | 1,254 |
+| Rupture vs original idle, alpha changed | **719** | 906 |
+| Adjacent impact facings, RGBA changed | **1,047** | 1,297 |
+
+**Independent verification after artifact download:** recomputed the ZIP
+SHA-256 and inspected the **actual 160px and 80px contact sheets**, not
+mockups. All 128 PNGs were present; JSON reports **zero failures**. At
+facings **00 / 04 / 08 / 16 / 24 / 31**, independently recomputed both
+Impact→Shear RGBA and Shear→Rupture alpha changes at 80px:
+**1,338/799; 1,355/837; 1,274/804; 1,249/723; 1,218/739;
+1,326/796** respectively. All **12 values exactly matched** the workflow
+JSON. Independently checked the original 133-file Hunter ZIP: its 128
+original 160px RGBA frames have 128 unique hashes and its original
+atlas SHA-256 is exactly
+`9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`.
+The targeted job verified this same SHA **before and after** rendering.
+New separate destruction atlas SHA-256:
+`e0296164d10cf82dc50ff3869791f885be456c5e416dba9ad3fc64e0ae00ce02`.
+
+**Artistic critique / remaining blockers:** The first Impact stage is
+deliberately close to the intact tank at a glance; its actual alpha
+difference is nonzero, but the narrow cyan fracture seams are subtle at
+80px. The Shear stage exposes the missing canopy, Rupture shows the
+separated turret and exposed warm reactor, and Settle is a lower, more
+scattered physical wreck. Some bright original optical elements and
+detached fragments overlap the near-side track in Rupture/Settle; this
+should be polished without replacing the validated baseline. The Hunter
+still lacks a true four-beat camouflage movement/deployment cycle, and
+the game loader does not consume this separate destruction atlas.
+
+**Publication and regression boundary:** The preview branch is stacked on
+the validated Hunter pilot; only original Blender modeling, isolated
+render/QA workflow, per-frame image QA, asset register and this QA document
+were modified. No approved atlas, game texture, manifest, loader, runtime
+or gameplay source was edited. Do **not** merge or publish without art
+approval. Next: genuine four-phase optical camouflage deployment/movement,
+then remaining faction vehicles and outstanding building polish.
