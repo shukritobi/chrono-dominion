@@ -44,7 +44,7 @@ jobs:
       - name: Download immutable MK-I optical preview for silhouette comparison
         uses: actions/download-artifact@v4
         with:
-          name: chrono-coalition-hunter-optics-mk2-fixed-hull-preview
+          name: chrono-coalition-hunter-four-phase-optics-preview
           run-id: 40662180954
           github-token: ${{ github.token }}
           path: archived-hunter-optics
@@ -110,7 +110,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chrono-coalition-hunter-four-phase-optics-preview
+          name: chrono-coalition-hunter-optics-mk2-fixed-hull-preview
           path: generated/coalition-hunter-optics-mk2/
           if-no-files-found: warn
           retention-days: 30
