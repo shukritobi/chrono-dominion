@@ -2213,3 +2213,32 @@ sprites, manifests, loaders, game logic or runtime were touched.
 [Draft PR #109](https://github.com/shukritobi/chrono-dominion/pull/109)
 remains **unapproved and preview-only**. Never merge or publish without
 explicit owner approval.
+
+
+## 2026-10-29 COA-VEH-007 Citadel Assault Carrier — original source, render verification pending
+
+**PREVIEW ONLY; never merge or publish unapproved art.** A new original
+[20-vertex fortress hull model](../../tools/blender/preview_coalition_citadel_carrier_32.py)
+was authored for the missing Coalition Citadel Assault Carrier, rather than
+re-rendering any previously validated vehicle. Its armored troop citadel has
+six recessed physical gunports, four independent pivoting battlement shields,
+twin articulated side sponson cannons with four gun-parented muzzle meshes,
+ten individually articulated roadwheel pivots, a rear hydraulic ramp and
+twelve asymmetric closed 12-vertex/8-face fracture meshes.
+
+- [Predeclared strict pixel QA](../../tools/blender/qa_coalition_citadel_carrier_32.py):
+  32 facings x idle/move/attack/destroyed = 128 unique RGBA 160px frames;
+  >=2px margin; LANCZOS downsampled 80px per-facing minimum changed pixels:
+  move RGBA >=100, attack RGBA >=150, attack alpha >=55, destroyed alpha
+  >=130, adjacent idle facings RGBA >=60. **These are targets, not results.**
+- Source-reopen QA must verify 20-vertex custom hull, ten independently
+  animated wheel pivots, four roof shields, six gunports, two physical
+  cannons, four attack-only muzzle meshes attached to their gun pivots,
+  and twelve hidden closed-manifold fracture meshes.
+- Visual hypotheses: roof shields must move visibly during attack, muzzle
+  effects must remain attached to both sponson guns, the fortress roof
+  must not clip at oblique facings, and the wreck must read as a collapsed
+  troop carrier rather than a pristine vehicle with loose debris.
+- **Unverified:** No render success, pixel counts, reopened .blend or actual
+  160px/80px visual inspection is claimed until the targeted workflow runs.
+  Existing validated preview atlases and live artwork must remain unchanged.
