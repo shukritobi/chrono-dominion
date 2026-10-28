@@ -58,10 +58,10 @@ a matched post-change benchmark.
 A narrowly scoped runtime change retains **immediate first-path computation**
 and the existing **1.6-second ongoing refresh interval**, but offsets the
 first *routine* refresh by `(unit.id % 4) * 0.2` seconds for newly ordered
-ordinary ground movers. This spreads their next scheduled A* refresh across
+**player-controlled** ordinary ground movers. This spreads their next scheduled A* refresh across
 four simulation ticks without adding saved fields or random state. It does
-not stagger loaded or empty harvesters, reconnaissance, combat/attack-move
-orders, traffic-priced recovery, or a changed destination. Their original
+not stagger AI units, loaded or empty harvesters, reconnaissance,
+combat/attack-move orders, traffic-priced recovery, or a changed destination. Their original
 immediate route changes and timers remain intact.
 
 The navigation regression checks that four distinct movers calculate
@@ -74,3 +74,7 @@ time against the same 120-unit CI fixture, then run the nine-scenario
 balance matrix, three 720-second natural matches, economy regression gate
 and aviation laboratory before merging. CI runner timing is not browser
 FPS, and staggering is not a guaranteed end-to-end speedup.
+
+### Failed broad trial and narrower retest
+
+The first branch CI run [40669822587](https://github.com/shukritobi/chrono-dominion/actions/runs/40669822587) **failed** the AI economy regression gate: Desert enemy ore income dropped to 10,800 versus the 15,120 reference (below the required 80% floor); aggregate delivery ticks fell to 65. This broad player+AI staggering experiment was **not merged**. The revised experiment excludes all AI-owned units, preserving their existing movement timers. It still requires full CI verification before any merge; a player-only change is not automatically safe for contested matches.
