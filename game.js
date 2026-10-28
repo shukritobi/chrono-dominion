@@ -957,6 +957,13 @@
       // once per distinct tile, which scales poorly on crowded XL maps.
       // Custom walkable implementations (tests/map tools) retain their rules.
       const standard=this.walkable===Game.prototype.walkable;
+      // The grid is integer-valued in A* and formation searches. Numeric
+      // tile keys avoid repeated "x,y" allocations during every path query.
+      // Retain the original string key for fractional/out-of-grid callers so
+      // custom walkability hooks preserve their exact cache semantics.
+      const tileKey=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
+        x>=0&&y>=0&&x<WORLD_SIZE&&y<WORLD_SIZE?
+        y*WORLD_SIZE+x:x+','+y;
       const blocked=standard?new Set():null;
       if(standard)for(const b of this.entities){
         if(b.hp<=0||b.type!=='building')continue;
@@ -966,11 +973,11 @@
         const maxY=Math.min(WORLD_SIZE-2,Math.ceil(b.y+1.5)-1);
         for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)
           if(Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5)
-            blocked.add(x+','+y);
+            blocked.add(tileKey(x,y));
       }
       const passable=new Map();
       return (x,y)=>{
-        const k=x+','+y;
+        const k=tileKey(x,y);
         if(!passable.has(k))passable.set(k,standard?
           x>=1&&y>=1&&x<=WORLD_SIZE-2&&y<=WORLD_SIZE-2&&
             !this.water(x,y)&&!blocked.has(k):

@@ -77,6 +77,50 @@ connected=g.reachableTiles({x:6,y:6});
 assert.ok(connected.has('40,6'),'new flood-fill sees reopened gap');
 unique('flood-fill after terrain change');
 
+// Packed navigation cache keys must preserve the *live* walkability result
+// for every XL tile, including fractional building footprints and water.
+delete g.walkable;
+const savedEntities=g.entities,savedWater=g.water,savedBuckets=g.buildingBuckets;
+const footprint={id:98765,type:'building',kind:'generator',owner:0,
+  x:12.5,y:13.25,hp:500,built:true};
+g.entities=[footprint];
+g.buildingBuckets=null;
+g.water=(x,y)=>x===17&&y>=10&&y<=14;
+const assertWalkParity=label=>{
+  const walk=g.navigationWalk();
+  for(let y=0;y<g.worldSize;y++)for(let x=0;x<g.worldSize;x++){
+    assert.equal(walk(x,y),g.walkable(x,y),
+      label+': tile '+x+','+y+' must match the live engine');
+    assert.equal(walk(x,y),g.walkable(x,y),
+      label+': repeat lookup must not change passability');
+  }
+  return walk;
+};
+let cached=assertWalkParity('fractional footprint and water');
+assert.equal(cached(12,13),false,'fractional footprint blocks its covered tiles');
+assert.equal(cached(17,12),false,'water stays impassable');
+footprint.hp=0;
+cached=assertWalkParity('destroyed footprint');
+assert.equal(cached(12,13),true,'new query must see destroyed building removed');
+footprint.hp=500;footprint.x=27.5;footprint.y=27.25;
+cached=assertWalkParity('relocated footprint');
+assert.equal(cached(12,13),true,'old location reopens after moving building');
+assert.equal(cached(27,27),false,'new footprint blocks its new location');
+
+// Fractional coordinates and out-of-grid custom hooks must not collide
+// with packed in-grid keys, and each unique probe is cached once.
+let customProbes=0;
+g.walkable=(x,y)=>{customProbes++;return x===.5&&y===.25;};
+const customWalk=g.navigationWalk();
+assert.equal(customWalk(.5,.25),true);
+assert.equal(customWalk(.5,.25),true);
+assert.equal(customWalk(0,0),false);
+assert.equal(customWalk(0,0),false);
+assert.equal(customWalk(1,0),false);
+assert.equal(customWalk(1,0),false);
+assert.equal(customProbes,3,'custom fractional and boundary probes cached separately');
+g.entities=savedEntities;g.water=savedWater;g.buildingBuckets=savedBuckets;
+
 delete g.walkable;
 assert.equal(g.saveGame(),true);
 assert.equal(g.loadGame(),true);

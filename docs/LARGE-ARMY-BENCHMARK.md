@@ -126,3 +126,30 @@ row-wrap errors. The full balance, progression, economy and aviation gates
 must pass before merging. The expected reduction in string allocation is a
 source-level hypothesis: compare matched repeated benchmarks before claiming
 faster A* or improved browser FPS.
+
+## Packed navigation passability-cache keys (28 October 2026)
+
+The production A* pathfinder already uses packed integer node IDs, but
+`navigationWalk()` still built a separate per-request building-footprint set
+and passability cache using allocated `"x,y"` strings. Each of the 120
+initial path requests independently creates these navigation caches.
+
+The navigation helper now uses `y * WORLD_SIZE + x` for integer tiles inside
+the active 34×34 or 48×48 battlefield. Fractional and out-of-grid probes
+retain string keys so custom `walkable()` hooks and non-grid callers retain
+their previous caching behavior. Each request still builds its own cache:
+there is **no cross-query sharing**, no stale building snapshot, and no
+change to terrain rules, building footprint geometry, corner clipping,
+path weights, A* heap ordering, unit orders, or save data.
+
+The extended `tests/path-query-cache-v236.test.mjs` compares every tile in
+the XL grid with the live `walkable()` result, including fractional building
+coordinates, water, destroyed and relocated structures. It separately checks
+fractional/out-of-grid custom-hook cache identity. Existing pathfinding,
+traffic, economic progression and aviation tests remain the regression gates.
+
+**Performance claim boundary:** fewer string keys are constructed in this
+source path, but no browser FPS or reliable end-to-end speedup is established.
+The first-tick 120-unit A* burst still exists; this change reduces the
+per-query allocation cost rather than delaying initial orders. Compare
+matched benchmark runs before claiming a measurable improvement.
