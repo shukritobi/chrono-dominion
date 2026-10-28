@@ -976,10 +976,36 @@ sprites, plus separate editable .blend and 80px contact sheet/GIF.
   downloads the validated Warden source and baseline artifact, installs
   checksum-verified Blender 4.2.23, reopens the saved new source, and
   publishes preview artifacts only.
-- **Validation status: PENDING first workflow.** Do not claim measured
-  pixels, Blender reopen, or artistic acceptance until the workflow
-  completes and actual 160px/80px PNGs have been inspected. Do not lower
-  acceptance gates to conceal weak fracture silhouettes.
+- **VALIDATED:** [single successful targeted Actions #40624755875](https://github.com/shukritobi/chrono-dominion/actions/runs/40624755875)
+  and [preview artifact #12789365288](https://github.com/shukritobi/chrono-dominion/actions/runs/40624755875/artifacts/12789365288).
+  All **128 new 160×160 RGBA frames** passed the clipping and visual
+  difference gates (global bounds x30–130, y48–134). The saved
+  **133,662-byte editable .blend reopened successfully**, verifying
+  20 hidden closed 3D fracture meshes, 3 low-intensity conductor seams,
+  8 preserved original wreck meshes, 18 track cleats and 2 ion barrels.
+  The actual downloaded 160px and 80px contact sheets were inspected.
+  At 80px the first two phases preserve tank recognition; rupture and
+  settle expose unmistakably displaced weapons and broken armour.
+
+  | 80px changed pixels (32 facings) | Min | Max |
+  |---|---:|---:|
+  | Impact → shear RGBA | **965** | **1,246** |
+  | Shear → rupture RGBA | **986** | **1,308** |
+  | Rupture → settle RGBA | **938** | **1,313** |
+  | Settled vs archived destroyed RGBA | **912** | **1,244** |
+  | Adjacent impact facings RGBA | **1,000** | **1,228** |
+  | Rupture vs archived idle alpha | **577** | **730** |
+
+  Independent 80px impact→shear recomputations for facings 00/07/15/23/31
+  were **1169/1218/1099/1128/1135**, exactly matching the saved
+  per-facing JSON. The new separate 5120×640 RGBA preview atlas SHA-256
+  is `28375b7c2fd8f60a2da4496f46ffa1cb5bd043d4d67053c61ca4abb63e727ee6`.
+  The archived atlas SHA-256 remained unchanged before and after:
+  `97da4b781b50dc6bad7f154c04adc44cfe7f001e77c1f2e4a02c75bb454d2d7a`.
+
+  **Visual limitation:** tiny fracture seams are still subtle at 80px
+  and the preserved orange battery glow dominates the final wreck.
+  This is acceptable for a preview, not final art approval.
 - **Isolation:** stacked on the Warden temporal preview branch, with
   only Blender authoring, PNG QA, workflow, register and QA documentation
   changes. No game sprites, production manifests or gameplay files touched.
