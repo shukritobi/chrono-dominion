@@ -952,3 +952,61 @@ consume these separate 32-facing four-phase atlases, and production
 integration still requires explicit art approval. No published textures,
 game manifests or gameplay code were edited. No previously validated
 128-frame Warden atlas was rerendered.
+
+
+## 2026-10-28 Coalition Warden four-stage physical destruction — isolated preview pending QA
+
+**COA-VEH-004; not approved for publication.** Extends the already validated
+[32-facing Warden source](https://github.com/shukritobi/chrono-dominion/actions/runs/40471597359)
+without rerendering its idle/move/attack/destroyed atlas. The new
+[modeling script](../../tools/blender/preview_coalition_warden_four_stage_destruction.py)
+authors **20 independent asymmetric closed 3D fracture meshes**, including
+three low-intensity cyan conductor cracks, split twin-chevron glacis,
+severed dual ion accelerators, detached sensor crown, broken track guards,
+and a collapsed battery chassis. The phases are impact / shear / rupture /
+settle, with **32 directions × 4 phases = 128 NEW** 160px transparent
+sprites, plus separate editable .blend and 80px contact sheet/GIF.
+
+- [Modeling commit dd9613fb](https://github.com/shukritobi/chrono-dominion/commit/dd9613fb1b54d413c464aacd4b48293d3b8126a7), [QA commit db8184e3](https://github.com/shukritobi/chrono-dominion/commit/db8184e3b4d07940706205ee0461b18a3714bda0), and [workflow commit 3f79dc93](https://github.com/shukritobi/chrono-dominion/commit/3f79dc93dfd56cf4a39b0f500263810e6f8545f2). [Draft PR #82](https://github.com/shukritobi/chrono-dominion/pull/82).
+- [Strict actual PNG QA](../../tools/blender/qa_coalition_warden_four_stage_destruction.py)
+  checks every 160px RGBA frame for transparency, margins, four phase
+  transitions, original idle/destroyed comparisons, adjacent directions
+  and 80px silhouette change. It records per-facing metrics and SHA-256
+  before/after for the **unchanged original atlas**.
+- [Targeted workflow](../../.github/workflows/coalition-warden-four-stage-destruction-review.yml)
+  downloads the validated Warden source and baseline artifact, installs
+  checksum-verified Blender 4.2.23, reopens the saved new source, and
+  publishes preview artifacts only.
+- **VALIDATED:** [single successful targeted Actions #40624755875](https://github.com/shukritobi/chrono-dominion/actions/runs/40624755875)
+  and [preview artifact #12789365288](https://github.com/shukritobi/chrono-dominion/actions/runs/40624755875/artifacts/12789365288).
+  All **128 new 160×160 RGBA frames** passed the clipping and visual
+  difference gates (global bounds x30–130, y48–134). The saved
+  **133,662-byte editable .blend reopened successfully**, verifying
+  20 hidden closed 3D fracture meshes, 3 low-intensity conductor seams,
+  8 preserved original wreck meshes, 18 track cleats and 2 ion barrels.
+  The actual downloaded 160px and 80px contact sheets were inspected.
+  At 80px the first two phases preserve tank recognition; rupture and
+  settle expose unmistakably displaced weapons and broken armour.
+
+  | 80px changed pixels (32 facings) | Min | Max |
+  |---|---:|---:|
+  | Impact → shear RGBA | **965** | **1,246** |
+  | Shear → rupture RGBA | **986** | **1,308** |
+  | Rupture → settle RGBA | **938** | **1,313** |
+  | Settled vs archived destroyed RGBA | **912** | **1,244** |
+  | Adjacent impact facings RGBA | **1,000** | **1,228** |
+  | Rupture vs archived idle alpha | **577** | **730** |
+
+  Independent 80px impact→shear recomputations for facings 00/07/15/23/31
+  were **1169/1218/1099/1128/1135**, exactly matching the saved
+  per-facing JSON. The new separate 5120×640 RGBA preview atlas SHA-256
+  is `28375b7c2fd8f60a2da4496f46ffa1cb5bd043d4d67053c61ca4abb63e727ee6`.
+  The archived atlas SHA-256 remained unchanged before and after:
+  `97da4b781b50dc6bad7f154c04adc44cfe7f001e77c1f2e4a02c75bb454d2d7a`.
+
+  **Visual limitation:** tiny fracture seams are still subtle at 80px
+  and the preserved orange battery glow dominates the final wreck.
+  This is acceptable for a preview, not final art approval.
+- **Isolation:** stacked on the Warden temporal preview branch, with
+  only Blender authoring, PNG QA, workflow, register and QA documentation
+  changes. No game sprites, production manifests or gameplay files touched.
