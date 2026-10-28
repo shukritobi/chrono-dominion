@@ -1864,3 +1864,26 @@ integrated, approved or playable**. Next artistic pass: improve barrel
 readability and more restrained physical muzzle flare at 80px, then proceed
 to other missing vehicles/building damage states rather than rerendering
 unchanged validated frames.
+
+## 2026-10-28 FED-VEH-004 original Hunter Spider Drone — preview QA pending
+
+**PREVIEW ONLY, NOT FOR PUBLICATION.** Newly authored original six-legged
+Iron Federation reconnaissance/interdiction spider with an octagonal 16-vertex
+faceted command carapace, six separately articulated five-part leg assemblies,
+12 tapered closed custom leg beams, three attack-only physical injector/fang
+beams, and ten independent asymmetric closed 12-vertex fracture meshes.
+No live texture, manifest, loader or gameplay code is modified.
+
+- [Original editable Blender source](../../tools/blender/preview_federation_spider_drone_32.py).
+- [Strict all-32-direction 160px/80px image QA](../../tools/blender/qa_federation_spider_drone_32.py).
+- [Branch-scoped isolated preview workflow](../../.github/workflows/federation-spider-drone-32-review.yml).
+- Acceptance before claiming success: saved .blend reopens, 10 hidden manifold
+  fracture meshes, six leg pivots, 15 custom tapered beams, 128 unique
+  transparent unclipped 160px RGBA PNGs, and all 32 directions meet
+  movement >=45 changed 80px RGBA pixels, attack >=80 RGBA and >=25 alpha,
+  destroyed >=95 alpha, and adjacent-facing >=40 RGBA pixels.
+- Rendering and real 160px/80px inspection **PENDING**. These are
+  design targets, not achieved measurements. If a gate fails, fix original
+  geometry; do not lower acceptance thresholds.
+- Parent preview: [Federation Shrapnel Carrier validated run](https://github.com/shukritobi/chrono-dominion/actions/runs/40684908621).
+- No previously validated asset is rerendered by this isolated workflow.
