@@ -1803,6 +1803,32 @@
         e.oreLastDistance=null;e.oreProgressAt=this.time+7;
       }
     }
+    deployRefineryHarvester(refinery){
+      // A completed refinery includes one harvester. Prefer the historical
+      // (+2,+1) position when it is safe to preserve normal opening routes.
+      // If terrain or traffic blocks it, use the same collision-checked
+      // exit search as paid production rather than spawning inside an obstacle.
+      const probe={id:-1,kind:'harvester',type:'unit',hp:1};
+      const x=refinery.x+2,y=refinery.y+1,r=this.unitRadius(probe)*.8;
+      const preferred=this.canOccupyUnit(probe,x,y)&&
+        [[r,0],[-r,0],[0,r],[0,-r]].every(([dx,dy])=>
+          !this.water(x+dx,y+dy))&&
+        [[.75,0],[-.75,0],[0,.75],[0,-.75]].some(([dx,dy])=>
+          this.canOccupyUnit(probe,x+dx,y+dy));
+      const spot=preferred?{x,y}:this.findProductionExit(refinery,'harvester',refinery.owner);
+      if(!spot){
+        // Do not lose the refinery's included worker or place it in water.
+        // This pending flag lives on the building and survives v1 saves.
+        refinery.pendingHarvester=true;
+        refinery.harvesterDeployAt=this.time+.8;
+        return false;
+      }
+      const worker=this.add(refinery.owner,'harvester',spot.x,spot.y);
+      worker.order={type:'harvest'};
+      refinery.pendingHarvester=false;
+      refinery.harvesterDeployAt=0;
+      return true;
+    }
     step(dt){
       this.time+=dt;
       this.unitBuckets=new UnitBuckets().rebuild(this.entities);
@@ -1821,7 +1847,9 @@
       this.clampCamera();
       for(const e of this.entities){
         if(e.hp<=0)continue;
-        if(!e.built){e.construction+=dt/e.buildTime;if(e.construction>=1){e.construction=1;e.built=true;if(e.kind==='refinery'){const h=this.add(e.owner,'harvester',e.x+2,e.y+1);h.order={type:'harvest'};}}continue;}
+        if(!e.built){e.construction+=dt/e.buildTime;if(e.construction>=1){e.construction=1;e.built=true;if(e.kind==='refinery')this.deployRefineryHarvester(e);}continue;}
+        if(e.kind==='refinery'&&e.pendingHarvester&&
+            (e.harvesterDeployAt||0)<=this.time)this.deployRefineryHarvester(e);
         e.ready=Math.max(0,e.ready-dt);
         if((e.stunnedUntil||0)>this.time)continue;
         if(e.type==='unit'){
