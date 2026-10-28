@@ -146,8 +146,10 @@ for(const faction of ['coalition','federation','psionic']){
       new Set(),new Set(),hq,false),true,
       faction+': stage one spare tank near exposed safe ore route');
     assert.equal(guard.order?.type,'move');
-    assert.ok(Math.hypot(guard.order.x-worker.x,guard.order.y-worker.y)<=4.8,
-      faction+': screen stays near the truck without occupying its tile');
+    assert.ok(Math.hypot(guard.order.x-worker.x,guard.order.y-worker.y)>=5.4,
+      faction+': defender must not stand in the harvester loading pocket');
+    assert.ok(Math.hypot(guard.order.x-worker.x,guard.order.y-worker.y)<=7,
+      faction+': screen remains close enough to support the ore route');
     assert.notEqual(home.order?.type,'move',
       faction+': leave the second armoured unit at HQ');
     assert.ok(g.saveGame()&&g.loadGame(),
