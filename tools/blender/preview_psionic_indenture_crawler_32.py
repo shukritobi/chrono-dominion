@@ -63,6 +63,8 @@ def tooth(name, angle, material, parent):
 
 
 def harvest_only(obj):
+    obj["closed_fracture"] = False
+    obj["wreckage_only"] = False
     obj["harvest_only"] = True
     obj.hide_render = True
     return obj
@@ -119,6 +121,7 @@ def build():
                          (.19, -.15, i*.66), ore, chassis)
         o.hide_render = False
         o["wreckage_only"] = False
+        o["closed_fracture"] = False
         o["ore_payload"] = True
 
     wheels = []
