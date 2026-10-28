@@ -352,3 +352,24 @@ base-defense and global two-escort regressions remain in the same test file.
 This source-level behavior is **not** evidence of fewer harvester losses in
 natural matches. Require the full nine-scenario and 720-second economic
 regression gate before merging; compare actual losses separately.
+
+
+## Reachable-threat escort allocation (29 October 2026)
+
+The reactive two-escort planner previously reserved one escort for *any* other
+AI-visible ore-route attacker, even if that second attacker was too far from
+every available ground defender. This left a second nearby tank idle against
+one reachable Siege Tank. The planner now reserves a second-threat slot only
+when an **uncommitted, eligible defender** can reach that other attacker under
+the same 8.5-tile enemy range, nine-tile worker range, and assault-order
+restrictions already used by the actual escort assignment. It still never
+uses hidden enemies or creates units, and the two-escort cap and base-defense
+priority are unchanged.
+
+Three-faction regression in `tests/ai-harvester-defense.test.mjs` covers
+two simultaneously visible ore-route threats where only the siege threat
+has reachable escorts. Existing multi-threat tests retain the requirement
+to split escorts when both threats are serviceable. This is a narrowly
+scoped tactical correction, **not** evidence of improved natural-match
+harvester survival; compare the 720-second economic guard, six recorded
+harvester losses and aviation milestones before claiming an outcome.
