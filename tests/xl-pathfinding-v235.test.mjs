@@ -58,11 +58,11 @@ const gateWall=new Set();
 for(let y=1;y<47;y++)if(y!==10&&y!==23)gateWall.add('12,'+y);
 g.walkable=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
   x>0&&y>0&&x<47&&y<47&&!gateWall.has(x+','+y);
-const nearGate=g.findPath(6,11,20,11);
+const nearGate=g.findPath(6,11,20,11,null,null,true);
 assert.ok(nearGate.some(p=>p.x===12&&p.y===10),
   'unweighted A* uses the shorter northern gate');
 const costlyGate=g.findPath(6,11,20,11,null,
-  p=>p.x===12&&p.y===10?200:0);
+  p=>p.x===12&&p.y===10?200:0,true);
 assert.ok(costlyGate.some(p=>p.x===12&&p.y===23),
   'nonnegative hazards still produce the cheaper southern detour');
 assert.ok(!costlyGate.some(p=>p.x===12&&p.y===10),

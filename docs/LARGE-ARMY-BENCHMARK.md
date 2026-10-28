@@ -94,3 +94,14 @@ hazards and with a prohibitively expensive short gate. The existing serpentine,
 partial-route, corner, movement and save tests remain in place. Measure path
 processing and the 120-unit fixture in CI; do not infer browser FPS from Node
 wall times, or merge if the natural-match economy gate regresses.
+
+### CI rejection and scoped follow-up
+
+The first octile trial [40677047032](https://github.com/shukritobi/chrono-dominion/actions/runs/40677047032)
+passed navigation tests but failed the **nine-scenario balance gate**:
+Ashen Basin AI ore deliveries fell below the scenario's minimum. That broad
+change was **not merged**. The revised trial explicitly opts into octile only
+for ordinary player-owned ground move orders. Enemy AI, harvesters, recon,
+attack-move, traffic-recovery and all standalone path queries retain the
+original Euclidean heuristic. New navigation tests assert the opt-in boundary.
+The revised trial must pass the full balance and progression gates before merge.
