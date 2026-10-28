@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - asset-preview/coalition-hunter-optics-mk3-fixed-hull-20261028
+      - asset-preview/coalition-hunter-optics-mk3-notched-bevel-20261028
     paths:
       - .github/workflows/coalition-hunter-optics-mk3-review.yml
       - tools/blender/preview_coalition_hunter_optics_mk3.py
@@ -59,7 +59,7 @@ jobs:
           echo '9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d  archived-hunter-source/coalition-camouflage-hunter-32-preview.png' | sha256sum --check
           sha256sum archived-hunter-source/coalition-camouflage-hunter-32-preview.png > "$RUNNER_TEMP/hunter-original.sha256"
           echo '7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6  archived-hunter-optics-mk2/coalition-hunter-optics-mk2-32-preview.png' | sha256sum --check
-          sha256sum archived-hunter-optics-mk2/coalition-hunter-four-phase-optics-32-preview.png > "$RUNNER_TEMP/hunter-optics-original.sha256"
+          sha256sum archived-hunter-optics-mk2/coalition-hunter-optics-mk2-32-preview.png > "$RUNNER_TEMP/hunter-optics-original.sha256"
 
       - name: Cache official Blender 4.2.23 LTS
         uses: actions/cache@v4
@@ -92,7 +92,7 @@ jobs:
       - name: Reopen editable Blender source and verify real physical surfaces
         run: |
           set -euo pipefail
-          blender --background --threads 2 generated/coalition-hunter-optics-mk3/coalition-hunter-optics-mk3.blend --python-exit-code 1 --python-expr 'import bpy; o=[x for x in bpy.data.objects if x.get("optical_deployment_only")]; s=[x for x in o if x.get("optical_role")=="sail"]; r=[x for x in o if x.get("optical_role")=="rib"]; p=[x for x in o if x.get("optical_role")=="shutter"]; v=[x for x in bpy.data.objects if x.name.startswith("Hunter independent optical camouflage vane hinge")]; w=[x for x in bpy.data.objects if x.get("wreckage_only")]; a=[x for x in bpy.data.objects if x.get("attack_only")]; assert (len(o),len(s),len(r),len(p),len(v),len(w),len(a))==(16,4,8,4,4,14,3); assert all(x.type=="MESH" and len(x.data.vertices)==8 and len(x.data.polygons)==6 and x.hide_render for x in o); assert all(abs(x.get("mk3_width",0)-.98)<.0001 and abs(x.get("mk3_height",0)-.57)<.0001 for x in s); assert all(x.hide_render for x in w+a); print("PASS REOPEN: 16 closed optical deployment solids, 4 hinges, 14 original wrecks, 3 hidden attack effects")'
+          blender --background --threads 2 generated/coalition-hunter-optics-mk3/coalition-hunter-optics-mk3.blend --python-exit-code 1 --python tools/blender/verify_coalition_hunter_optics_mk3.py
 
       - name: Validate all 128 PNGs at actual 160px and 80px
         run: |
