@@ -185,10 +185,10 @@ def pose(p, state, facing):
         wheel.rotation_euler.y = (.64 if i%2 else -.64) if state=="move" else 0
     for i,leaf in enumerate(p["leaves"]):
         leaf.rotation_euler.x = (-.65 if i==0 else .65) if state=="deploy" else 0
-    p["mast"].rotation_euler.y = -.24 if state=="deploy" else 0
+    # Transport stows the entire 1.2-unit mast horizontally above the roof;\n    # deployment physically lifts it upright instead of merely lighting it.\n    p["mast"].rotation_euler.y = -.08 if state=="deploy" else 1.25
     p["mast"].location.z = 1.72 if state=="deploy" else 1.51
     for i,arm in enumerate(p["arms"]):
-        arm.rotation_euler.z = (-.32 if i==0 else .32) if state=="deploy" else 0
+        arm.rotation_euler.z = (-.25 if i==0 else .25) if state=="deploy" else (-.95 if i==0 else .95)
     for obj in chassis.children_recursive:
         if obj.type=="MESH":
             obj.hide_render = bool(obj.get("deployment_only")) and state!="deploy"
