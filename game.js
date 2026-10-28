@@ -1002,7 +1002,7 @@
       }
       return heat;
     }
-    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null){
+    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
       // open list. During congestion replans it also prices nearby unit traffic.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
@@ -1036,6 +1036,16 @@
       const costs=new Map([[begin,0]]),came=new Map(),closed=new Set();
       const traffic=avoidUnit?this.trafficCosts(avoidUnit):null;
       const moves=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      // Opt-in only for ordinary player move orders: changing enemy AI routes
+      // lowered Ashen Basin ore income in the broad experiment (PR #97).
+      // Octile distance is the exact obstacle-free lower bound for our
+      // eight-way grid (orthogonal cost 1, diagonal cost sqrt(2)). Unlike
+      // Euclidean distance it stays admissible while expanding fewer tiles
+      // on long mixed-axis routes; congestion/hazard costs are nonnegative.
+      const heuristic=(x,y)=>{
+        const dx=Math.abs(goal.x-x),dy=Math.abs(goal.y-y);
+        return Math.max(dx,dy)+(Math.SQRT2-1)*Math.min(dx,dy);
+      };
       let nearest=begin,nearestDist=Math.hypot(start.x-tx,start.y-ty),nearestCost=0;
       const trace=(end)=>{
         const path=[];let k=end;
@@ -1069,7 +1079,7 @@
           const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
-          push({x,y,key:k,f:candidate+Math.hypot(goal.x-x,goal.y-y)});
+          push({x,y,key:k,f:candidate+(useOctile?heuristic(x,y):Math.hypot(goal.x-x,goal.y-y))});
         }
       }
       return trace(nearest);
@@ -1306,7 +1316,9 @@
         // emergency escape orders issued during retreat cooldowns.
         e.path=scoutPatrol?
           (this.scoutPath(e,{x:tx,y:ty},new Map(),e.trafficRepath?e:null)?.path||[]):
-          this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null);
+          this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null,null,
+            e.owner===0&&e.order?.type==='move'&&
+            e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath);
         // Routine new move orders need an immediate first A* route, but
         // identical 1.6s refresh timers synchronize large formations. Spread
         // only the *first* non-urgent refresh by stable unit ID; subsequent

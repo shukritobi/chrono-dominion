@@ -197,6 +197,27 @@ assert.ok(Math.abs(enemyMover.pathRecheck-1.4)<1e-6,
   'AI move orders retain the original refresh cadence and economy');
 game.findPath=originalPath;
 
+// The faster heuristic must be opt-in: AI routes, harvesters, and combat
+// continue using the established Euclidean route selection and economy.
+game.entities=[];
+game.water=()=>false;
+const optIn=[];
+game.findPath=(...args)=>{optIn.push(args[6]===true);return originalPath(...args);};
+const routeCases=[
+  {owner:0,kind:'soldier',order:'move',expected:true},
+  {owner:1,kind:'soldier',order:'move',expected:false},
+  {owner:0,kind:'harvester',order:'move',expected:false},
+  {owner:0,kind:'tank',order:'attackMove',expected:false}
+];
+for(let i=0;i<routeCases.length;i++){
+  const c=routeCases[i],u=game.add(c.owner,c.kind,5,6+i*5);
+  u.order={type:c.order,x:25,y:u.y};
+  game.move(u,25,u.y,.2);
+  assert.equal(optIn.at(-1),c.expected,
+    c.kind+' '+c.order+' '+c.owner+' heuristic eligibility');
+}
+game.findPath=originalPath;
+
 // Existing saves contain ordinary path/position state, not transient queue
 // nodes; the next frame can rebuild the pathfinder after loading.
 setup();
