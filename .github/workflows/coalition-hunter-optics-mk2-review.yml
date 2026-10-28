@@ -1,0 +1,116 @@
+name: Coalition Hunter MK-II Fixed-Hull Optical Sail Blender Preview
+
+# Preview only. Read-only runner; never publish game assets or manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/coalition-hunter-optics-mk2-fixed-hull-20261028
+    paths:
+      - .github/workflows/coalition-hunter-optics-mk2-review.yml
+      - tools/blender/preview_coalition_hunter_optics_mk2.py
+      - tools/blender/qa_coalition_hunter_optics_mk2.py
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-coalition-hunter-optics-mk2-fixed-hull
+  cancel-in-progress: true
+
+jobs:
+  optical-deployment-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview branch
+        uses: actions/checkout@v4
+
+      - name: Syntax-check source and strict image QA
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_hunter_optics_mk2.py tools/blender/qa_coalition_hunter_optics_mk2.py
+          python -m pip install --quiet Pillow
+
+      - name: Download previously validated Hunter source and original frames
+        uses: actions/download-artifact@v4
+        with:
+          name: chrono-coalition-camouflage-hunter-32-preview
+          run-id: 40648427473
+          github-token: ${{ github.token }}
+          path: archived-hunter-source
+
+      - name: Download immutable MK-I optical preview for silhouette comparison
+        uses: actions/download-artifact@v4
+        with:
+          name: chrono-coalition-hunter-four-phase-optics-preview
+          run-id: 40662180954
+          github-token: ${{ github.token }}
+          path: archived-hunter-optics
+
+      - name: Verify immutable original source and atlas
+        run: |
+          set -euo pipefail
+          test -s archived-hunter-source/coalition-camouflage-hunter.blend
+          test -s archived-hunter-source/frames/idle/00.png
+          test -s archived-hunter-source/frames/idle/31.png
+          echo '9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d  archived-hunter-source/coalition-camouflage-hunter-32-preview.png' | sha256sum --check
+          sha256sum archived-hunter-source/coalition-camouflage-hunter-32-preview.png > "$RUNNER_TEMP/hunter-original.sha256"
+          echo '7a3acf883b62473ee50d22aafd60052bc1f52b70b3fd6e5806824277e77f8c39  archived-hunter-optics/coalition-hunter-four-phase-optics-32-preview.png' | sha256sum --check
+          sha256sum archived-hunter-optics/coalition-hunter-four-phase-optics-32-preview.png > "$RUNNER_TEMP/hunter-optics-original.sha256"
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender 4.2.23
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-$version-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only NEW MK-II optical sail frames and four fixed-hull poses
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 archived-hunter-source/coalition-camouflage-hunter.blend --python-exit-code 1 --python tools/blender/preview_coalition_hunter_optics_mk2.py -- --output generated/coalition-hunter-optics-mk2
+
+      - name: Reopen editable Blender source and verify real physical surfaces
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 generated/coalition-hunter-optics-mk2/coalition-hunter-optics-mk2.blend --python-exit-code 1 --python-expr 'import bpy; o=[x for x in bpy.data.objects if x.get("optical_deployment_only")]; s=[x for x in o if x.get("optical_role")=="sail"]; r=[x for x in o if x.get("optical_role")=="rib"]; p=[x for x in o if x.get("optical_role")=="shutter"]; v=[x for x in bpy.data.objects if x.name.startswith("Hunter independent optical camouflage vane hinge")]; w=[x for x in bpy.data.objects if x.get("wreckage_only")]; a=[x for x in bpy.data.objects if x.get("attack_only")]; assert (len(o),len(s),len(r),len(p),len(v),len(w),len(a))==(16,4,8,4,4,14,3); assert all(x.type=="MESH" and len(x.data.vertices)==8 and len(x.data.polygons)==6 and x.hide_render for x in o); assert all(abs(x.get("mk2_width",0)-.98)<.0001 and abs(x.get("mk2_height",0)-.57)<.0001 for x in s); assert all(x.hide_render for x in w+a); print("PASS REOPEN: 16 closed optical deployment solids, 4 hinges, 14 original wrecks, 3 hidden attack effects")'
+
+      - name: Validate all 128 PNGs at actual 160px and 80px
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_coalition_hunter_optics_mk2.py --stage generated/coalition-hunter-optics-mk2 --baseline archived-hunter-source --previous archived-hunter-optics
+          sha256sum --check "$RUNNER_TEMP/hunter-original.sha256"
+          sha256sum --check "$RUNNER_TEMP/hunter-optics-original.sha256"
+          test -s generated/coalition-hunter-optics-mk2/coalition-hunter-optics-contact-160.png
+          test -s generated/coalition-hunter-optics-mk2/coalition-hunter-optics-contact-80.png
+          test -s generated/coalition-hunter-optics-mk2/coalition-hunter-optics-facing04-80px.gif
+          test -s generated/coalition-hunter-optics-mk2/pixel-qa.json
+          test -s generated/coalition-hunter-optics-mk2/coalition-hunter-optics-fixed-hull-80.png
+          test -s generated/coalition-hunter-optics-mk2/coalition-hunter-optics-fixed-hull-160.png
+
+      - name: Upload preview-only source frames and QA even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-coalition-hunter-optics-mk2-fixed-hull-preview
+          path: generated/coalition-hunter-optics-mk2/
+          if-no-files-found: warn
+          retention-days: 30

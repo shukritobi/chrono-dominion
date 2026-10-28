@@ -1683,3 +1683,97 @@ Do not claim approval or integration. Future art passes should enlarge the
 physical fin footprint without clipping and compare fixed-hull poses to
 isolate deployment from vehicle bobbing. No published texture, manifest,
 loader or gameplay file was changed.
+
+
+## 2026-10-28 Coalition Hunter MK-II enlarged physical sails — VERIFIED preview only
+
+**COA-VEH-005; unapproved, unintegrated.** Follow-up to the validated
+[MK-I four-beat optical deployment](https://github.com/shukritobi/chrono-dominion/actions/runs/40662180954).
+The physical sails were too small at 80px and the prior animation combined
+sail motion with chassis bob, making causal visual attribution difficult.
+This pass enlarges the *original editable Blender geometry* rather than
+replacing it with a painted billboard or merely raising emission.
+
+- [Successful focused Blender Actions run #40670200185](https://github.com/shukritobi/chrono-dominion/actions/runs/40670200185),
+  [draft stacked PR #96](https://github.com/shukritobi/chrono-dominion/pull/96),
+  [artifact #12807533477](https://github.com/shukritobi/chrono-dominion/actions/runs/40670200185/artifacts/12807533477).
+- [Original MK-II modeling](../../tools/blender/preview_coalition_hunter_optics_mk2.py):
+  sail width **0.66 → 0.98**, depth **0.56 → 0.82**, height
+  **0.34 → 0.57** Blender units; diffraction ribs were enlarged and
+  repositioned. Fold now contains actual reduced-scale folded sails
+  rather than invisible fins. All **16 independently editable closed
+  optical solids** remain: four sails, eight ribs, four shutters.
+  Original four vane hinges, 14 hidden wrecks and three hidden attack
+  effects remain preserved. **142,942-byte compressed editable .blend**
+  reopened in Blender; verified four sails have expected .98 width and
+  .57 height properties and all 16 solids are hidden in the saved
+  intact source.
+- [Strict independent pixel QA](../../tools/blender/qa_coalition_hunter_optics_mk2.py)
+  and [isolated read-only workflow](../../.github/workflows/coalition-hunter-optics-mk2-review.yml)
+  rendered **128 NEW 160×160 RGBA PNGs** (four beats × 32 facings),
+  a separate **5120×640 atlas**, plus **four NEW fixed-hull
+  diagnostic frames**. No original Hunter or MK-I optics frame was
+  rerendered. The fixed-hull frames keep chassis, turret, roadwheels,
+  track cleats and camera stationary; only physical optical assemblies
+  change.
+- **First workflow #40670084500 FAILED before rendering** because its
+  second artifact-download step accidentally requested the new MK-II
+  artifact instead of the immutable MK-I artifact. The
+  [corrected workflow commit 8ecc8bf](https://github.com/shukritobi/chrono-dominion/commit/8ecc8bf9cf851a085f16798ff9668f8c86fa58ce)
+  fixed the name, and only the subsequent run #40670200185 rendered.
+  The failure was an artifact lookup configuration error, not an art
+  acceptance failure; no duplicated render job was launched.
+- All **128 new pixel hashes are unique**; all transparent sprites are
+  nonempty and at least three pixels clear of canvas boundaries. The
+  new 5,779,336-byte artifact ZIP SHA-256 is
+  `6eae779e2e00c9f787ffc554b8c13027c5aa0b75de595791b4e38b7e62f037ae`;
+  new MK-II atlas SHA-256 is
+  `7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6`.
+
+| Actual 80px image QA across all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Fold → Spread RGBA changed pixels | **1,243** | 1,504 |
+| Spread → Refract RGBA changed pixels | **1,294** | 1,597 |
+| Refract → Glide RGBA changed pixels | **1,320** | 1,608 |
+| Fold → Spread alpha changed pixels | **672** | 850 |
+| Spread → Refract alpha changed pixels | **700** | 826 |
+| Refract → Glide alpha changed pixels | **718** | 879 |
+| MK-I → MK-II Fold alpha | **195** | 269 |
+| MK-I → MK-II Spread alpha | **312** | 377 |
+| MK-I → MK-II Refract alpha | **352** | 418 |
+| MK-I → MK-II Glide alpha | **317** | 366 |
+
+**More rigorous fixed-hull silhouette proof:** After downsampling the
+four stationary-hull frames to 80px, thresholding alpha at >=32, and
+counting changed *binary silhouette* pixels, the transitions changed
+**109** (Fold→Spread), **71** (Spread→Refract) and **58**
+(Refract→Glide) pixels. All exceed the predeclared **25-pixel** gate.
+Every beat also differs from MK-I by >=15 raw alpha pixels in **all
+32 facings** (not merely the mean). Mean MK-I→MK-II alpha differences
+are **236.31 / 335.81 / 382.28 / 338.19** pixels.
+
+**Independent artifact verification:** downloaded the completed ZIP and
+recomputed the 128 frame hashes, 128 alpha margins, all 128 MK-I→MK-II
+80px alpha differences, and three fixed-hull binary-silhouette changes
+using a separate local audit. Every recalculated metric matched the
+workflow JSON exactly. Visually inspected the actual 160px and 80px
+contact sheets, the stationary-hull 160px/80px strips, and the
+side-by-side MK-I/MK-II 80px comparison. The physical fins are
+substantially more visible and retain the Coalition teal/graphite
+palette. **Remaining artistic limitation:** the larger sails sometimes
+read as blocky panels rather than fine diffraction vanes; the
+underlying vehicle remains small at gameplay scale. Further bevel,
+notch and silhouette refinement would help. This is not real optical
+invisibility or gameplay camouflage.
+
+**Immutability and publication boundary:** original Hunter atlas SHA-256
+`9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`
+and MK-I optics atlas SHA-256
+`7a3acf883b62473ee50d22aafd60052bc1f52b70b3fd6e5806824277e77f8c39`
+both matched before and after the successful job. The review branch
+changes only new Blender modeling, new pixel QA, a new isolated
+workflow, this QA document and the asset register relative to its
+stacked preview parent. **No published textures, manifests, loaders,
+runtime or gameplay files were touched.** Do not merge or publish
+without explicit owner art approval. Next: refine sail outline,
+then return to missing vehicle models and remaining building-state polish.
