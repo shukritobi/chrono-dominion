@@ -169,12 +169,18 @@ function runScenario(map,difficulty,mi,di){
   const {game:g}=createGame();
   g.newMatch({map,difficulty,playerFaction,enemyFaction,startingCredits:5000});
   const aiAviation={decisions:{},recent:[],maxCreditsAfterAirfield:0,airfieldDecisionTicks:0};
+  let hadFactory=false,hadRadar=false;
   if(progression){
     // Record post-decision state at real planner ticks, without altering its logic.
     const originalRunAI=g.runAI.bind(g);
     g.runAI=()=>{
       const result=originalRunAI();
-      const state=aviationSnapshot(g),reason=classifyAviationBlocker(state);
+      const state=aviationSnapshot(g);
+      hadFactory ||= state.hasFactory;
+      hadRadar ||= state.hasRadar;
+      state.hadFactory=hadFactory;
+      state.hadRadar=hadRadar;
+      const reason=classifyAviationBlocker(state);
       aiAviation.decisions[reason]=(aiAviation.decisions[reason]||0)+1;
       if(state.airfieldOwned){
         aiAviation.airfieldDecisionTicks++;
@@ -426,6 +432,14 @@ const report={
 if(out)writeFileSync(out,JSON.stringify(report,null,2)+'\n');
 if(options.includes('--json'))console.log(JSON.stringify(report,null,2));
 else console.log('BALANCE LAB SUMMARY:',JSON.stringify(report.summary));
+if(progression&&!options.includes('--json'))for(const r of results){
+  console.log('AI AVIATION SCENARIO:',JSON.stringify({map:r.map,faction:r.enemyFaction,
+    airfieldStartedAt:r.aiMilestones.airfield.startedAt,
+    airfieldOperationalAt:r.aiMilestones.airfield.operationalAt,
+    aircraftQueuedAt:r.firstAircraftQueuedAt,
+    maxCreditsAfterAirfield:r.aiAviation.maxCreditsAfterAirfield,
+    blockers:r.aiAviation.decisions}));
+}
 assert.equal(results.length,progression?3:9,
   'complete '+(progression?'three-faction natural progression':'three-map/three-difficulty')+' matrix');
 if(progression){
