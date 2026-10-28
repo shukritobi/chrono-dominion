@@ -98,5 +98,36 @@ g.water=()=>false;
 const legacy=g.findPath(8,12,23,12);
 assert.equal(legacy.length,15,'legacy open-terrain shortest path is unchanged');
 assert.equal(legacy.at(-1)?.x,23);
+
+// Packed A* keys must remain unique at both edges of 34x34 and 48x48
+// battlefields. In particular, a row boundary must never become a shortcut.
+for(const map of ['verdant','expanse']){
+  g.newMatch({...settings,map});
+  g.entities=[];
+  g.water=()=>false;
+  const edge=g.worldSize-2,mid=Math.floor(edge/2);
+  const endpoints=[
+    [1,1,edge,edge],
+    [edge,1,1,edge],
+    [1,edge,edge,1],
+    [edge,edge,1,1],
+    [1,mid,edge,mid]
+  ];
+  for(const [sx,sy,tx,ty] of endpoints){
+    const route=g.findPath(sx,sy,tx,ty);
+    assert.ok(route.length>0,map+' edge route must exist');
+    assert.equal(route.at(-1)?.x,tx,map+' reaches requested X');
+    assert.equal(route.at(-1)?.y,ty,map+' reaches requested Y');
+    let previous={x:sx,y:sy};
+    for(const point of route){
+      assert.ok(point.x>=1&&point.x<=edge&&point.y>=1&&point.y<=edge,
+        map+' route must never wrap outside legal grid bounds');
+      const dx=Math.abs(point.x-previous.x),dy=Math.abs(point.y-previous.y);
+      assert.ok(dx<=1&&dy<=1&&dx+dy>0,
+        map+' packed-key route must keep adjacent waypoints');
+      previous=point;
+    }
+  }
+}
 assert.equal(window.ChronoDominion.version,'2.42.0');
 console.log('v2.35 XL full-route A*, safe fallback, corner and save regression passed');

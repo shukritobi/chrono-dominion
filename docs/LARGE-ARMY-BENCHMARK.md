@@ -105,3 +105,24 @@ for ordinary player-owned ground move orders. Enemy AI, harvesters, recon,
 attack-move, traffic-recovery and all standalone path queries retain the
 original Euclidean heuristic. New navigation tests assert the opt-in boundary.
 The revised trial must pass the full balance and progression gates before merge.
+
+## Packed A* search-node keys (28 October 2026)
+
+The 120-unit benchmark attributes a substantial fraction of headless simulation
+work to A*. The pathfinder formerly allocated a `"x,y"` string for every
+candidate node, then split those strings while reconstructing each route.
+Because A* grid nodes are integer coordinates within the current 34×34 or
+48×48 map, the internal `costs`, `came` and `closed` maps can instead use
+the collision-free integer `y * WORLD_SIZE + x`. Route reconstruction uses
+integer remainder and division. This does **not** change the heuristic,
+priority ordering, traffic/hazard weights, passability cache, corner rules,
+expansion cap, partial-route fallback, unit orders or serialized save data.
+
+The existing XL serpentine, weighted-gate, unreachable-goal and historical-save
+regressions remain in place. Additional tests route between opposite grid
+edges on both map sizes and require every reconstructed waypoint to stay
+inside the legal battlefield and adjacent to its predecessor, guarding against
+row-wrap errors. The full balance, progression, economy and aviation gates
+must pass before merging. The expected reduction in string allocation is a
+source-level hypothesis: compare matched repeated benchmarks before claiming
+faster A* or improved browser FPS.

@@ -1007,7 +1007,9 @@
       // open list. During congestion replans it also prices nearby unit traffic.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
       const goal={x:clamp(Math.round(tx),1,WORLD_SIZE-2),y:clamp(Math.round(ty),1,WORLD_SIZE-2)};
-      const key=(x,y)=>x+','+y,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
+      // A* visits only in-bounds grid cells. Packed numeric keys avoid allocating
+      // thousands of coordinate strings per large-army path query.
+      const key=(x,y)=>y*WORLD_SIZE+x,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
       const walk=this.navigationWalk();
       const open=[],push=node=>{
         open.push(node);let i=open.length-1;
@@ -1050,7 +1052,8 @@
       const trace=(end)=>{
         const path=[];let k=end;
         while(k!==begin&&came.has(k)){
-          const [x,y]=k.split(',').map(Number);path.push({x,y});k=came.get(k);
+          const x=k%WORLD_SIZE,y=Math.floor(k/WORLD_SIZE);
+          path.push({x,y});k=came.get(k);
         }
         path.reverse();return path;
       };
@@ -1075,7 +1078,9 @@
           if(closed.has(k)||!walk(x,y))continue;
           if(dx&&dy&&(!walk(node.x+dx,node.y)||!walk(node.x,node.y+dy)))continue;
           const hazard=extraCost?Math.max(0,Number(extraCost({x,y}))||0):0;
-          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0)+hazard;
+          // Congestion heat is independently keyed by coordinate strings;
+          // only A*'s internal node bookkeeping uses packed integer keys.
+          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(x+','+y)||0)+hazard;
           const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
