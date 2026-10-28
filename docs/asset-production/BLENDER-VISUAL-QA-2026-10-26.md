@@ -2261,3 +2261,49 @@ meshes. The corrective geometry-state change now hides those specific
 upper hardware meshes only in destroyed, leaving their editable geometry
 intact in the saved Blender source. A second targeted render and independent
 comparison are required; do not mark the corrected visual as validated yet.
+
+
+### Corrected Citadel Carrier destroyed-state visual and independent audit — 29 October 2026 (PASSED)
+
+- [Successful corrected Blender 4.2.23 workflow #40733045548](https://github.com/shukritobi/chrono-dominion/actions/runs/40733045548)
+  and [complete 133-file preview artifact #12835951370](https://github.com/shukritobi/chrono-dominion/actions/runs/40733045548/artifacts/12835951370).
+  The saved **151,525-byte editable .blend** reopened in headless Blender;
+  source checks confirmed the 20-vertex hull, 10 wheel pivots, four hinged
+  shields, six recessed ports, two barrels, four attack-only gun-parented
+  effects and **12 closed-manifold 12-vertex/8-face wreck meshes**.
+- **Actual 160px and 80px contact sheets downloaded and visually inspected.**
+  The dark shield apertures and cyan gunport strips previously suspended
+  above the wreck are gone; the wreck reads as a lower crushed troop hull
+  with scattered armor fragments. Roof details and wheels remain subtle at
+  80px, and the wreck is still a single static beat rather than a staged
+  collapse. The attack effects read as small white flashes at this scale.
+- All **128 160x160 RGBA frames** are nonempty, unclipped and unique by
+  raw-pixel SHA-256, with **23px minimum alpha margin**. A separate
+  Pillow/NumPy/LANCZOS audit recomputed **256 per-facing measurements**
+  from the downloaded PNGs, reproducing the workflow JSON with **zero
+  discrepancies**. First-versus-corrected image-byte comparison confirmed
+  all **96 idle/move/attack frames are pixel-identical**; only the 32
+  destroyed frames changed. Thus the repair did not regress any other state.
+- Corrected atlas SHA-256:
+  `0f7d57b1be5f488e9604371839c52c2933a24f093a79bfec545252fdd10d0eda`.
+  Downloaded ZIP SHA-256:
+  `86cc24e0512d9a2714545f1c8c0c7ae2c5f7db7d98d601d730f13006e74f608c`.
+
+| Independently reproduced corrected 80px measurements, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle → move RGBA | **1,212** | 1,776 |
+| Idle → attack RGBA | **985** | 1,483 |
+| Idle → attack alpha | **227** | 324 |
+| Idle → destroyed RGBA | **1,259** | 1,808 |
+| Idle → destroyed alpha | **739** | 1,224 |
+| Idle → attack alpha at 160px | **330** | 569 |
+| Idle → destroyed alpha at 160px | **1,545** | 3,054 |
+| Adjacent idle facings RGBA at 80px | **1,356** | 1,818 |
+
+**Limits and publication boundary:** No multi-frame locomotion, fire cycle,
+collapse or troop-garrison gameplay is implemented. This is an art preview,
+not a live gameplay integration. The isolated branch changes only five
+art-production files relative to the previous unapproved Lattice preview;
+no published textures, manifests, loaders or gameplay were modified.
+[Draft PR #110](https://github.com/shukritobi/chrono-dominion/pull/110)
+remains unapproved; do not merge or publish without explicit owner approval.
