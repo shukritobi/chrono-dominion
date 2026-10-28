@@ -239,10 +239,15 @@ unit's current position, so it usually passes occupancy and lane checks,
 resets the stuck timer, and prevents the symmetric lateral sidesteps from
 running. A due-east/west movement similarly risks accepting a zero-length
 Y-only fallback. The correction skips an axis fallback when its displacement
-is effectively zero (`<= 1e-6`), allowing the existing collision-checked
-alternative axis or lateral sidestep to run. It does **not** force another
-unit to yield, change pathfinding goals, ignore water, alter save fields, or
-add a new navigation rule.
+is effectively zero (`<= 1e-6`) **only for fully loaded harvesters**, allowing
+the existing collision-checked alternative axis or lateral sidestep to run.
+An initial all-unit experiment passed the targeted tests but **failed** the
+natural economy gate: Desert AI ore fell to 5,400 (baseline 15,120), deliveries
+to 53 (baseline 78), and operational AI airfields to zero (baseline one).
+That broad change was rejected; ordinary ground units retain their existing
+movement fallback. The scoped version still requires independent CI verification.
+It does **not** force another unit to yield, change pathfinding goals, ignore
+water, alter save fields, or add a new navigation rule.
 
 `tests/navigation-v15.test.mjs` reproduces the northbound and westbound
 cases with real harvesters, Guard soldiers and engine collision checks. The
