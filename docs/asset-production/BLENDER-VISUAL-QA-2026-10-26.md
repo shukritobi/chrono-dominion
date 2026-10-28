@@ -2483,38 +2483,74 @@ thresholds are unchanged. Full animation cycles remain future work.
 
 **Visual limitations / untested claims:** movement uses a single hover-bob/tilt pose, not a multi-frame propulsion cycle; at 80px its articulation is subtler than the numerical differences suggest. The open ring is built from twelve separate meshes, but no independent raycast proof of the empty center was performed. Construction deployment and wreckage are each a single static beat, not full animation. Actual MCV construction gameplay and terrain anchoring are **not implemented**. This is original **preview-only art**, not integrated or approved. The branch changes only five art-production paths compared with the prior Hallucination Drone preview, and [draft PR #117](https://github.com/shukritobi/chrono-dominion/pull/117) must remain unmerged pending owner approval. No published textures, manifests, loaders or gameplay files were modified.
 
-## 2026-10-29 Coalition MCV original 32-facing preview (COA-VEH-007)
+## 2026-10-29 Coalition MCV original 32-facing preview (COA-VEH-008)
 
-**PREVIEW ONLY — not approved for live game art.** This isolated branch adds
-[original Blender source](../../tools/blender/preview_coalition_mcv_32.py),
-[32-facing strict 160px/80px pixel QA](../../tools/blender/qa_coalition_mcv_32.py)
+**PREVIEW ONLY — not approved for live game art.** This isolated branch
+adds [original Blender source](../../tools/blender/preview_coalition_mcv_32.py),
+[32-facing strict pixel QA](../../tools/blender/qa_coalition_mcv_32.py)
 and a [branch-scoped targeted render workflow](../../.github/workflows/coalition-mcv-32-review.yml).
 [Draft PR #120](https://github.com/shukritobi/chrono-dominion/pull/120)
-is based on the previously validated Psionic MCV preview branch, not main.
+targets the previously validated Psionic MCV preview branch.
 
-The new Coalition machine is distinct from both prior MCVs: a custom
-**20-vertex chamfered armored hull**, **eight separately pivoted wheels**,
-**four physically extending ground outriggers**, a **folding twin-rail
-construction gantry** with hydraulic pistons, a deployment-only worktable
-and **twelve individually editable closed-manifold asymmetric wreck meshes**.
-The crane folds nearly horizontal for transport and rises for deployment.
-State and heading controls produce idle/move/deploy/destroyed at 32 facings;
-only this new asset is scheduled to render.
+The new Coalition MCV is distinct from the Federation and Psionic vehicles:
+a custom **20-vertex chamfered armored hull**, **eight separately pivoted
+roadwheels**, **four physically extending ground outriggers**, a **folding
+twin-rail construction gantry** with hydraulic pistons, deployment-only
+fabrication worktable and **twelve individually editable, closed-manifold,
+asymmetric wreckage meshes**. The crane folds nearly horizontal in transit
+and rises during deployment.
 
-**Predeclared pixel gates**: all 128 frames must be 160×160 RGBA, populated,
-unclipped with >=2px margin, and hash-unique; at 80px, each facing must
-change >=90 movement RGBA pixels, >=180 deployment RGBA pixels, >=100
-deployment alpha pixels, >=140 destroyed alpha pixels, and >=65 adjacent
-idle-direction RGBA pixels. Reopen the saved .blend and verify 20 hull
-vertices, eight wheel pivots, four outrigger pivots, one folding gantry,
-twelve 12-vertex/8-face watertight fracture meshes and hidden deployment
-and wreckage objects. Failed thresholds require geometry corrections, not
-threshold reductions.
+- [Successful original 128-frame Blender render #40768964885](https://github.com/shukritobi/chrono-dominion/actions/runs/40768964885):
+  rendered idle/move/deploy/destroyed × 32 facings at 160×160 RGBA;
+  reopened the original 137,245-byte .blend and verified the custom hull,
+  eight wheels, four outriggers and twelve 12-vertex/8-face watertight wreck
+  meshes. **128 unique, unclipped RGBA frame hashes** and **20px minimum
+  canvas margin**.
+- **Registry reconciliation and source correction:** the initial source
+  mistakenly labeled the MCV **COA-VEH-007**, which belongs to the
+  **Citadel Assault Carrier**. The authoritative AssetRegister.csv assigns
+  **COA-VEH-008** to Coalition MCV. Source code and QA identifiers were
+  corrected without changing geometry. The
+  [successful metadata-only correction workflow #40769372711](https://github.com/shukritobi/chrono-dominion/actions/runs/40769372711)
+  downloaded the original artifact, corrected the saved Blender root ID,
+  reopened the 130,223-byte compressed .blend, rechecked the twelve manifold
+  wreck meshes, and **did not rerender any frame**.
+- Independent comparison of the two downloaded artifacts verified that
+  **all 131 PNG files** (128 individual frames, 160px and 80px contact
+  sheets, and atlas) are **byte-identical**. The 5120×640 RGBA preview atlas
+  SHA-256 remained
+  `24b0c57e5cb87ae748ca6844ea4dfbf05367392fca269f3a52c6a2f0db23fe77`.
+- Independent local Pillow verification recomputed **256 pixel metrics**
+  (seven per-facing state measurements and one adjacent-facing measurement)
+  with **zero discrepancies** from the workflow JSON. Both actual 160px
+  and 80px contact sheets were downloaded and visually inspected.
 
-[First targeted render run #40768964885](https://github.com/shukritobi/chrono-dominion/actions/runs/40768964885)
-was confirmed **in progress** after Python compilation and official Blender
-installation passed. **No final pixel metrics or visual acceptance are claimed
-until the workflow completes and the actual 160px and 80px images are
-downloaded and independently inspected.** The workflow uploads the editable
-.blend, 128 PNGs, contact sheets, atlas and JSON measurements. No approved
+| Verified changed pixels across 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Movement RGBA, 80px | 922 | 1,253 |
+| Deployment RGBA, 80px | 1,156 | 1,342 |
+| Deployment alpha, 80px | 370 | 615 |
+| Destroyed RGBA, 80px | 969 | 1,303 |
+| Destroyed alpha, 80px | 546 | 764 |
+| Deployment alpha, 160px | 739 | 1,281 |
+| Destroyed alpha, 160px | 980 | 1,517 |
+| Adjacent facing RGBA, 80px | 961 | 1,282 |
+
+**Predeclared acceptance thresholds (unchanged):** at 80px each facing
+must change >=90 movement RGBA, >=180 deployment RGBA, >=100 deployment
+alpha, >=140 destroyed alpha, and >=65 adjacent idle-direction RGBA pixels.
+All pass. The Blender-source topology and pixel checks are separately
+verified; a Blender reopen does not by itself prove artistic readability.
+
+**Actual visual finding:** at 80px the eight-wheel hull and upright
+deployment crane are readable. The destroyed state loses the gantry and
+roofline but resembles a comparatively intact low armored slab; orange
+fracture fragments are subtle. This is a **remaining artistic limitation**,
+not a numerical QA failure. A later targeted wreck-only improvement should
+expose a torn roof cavity and more prominent asymmetric fracture edges,
+without rerendering validated idle/move/deploy frames.
+
+**Production safety:** only preview source, QA scripts, review workflows,
+this QA document and asset-register metadata were changed. No approved
 textures, production manifests, loaders or gameplay files were modified.
+The asset remains **preview-only, not playable or approved for publication**.
