@@ -2369,8 +2369,14 @@
         // Share the two-escort budget across distinct threats when several
         // workers or attackers are endangered. Preserve two-on-one siege
         // concentration when there is only one unassigned ore threat.
-        const otherThreats=oreThreats.some(({enemy:other})=>
-          other.id!==enemy.id&&!committed.has(other.id));
+        // Reserve the second escort only for another threat that a remaining
+        // defender can actually reach. An observed attacker across the map
+        // must not prevent two nearby guards from stopping a lone siege tank.
+        const otherThreats=oreThreats.some(({enemy:other,worker:otherWorker})=>
+          other.id!==enemy.id&&!committed.has(other.id)&&
+          [...available.values()].some(u=>
+            dist(u,other)<=8.5&&dist(u,otherWorker)<=9&&
+            (u.order?.type!=='attackMove'||dist(u,other)<=4.5)));
         const needed=siege&&!otherThreats?2:1;
         for(const escort of candidates.slice(0,Math.min(needed,2-escorts))){
           assign(escort,enemy);escorts++;
