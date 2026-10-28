@@ -1,0 +1,106 @@
+name: Federation Bull Four-Stage Destruction Blender Preview
+
+# PREVIEW ONLY: 128 NEW destruction frames; never publish production art.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/federation-bull-four-stage-destruction-20261028
+    paths:
+      - .github/workflows/federation-bull-four-stage-destruction-review.yml
+      - tools/blender/preview_federation_bull_four_stage_destruction.py
+      - tools/blender/qa_federation_bull_four_stage_destruction.py
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-federation-bull-four-stage-destruction
+  cancel-in-progress: true
+
+jobs:
+  destruction-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview-only branch
+        uses: actions/checkout@v4
+
+      - name: Compile modeling and actual PNG QA
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_federation_bull_four_stage_destruction.py tools/blender/qa_federation_bull_four_stage_destruction.py
+          python -m pip install --quiet Pillow
+
+      - name: Download validated Bull Blender source and 128 baseline PNGs
+        uses: actions/download-artifact@v4
+        with:
+          name: chrono-federation-bull-heavy-tank-32-preview
+          run-id: 40501761698
+          github-token: ${{ github.token }}
+          path: archived-bull-source
+
+      - name: Check immutable archived atlas and saved Blender source
+        run: |
+          set -euo pipefail
+          test -s archived-bull-source/federation-bull-heavy-tank.blend
+          test -s archived-bull-source/frames/idle/00.png
+          test -s archived-bull-source/frames/destroyed/31.png
+          sha256sum archived-bull-source/federation-bull-battle-tank-32-preview.png > "$RUNNER_TEMP/immutable-bull.sha256"
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified official Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-$version-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only 128 NEW physical destruction frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 archived-bull-source/federation-bull-heavy-tank.blend --python-exit-code 1 --python tools/blender/preview_federation_bull_four_stage_destruction.py -- --output generated/federation-bull-destruction
+
+      - name: Reopen saved editable Blender source and verify hidden original geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 generated/federation-bull-destruction/federation-bull-four-stage-destruction.blend --python-exit-code 1 --python-expr 'import bpy; d=[o for o in bpy.data.objects if o.get("bull_destruction_only")]; w=[o for o in bpy.data.objects if o.get("wreckage_only")]; p=[o for o in bpy.data.objects if o.name.startswith("Bull independent roadwheel pivot")]; c=[o for o in bpy.data.objects if o.name.startswith("Bull individually animated track cleat")]; assert len(d)==20 and len(w)==8 and len(p)==14 and len(c)==24,(len(d),len(w),len(p),len(c)); assert all(o.type=="MESH" and len(o.data.vertices)==8 and len(o.data.polygons)==6 and o.hide_render for o in d); assert all(o.hide_render for o in w); assert sum(o.get("damage_role")=="seam" for o in d)==3; print("PASS REOPEN: 20 original closed fragments, 8 original wrecks, 14 wheels, 24 cleats")'
+
+      - name: Verify all 160px and 80px PNGs and immutable baseline SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_federation_bull_four_stage_destruction.py --stage generated/federation-bull-destruction --baseline archived-bull-source
+          sha256sum --check "$RUNNER_TEMP/immutable-bull.sha256"
+          test -s generated/federation-bull-destruction/federation-bull-destruction-contact-160.png
+          test -s generated/federation-bull-destruction/federation-bull-destruction-contact-80.png
+          test -s generated/federation-bull-destruction/federation-bull-destruction-facing04-80px.gif
+          test -s generated/federation-bull-destruction/pixel-qa.json
+
+      - name: Upload preview-only editable Blender source, frames, atlas and QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-federation-bull-four-stage-destruction-preview
+          path: generated/federation-bull-destruction/
+          if-no-files-found: warn
+          retention-days: 30
