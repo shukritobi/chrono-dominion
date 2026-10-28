@@ -212,4 +212,37 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entityById(infantry.id)?.order?.id,rifle.id);
   assert.equal(g.entityById(scout.id)?.kind,'recon');
 }
+// A second visible threat on a different ore route must not consume an
+// escort slot when none of the available defenders can reach that route.
+// Otherwise one nearby siege tank gets only one guard, leaving a second
+// eligible tank idle even though the distant worker cannot be protected.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,hq,worker,guard,enemy}=game(faction);
+  enemy.hp=0;
+  guard.x=12;guard.y=14;
+  const second=g.add(1,'tank',13,16);
+  const scout=g.add(1,'recon',18,14);
+  const siege=g.add(0,'heavy',20,14);
+  const remoteWorker=g.add(1,'harvester',27,16);
+  const remoteRifle=g.add(0,'soldier',27,17);
+  assert.ok(g.sideCanSee(1,siege)&&g.sideCanSee(1,remoteRifle),
+    faction+': both local siege and distant ore threats are genuinely visible');
+  assert.ok(Math.hypot(second.x-remoteRifle.x,second.y-remoteRifle.y)>8.5,
+    faction+': no available escort can reach the distant threat');
+  const assignments=g.assignAIEngagements([guard,second],[],hq);
+  assert.equal(assignments.size,2,
+    faction+': unreachable second threat must not leave a local escort idle');
+  assert.equal(assignments.get(guard.id),siege.id,
+    faction+': lead escort must engage the local siege tank');
+  assert.equal(assignments.get(second.id),siege.id,
+    faction+': spare escort should reinforce the reachable siege engagement');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': focused orders and both workers survive the legacy save format');
+  assert.equal(g.entityById(guard.id)?.order?.id,siege.id);
+  assert.equal(g.entityById(second.id)?.order?.id,siege.id);
+  assert.equal(g.entityById(worker.id)?.kind,'harvester');
+  assert.equal(g.entityById(remoteWorker.id)?.kind,'harvester');
+  assert.equal(g.entityById(scout.id)?.kind,'recon');
+}
+
 console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');
