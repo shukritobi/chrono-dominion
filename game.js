@@ -516,8 +516,8 @@
     canPlace(x,y,side){
       if(x<2||y<2||x>WORLD_SIZE-3||y>WORLD_SIZE-3)return false;
       for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)if(this.water(x+dx,y+dy))return false;
-      for(const e of this.entities){if(e.type==='building'&&Math.abs(e.x-x)<2.7&&Math.abs(e.y-y)<2.7)return false;}
-      return this.entities.some(e=>e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
+      for(const e of this.entities){if(e.hp>0&&e.type==='building'&&Math.abs(e.x-x)<2.7&&Math.abs(e.y-y)<2.7)return false;}
+      return this.entities.some(e=>e.hp>0&&e.owner===side&&e.type==='building'&&e.built&&dist(e,{x,y})<8.2);
     }
     getDef(e){return BUILD[e.kind]||UNITS[e.kind];}
     veterancyRank(e){
@@ -581,7 +581,15 @@
       return true;
     }
     placeBuilding(x,y){
-      const key=this.placing,def=BUILD[key];if(!key||!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
+      const key=this.placing,def=BUILD[key];
+      if(!key)return this.notify('Invalid placement: keep structures near your base.');
+      // A prerequisite can be sold or destroyed while the placement ghost is active.
+      // Recheck before charging credits, and clear a now-impossible build order.
+      if(!this.prereq(0,key)){
+        this.placing=null;this.notify('Required technology or production building missing');
+        this.updateUI(true);return;
+      }
+      if(!this.canPlace(x,y,0))return this.notify('Invalid placement: keep structures near your base.');
       if(this.players[0].credits<def.cost)return this.notify('Insufficient credits');
       this.players[0].credits-=def.cost;this.stats[0].creditsSpent+=def.cost;const e=this.add(0,key,Math.round(x),Math.round(y),false);e.buildTime=3.5+def.cost/650;
       this.placing=null;this.selected=[e.id];this.audio?.play('build');this.notify(this.name(e)+' construction started');this.updateUI(true);
@@ -3305,7 +3313,8 @@
       for(const e of entities)e.type==='building'?this.drawBuilding(e):this.drawUnit(e);
       this.drawProjectiles();this.drawEffects();this.drawFog();
       if(this.placing&&this.state==='playing'){
-        const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),ok=this.canPlace(x,y,0);
+        const x=Math.round(this.mouse.worldX),y=Math.round(this.mouse.worldY),
+          ok=this.prereq(0,this.placing)&&this.canPlace(x,y,0);
         const color=ok?'#62e2a7':'#fa797f';
         for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
           const p=iso(x+dx,y+dy);
