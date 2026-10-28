@@ -2374,6 +2374,51 @@
       }
       return assignments;
     }
+    positionAIHarvesterScreen(fighters,engagements,platoonIds,supportIds,base,threatened){
+      // Stage ONE genuinely spare armoured reserve beside an exposed ore route
+      // before an enemy appears. Never steal base defense, assault formations,
+      // Hold sentries or active combat orders. No hidden enemy data is read.
+      if(!base||threatened||this.time<30)return false;
+      const armor=fighters.filter(u=>u.hp>0&&u.built&&
+        (u.kind==='tank'||u.kind==='heavy')&&
+        (u.retreatUntil||0)<=this.time&&(u.retreatCooldownAt||0)<=this.time&&
+        u.hp/u.maxHp>=.5);
+      const workers=this.entities.filter(h=>h.owner===1&&h.type==='unit'&&
+        h.kind==='harvester'&&h.hp>0&&h.built&&dist(h,base)>7)
+        .sort((a,b)=>dist(a,base)-dist(b,base)||a.id-b.id);
+      for(const worker of workers){
+        // Existing local armour already supplies coverage. Do not occupy the
+        // ore truck's immediate loading/unloading pocket.
+        if(armor.some(u=>dist(u,worker)<=4.5))continue;
+        if(this.entities.some(e=>e.owner===0&&e.type==='unit'&&e.hp>0&&
+          this.sideCanSee(1,e)&&dist(e,worker)<=7))continue;
+        const candidates=armor.filter(u=>!engagements.has(u.id)&&
+          !platoonIds.has(u.id)&&!supportIds.has(u.id)&&
+          u.stance!=='hold'&&!['attack','attackMove','hold'].includes(u.order?.type)&&
+          dist(u,base)<=11&&dist(u,worker)<=13&&
+          // At least one OTHER armoured defender remains close to HQ.
+          armor.some(other=>other.id!==u.id&&dist(other,base)<=8))
+          .sort((a,b)=>dist(a,worker)-dist(b,worker)||a.id-b.id);
+        for(const guard of candidates){
+          // Preserve an already-issued route to this worker's corridor.
+          if(guard.order?.type==='move'&&dist(guard.order,worker)<=4.8)continue;
+          const d=dist(worker,base),vx=(base.x-worker.x)/d,vy=(base.y-worker.y)/d;
+          for(const [back,lateral] of [[2.8,1.8],[2.8,-1.8],[3.5,0]]){
+            const x=Math.round(worker.x+vx*back-vy*lateral);
+            const y=Math.round(worker.y+vy*back+vx*lateral);
+            if(!this.canOccupyUnit(guard,x,y))continue;
+            const route=this.findPath(guard.x,guard.y,x,y);
+            const end=route.at(-1);
+            if(!end||dist(end,{x,y})>.85)continue;
+            guard.order={type:'move',x,y};
+            guard.path=[];guard.pathTarget=null;guard.pathGoal=null;
+            guard.pathRecheck=0;guard.yieldOrder=null;guard.laneWaiting=null;
+            return true;
+          }
+        }
+      }
+      return false;
+    }
     resumeAIRallyOrders(plan,members){
       // Tactical defense may interrupt a squad's rally order. Once combat
       // ends, resume the ORIGINAL assigned slot instead of waiting until the
@@ -2910,6 +2955,7 @@
       }
       const engagements=this.assignAIEngagements(active,invaders,base);
       this.coordinateAISiegeFocus(active,engagements,threatened);
+      this.positionAIHarvesterScreen(active,engagements,platoonIds,supportIds,base,threatened);
       for(const fighter of active){
         if(engagements.has(fighter.id))continue;
         if(fighter.order?.type==='attack'){

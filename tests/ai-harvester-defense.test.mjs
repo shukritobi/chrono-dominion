@@ -131,4 +131,65 @@ for(const faction of ['coalition','federation','psionic']){
       !assignments.has(guard.id));
   }
 }
+// Pre-contact reserve staging must be defensive, bounded and fog-honest.
+for(const faction of ['coalition','federation','psionic']){
+  const setup=()=>{
+    const state=game(faction),{g,guard,enemy}=state;
+    enemy.hp=0;
+    guard.x=20;guard.y=21;
+    const home=g.add(1,'tank',27,26);
+    return {...state,home};
+  };
+  {
+    const {g,hq,worker,guard,home}=setup();
+    assert.equal(g.positionAIHarvesterScreen([guard,home],new Map(),
+      new Set(),new Set(),hq,false),true,
+      faction+': stage one spare tank near exposed safe ore route');
+    assert.equal(guard.order?.type,'move');
+    assert.ok(Math.hypot(guard.order.x-worker.x,guard.order.y-worker.y)<=4.8,
+      faction+': screen stays near the truck without occupying its tile');
+    assert.equal(home.order?.type,'idle'===home.order?.type?'idle':undefined,
+      faction+': leave the second armoured unit at HQ');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': normal move order remains compatible with legacy saves');
+    assert.equal(g.entityById(guard.id)?.order?.type,'move');
+  }
+  {
+    const {g,hq,guard,home}=setup();
+    assert.equal(g.positionAIHarvesterScreen([guard,home],new Map(),
+      new Set(),new Set(),hq,true),false,
+      faction+': an active base attack blocks proactive redeployment');
+    assert.equal(guard.order?.type,'move',false,
+      faction+': no new move order during an attack');
+  }
+  {
+    const {g,hq,guard}=setup();
+    assert.equal(g.positionAIHarvesterScreen([guard],new Map(),
+      new Set(),new Set(),hq,false),false,
+      faction+': do not leave HQ without its last armoured defender');
+  }
+  {
+    const {g,hq,guard,home}=setup();
+    guard.order={type:'attackMove',x:5,y:5};
+    assert.equal(g.positionAIHarvesterScreen([guard,home],new Map(),
+      new Set(),new Set(),hq,false),false,
+      faction+': do not interrupt an active assault');
+    assert.equal(guard.order.type,'attackMove');
+  }
+  {
+    const {g,hq,guard,home,enemy}=setup();
+    enemy.hp=100;
+    assert.ok(g.sideCanSee(1,enemy));
+    assert.equal(g.positionAIHarvesterScreen([guard,home],new Map(),
+      new Set(),new Set(),hq,false),false,
+      faction+': visible danger requires reactive defense, not blind staging');
+  }
+  {
+    const {g,hq,worker,guard,home}=setup();
+    worker.x=24;worker.y=23;
+    assert.equal(g.positionAIHarvesterScreen([guard,home],new Map(),
+      new Set(),new Set(),hq,false),false,
+      faction+': no unnecessary screen beside HQ');
+  }
+}
 console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');

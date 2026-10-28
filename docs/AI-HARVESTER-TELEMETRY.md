@@ -321,3 +321,10 @@ old trigger, and rejects targets after the only observer disappears.
 The 720-second natural-match progression and economy regression gate must
 be checked separately: passing these focused tests **does not prove** that
 harvester losses decrease, income increases, or aircraft are produced.
+
+
+## Proactive spare-armour ore-route screen (29 October 2026)
+
+After reactive escorts were shown to work in targeted tests but natural matches still lost six harvesters, the AI now stages **at most one uncommitted tank or heavy** in a reachable lateral pocket 2.8–3.5 tiles behind an exposed, currently safe harvester. It runs after normal platoon, base-defense and visible-engagement planning, and only when another healthy armoured defender remains within eight tiles of HQ. The unit must already be within 11 tiles of HQ and 13 of the worker; no assault, Hold, retreating or actively engaged unit is diverted. Workers within seven tiles of HQ, workers with AI-visible enemies within seven tiles, and workers already covered by armour do not trigger staging. A* must actually reach the destination; no teleports, credits or new saved state are introduced. A new move order uses the existing save format.
+
+This is deliberately a narrow **pre-contact reserve placement**, not a permanent escort contract. Coordinated platoons may still recruit a staged unit on later decisions. The three-faction regression in `tests/ai-harvester-defense.test.mjs` checks safe staging, HQ coverage, combat/assault protection, visible threats, nearby workers and save/load. The full 720-second natural-match economy guard remains the acceptance gate: do not claim reduced harvester losses until those results demonstrate it.
