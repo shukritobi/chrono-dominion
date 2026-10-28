@@ -143,6 +143,60 @@ assert.ok(walker.x>=8&&walker.x<=15,'the blocked unit moves without teleporting'
 assert.ok(!game.water(walker.x,walker.y));
 game.trafficCosts=originalCosts;
 
+// Large move formations all need their first route immediately, but the
+// periodic 1.6s refresh must not make all 120 soldiers repath on one tick.
+setup();
+game.entities=[];
+game.water=()=>false;
+const formation=Array.from({length:4},(_,i)=>{
+  const u=game.add(0,'soldier',5+i*3,5+i*5);
+  u.order={type:'move',x:29,y:u.y};
+  return u;
+});
+let pathCalls=0;
+const originalPath=game.findPath.bind(game);
+game.findPath=(...args)=>{pathCalls++;return originalPath(...args);};
+const refreshes=[];
+for(let tick=0;tick<16;tick++){
+  const before=pathCalls;
+  for(const u of formation)game.move(u,u.order.x,u.order.y,.2);
+  refreshes.push(pathCalls-before);
+}
+assert.equal(refreshes[0],4,'new move orders compute every first path immediately');
+assert.ok(refreshes.slice(1).filter(n=>n>0).length>=3,
+  'periodic formation refreshes must be spread across multiple ticks');
+assert.ok(refreshes.slice(1).every(n=>n<4),
+  'routine refreshes must not recreate the four-unit synchronous A* burst');
+assert.ok(refreshes.slice(1).reduce((sum,n)=>sum+n,0)>=4,
+  'staggering may delay routine refreshes, not permanently suppress them');
+// Changing an active destination must still repath immediately.
+const changing=formation[0],beforeChange=pathCalls;
+changing.order={type:'move',x:29,y:changing.y+3};
+game.move(changing,changing.order.x,changing.order.y,.2);
+assert.equal(pathCalls,beforeChange+1,'new destinations bypass the refresh timer');
+assert.ok(changing.pathRecheck<1.6,'changed destination uses the original timer');
+// Harvesting, reconnaissance, combat and traffic recovery remain urgent.
+game.entities=[];
+for(const kind of ['harvester','recon','tank']){
+  const u=game.add(0,kind,6,7+game.entities.length*5);
+  u.order={type:kind==='tank'?'attackMove':'move',x:28,y:u.y};
+  game.move(u,u.order.x,u.order.y,.2);
+  assert.ok(Math.abs(u.pathRecheck-1.4)<1e-6,
+    kind+' retains the original non-staggered refresh');
+}
+const blocked=game.add(0,'soldier',8,27);
+blocked.order={type:'move',x:28,y:27};
+blocked.trafficRepath=true;
+game.move(blocked,28,27,.2);
+assert.ok(Math.abs(blocked.pathRecheck-1.4)<1e-6,
+  'traffic-recovery A* is never delayed by routine staggering');
+const enemyMover=game.add(1,'soldier',12,25);
+enemyMover.order={type:'move',x:27,y:25};
+game.move(enemyMover,27,25,.2);
+assert.ok(Math.abs(enemyMover.pathRecheck-1.4)<1e-6,
+  'AI move orders retain the original refresh cadence and economy');
+game.findPath=originalPath;
+
 // Existing saves contain ordinary path/position state, not transient queue
 // nodes; the next frame can rebuild the pathfinder after loading.
 setup();
