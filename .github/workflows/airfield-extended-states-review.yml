@@ -3,12 +3,6 @@ name: Three-Faction Airfield Extended-State Blender Review
 # Preview-only: never write live art or production manifests.
 on:
   workflow_dispatch:
-  push:
-    branches: [asset-preview/three-faction-airfield-extended-states-20261028]
-    paths:
-      - ".github/workflows/airfield-extended-states-review.yml"
-      - "tools/blender/preview_airfield_extended_states.py"
-      - "tools/blender/qa_airfield_extended_states.py"
 
 permissions:
   contents: read

@@ -46,6 +46,7 @@ def main():
                 after=frames[state].resize((size,size),Image.Resampling.LANCZOS)
                 metrics[state]["alpha_"+str(size)]=changed_alpha(before,after)
                 metrics[state]["rgba_"+str(size)]=changed_rgba(before,after)
+        print("MEASURED",faction,json.dumps(metrics,sort_keys=True),flush=True)
         # These are geometric silhouette gates, not RGB-only glow changes.
         assert metrics["critical"]["alpha_80"]>=35,(faction,"critical silhouette",metrics)
         assert metrics["destroyed"]["alpha_80"]>=90,(faction,"destroyed silhouette",metrics)

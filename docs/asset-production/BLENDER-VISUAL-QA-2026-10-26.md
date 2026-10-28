@@ -561,3 +561,29 @@ critical, destroyed and power-out geometry in a second editable .blend.
   baseline render, and fails closed on any atlas/source mismatch.
 - **Publication:** no files under art/baked-v1, art/rendered, manifests or
   game code are changed. Keep these states separate until explicitly approved.
+
+### Targeted airfield QA correction (28 October 2026)
+
+The [first airfield render #40642316525](https://github.com/shukritobi/chrono-dominion/actions/runs/40642316525)
+**failed**, despite successful rendering and reopening all three editable
+sources. The actual downloaded 160px/80px contact sheets showed the Federation
+critical roof looked almost intact: **49 changed alpha pixels at 160px, only
+10 at 80px**, below the fixed >=35 gate. The intact flak roof occluded
+the first small broken barrel/cupola. This is a genuine silhouette problem,
+not a QA threshold problem.
+
+Independent pixel measurements from the preserved artifact:
+- Coalition critical/destroyed/power-out alpha at 80px: **122 / 338 / 0**;
+  power-out RGB(A) changed **1,297** pixels.
+- Federation critical/destroyed/power-out alpha at 80px: **10 / 495 / 0**;
+  power-out RGB(A) changed **1,384** pixels.
+- Psionic critical/destroyed/power-out alpha at 80px: **101 / 164 / 0**;
+  power-out RGB(A) changed **1,080** pixels.
+
+The targeted correction removes the intact Federation roof in critical state,
+replacing it with **two closed, uneven fractured roof panels and a raised
+broken flak assembly**. [Repair-only workflow](../../.github/workflows/federation-airfield-critical-repair.yml)
+reuses the prior artifact and rerenders **only Federation's four extra PNGs**,
+not the previously passing Coalition/Psionic poses or any five-frame atlas.
+The original general airfield workflow is now manual-only to prevent duplicate
+jobs. **Correction awaiting independent render and pixel evidence.**

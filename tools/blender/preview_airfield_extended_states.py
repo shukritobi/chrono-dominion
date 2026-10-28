@@ -20,7 +20,8 @@ REMOVE = {
                       "Flight control tower", "Aircraft loading mouth"),
     },
     "federation": {
-        "critical": ("Roof flak cupola", "Rooftop anti-air barrel"),
+        "critical": ("Roof flak cupola", "Rooftop anti-air barrel",
+                     "Layered anti-air roof"),
         "destroyed": ("Hardened aircraft bunker", "Layered anti-air roof",
                       "Roof flak cupola", "Rooftop anti-air barrel",
                       "Aircraft blast bay"),
@@ -67,9 +68,9 @@ def make_debris(faction, root):
             ("Sheared shelter-edge fin",(.72,-1.21,2.06),(1.17,.34,.43),(.24,-.11),armor),
             ("Exposed control conductor",(-.80,-1.36,2.26),(.20,.23,.74),(.13,-.16),steel)],
         "federation": [
-            ("Severed anti-air cupola",(-.80,-.81,2.86),(.64,.49,1.18),(.38,-.22),steel),
-            ("Broken flak barrel",(.19,-1.18,2.52),(1.19,.24,.33),(.22,-.08),dark),
-            ("Split roof armor seam",(.77,-1.26,2.17),(.84,.29,.35),(.16,-.09),steel)],
+            ("Severed anti-air cupola",(-.64,-1.36,3.10),(.71,.58,1.43),(.42,-.24),steel),
+            ("Collapsed near roof plate",(.15,-1.06,2.12),(2.21,1.20,.42),(.37,-.25),dark),
+            ("Torn far roof ridge",(-.66,.76,2.37),(1.53,.73,.43),(.32,.13),steel)],
         "psionic": [
             ("Fractured near-side landing arc",(-.34,-1.24,2.78),(.57,.44,1.43),(.32,-.22),armor),
             ("Detached neural beacon",(.88,-1.06,2.14),(.40,.42,.83),(.29,-.20),steel),
