@@ -242,6 +242,58 @@
           160,
           800
         ]
+      },
+      "tank": {
+        "file": "coalition-tank.png",
+        "directions": 32,
+        "states": {
+          "idle": 1,
+          "move": 1,
+          "attack": 1,
+          "destroyed": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          5120,
+          640
+        ]
+      },
+      "recon": {
+        "file": "coalition-recon.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "harvester": {
+        "file": "coalition-harvester.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
       }
     },
     "federation": {
@@ -482,6 +534,58 @@
           160,
           800
         ]
+      },
+      "tank": {
+        "file": "federation-tank.png",
+        "directions": 32,
+        "states": {
+          "idle": 1,
+          "move": 1,
+          "attack": 1,
+          "destroyed": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          5120,
+          640
+        ]
+      },
+      "recon": {
+        "file": "federation-recon.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "harvester": {
+        "file": "federation-harvester.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
       }
     },
     "psionic": {
@@ -721,6 +825,58 @@
         "canvasSize": [
           160,
           800
+        ]
+      },
+      "tank": {
+        "file": "psionic-tank.png",
+        "directions": 32,
+        "states": {
+          "idle": 1,
+          "move": 1,
+          "attack": 1,
+          "destroyed": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          5120,
+          640
+        ]
+      },
+      "recon": {
+        "file": "psionic-recon.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
+        ]
+      },
+      "harvester": {
+        "file": "psionic-harvester.png",
+        "directions": 8,
+        "states": {
+          "idle": 1,
+          "move": 2,
+          "attack": 1
+        },
+        "pivot": [
+          80,
+          141
+        ],
+        "canvasSize": [
+          1280,
+          640
         ]
       }
     }
