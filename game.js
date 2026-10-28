@@ -2339,21 +2339,27 @@
       for(const {enemy,worker} of oreThreats){
         if(escorts>=2)break;
         if(committed.has(enemy.id))continue;
-        const escort=[...available.values()].filter(u=>
+        const siege=this.stat(enemy,'range')>=4.5;
+        const candidates=[...available.values()].filter(u=>
           dist(u,enemy)<=8.5&&dist(u,worker)<=9&&
           (u.order?.type!=='attackMove'||dist(u,enemy)<=4.5))
           .sort((a,b)=>{
-            // A siege tank outranges rifle squads. If two defenders can
-            // respond promptly, prefer the one with the reach and firepower
-            // to contest its firing line; keep nearest-first for short-range
-            // threats. This only ranks already-eligible, AI-visible escorts.
-            const siege=this.stat(enemy,'range')>=4.5;
+            // Prioritise armour able to contest a siege firing line; retain
+            // nearest-first selection against ordinary short-range threats.
             const score=u=>dist(u,enemy)-(siege?Math.min(3.5,
               Math.max(0,this.stat(u,'range')-3)*1.4+
               this.stat(u,'damage')/16):0);
             return score(a)-score(b)||dist(a,enemy)-dist(b,enemy)||a.id-b.id;
-          })[0];
-        if(escort){assign(escort,enemy);escorts++;}
+          });
+        // A single long-range siege tank can kill a worker while its lone
+        // escort trades shots. Concentrate up to two *already nearby* guards
+        // on that one threat, without exceeding the existing global escort
+        // budget or pulling units away from the base. A rifle threat still
+        // receives one escort; neither case uses hidden enemy information.
+        const needed=siege?2:1;
+        for(const escort of candidates.slice(0,Math.min(needed,2-escorts))){
+          assign(escort,enemy);escorts++;
+        }
       }
       // Remaining combatants share target intentions. Prefer vulnerable,
       // threatening contacts while penalising projected overkill and the

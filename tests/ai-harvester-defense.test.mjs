@@ -164,4 +164,27 @@ for(const faction of ['coalition','federation','psionic']){
     faction+': distant armour is not needlessly recalled for rifle threats');
   assert.equal(scout.hp>0,true);
 }
+// A single long-range threat can require concentrated defensive fire. The
+// global two-escort cap still applies even if three nearby tanks are free.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,hq,worker,guard,enemy}=game(faction);
+  enemy.hp=0;
+  guard.x=12;guard.y=14;
+  const second=g.add(1,'tank',13,16);
+  const third=g.add(1,'tank',12,16);
+  const scout=g.add(1,'recon',18,14);
+  const siege=g.add(0,'heavy',20,14);
+  assert.ok(g.sideCanSee(1,siege),faction+': scout spots long-range threat');
+  const assignments=g.assignAIEngagements([guard,second,third],[],hq);
+  assert.equal(assignments.size,2,faction+': one siege threat gets two nearby escorts, not three');
+  assert.equal(assignments.get(guard.id),siege.id,
+    faction+': armoured lead escort targets the siege tank');
+  assert.ok([...assignments.values()].every(id=>id===siege.id),
+    faction+': both escorts focus the same observed siege threat');
+  assert.ok(g.saveGame()&&g.loadGame(),faction+': focused attack orders remain serializable');
+  assert.equal(g.entities.filter(u=>u.owner===1&&[guard.id,second.id,third.id].includes(u.id)&&
+    u.order?.id===siege.id).length,2);
+  assert.equal(g.entityById(worker.id)?.kind,'harvester');
+  assert.equal(g.entityById(scout.id)?.kind,'recon');
+}
 console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');
