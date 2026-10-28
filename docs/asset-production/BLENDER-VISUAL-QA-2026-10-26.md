@@ -1369,3 +1369,38 @@ preview parent shows exactly five changed development files (model,
 QA, workflow, asset register and this document). No production textures,
 gameplay files or published manifests changed. The new art remains
 **preview-only and not integrated into the game**.
+
+## 2026-10-28 Psionic Spindle Cannon Tank — original 32-facing pilot (pending real render QA)
+
+**PREVIEW ONLY; not approved, merged, published or game-integrated.** The
+registered PSI-VEH-003 Spindle Cannon Tank was still unmodeled in the
+AssetRegister when this work started. Its new original Blender script
+[preview_psionic_spindle_32.py](../../tools/blender/preview_psionic_spindle_32.py)
+builds a physically articulated six-tube rotating cannon on a traversing
+pedestal, a compact suspended hull, two independently movable gravity
+outriggers, exposed barrel retainers and **12 independent asymmetric
+wreckage solids**. Each state is real 3D geometry, not image substitution.
+
+- Source modeling commit [0aca302d](https://github.com/shukritobi/chrono-dominion/commit/0aca302d21d53b467e81e6cc94972cc5758bca38).
+- Independent strict-PNG QA commit [cf9b18b1](https://github.com/shukritobi/chrono-dominion/commit/cf9b18b1703a59b5b66346d2ca5ec1e01dbda153).
+- [PNG acceptance](../../tools/blender/qa_psionic_spindle_32.py)
+  requires 128 populated unclipped 160×160 RGBA frames, all 32 unique
+  adjacent 80px facings, and movement / firing / destroyed 80px
+  differences. It packs a **separate** 5120×640 preview atlas, both
+  160px and 80px contact sheets, and per-facing JSON.
+- Source-reopen checks require six independent barrel tubes, two
+  separately articulated gravity outriggers and 12 hidden editable
+  fracture objects. Targeted render workflow is read-only and stores
+  artifacts for review.
+- **Status at authoring:** static source and QA authored; actual Blender
+  rendering, 80px visual review, source reopening, and exact pixel
+  measurements are **not yet verified**. Do not mark the register as
+  passed until the targeted workflow succeeds and actual PNGs are
+  inspected. Existing Viper, Warden and other validated artwork is
+  deliberately not rerendered.
+
+**Risks to test:** rotating six-bore cannon may look similar between
+adjacent facings at 80px; high glow can hide barrel detail; destroyed
+fragments may crowd the near-side outrigger. These are hypotheses until
+the real contact sheets are inspected. No production textures, manifests
+or gameplay code are changed.
