@@ -1326,8 +1326,15 @@
       const move=Math.min(this.stat(e,'speed')*dt,len),vx=dx/len*move,vy=dy/len*move;
       const clear=(x,y)=>this.canOccupyUnit(e,x,y)&&this.checkLaneEntry(e,x,y);
       if(clear(e.x+vx,e.y+vy)){this.setUnitPosition(e,e.x+vx,e.y+vy);e.stuck=0;}
-      else if(clear(e.x+vx,e.y)){this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;}
-      else if(clear(e.x,e.y+vy)){this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;}
+      // A zero-length axis fallback is not movement. In particular, a truck
+      // heading exactly north/south must not accept its current X-only
+      // position as a successful escape while a soldier blocks the Y step.
+      else if(Math.abs(vx)>1e-6&&clear(e.x+vx,e.y)){
+        this.setUnitPosition(e,e.x+vx,e.y);e.stuck=0;
+      }
+      else if(Math.abs(vy)>1e-6&&clear(e.x,e.y+vy)){
+        this.setUnitPosition(e,e.x,e.y+vy);e.stuck=0;
+      }
       else {
         // Symmetric short sidesteps avoid simple head-on jams. No teleporting.
         const sign=e.id%2===0?1:-1;
