@@ -1,0 +1,132 @@
+name: Coalition MCV Preview ID Metadata Correction (no rerender)
+on:
+  push:
+    branches:
+      - asset-preview/coalition-mcv-32-20261029
+    paths:
+      - .github/workflows/coalition-mcv-id-repair.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-coalition-mcv-id-repair
+  cancel-in-progress: true
+
+jobs:
+  source-id-repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
+
+      - name: Install Pillow and compile corrected QA
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow
+          python -m py_compile tools/blender/preview_coalition_mcv_32.py tools/blender/qa_coalition_mcv_32.py
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Download existing 128-frame artifact (no rendering)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p generated/coalition-mcv-32
+          gh run download 40768964885 --repo shukritobi/chrono-dominion \
+            --name chrono-coalition-mcv-32-preview \
+            --dir generated/coalition-mcv-32
+          test -s generated/coalition-mcv-32/coalition-mcv.blend
+          test -s generated/coalition-mcv-32/frames/destroyed/31.png
+          find generated/coalition-mcv-32/frames -name '*.png' -print0 |
+            sort -z | xargs -0 sha256sum > "$RUNNER_TEMP/frames.before"
+          sha256sum generated/coalition-mcv-32/coalition-mcv-32-preview.png > "$RUNNER_TEMP/atlas.before"
+
+      - name: Correct editable source root ID without touching meshes
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 generated/coalition-mcv-32/coalition-mcv.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy
+          old=[o for o in bpy.data.objects if o.name.startswith("COA-VEH-007 ORIGINAL Coalition")]
+          assert len(old)==1, [(o.name) for o in bpy.data.objects if "COA-VEH-" in o.name]
+          old[0].name=old[0].name.replace("COA-VEH-007","COA-VEH-008")
+          bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath,compress=True)
+          print("PASS: source asset ID corrected; mesh topology untouched")
+          '
+          rm -f generated/coalition-mcv-32/*.blend1
+
+      - name: Reopen corrected source and validate actual mesh topology
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 generated/coalition-mcv-32/coalition-mcv.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy,bmesh
+          root=[o for o in bpy.data.objects if o.name.startswith("COA-VEH-008 ORIGINAL Coalition")]
+          assert len(root)==1
+          hull=[o for o in bpy.data.objects if o.type=="MESH" and o.get("custom_hull")]
+          wheels=[o for o in bpy.data.objects if "independently rotating roadwheel hub" in o.name.lower()]
+          outriggers=[o for o in bpy.data.objects if "independent deployable outrigger pivot" in o.name.lower()]
+          wreck=[o for o in bpy.data.objects if o.type=="MESH" and o.get("closed_fracture")]
+          assert len(hull)==1 and len(hull[0].data.vertices)==20
+          assert (len(wheels),len(outriggers),len(wreck))==(8,4,12)
+          for o in wreck:
+              bm=bmesh.new();bm.from_mesh(o.data)
+              assert len(bm.verts)==12 and len(bm.faces)==8
+              assert all(e.is_manifold for e in bm.edges)
+              bm.free()
+          print("PASS REOPEN: COA-VEH-008; 20 hull vertices, 8 wheels, 4 outriggers, 12 manifold wrecks")
+          '
+
+      - name: Recompute 80px/160px QA and prove all 128 frames unchanged
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_coalition_mcv_32.py --stage generated/coalition-mcv-32
+          find generated/coalition-mcv-32/frames -name '*.png' -print0 |
+            sort -z | xargs -0 sha256sum > "$RUNNER_TEMP/frames.after"
+          diff -u "$RUNNER_TEMP/frames.before" "$RUNNER_TEMP/frames.after"
+          sha256sum generated/coalition-mcv-32/coalition-mcv-32-preview.png > "$RUNNER_TEMP/atlas.after"
+          diff -u "$RUNNER_TEMP/atlas.before" "$RUNNER_TEMP/atlas.after"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('generated/coalition-mcv-32/pixel-qa.json')
+          r=json.loads(p.read_text())
+          assert r['asset_id']=='COA-VEH-008' and r['unique_frame_hashes']==128
+          print('PASS: corrected ID, all 128 source frames and atlas byte-identical')
+          PY
+
+      - name: Upload corrected source and unchanged frame archive
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-coalition-mcv-32-corrected-id
+          path: generated/coalition-mcv-32/
+          if-no-files-found: warn
+          retention-days: 30
