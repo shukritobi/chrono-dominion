@@ -1587,3 +1587,99 @@ were modified. No approved atlas, game texture, manifest, loader, runtime
 or gameplay source was edited. Do **not** merge or publish without art
 approval. Next: genuine four-phase optical camouflage deployment/movement,
 then remaining faction vehicles and outstanding building polish.
+
+## 2026-10-28 Coalition Camouflage Hunter four-beat optical deployment — QA PENDING
+
+**PREVIEW ONLY; not approved or integrated.** This pass follows the
+[validated four-stage Hunter destruction](https://github.com/shukritobi/chrono-dominion/actions/runs/40654743132)
+but deliberately loads the **original saved Hunter pilot .blend** from
+[workflow 40648427473](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473)
+instead of rerendering any of its 128 validated original sprites.
+
+- [Original procedural modeling](../../tools/blender/preview_coalition_hunter_four_phase_optics.py)
+  adds **16 independently editable closed optical solids**: four tapered
+  diffraction sails, eight narrow ceramic diffraction ribs and four small
+  physical projector shutters, all parented to existing articulated hardware.
+  Original four vane hinges, eight wheel pivots and 24 cleats also move across
+  the four distinct beats: **fold → spread → refract → glide**.
+- [Strict 160px/80px image QA](../../tools/blender/qa_coalition_hunter_four_phase_optics.py)
+  checks 128 real RGBA PNGs, per-facing alpha-silhouette changes separately
+  from RGB changes, adjacent facings, clipping, unique pixel hashes and
+  SHA-256 immutability of the original atlas.
+- [Read-only isolated preview workflow](../../.github/workflows/coalition-hunter-four-phase-optics-review.yml)
+  uses checksum-verified Blender 4.2.23, reopens the saved editable .blend,
+  and uploads all preview artifacts even if QA fails.
+- [Initial targeted Actions run #40662180954](https://github.com/shukritobi/chrono-dominion/actions/runs/40662180954);
+  [draft PR #94](https://github.com/shukritobi/chrono-dominion/pull/94).
+  **No render success, source-reopen success or pixel metrics are claimed yet.**
+  Record actual results and any failed gate here after inspecting the artifact.
+- Original Hunter preview atlas SHA-256 must remain
+  `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`.
+  This is physical silhouette deployment, **not** a claim that true optical
+  invisibility or gameplay camouflage is implemented.
+- Publication boundary: **do not merge, publish, replace textures/manifests
+  or integrate into gameplay without owner approval**. This preview branch
+  is stacked on an unmerged Hunter destruction branch.
+
+### 2026-10-28 final optical-deployment render inspection — VERIFIED
+
+The **single targeted workflow #40662180954 passed**. The job reopened the
+**142,313-byte editable .blend** and verified all **16 closed physical optical
+solids** (4 sails, 8 ribs, 4 shutters), four preserved vane hinges,
+14 original hidden wreck meshes and three hidden attack effects. The workflow
+produced **128 independent transparent RGBA 160×160 PNGs** across 32 facings
+and four beats. Every frame has a distinct pixel hash, nonempty alpha and a
+silhouette at least three pixels clear of the canvas edge. The separate new
+atlas is **5120×640**.
+
+- [Successful targeted workflow #40662180954](https://github.com/shukritobi/chrono-dominion/actions/runs/40662180954).
+- [Preview artifact #12804272364](https://github.com/shukritobi/chrono-dominion/actions/runs/40662180954/artifacts/12804272364):
+  134 files, **5,241,867 bytes**, ZIP SHA-256
+  `d395697c6efba68ea2de8db343fa7f6295732f9d2817d3ab467f179f0879bfcc`.
+- Separate new optical atlas SHA-256
+  `7a3acf883b62473ee50d22aafd60052bc1f52b70b3fd6e5806824277e77f8c39`.
+  Original baseline atlas SHA-256 remains
+  `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`
+  before and after rendering.
+
+| Actual 80px RGBA changed pixels, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Fold → Spread | **1,068** | 1,342 |
+| Spread → Refract | **1,087** | 1,406 |
+| Refract → Glide | **1,130** | 1,411 |
+| Adjacent Glide facings | **1,162** | 1,404 |
+| Glide vs archived Idle | **1,068** | 1,401 |
+
+| Actual 80px alpha-channel changed pixels | Minimum | Maximum |
+|---|---:|---:|
+| Fold → Spread | **535** | 784 |
+| Spread → Refract | **585** | 745 |
+| Refract → Glide | **636** | 776 |
+| Glide vs archived Idle | **590** | 809 |
+
+**Independent artifact inspection:** downloaded the actual ZIP and visually
+inspected both actual 160px and 80px contact sheets. Recomputed 18 independent
+80px pixel measurements (Fold→Spread RGBA, Spread→Refract alpha,
+Refract→Glide alpha at facings 00/04/08/16/24/31); **all 18 matched JSON**.
+Independently checked 128 RGBA frame sizes, alpha margins, unique pixel
+hashes and both artifact/atlas SHA-256 checksums.
+
+**Additional anti-overclaim check:** raw alpha-channel pixel differences count
+antialiasing and displacement as well as physical geometry. To test the
+stronger claim that the shape changes, independently thresholded 80px alpha
+at >=32 and minimized silhouette XOR over all integer translations within
+±8px. The resulting *translation-normalized binary silhouette* differences
+across all 32 facings were **95–167** pixels (Fold→Spread), **47–117**
+(Spread→Refract) and **75–152** (Refract→Glide). These smaller, conservative
+numbers still confirm shape differences rather than a mere uniform shift.
+This is an independent post-render audit, not an extra CI gate.
+
+**Visual critique:** the Hunter's hull remains relatively small in an 80px
+sprite. The new raised optical sails and differentiated deployment beats
+are discernible when animated but subtle when static. The brighter existing
+projector/track details can dominate the new fins. The model does **not**
+implement actual cloaking/transparency or any gameplay stealth logic.
+Do not claim approval or integration. Future art passes should enlarge the
+physical fin footprint without clipping and compare fixed-hull poses to
+isolate deployment from vehicle bobbing. No published texture, manifest,
+loader or gameplay file was changed.
