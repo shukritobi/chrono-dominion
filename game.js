@@ -2403,7 +2403,7 @@
           // Preserve an already-issued route to this worker's corridor.
           if(guard.order?.type==='move'&&dist(guard.order,worker)<=4.8)continue;
           const d=dist(worker,base),vx=(base.x-worker.x)/d,vy=(base.y-worker.y)/d;
-          for(const [back,lateral] of [[4.8,3.2],[4.8,-3.2],[3.5,4.8]]{
+          for(const [back,lateral] of [[4.8,3.2],[4.8,-3.2],[3.5,4.8]]){
             const x=Math.round(worker.x+vx*back-vy*lateral);
             const y=Math.round(worker.y+vy*back+vx*lateral);
             // Do not stand on the truck's loading or return lane. Reject
