@@ -1311,9 +1311,9 @@
         // identical 1.6s refresh timers synchronize large formations. Spread
         // only the *first* non-urgent refresh by stable unit ID; subsequent
         // refreshes retain the existing 1.6s cadence. Traffic recovery,
-        // changed destinations, harvesters, recon and combat keep their
-        // original prompt routing and timers. No new saved state is needed.
-        const staggerRoutine=!old&&e.order?.type==='move'&&
+        // changed destinations, AI orders, harvesters, recon and combat keep
+        // their original prompt routing and timers. No new saved state is needed.
+        const staggerRoutine=!old&&e.owner===0&&e.order?.type==='move'&&
           e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath;
         e.trafficRepath=false;
         e.pathTarget={x:tx,y:ty};e.pathGoal=e.path.length?e.path[e.path.length-1]:null;
