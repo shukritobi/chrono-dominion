@@ -64,4 +64,51 @@ const restored=g.entityById(live.id);
 assert.ok(restored);
 g.processHarvester(restored,.08);
 assert.ok(Number.isInteger(restored.oreIndex),'older harvesters can choose a new ore destination');
-console.log('PASS: blocked refinery ore, river isolation, stalled-deposit blacklisting and old-save recovery');
+// A full truck must not choose a closer-looking refinery across an
+// impassable river when another owned, operational depot is reachable.
+g.entities=[];g.ores=[];g.water=(x,y)=>x>=14&&x<=15;
+const isolatedDepot=g.add(0,'refinery',18,12);
+const reachableDepot=g.add(0,'refinery',4,12);
+const returningTruck=g.add(0,'harvester',12,12);
+returningTruck.load=360;
+let returnRoute=g.chooseHarvesterReturn(returningTruck);
+assert.equal(returnRoute.refinery.id,reachableDepot.id,
+  'loaded harvester selects reachable depot rather than closer isolated depot');
+const originalMove=g.move;
+let requested=null;
+g.move=(_unit,x,y)=>{requested={x,y};return false;};
+g.processHarvester(returningTruck,.1);
+assert.equal(requested.x,returnRoute.x,'return movement uses reachable approach X');
+assert.equal(requested.y,returnRoute.y,'return movement uses reachable approach Y');
+g.move=originalMove;
+assert.ok(!Object.keys(returningTruck).some(k=>k.startsWith('returnRefinery')),
+  'refinery route cache must not add fields to saved entities');
+
+// A destroyed selected depot invalidates the cache immediately; a newly
+// built reachable one can be selected on the next bounded route refresh.
+reachableDepot.hp=0;
+returnRoute=g.chooseHarvesterReturn(returningTruck);
+assert.equal(returnRoute.refinery.id,isolatedDepot.id,
+  'if all routes are blocked, preserve the old nearest-depot fallback');
+const rebuiltDepot=g.add(0,'refinery',10,17);
+g.time+=7;
+returnRoute=g.chooseHarvesterReturn(returningTruck);
+assert.equal(returnRoute.refinery.id,rebuiltDepot.id,
+  'route refresh selects a newly operational reachable depot');
+const enemyDepot=g.add(1,'refinery',12,10);
+g.time+=7;
+assert.equal(g.chooseHarvesterReturn(returningTruck).refinery.id,rebuiltDepot.id,
+  'harvester cannot unload at an enemy refinery');
+
+// Preserve the old exact approach and behavior when there is only one
+// friendly depot, which covers the established natural-match economy.
+g.entities=[];g.water=()=>false;
+const soleDepot=g.add(0,'refinery',9,9);
+const soloTruck=g.add(0,'harvester',17,9);
+soloTruck.load=360;
+returnRoute=g.chooseHarvesterReturn(soloTruck);
+assert.equal(returnRoute.refinery.id,soleDepot.id);
+assert.equal(returnRoute.x,soleDepot.x+1.9);
+assert.equal(returnRoute.y,soleDepot.y+1.3);
+
+console.log('PASS: blocked ore, reachable multi-refinery returns, cache invalidation and legacy saves');

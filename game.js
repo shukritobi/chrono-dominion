@@ -1709,13 +1709,55 @@
       }
       return -1;
     }
+    chooseHarvesterReturn(e){
+      const refineries=this.entities.filter(b=>b.owner===e.owner&&b.type==='building'&&
+        b.kind==='refinery'&&b.hp>0&&b.built)
+        .sort((a,b)=>dist(e,a)-dist(e,b)||a.id-b.id);
+      if(!refineries.length)return null;
+      const closest=refineries[0];
+      const fallback={refinery:closest,x:closest.x+1.9,y:closest.y+1.3};
+      // Preserve established single-refinery routes and their economy.
+      if(refineries.length===1)return fallback;
+      // A truck already in unload range should never leave for another depot.
+      const inRange=refineries.find(b=>dist(e,b)<=3.6);
+      if(inRange)return {refinery:inRange,x:inRange.x+1.9,y:inRange.y+1.3};
+      // Cache route choice outside saved entities. Recheck destroyed depots
+      // immediately, and refresh reachable approaches every six seconds.
+      const cached=this.harvesterReturnRoutes?.get(e);
+      if(cached&&this.time<cached.until){
+        const live=refineries.find(b=>b.id===cached.refineryId);
+        if(live)return {refinery:live,x:cached.x,y:cached.y};
+      }
+      let best=null;
+      const approaches=[[2,0],[-2,0],[0,2],[0,-2],
+        [2,2],[2,-2],[-2,2],[-2,-2]];
+      for(const refinery of refineries)for(const [dx,dy] of approaches){
+        const x=refinery.x+dx,y=refinery.y+dy;
+        if(!this.canOccupyUnit(e,x,y,true))continue;
+        // Static A* must actually reach the unload perimeter. A* returns
+        // the nearest partial path when water/buildings cut off the goal.
+        const route=this.findPath(e.x,e.y,x,y);
+        const last=route.at(-1)||{x:e.x,y:e.y};
+        if(Math.hypot(last.x-x,last.y-y)>.6)continue;
+        const score=route.length+Math.hypot(e.x-x,e.y-y)*.02;
+        if(!best||score<best.score)best={refinery,x,y,score};
+      }
+      if(!best)return fallback;
+      this.harvesterReturnRoutes??=new WeakMap();
+      this.harvesterReturnRoutes.set(e,{
+        refineryId:best.refinery.id,x:best.x,y:best.y,until:this.time+6
+      });
+      return {refinery:best.refinery,x:best.x,y:best.y};
+    }
     processHarvester(e,dt){
       e.work-=dt;
-      const refinery=this.nearest(e,b=>b.owner===e.owner&&b.type==='building'&&
-        b.kind==='refinery'&&b.built);
+      const returnRoute=e.load>=360?this.chooseHarvesterReturn(e):null;
+      const refinery=returnRoute?.refinery||this.nearest(e,b=>
+        b.owner===e.owner&&b.type==='building'&&b.kind==='refinery'&&b.built);
       if(!refinery)return;
       if(e.load>=360){
-        if(dist(e,refinery)>3.6)this.move(e,refinery.x+1.9,refinery.y+1.3,dt);
+        if(dist(e,refinery)>3.6)this.move(e,
+          returnRoute?.x??refinery.x+1.9,returnRoute?.y??refinery.y+1.3,dt);
         else if(e.work<=0){
           this.players[e.owner].credits+=e.load;
           if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
