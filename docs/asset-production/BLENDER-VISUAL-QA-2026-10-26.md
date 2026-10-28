@@ -2074,3 +2074,5 @@ development files relative to the stacked Mammoth preview branch: the
 new Blender source, new pixel QA, new isolated workflow, asset register,
 and this QA document. **No production texture, manifest, loader, or
 gameplay file was modified; the draft PR remains unapproved.**
+
+Review links: [draft PR #106](https://github.com/shukritobi/chrono-dominion/pull/106), [final quantitative QA documentation commit 262d34f](https://github.com/shukritobi/chrono-dominion/commit/262d34f6a89a862397a0dfb1847c8dec27ff4e14), and [successful corrected render #40713457651](https://github.com/shukritobi/chrono-dominion/actions/runs/40713457651). No owner approval or live integration is implied.
