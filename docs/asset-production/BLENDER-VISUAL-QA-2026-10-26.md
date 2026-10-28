@@ -1779,10 +1779,34 @@ without explicit owner art approval. Next: refine sail outline,
 then return to missing vehicle models and remaining building-state polish.
 
 
-## 2026-10-28 Coalition Hunter MK-III dual-notch beveled sails — QA PENDING
+## 2026-10-28 Coalition Hunter MK-III dual-notch beveled sails — VERIFIED preview only
 
-**Preview only; not approved or integrated.** This revision addresses blocky optical panels in validated [MK-II workflow #40670200185](https://github.com/shukritobi/chrono-dominion/actions/runs/40670200185). Four sail wedges are replaced by original dual-notch concave outlines and 14-quad bevel rings (42 vertices, 30 faces, 70 manifold edges per sail), with restrained ceramic chamfer material. Eight ribs, four shutters, four original hinges, 14 wreck meshes and three attack effects are preserved.
+**COA-VEH-005; unapproved and unintegrated.** [Successful targeted workflow #40678108105](https://github.com/shukritobi/chrono-dominion/actions/runs/40678108105), [draft stacked PR #98](https://github.com/shukritobi/chrono-dominion/pull/98), [artifact #12811352362](https://github.com/shukritobi/chrono-dominion/actions/runs/40678108105/artifacts/12811352362). The 5,921,387-byte artifact ZIP SHA-256 is `e3e93838783e87d5316830714163d21b45bb4ee8c44e2cd7959a44c3b739ba8e`.
 
-The isolated workflow downloads the immutable original Hunter .blend from #40648427473 and MK-II optical preview from #40670200185. It does not rerender either baseline; only 128 new MK-III poses plus four fixed-hull diagnostics. QA requires actual 160px/80px transparent PNGs, 32 facings, unique hashes, unclipped silhouettes, reopened watertight editable meshes, stationary-hull shape changes against MK-II and unchanged archived atlas SHA-256 checksums. Original atlas SHA-256 `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`; MK-II SHA-256 `7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6`.
+**Original editable geometry:** four previously wedge-like MK-II optical sails are now **concave dual-notch physical panels**, each with 42 vertices, 30 polygon faces, 70 watertight manifold edges, and 14 actual bevel faces assigned a restrained ceramic edge material. The signed winding is corrected for mirrored -Y sails. All 16 independent optical objects (four sails, eight ribs, four shutters), four original hinges, 14 hidden wreck meshes and three hidden attack effects remain intact. The **144,217-byte saved .blend reopened in Blender**, and the separate source-reopen script verified all four sail meshes' geometry, concavity, closed topology, material indices and hidden preview-only state.
 
-**Status at commit:** render, source reopen, pixel QA and actual image inspection pending. No metrics claimed until artifacts inspected. No live texture, manifest or gameplay file changed.
+**Scope:** downloaded the previously validated original Hunter source and MK-II preview; **did not rerender** their old frames. Generated only **128 new transparent 160×160 RGBA MK-III frames** (32 facings × four Fold/Spread/Refract/Glide beats), a new separate 5120×640 atlas, and four additional stationary-hull diagnostic poses. Every new frame has a unique pixel hash and an unclipped, nonempty silhouette with >=3px canvas clearance. Original baseline and MK-II preview atlas SHA-256 checks passed before and after rendering.
+
+| Independently recalculated MK-II → MK-III 80px alpha changes, 32 facings | Minimum | Maximum | Mean |
+|---|---:|---:|---:|
+| Fold | **161** | 210 | 185.59 |
+| Spread | **238** | 328 | 269.34 |
+| Refract | **238** | 323 | 279.69 |
+| Glide | **233** | 302 | 260.75 |
+
+All **32/32 facings** in each beat exceed the predeclared 12-alpha-pixel minimum. The stricter fixed-hull MK-II → MK-III binary silhouette comparison at 80px, with camera/chassis/track motion held stationary, changes **20 / 35 / 41 / 33 pixels** in Fold/Spread/Refract/Glide respectively (predeclared >=10). This independently isolates *real outline change* from emissive or chassis-motion effects. Within the new MK-III animation, fixed-hull silhouette changes are **114 / 77 / 68** pixels across Fold→Spread / Spread→Refract / Refract→Glide (>=25 required).
+
+| 80px per-facing MK-III phase RGBA differences | Minimum | Maximum |
+|---|---:|---:|
+| Fold → Spread | **1,247** | 1,510 |
+| Spread → Refract | **1,285** | 1,596 |
+| Refract → Glide | **1,311** | 1,610 |
+| Adjacent Glide directions | **1,330** | 1,586 |
+
+**Independent artifact audit:** downloaded the real ZIP, inspected the actual 160px and 80px contact sheets and the MK-II/MK-III side-by-side comparison, and recomputed **all 128 MK-II/MK-III 80px alpha differences**, all four stationary-hull baseline differences and all three new fixed-hull phase transitions using a separate Pillow script. Every independent measurement matched `pixel-qa.json`; all 128 unique hashes and alpha margins passed. The automated QA report contains **zero failures**. New MK-III atlas SHA-256: `33d31c45d97c9e7a23675830c7aa18c2959800f00f3bc850f54ac62d5727b903`.
+
+**Failure / corrective note:** the initial atomic commit used the inherited MK-II branch filter and an outdated checksum-path/reopen command. This configuration created **no workflow run and no render**. [Correction commit 649c738](https://github.com/shukritobi/chrono-dominion/commit/649c7381e678d3a0ea332a4464f4c1f5923daae0) fixed all three before the **single successful targeted render**. A separate [asset-register correction 7588d45](https://github.com/shukritobi/chrono-dominion/commit/7588d45bf1885c4875d44e9becdc3168306e2dc7) restored the Hunter row to a valid 13-column CSV (it had contained unquoted commas). No duplicate rendering jobs were launched.
+
+**Visual critique and remaining work:** the 160px chamfered shells are more faceted and less box-like; the 80px silhouette is measurably different but the actual notches are still subtle at gameplay scale. The unit remains a small first-pass vehicle; the optical deployment is **not** true invisibility or gameplay stealth. Prioritize remaining faction vehicles and building damage-state polish rather than indefinite Hunter iteration.
+
+**Publication boundary:** original Hunter atlas SHA-256 `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`, MK-II atlas SHA-256 `7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6`, both unchanged. No production texture, manifest, loader, runtime or gameplay file was modified. **Draft PR #98 must not be merged or published without owner approval.**
