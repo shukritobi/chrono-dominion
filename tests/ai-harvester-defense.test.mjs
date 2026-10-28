@@ -59,6 +59,34 @@ for(const faction of ['coalition','federation','psionic']){
     assert.equal(g.entityById(worker.id)?.kind,'harvester');
   }
   {
+    // The scout provides legitimate sight, but is not an available escort.
+    // A heavy tank can fire from five tiles away; intercept before it reaches
+    // the old fixed 4.5-tile harvester-defense trigger.
+    const {g,hq,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=12;
+    const scout=g.add(1,'recon',18,14);
+    const siege=g.add(0,'heavy',20,14);
+    assert.ok(g.sideCanSee(1,siege),faction+': scout spots approaching siege tank');
+    assert.ok(Math.hypot(guard.x-siege.x,guard.y-siege.y)>6.5,
+      faction+': defender cannot acquire this target through ordinary local combat');
+    assert.equal(g.assignAIEngagements([guard],[],hq).get(guard.id),siege.id,
+      faction+': ranged siege threat receives a preemptive worker escort');
+    siege.x=20.7;guard.x=12.3;
+    assert.equal(g.assignAIEngagements([guard],[],hq).has(guard.id),false,
+      faction+': do not intercept a distant tank outside its firing approach');
+    siege.hp=0;
+    const rifle=g.add(0,'soldier',19,14);
+    guard.x=12;
+    assert.equal(g.assignAIEngagements([guard],[],hq).has(guard.id),false,
+      faction+': short-range infantry must not inherit the siege interception radius');
+    rifle.hp=0;siege.hp=100;siege.x=20;scout.hp=0;
+    assert.equal(g.sideCanSee(1,siege),false,
+      faction+': worker and remote defender cannot see the tank without scout');
+    assert.equal(g.assignAIEngagements([guard],[],hq).has(guard.id),false,
+      faction+': preemptive escorts cannot pursue hidden ranged threats');
+    assert.equal(worker.kind,'harvester');
+  }
+  {
     const {g,hq,guard,enemy}=game(faction);
     enemy.x=19.5;
     assert.equal(g.sideCanSee(1,enemy),false,
