@@ -967,6 +967,7 @@ and a collapsed battery chassis. The phases are impact / shear / rupture /
 settle, with **32 directions × 4 phases = 128 NEW** 160px transparent
 sprites, plus separate editable .blend and 80px contact sheet/GIF.
 
+- [Modeling commit dd9613fb](https://github.com/shukritobi/chrono-dominion/commit/dd9613fb1b54d413c464aacd4b48293d3b8126a7), [QA commit db8184e3](https://github.com/shukritobi/chrono-dominion/commit/db8184e3b4d07940706205ee0461b18a3714bda0), and [workflow commit 3f79dc93](https://github.com/shukritobi/chrono-dominion/commit/3f79dc93dfd56cf4a39b0f500263810e6f8545f2). [Draft PR #82](https://github.com/shukritobi/chrono-dominion/pull/82).
 - [Strict actual PNG QA](../../tools/blender/qa_coalition_warden_four_stage_destruction.py)
   checks every 160px RGBA frame for transparency, margins, four phase
   transitions, original idle/destroyed comparisons, adjacent directions
