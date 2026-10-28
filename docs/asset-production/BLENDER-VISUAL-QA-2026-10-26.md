@@ -2413,3 +2413,34 @@ files** (new source, QA, workflow, updated register and this document).
 No live texture, atlas, manifest, loader or gameplay file was modified.
 **Preview-only; PR #115 remains a draft and must not be merged or published
 without owner approval.**
+
+
+## 2026-10-29 PSI-VEH-007 Psionic MCV — original Blender preview (render pending)
+
+**Preview-only; no live game texture, atlas, manifest, loader or runtime changes.**
+A new original [Psionic MCV source](../../tools/blender/preview_psionic_mcv_32.py),
+[32-facing strict image QA](../../tools/blender/qa_psionic_mcv_32.py), and
+[isolated Actions workflow](../../.github/workflows/psionic-mcv-32-review.yml)
+are staged separately from the validated Hallucination Drone baseline.
+The MCV has a purpose-built **24-vertex asymmetric manta-ark hull**,
+**six independent hover pivots**, **three folding ceramic fabrication petals**,
+**three physically extending deployment anchors**, an **open twelve-strut
+rising assembly gantry**, and **twelve independently editable closed-manifold
+fracture meshes**. It is not a reskinned Federation MCV: no wheels or gantry
+mast are reused; it deploys by hovering, raising a circular fabrication frame
+and grounding three radial anchor spars.
+
+**Predeclared gates, not measurements:** 32 facings × four states = 128 unique
+160×160 transparent RGBA PNGs, each nonempty with ≥2px alpha margin.
+After LANCZOS downsampling to actual 80px, every facing must change
+≥90 RGBA pixels in movement, ≥180 RGBA and ≥90 alpha in deployment,
+≥145 alpha in destruction, and ≥65 RGBA between adjacent idle facings.
+Reopen the saved editable .blend in actual Blender, checking all separate
+components and manifold fracture meshes. Inspect 160px and 80px sheets
+for actual grounded anchors, raised open ring, folded transport silhouette,
+and coherent wreckage. Fix geometry if any visual gate fails; never lower
+thresholds merely to force a pass.
+
+**Not yet verified:** Blender rendering, 128 unique frames, actual 80px
+measurements, source reopening, atlas SHA, contact-sheet inspection and
+successful Actions run. No prior asset was rerendered or approved for release.
