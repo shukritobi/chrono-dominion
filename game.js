@@ -2762,10 +2762,14 @@
       // Keep a small defensive army, then bank for aviation instead of
       // spending every income delivery on another tank or optional turret.
       // Under a visible local attack, unit recruitment resumes immediately.
+      // A single surviving tank is enough to keep a safe, radar-equipped
+      // economy saving for its first Air Command. Requiring two permanently
+      // restarted cheap recruitment after ordinary front-line attrition.
+      // Zero armour or a visible invasion still releases the reserve.
       const savingForAirfield=aviationReady&&!threatened&&
         me.credits<BUILD.airfield.cost+BUILD.generator.cost&&
         owned('harvester').length>0&&
-        owned('tank').length+owned('heavy').length>=2;
+        owned('tank').length+owned('heavy').length>=1;
       // Rebuilding a lost radar is a prerequisite for aviation. While a
       // powered, defended economy is saving its 900-credit radar cost plus
       // the 650-credit generator reserve, defer optional unit purchases.
