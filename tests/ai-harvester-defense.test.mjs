@@ -148,7 +148,7 @@ for(const faction of ['coalition','federation','psionic']){
     assert.equal(guard.order?.type,'move');
     assert.ok(Math.hypot(guard.order.x-worker.x,guard.order.y-worker.y)<=4.8,
       faction+': screen stays near the truck without occupying its tile');
-    assert.equal(home.order?.type,'idle'===home.order?.type?'idle':undefined,
+    assert.notEqual(home.order?.type,'move',
       faction+': leave the second armoured unit at HQ');
     assert.ok(g.saveGame()&&g.loadGame(),
       faction+': normal move order remains compatible with legacy saves');
@@ -159,7 +159,7 @@ for(const faction of ['coalition','federation','psionic']){
     assert.equal(g.positionAIHarvesterScreen([guard,home],new Map(),
       new Set(),new Set(),hq,true),false,
       faction+': an active base attack blocks proactive redeployment');
-    assert.equal(guard.order?.type,'move',false,
+    assert.notEqual(guard.order?.type,'move',
       faction+': no new move order during an attack');
   }
   {
