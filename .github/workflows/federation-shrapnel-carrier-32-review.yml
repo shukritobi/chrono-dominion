@@ -1,0 +1,102 @@
+name: Federation Shrapnel Carrier 32-Facing Original Blender Preview
+
+# Isolated original artwork review. NEVER publish game textures/manifests.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/federation-shrapnel-carrier-32-20261028
+    paths:
+      - .github/workflows/federation-shrapnel-carrier-32-review.yml
+      - tools/blender/preview_federation_shrapnel_carrier_32.py
+      - tools/blender/qa_federation_shrapnel_carrier_32.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrono-federation-shrapnel-carrier-32-preview
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview branch
+        uses: actions/checkout@v4
+
+      - name: Compile Python and install image QA
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_coalition_carrier_32.py tools/blender/preview_federation_shrapnel_carrier_32.py tools/blender/qa_federation_shrapnel_carrier_32.py
+          python -m pip install --quiet Pillow
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-${version}-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-${version}.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only the missing original Federation Shrapnel Carrier
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 --python-exit-code 1 \
+            --python tools/blender/preview_federation_shrapnel_carrier_32.py -- \
+            --output generated/federation-shrapnel-carrier-32
+
+      - name: Reopen saved editable Blender model and inspect fracture topology
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 \
+            generated/federation-shrapnel-carrier-32/federation-shrapnel-carrier.blend \
+            --python-exit-code 1 --python-expr '
+          import bpy, bmesh
+          wreck=[o for o in bpy.data.objects if o.type=="MESH" and o.get("closed_fracture")]
+          assert len(wreck)==8, (len(wreck),[o.name for o in wreck])
+          assert all(o.hide_render and o.get("wreckage_only") for o in wreck)
+          for o in wreck:
+              bm=bmesh.new();bm.from_mesh(o.data)
+              assert len(bm.verts)==12 and len(bm.faces)==8,(o.name,len(bm.verts),len(bm.faces))
+              assert all(e.is_manifold for e in bm.edges),o.name
+              bm.free()
+          wheels=[o for o in bpy.data.objects if "independent articulated wheel" in o.name.lower()]
+          barrels=[o for o in bpy.data.objects if "independent flak barrel" in o.name.lower()]
+          assert len(wheels)==6 and len(barrels)==2,(len(wheels),len(barrels))
+          print("PASS REOPEN: 8 closed manifold editable fracture meshes, 6 wheels, 2 barrels")
+          '
+
+      - name: Validate 160px and 80px actual pixels and create preview atlas
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_federation_shrapnel_carrier_32.py --stage generated/federation-shrapnel-carrier-32
+          test -s generated/federation-shrapnel-carrier-32/pixel-qa.json
+          test -s generated/federation-shrapnel-carrier-32/federation-shrapnel-carrier-contact-80.png
+          test -s generated/federation-shrapnel-carrier-32/federation-shrapnel-carrier-contact-160.png
+
+      - name: Upload editable source, all frames, atlas and strict QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-federation-shrapnel-carrier-32-preview
+          path: generated/federation-shrapnel-carrier-32/
+          if-no-files-found: warn
+          retention-days: 30

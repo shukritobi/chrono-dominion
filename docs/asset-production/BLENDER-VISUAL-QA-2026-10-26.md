@@ -1810,3 +1810,57 @@ All **32/32 facings** in each beat exceed the predeclared 12-alpha-pixel minimum
 **Visual critique and remaining work:** the 160px chamfered shells are more faceted and less box-like; the 80px silhouette is measurably different but the actual notches are still subtle at gameplay scale. The unit remains a small first-pass vehicle; the optical deployment is **not** true invisibility or gameplay stealth. Prioritize remaining faction vehicles and building damage-state polish rather than indefinite Hunter iteration.
 
 **Publication boundary:** original Hunter atlas SHA-256 `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`, MK-II atlas SHA-256 `7c2ccea7c1c0e0349c10b757755eb4fa0b4cbeb375c6a5d337d66d1125f3b9e6`, both unchanged. No production texture, manifest, loader, runtime or gameplay file was modified. **Draft PR #98 must not be merged or published without owner approval.**
+
+## 2026-10-28 Federation Shrapnel Carrier FED-VEH-003 — original 32-facing preview (QA pending)
+
+**PREVIEW ONLY; never published.** This new P2 vehicle was confirmed missing
+from the stacked preview branch before modeling. Unlike the previously
+validated Coalition Hunter, this is a distinct Iron Federation anti-air
+halftrack: original raked driver cab, six independent wheels, separate rear
+flak turntable, two physically modeled cannon barrels, ammunition feed,
+ventilated cooling collars, and eight closed asymmetric wreck fragments.
+The targeted branch-scoped workflow
+[`federation-shrapnel-carrier-32-review.yml`](../../.github/workflows/federation-shrapnel-carrier-32-review.yml)
+renders only this new model (32 facings × idle/move/attack/destroyed);
+the [source](../../tools/blender/preview_federation_shrapnel_carrier_32.py)
+and [pixel QA](../../tools/blender/qa_federation_shrapnel_carrier_32.py)
+do not write live game assets. Predeclared 80px gates per facing:
+move RGBA >=30; attack RGBA >=80 and alpha >=10;
+destroyed alpha >=70; adjacent idle facing RGBA >=35.
+The saved .blend must reopen with eight manifold closed fracture meshes,
+six articulated wheel pivots and two flak barrels. Every one of the
+128 PNGs must be nonempty, unclipped, RGBA and pixel-hash unique.
+**No pass or measured metrics claimed until the workflow finishes and the
+actual 160px/80px PNGs are independently inspected.**
+
+### Final targeted verification — 28 October 2026 (PASSED)
+
+- [Successful Blender 4.2.23 workflow #40684908621](https://github.com/shukritobi/chrono-dominion/actions/runs/40684908621), [preview artifact #12814133780](https://github.com/shukritobi/chrono-dominion/actions/runs/40684908621/artifacts/12814133780). The first branch push [#40684877797](https://github.com/shukritobi/chrono-dominion/actions/runs/40684877797) was **cancelled before rendering** by workflow concurrency when a missing Python wheel-list initialization was corrected in [commit 91c10bc](https://github.com/shukritobi/chrono-dominion/commit/91c10bcff1fbb1d6acfcacb5192604368f4cb87b). Only the corrected workflow rendered the vehicle.
+- The **137,341-byte compressed editable Blender source reopened successfully** under Blender 4.2.23. The source-reopen job verified **8 closed 12-vertex / 8-face manifold asymmetric fracture meshes**, all hidden in intact pose, plus **6 independent wheel pivots and 2 flak barrels**.
+- All **128 transparent 160×160 RGBA PNGs** passed the per-facing gates; all 128 pixel hashes are unique. Each frame has at least **30px** of empty canvas margin at 160px; no clipping.
+- Downloaded and visually inspected the **actual 160px and 80px contact sheets**, including front, side and oblique facings. The twin flak barrels and their bright physical attack flares are distinguishable; destroyed poses remove the intact gun cradle and reveal asymmetric debris. At 80px the overall unit remains relatively small and the bright orange/yellow attack effect can dominate the narrow barrels.
+- Independent Pillow remeasurement of **all 32 facings and all per-facing state metrics**, plus all **32 adjacent-direction differences**, matched the Actions `pixel-qa.json` exactly. The separate audit also rechecked all 128 RGBA frames, alpha margins and unique hashes. It correctly identifies the compressed .blend as Zstandard data rather than assuming an uncompressed `BLENDER` header; actual source reopening was performed by the Actions Blender step.
+
+| Independently verified 80px changes across 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle → move RGBA | **1,000** | 1,454 |
+| Idle → attack RGBA | **758** | 1,139 |
+| Idle → attack alpha | **150** | 351 |
+| Idle → destroyed RGBA | **1,035** | 1,480 |
+| Idle → destroyed alpha | **630** | 946 |
+| Adjacent idle directions RGBA | **1,082** | 1,479 |
+
+At 160px the destroyed-state alpha difference is **1,247–1,998** pixels.
+The new separate preview atlas SHA-256 is
+`a4f5a843d6c6f41a7b7ad89f38aebb2abfb83996fee20b563f29e61fb64d1063`.
+Downloaded artifact ZIP SHA-256 is
+`931da5b4a75f58825ef2487ddec925f0de0bb6d969de614f9d8467c76f75dc42`.
+
+**Production safety:** the preview branch differs from its stacked art parent
+in only new Blender modeling, new pixel QA, isolated workflow, this document,
+and the single asset-register row. No published texture, game manifest,
+loader, runtime or gameplay source was modified. This artwork is **NOT
+integrated, approved or playable**. Next artistic pass: improve barrel
+readability and more restrained physical muzzle flare at 80px, then proceed
+to other missing vehicles/building damage states rather than rerendering
+unchanged validated frames.
