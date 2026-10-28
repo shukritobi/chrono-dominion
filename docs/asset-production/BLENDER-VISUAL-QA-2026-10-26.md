@@ -1937,3 +1937,10 @@ never merge/publish this art without owner approval.**
 - Parent validated preview: [Federation Hunter Spider Drone workflow #40694099269](https://github.com/shukritobi/chrono-dominion/actions/runs/40694099269). This new branch is stacked on its draft art branch, not on live production assets.
 
 **Status: original geometry/QA/workflow authored; targeted render and independent visual QA pending. Never merge or publish without owner approval.**
+
+
+### Mammoth first-render visual correction (28 October 2026)
+
+[First targeted render #40703272036](https://github.com/shukritobi/chrono-dominion/actions/runs/40703272036) **passed** Python compilation, saved-source Blender reopen, all 128 PNGs and the numeric 80px QA gates, but **manual inspection found an artistic failure**: the bright muzzle flashes were visibly detached from the recoiling barrels. This is a real visual issue that numerical state-difference checks did not detect. Original first-pass 80px pixel ranges were movement RGBA 1,157–1,640; attack RGBA 975–1,506; attack alpha 119–402; destroyed alpha 546–876; adjacent-facing RGBA 1,393–1,881. All 128 hashes were unique and minimum margin was 8px, but these measurements alone do not justify artistic approval.
+
+**Targeted correction:** parent each physical flash to its respective moving siege rail at local x=2.24 (muzzle tip at x=2.09), shrink the flare from 0.64 to 0.42 world units, and reduce cannon recoil displacement from 0.70 to 0.22 world units. The reopened-source workflow now explicitly verifies that both attack-only meshes are gun children and physically near their barrel tips. Only the new Mammoth preview is rerendered; no earlier validated vehicle or published atlas is touched. Corrected run and independent 160px/80px inspection **pending**.

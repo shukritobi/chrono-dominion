@@ -142,10 +142,12 @@ def build():
              (.14,.49,.28),brass,pod)
 
     effects=[]
-    for side in (-1,1):
-        flash=faceted_shard("Mammoth attack-only real muzzle flash",
-                           (2.67,side*.35,1.95),(.64,.38,.30),
-                           (.08,0,side*.22),ember,root)
+    for side,gun in zip((-1,1),guns):
+        # Flash is parented to the moving gun, physically overlapping its muzzle.
+        # The previous root-space flash visibly floated away during recoil.
+        flash=faceted_shard("Mammoth attack-only gun-attached muzzle flash",
+                           (2.24,0,0),(.42,.27,.23),
+                           (.08,0,side*.22),ember,gun)
         flash["attack_only"]=True
         flash["wreckage_only"]=False
         flash["closed_fracture"]=False
@@ -177,7 +179,7 @@ def pose(parts,state,facing):
     chassis.location.z=.065 if state=="move" else -.13 if state=="destroyed" else 0
     chassis.rotation_euler.y=.035 if state=="move" else -.17 if state=="destroyed" else 0
     turret.rotation_euler.z=-.11 if state=="attack" else -.28 if state=="destroyed" else 0
-    recoil.location.x=-.20 if state=="attack" else .50
+    recoil.location.x=.28 if state=="attack" else .50
     for i,wheel in enumerate(wheels):
         wheel.rotation_euler.y=(.55 if i%2 else -.55) if state=="move" else 0
     for i,link in enumerate(cleats):

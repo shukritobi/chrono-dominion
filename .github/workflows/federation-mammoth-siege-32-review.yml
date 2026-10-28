@@ -85,6 +85,8 @@ jobs:
           links=[o for o in bpy.data.objects if o.type=="MESH" and o.get("track_link")]
           assert len(hull)==1 and len(hull[0].data.vertices)==16
           assert len(rails)==2 and len(pods)==2 and len(wheels)==10 and len(links)==28,(len(rails),len(pods),len(wheels),len(links))
+          flashes=[o for o in bpy.data.objects if o.type=="MESH" and o.get("attack_only")]
+          assert len(flashes)==2 and all(o.parent in rails and 2.05<=o.location.x<=2.4 for o in flashes),[(o.name,o.parent.name if o.parent else None) for o in flashes]
           print("PASS REOPEN: 12 closed manifold fracture meshes, custom hull, 2 guns, 2 missile pods, 10 wheels, 28 track cleats")
           '
 
