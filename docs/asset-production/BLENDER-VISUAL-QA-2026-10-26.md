@@ -1436,13 +1436,69 @@ Existing validated Viper, Warden and other preview atlases were not
 rerendered. No production textures, manifests or gameplay code were
 changed; the model is **preview-only, not game-integrated or approved**.
 
-## 2026-10-28 Coalition Camouflage Hunter original 32-facing pilot (verification pending)
+## 2026-10-28 Coalition Camouflage Hunter original 32-facing pilot — VERIFIED
 
-**Preview only; NOT approved or integrated.** The existing draft [Spindle Cannon preview](https://github.com/shukritobi/chrono-dominion/pull/86) already covers PSI-VEH-003, and [beam-defense extra states](https://github.com/shukritobi/chrono-dominion/pull/25) were validated previously. Rather than rerender either, this pass targets missing **COA-VEH-005 Camouflage Hunter**, which had no existing vehicle preview PR when checked.
+**Preview-only; NOT approved or game-integrated.** This pass targets previously
+unmodeled **COA-VEH-005**. Earlier validated [three-faction beam defenses](https://github.com/shukritobi/chrono-dominion/pull/25),
+[airfields](https://github.com/shukritobi/chrono-dominion/pull/89), and
+[Psionic Spindle Cannon](https://github.com/shukritobi/chrono-dominion/pull/86)
+were not rerendered.
 
-- [Original editable Blender modeling](../../tools/blender/preview_coalition_camouflage_hunter_32.py): closed faceted hull, eight independently articulated wheel pivots, 24 modeled tread cleats, four independently hinged irregular optical vanes, a dual-spectrum projector, three physical attack-only meshes, and **14 separately editable closed five-sided asymmetric wreckage volumes**.
-- [Strict PNG validation](../../tools/blender/qa_coalition_camouflage_hunter_32.py): all 128 RGBA 160×160 frames must have a nonclipped alpha bounding box; every 80px facing must show distinct move/attack/destroyed states and differ from adjacent facing. Thresholds remain fixed at 45 move RGBA, 55 attack RGBA, 100 destroyed alpha, and 30 adjacent-facing RGBA pixels.
-- [Targeted read-only Blender workflow](../../.github/workflows/coalition-camouflage-hunter-32-review.yml) renders **only this new vehicle**, reopens the editable source, asserts the independent 14/4/8/24 physical components, and uploads separate 160px/80px contact sheets, a preview atlas and quantitative JSON.
-- [Initial isolated workflow #40648427473](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473) was **queued when this record was authored**. [Draft PR #91](https://github.com/shukritobi/chrono-dominion/pull/91) is stacked on the unmerged Spindle branch because its shared Blender helper is not in main.
+- [Successful targeted original Blender 4.2.23 Actions workflow #40648427473](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473):
+  all steps passed, including headless source reopen, 128-frame render,
+  strict 80px/160px PNG QA and artifact upload.
+- [Complete 5,047,083-byte preview artifact #12798770786](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473/artifacts/12798770786),
+  ZIP SHA-256 `25d12fd85eede33131499f29355ea23a14193fde44c40524fc1be71d7e389f07`.
+  Includes **144,725-byte editable Blender source**, all 128 independent
+  160×160 RGBA frames, separate **5120×640** four-row atlas, actual 160px/80px
+  contact sheets, and full JSON metrics.
+- [Original modeling](../../tools/blender/preview_coalition_camouflage_hunter_32.py)
+  contains a nonrectangular faceted low hull, **four independent hinged
+  adaptive-optic vanes**, **eight roadwheel pivots**, **24 modeled track cleats**,
+  a physical forward projector and three separate attack-only meshes.
+  **Fourteen editable asymmetric CLOSED extruded five-sided fracture meshes**
+  replace the intact signature parts in the destroyed state.
+- [Pixel QA](../../tools/blender/qa_coalition_camouflage_hunter_32.py)
+  tests every facing and state at actual 80px gameplay scale, rejects
+  clipped/empty images, and checks adjacent facings. [Isolated read-only
+  workflow](../../.github/workflows/coalition-camouflage-hunter-32-review.yml)
+  verifies the saved .blend source reopens with all 14 hidden 10-vertex,
+  7-face closed wreckage meshes, 4 vanes, 8 wheels, 24 cleats and 3 hidden
+  attack effects.
+- The standalone preview atlas SHA-256 is
+  `9059f6d2c5dcaaae596a136ec9b2098973ee2c5ce830dd60857e165a4f38f08d`.
+  **All 128 RGBA frames have unique pixel hashes** and alpha bounds at
+  least 3 pixels inside every edge. This does NOT alter any pre-existing atlas.
 
-**Unverified until Actions finishes:** the 80px readability, clipping, Blender source reopen, 128 rendered PNGs, and atlas hash. Do not infer success from committed code or queued status. If a gate fails, inspect the actual PNGs and correct physical geometry rather than relaxing thresholds. No previously validated models were rerendered; no production texture, manifest or gameplay path was changed.
+| 80px measurement, all 32 facings | Minimum | Maximum | Gate |
+|---|---:|---:|---:|
+| Idle → move, RGBA changed | **990** | 1,300 | >=45 |
+| Idle → attack, RGBA changed | **823** | 1,128 | >=55 |
+| Idle → destroyed, alpha changed | **694** | 829 | >=100 |
+| Adjacent idle facings, RGBA changed | **1,052** | 1,281 | >=30 |
+| Idle → destroyed, alpha changed at 160px | **1,326** | 1,782 | Report only |
+
+**Independent verification:** Downloaded the real 133-file artifact,
+inspected the actual 160px and 80px contact sheets, independently checked
+every PNG for transparency/clipping, and recalculated movement, attack and
+destroyed alpha at facings **00/04/08/16/24**. All **15 independent values**
+matched the workflow JSON exactly. The original source reopened inside
+the workflow, not locally (local Blender executable unavailable).
+
+**Art critique:** At 80px the complete vehicle remains relatively small.
+The four physical vanes are legible as blocky raised roof facets but their
+individual hinges are subtle. The attack pulse is readable, but it does not
+yet communicate a distinctive optical-camouflage mechanic. These are
+polish priorities, not reasons to claim game integration. Current move and
+attack are single-pose state differences rather than multi-frame cycles.
+
+**Publication safety and blockers:** The branch comparison against its
+Spindle preview parent found exactly five development-only files: new
+Blender modeling, new pixel QA, new isolated workflow, asset-register
+status and this QA document. **No production texture, atlas, manifest,
+or gameplay code was changed.** Draft [PR #91](https://github.com/shukritobi/chrono-dominion/pull/91)
+remains stacked on the unmerged Spindle branch and must not be merged
+without owner art approval. The game loader does not yet consume this
+separate 32-facing preview atlas. Next: improve optical camouflage
+readability and build a genuine multi-phase movement/destruction sequence
+before considering art integration.
