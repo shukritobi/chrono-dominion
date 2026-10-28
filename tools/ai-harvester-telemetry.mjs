@@ -11,7 +11,7 @@ export function newHarvesterTelemetry(){
     deliveredOre:0,longestDeliveryGapSeconds:0,lastDeliveryAt:0,
     threatenedSamples:0,harvesterSamples:0,
     travelTiles:0,loadedTravelTiles:0,fullCargoStallSeconds:0,
-    fullCargoStallEvents:0,fullCargoStallCases:[],fullCargoStallCasesOmitted:0,
+    fullCargoStallEvents:0,fullCargoStallCases:[],fullCargoStallCasesOmitted:0,lossCases:[],lossCasesOmitted:0,
     threatenedLoadedSamples:0,
     threatenedEmptySamples:0,threatenedFarFromRefinerySamples:0};
   // Keep the per-truck streak state out of exported JSON reports and saves.
@@ -20,7 +20,36 @@ export function newHarvesterTelemetry(){
   }});
   return metrics;
 }
-export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,time,refineries=[],inspectStall=null){
+
+/** Pre-step, AI-sensor-visible exposure context; never a killer attribution. */
+export function inspectHarvesterLoss(prior,visibleHostiles=[],defenders=[],refineries=[],time=0){
+  if(!prior||![prior.x,prior.y,time].every(Number.isFinite))
+    throw Error('Invalid harvester loss context');
+  const distance=e=>Math.hypot(e.x-prior.x,e.y-prior.y);
+  const eligible=e=>e&&Number.isFinite(e.x)&&Number.isFinite(e.y)&&e.hp>0;
+  const nearest=(items,range)=>items.filter(e=>eligible(e)&&distance(e)<=range)
+    .sort((a,b)=>distance(a)-distance(b)||String(a.id).localeCompare(String(b.id)));
+  const threats=nearest(visibleHostiles.filter(e=>e.type==='unit'&&e.kind!=='harvester'),7);
+  const fighters=nearest(defenders.filter(e=>e.type==='unit'&&
+    !['harvester','recon','aircraft'].includes(e.kind)),9);
+  const refinery=nearest(refineries.filter(e=>e.built),Infinity)[0];
+  const round=n=>Number(n.toFixed(2));
+  return {
+    id:prior.id,time:round(time),position:{x:round(prior.x),y:round(prior.y)},
+    lastSeenHp:Number.isFinite(prior.hp)?round(prior.hp):null,
+    lastSeenCargo:Number.isFinite(prior.load)?Math.max(0,round(prior.load)):null,
+    nearestOperationalRefineryId:refinery?.id??null,
+    refineryDistance:refinery?round(distance(refinery)):null,
+    visibleThreats:threats.slice(0,4).map(e=>({id:e.id,kind:e.kind,distance:round(distance(e))})),
+    visibleThreatsOmitted:Math.max(0,threats.length-4),
+    nearbyDefenders:fighters.slice(0,4).map(e=>({
+      id:e.id,kind:e.kind,distance:round(distance(e)),
+      orderType:e.order?.type??null,targetId:e.order?.id??null
+    })),
+    nearbyDefendersOmitted:Math.max(0,fighters.length-4)
+  };
+}
+export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,time,refineries=[],inspectStall=null,inspectLoss=null){
   if(!Number.isFinite(time)||time<0||!Number.isFinite(oreBefore)||
      !Number.isFinite(oreAfter)||oreAfter<oreBefore)
     throw Error('Invalid ore telemetry step');
@@ -38,6 +67,10 @@ export function observeHarvesterStep(metrics,before,after,oreBefore,oreAfter,tim
       // Cargo at the start of the final tick is an estimate, not a
       // reconstructed death event or a claim of exact ore lost.
       metrics.cargoAtLoss+=Math.max(0,prior.load||0);
+      if(inspectLoss){
+        if(metrics.lossCases.length<12)metrics.lossCases.push(inspectLoss(prior));
+        else metrics.lossCasesOmitted++;
+      }
     }else{
       if(current.hp<prior.hp)metrics.damageObservations++;
       const traveled=Math.hypot(current.x-prior.x,current.y-prior.y);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {newHarvesterTelemetry,observeHarvesterStep,
-  observeHarvesterThreatSample} from '../tools/ai-harvester-telemetry.mjs';
+  observeHarvesterThreatSample,inspectHarvesterLoss} from '../tools/ai-harvester-telemetry.mjs';
 import {inspectHarvesterReturnStall} from '../tools/harvester-stall-diagnostics.mjs';
 
 const m=newHarvesterTelemetry();
@@ -146,4 +146,42 @@ assert.deepEqual(inspected.fullCargoStallCases[0].returnAccess.reachableUnloadTi
   {x:11,y:10});
 assert.equal(JSON.stringify(inspected).includes('_movement'),false);
 
-console.log('PASS: ore telemetry records losses, deliveries, actual travel, bounded stalled-return context and visible route threats');
+// A loss case captures only supplied pre-step AI-visible contacts and living
+// ground defenders. Proximity is not proof of a killing blow or interception.
+const prior=h(71,85,240,10,10);
+const loss=inspectHarvesterLoss(prior,[
+  {id:90,kind:'tank',type:'unit',hp:100,x:12,y:10},
+  {id:91,kind:'soldier',type:'unit',hp:100,x:30,y:30},
+  {id:92,kind:'harvester',type:'unit',hp:100,x:10,y:10}
+],[
+  {id:80,kind:'tank',type:'unit',hp:200,x:11,y:11,
+    order:{type:'attack',id:90}},
+  {id:81,kind:'aircraft',type:'unit',hp:200,x:10,y:10},
+  {id:82,kind:'tank',type:'unit',hp:0,x:10,y:10}
+],[{id:75,x:13,y:10,hp:100,built:true}],44.2);
+assert.deepEqual(loss.visibleThreats,[{id:90,kind:'tank',distance:2}]);
+assert.deepEqual(loss.nearbyDefenders,[{id:80,kind:'tank',distance:1.41,
+  orderType:'attack',targetId:90}]);
+assert.equal(loss.nearestOperationalRefineryId,75);
+assert.equal(loss.refineryDistance,3);
+assert.equal(loss.lastSeenHp,85);
+assert.equal(loss.lastSeenCargo,240);
+assert.equal(loss.time,44.2);
+assert.equal(inspectHarvesterLoss(prior,[],[],[],44.2).visibleThreats.length,0,
+  'unseen contacts must not be inferred from omniscient positions');
+assert.equal(inspectHarvesterLoss(prior,[],[],[],44.2).refineryDistance,null);
+assert.throws(()=>inspectHarvesterLoss({id:1,x:NaN,y:2},[],[],[],4),
+  /Invalid harvester loss context/);
+const deaths=newHarvesterTelemetry();
+let inspectedLosses=0;
+for(let i=0;i<14;i++)
+  observeHarvesterStep(deaths,[h(i,90,100,10,10)],[],0,0,i+1,[],null,
+    before=>{inspectedLosses++;return inspectHarvesterLoss(before,[],[],[],i+1);});
+assert.equal(deaths.lost,14);
+assert.equal(inspectedLosses,12,'expensive loss inspection is bounded');
+assert.equal(deaths.lossCases.length,12);
+assert.equal(deaths.lossCasesOmitted,2);
+assert.equal(deaths.cargoAtLoss,1400);
+assert.ok(!JSON.stringify(deaths).includes('_movement'));
+
+console.log('PASS: ore telemetry records pre-step loss exposure, defenders, deliveries and bounded stall context');

@@ -286,3 +286,12 @@ balance and three 720-second natural matches must pass the existing economy
 guard before merging. A local escort assignment alone does **not** establish
 fewer harvester losses or natural aircraft production; compare those measured
 outcomes with the prior six-loss, 3,960 / 15,120 / 9,000-income baseline.
+
+
+## Pre-step harvester-loss exposure snapshots (29 October 2026)
+
+The real-engine natural-match report now includes up to **12** `aiHarvesterTelemetry.lossCases` per scenario and `lossCasesOmitted` for further disappearances. Each snapshot records last observed truck position, HP and cargo, distance to the nearest operational refinery, up to four **AI-sensor-visible** nearby enemy combat units (seven-tile radius), and up to four nearby living friendly ground fighters (nine-tile radius), including their pre-step orders. Separate omitted counters bound contact lists; summary counts report captured and omitted loss cases.
+
+Enemy visibility and friendly orders are sampled **before** the simulation step that removes the worker; post-step inspection alone could miss an attacker destroyed in the same tick. These are exposure snapshots, **not actual killer attribution**, proof that a defender could intercept, or evidence that the worker was destroyed rather than removed for another reason. Zero visible threats means none were observed by the AI at that instant, not that the worker was safe. This observation-only code does not change gameplay AI, saves, combat, credits, movement or artwork.
+
+Verify with `node tests/ai-harvester-telemetry.test.mjs`, `npm run balance:progression` and `npm run balance:regression`. Inspect archived cases before trialing another defense or routing change; compare the prior six worker losses and 3,960 / 15,120 / 9,000 ore-income baseline before claiming improvement.
