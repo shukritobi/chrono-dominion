@@ -1078,7 +1078,9 @@
           if(closed.has(k)||!walk(x,y))continue;
           if(dx&&dy&&(!walk(node.x+dx,node.y)||!walk(node.x,node.y+dy)))continue;
           const hazard=extraCost?Math.max(0,Number(extraCost({x,y}))||0):0;
-          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(k)||0)+hazard;
+          // Congestion heat is independently keyed by coordinate strings;
+          // only A*'s internal node bookkeeping uses packed integer keys.
+          const step=(dx&&dy?Math.SQRT2:1)+(traffic?.get(x+','+y)||0)+hazard;
           const candidate=travelled+step;
           if(candidate>=(costs.get(k)??Infinity))continue;
           costs.set(k,candidate);came.set(k,node.key);
