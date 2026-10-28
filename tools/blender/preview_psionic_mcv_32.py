@@ -183,7 +183,7 @@ def pose(p,state,facing):
         for o in chassis.children_recursive:
             if o.type=="MESH" and any(s in o.name.lower() for s in
                   ("split wing","petal","ring strut","cantilever",
-                   "navigation eye","counterweight spine","floating reactor",
+                   "navigation eye","counterweight spine","visible plasma annulus","floating reactor",
                    "levitation core","active anchoring","assembly crystal")):
                 o.hide_render=True
     bpy.context.view_layer.update()

@@ -2444,3 +2444,19 @@ thresholds merely to force a pass.
 **Not yet verified:** Blender rendering, 128 unique frames, actual 80px
 measurements, source reopening, atlas SHA, contact-sheet inspection and
 successful Actions run. No prior asset was rerendered or approved for release.
+
+
+**First real visual review, run #40760614759 (numeric PASS, artistic issue):**
+The [first successful render](https://github.com/shukritobi/chrono-dominion/actions/runs/40760614759)
+produced all 128 sprites, reopened the editable .blend and passed every strict
+80px gate. Real 160px and 80px contact sheets were opened. The three radial
+anchors and rising central gantry visibly distinguish deployment, but the
+single-frame movement is subtle and the destroyed pose incorrectly retains
+**six bright, powered hover-plasma annuli**. The initial QA measured a 23px
+minimum margin, 128 unique RGBA frames and deployment alpha changes of
+592–743 pixels at 80px. **Do not treat the first artistic pass as final.**
+The corrective source hides only the live plasma annuli in the destroyed
+state, preserving the dark thruster housings and editable source objects.
+The rerender must be independently compared against the first 128-frame
+baseline: only destroyed frames are authorized to change. The numerical
+thresholds are unchanged. Full animation cycles remain future work.
