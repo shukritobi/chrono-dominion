@@ -2307,3 +2307,14 @@ art-production files relative to the previous unapproved Lattice preview;
 no published textures, manifests, loaders or gameplay were modified.
 [Draft PR #110](https://github.com/shukritobi/chrono-dominion/pull/110)
 remains unapproved; do not merge or publish without explicit owner approval.
+
+
+## 2026-10-29 PSI-VEH-006 Neural Nexus Tank — original Blender preview source (render pending)
+
+**Publication boundary:** Preview-only branch stacked on unapproved Coalition Citadel PR #110. No existing validated atlas was regenerated; no production texture, manifest, loader, runtime or gameplay file was changed. Do not merge or publish without explicit owner approval.
+
+- [New original Blender source](../../tools/blender/preview_psionic_neural_nexus_32.py) defines a purpose-built 20-vertex asymmetric manta hover hull, six independently animated levitation pods, six physically open radial neural crown arches built from 18 separate struts, four independently hinged concave crown petals, 24 attack-only physical pulse-ring segments and twelve independent closed-manifold asymmetric wreck fragments. This is a different design from the validated Viper, Spindle and Gravitic Manipulator.
+- [Predeclared strict 80px QA](../../tools/blender/qa_psionic_neural_nexus_32.py): 32 facings × idle/move/attack/destroyed = 128 unique 160×160 transparent RGBA PNGs, >=2px alpha margin in every frame; LANCZOS downsample to 80px. Every direction must exceed movement RGBA **100**, attack RGBA **160**, attack alpha **65**, destroyed alpha **140**, and adjacent-facing RGBA **65** changed pixels. These are **acceptance thresholds, not measured results**.
+- Source reopen acceptance: exactly one 20-vertex custom hull, six independent levitation pod pivots, 18 separately modeled open crown struts, four articulated petals, 24 hidden attack-only field arcs parented to the crown, and twelve hidden manifold 12-vertex/8-face wreck meshes. Reopen the actual saved .blend, not merely the source script.
+- Visual hypotheses requiring **real 160px and 80px contact-sheet inspection**: the crown center remains visibly open (not a fake transparent solid); four petal hinges and expanding ring geometry produce physical attack silhouette changes; no pulse clips the canvas at oblique facings; destroyed hides the intact crown and reads as a collapsed neural vehicle; hover pods remain legible at 80px. Numerical QA alone is insufficient for visual approval.
+- **Not yet verified:** Blender rendering, source reopening, 128 PNG uniqueness, image measurements, visual silhouette review, atlas SHA and successful Actions link. Update this entry with actual metrics and failures after targeted CI completes. Do not claim success merely because code is committed.
