@@ -2610,3 +2610,77 @@ wreck-only meshes remain editable in the saved source.
   source, or live site files were changed. The branch is stacked on unapproved
   draft PR #120; **PR #122 remains draft and must not be merged or published
   without explicit owner approval**.
+
+
+## 2026-10-29 PSI-VEH-001 original Psionic Indenture Mining Crawler — PASSED, MK-II wreck corrected
+
+**PREVIEW ONLY; not integrated or approved for publication.** The previously
+unmodeled P1 mining crawler now has an original, editable Blender 3D source:
+a custom asymmetric **20-vertex armored excavation hull**, **eight independently
+rotating roadwheel pivots**, **24 separate track cleats**, two individually
+hinged mining booms, two independent rotary cutting axles with **20 separate
+closed five-face cutter teeth**, and a genuinely **open ore hopper** with four
+separate walls and three visible ore payload pieces. It has **12 original
+closed-manifold asymmetric wreckage fragments**. Four physical harvesting
+pieces are only visible in the harvest pose.
+
+- [Successful original 32-facing Blender render and saved-source reopen
+  #40784608098](https://github.com/shukritobi/chrono-dominion/actions/runs/40784608098):
+  **128** 160×160 RGBA sprites, 32 directions × idle/move/harvest/destroyed,
+  all unique, unclipped, and passing the strict unchanged 80px QA thresholds.
+  The actual .blend was reopened in headless Blender 4.2.23. Verification
+  counted 8 wheel pivots, 2 articulated booms, 2 cutter axles, 20 manifold
+  tooth meshes, 24 track cleats, 4 hopper walls, 3 ore payload meshes and
+  12 closed-manifold hidden wreck fragments. A downward **raycast through
+  the hopper's center** hit its floor or ore rather than a fake opaque lid.
+- **Independent 160px/80px visual inspection found a real artistic defect:**
+  the intact glowing rotary cutting drums and cyan hubs remained visible
+  above the destroyed vehicle. Passing numerical pixel QA alone was not
+  considered sufficient; the defect was not ignored.
+- [Successful targeted physical correction #40784897546](https://github.com/shukritobi/chrono-dominion/actions/runs/40784897546)
+  ([artifact #12858607513](https://github.com/shukritobi/chrono-dominion/actions/runs/40784897546/artifacts/12858607513))
+  removes those intact cutter drums **only in the destroyed state** and
+  introduces **four new independently editable, closed-manifold, asymmetric
+  sheared-cutter fragments**. The corrected .blend reopened successfully;
+  all four new 12-vertex/8-face manifold fragments are hidden in the saved
+  intact state and the four intact cutter-drum meshes remain editable.
+  Only the **32 destroyed directions** were rerendered. All **96 original
+  idle/move/harvest PNGs were reused byte-for-byte** and verified by SHA-256.
+- The [strict targeted preservation/difference QA](../../tools/blender/qa_psionic_indenture_crawler_wreck_mk2.py)
+  required at least 65 changed RGBA pixels at 80px and 220 at 160px
+  in every corrected destroyed direction, relative to the archived baseline.
+  Independent local NumPy/Pillow recomputation measured **596–938 changed
+  RGBA pixels at 80px** and **2,236–3,374 at 160px**; actual
+  **alpha-silhouette differences** were **77–193 at 80px** and
+  **113–473 at 160px**, demonstrating physical visibility changes rather
+  than a color-only correction. No acceptance thresholds were lowered.
+- The final 128-frame QA retained **128 unique decoded RGBA hashes** and
+  a **15px minimum canvas margin**. Independent local recomputation matched
+  all **256 per-facing pixel measurements with zero discrepancies**.
+  Corrected preview atlas SHA-256:
+  `3576c62fb11830d68e91e5dcf7473e5cd1ba475f61ebb55f23edffd6e0dc7fcb`.
+  Original atlas SHA-256:
+  `f0c2d1b15ce39ccbeb880bc8ea41b09d45f86b983106d2912f147ef23c4b9e6f`.
+- [Draft PR #124](https://github.com/shukritobi/chrono-dominion/pull/124)
+  is stacked on the unapproved Coalition MCV preview PR #122. No live
+  textures, manifests, sprite loaders, gameplay code or site files changed.
+
+| Final 32-facing pixel measurement | Minimum | Maximum |
+|---|---:|---:|
+| Movement RGBA change, 80px | 913 | 1,423 |
+| Harvest RGBA change, 80px | 650 | 1,095 |
+| Harvest alpha change, 80px | 144 | 414 |
+| Destroyed RGBA change, 80px | 999 | 1,426 |
+| Destroyed alpha change, 80px | 641 | 959 |
+| Harvest alpha change, 160px | 297 | 1,011 |
+| Destroyed alpha change, 160px | 1,214 | 2,394 |
+| Adjacent idle facing RGBA change, 80px | 1,014 | 1,439 |
+
+**Observed artistic limitations:** the open ore hopper is clearer at 160px
+than 80px; individual track cleats and cutting teeth become subtle at
+80px. The corrected wreck no longer has intact glowing cutter hubs, but
+its lower tracks and engine pan remain largely intact. Mining, propulsion
+and destruction are still single poses per direction, **not multi-frame
+animations**. Ore collection and labor gameplay are not implemented.
+Next: outstanding defense/airfield extra-state geometry and remaining
+vehicle subclasses; preserve validated baselines, avoid redundant renders.
