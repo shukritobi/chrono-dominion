@@ -237,5 +237,55 @@ lostOutpost.hp=lostOutpost.maxHp;
 assert.equal(g.canPlace(24,20,0),true,
   'a restored operational anchor can extend the construction frontier');
 
+// A newly completed refinery grants one worker. Its historical (+2,+1)
+// spawn is retained when clear, but water/traffic must trigger a safe exit.
+for(const side of [0,1]){
+  reset();
+  const refinery=g.add(side,'refinery',12,12);
+  const credits=g.players[side].credits;
+  assert.equal(g.deployRefineryHarvester(refinery),true);
+  const worker=g.entities.find(e=>e.owner===side&&e.kind==='harvester');
+  assert.equal(worker.x,14,'clear default spawn preserves the original X coordinate');
+  assert.equal(worker.y,13,'clear default spawn preserves the original Y coordinate');
+  assert.equal(worker.order.type,'harvest');
+  assert.equal(g.players[side].credits,credits,'included worker is not charged twice');
+
+  reset();
+  const blocked=g.add(side,'refinery',12,12);
+  g.water=(x,y)=>Math.hypot(x-14,y-13)<.5;
+  assert.equal(g.canOccupyUnit({id:-1,kind:'harvester',type:'unit',hp:1},14,13),false);
+  assert.equal(g.deployRefineryHarvester(blocked),true);
+  const rerouted=g.entities.find(e=>e.owner===side&&e.kind==='harvester');
+  assert.ok(rerouted,'an alternate legal exit deploys the included worker');
+  assert.ok(Math.hypot(rerouted.x-14,rerouted.y-13)>.5,
+    'blocked default location is never used');
+  assert.ok(g.canOccupyUnit(rerouted,rerouted.x,rerouted.y),
+    'worker deploys on clear terrain without colliding with the refinery');
+  assert.equal(g.entities.filter(e=>e.owner===side&&e.kind==='harvester').length,1);
+}
+
+// Fully enclosed refinery: do not spawn the included worker in water or lose
+// it permanently. Pending entitlement persists through the existing v1 save.
+reset();
+g.add(0,'hq',5,5);g.add(1,'hq',25,25);
+const sealed=g.add(0,'refinery',12,12,false);
+sealed.buildTime=.5;
+g.water=(x,y)=>Math.hypot(x-12,y-12)>1.4;
+g.step(.6);
+assert.equal(sealed.built,true,'the refinery completed in the real world step');
+assert.equal(sealed.pendingHarvester,true,'included worker waits for an open exit');
+assert.equal(unitCount(0,'harvester'),0,'sealed terrain never receives an invalid worker');
+assert.ok(g.saveGame()&&g.loadGame(),'pending worker survives the original save schema');
+const restored=g.entityById(sealed.id);
+assert.equal(restored.pendingHarvester,true);
+assert.equal(JSON.parse(storage.get('chrono-dominion-skirmish-v1')).version,1);
+g.water=()=>false;
+g.step(1);
+assert.equal(unitCount(0,'harvester'),1,'the pending worker deploys once a safe exit opens');
+assert.equal(g.entityById(sealed.id).pendingHarvester,false,
+  'the entitlement is cleared after exactly one deployment');
+g.step(1);
+assert.equal(unitCount(0,'harvester'),1,'retries cannot duplicate the included worker');
+
 g.draw();
-console.log('PASS: clear production exits, blocked queues, footprint, factory loss, refunds, save/load, enemy spawns and alternate factories/airfields');
+console.log('PASS: clear production exits, blocked queues, footprint, factory loss, refunds, save/load, alternate producers and refinery worker recovery');
