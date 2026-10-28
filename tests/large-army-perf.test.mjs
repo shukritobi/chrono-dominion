@@ -20,7 +20,37 @@ try{
   assert.ok(Number.isFinite(result.p95TickMs)&&result.p95TickMs>=0);
   assert.ok(Number.isFinite(result.maxTickMs)&&result.maxTickMs>=result.p95TickMs,
     'worst tick must be no faster than the 95th percentile');
-  console.log('PASS: 120-unit XL movement, pathfinding, collisions, saves and wall-time telemetry');
+  assert.equal(result.tickProfile.length,result.ticks,
+    'every simulation tick must have a diagnostic profile');
+  assert.equal(result.slowestTicks.length,5,'retain five worst ticks for investigation');
+  assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.pathQueries,0),result.pathQueries,
+    'per-tick A* query counts must reconcile with total');
+  assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.occupancyChecks,0),result.occupancyChecks,
+    'per-tick occupancy checks must reconcile with total');
+  assert.equal(result.ticksWithPathQueries,
+    result.tickProfile.filter(t=>t.pathQueries>0).length);
+  assert.equal(result.maxPathQueriesPerTick,
+    Math.max(...result.tickProfile.map(t=>t.pathQueries)));
+  assert.equal(result.maxOccupancyChecksPerTick,
+    Math.max(...result.tickProfile.map(t=>t.occupancyChecks)));
+  assert.ok(result.tickProfile.every((t,i)=>
+    t.tick===i+1&&Math.abs(t.simulatedSeconds-(i+1)*.2)<1e-8&&
+    Number.isFinite(t.wallMs)&&t.wallMs>=0&&
+    Number.isFinite(t.pathMs)&&t.pathMs>=0&&t.pathMs<=t.wallMs+1),
+    'per-tick timings, tick IDs and simulation times must be valid');
+  assert.ok(result.slowestTicks.every((t,i)=>
+    result.tickProfile.some(p=>p.tick===t.tick&&p.wallMs===t.wallMs&&
+      p.pathQueries===t.pathQueries&&p.occupancyChecks===t.occupancyChecks)&&
+    (!i||result.slowestTicks[i-1].wallMs>=t.wallMs)),
+    'worst-tick entries must be real ticks sorted by descending work');
+  assert.ok(Math.abs(result.slowestTicks[0].wallMs-result.maxTickMs)<.011,
+    'worst-tick profile must identify the measured maximum');
+  assert.ok(Number.isFinite(result.pathTimeMs)&&result.pathTimeMs>=0&&
+    result.pathTimeMs<=result.wallMs+1,'A* wall time must fit within simulation time');
+  assert.ok(Number.isFinite(result.pathTimeSharePercent)&&
+    result.pathTimeSharePercent>=0&&result.pathTimeSharePercent<=100,
+    'pathfinding time share must be a valid percentage');
+  console.log('PASS: 120-unit XL movement, pathfinding, collisions, saves and tick-level attribution');
 }finally{
   try{unlinkSync(output);}catch{}
 }
