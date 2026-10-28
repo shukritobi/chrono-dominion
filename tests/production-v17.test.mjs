@@ -267,7 +267,7 @@ for(const side of [0,1]){
 // Fully enclosed refinery: do not spawn the included worker in water or lose
 // it permanently. Pending entitlement persists through the existing v1 save.
 reset();
-g.add(0,'hq',5,5);g.add(1,'hq',35,35);
+g.add(0,'hq',5,5);g.add(1,'hq',25,25);
 const sealed=g.add(0,'refinery',12,12,false);
 sealed.buildTime=.5;
 g.water=(x,y)=>Math.hypot(x-12,y-12)>1.4;
