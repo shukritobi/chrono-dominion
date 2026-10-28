@@ -587,3 +587,54 @@ reuses the prior artifact and rerenders **only Federation's four extra PNGs**,
 not the previously passing Coalition/Psionic poses or any five-frame atlas.
 The original general airfield workflow is now manual-only to prevent duplicate
 jobs. **Correction awaiting independent render and pixel evidence.**
+
+### Final three-faction airfield QA — passed 28 October 2026
+
+[Successful targeted repair workflow #40642594960](https://github.com/shukritobi/chrono-dominion/actions/runs/40642594960)
+reused [initial artifact #12795463358](https://github.com/shukritobi/chrono-dominion/actions/runs/40642316525/artifacts/12795463358),
+rerendered **only Federation's baseline and three extra states**, and passed
+all three factions' original image QA. [Validated preview archive
+#12795799406](https://github.com/shukritobi/chrono-dominion/actions/runs/40642594960/artifacts/12795799406)
+contains all three original five-frame atlases, original editable sources,
+three independent extended .blend sources, nine separate 160x160 RGBA PNGs,
+160px and 80px contact sheets and the JSON QA report.
+
+| Faction | Critical alpha 160/80 | Destroyed alpha 160/80 | Power-out alpha 80 | Power-out RGBA 80 |
+|---|---:|---:|---:|---:|
+| Coalition | 484 / **122** | 1,367 / **338** | **0** | **1,297** |
+| Federation | 496 / **129** | 1,942 / **495** | **0** | **1,384** |
+| Psionic | 387 / **101** | 642 / **164** | **0** | **1,080** |
+
+Federation's first failed critical pose changed **10 alpha pixels at 80px**.
+The corrected physical split roof and elevated flak wreckage change **129**
+without reducing the strict 35-pixel acceptance threshold. All nine extra
+states have transparent, non-clipped RGBA images, and each original idle
+baseline reopened from source is **pixel-identical (0 RGBA difference at
+160px)** to its original atlas first frame. The three independently reopened
+extended Blender sources contain nine hidden, editable damage meshes each;
+compressed sizes: **119,595 / 119,399 / 129,328 bytes** for Coalition /
+Federation / Psionic.
+
+Unchanged original five-frame atlas SHA-256:
+- Coalition: `24bd6617a2e663a621340c6d8b27dc49fe061f0a1a5ff788c4fdebb37744ad1f`
+- Federation: `b0dde06c0e7793b577b10d7561765b184d2a6c07a48e6c140ff53fc3b9a0f60f`
+- Psionic: `81a5a7339f2a4cdfd86d76a34259e267245891738da19ba6fe9503dade1751ea`
+
+The downloaded **actual** 160px and 80px contact sheets were inspected
+visually. The Coalition's fallen control tower, Federation's exposed split
+roof and Psionic's broken launch arc read distinctly at 80px. The destroyed
+poses visibly remove the hangar or launch-field superstructure. Power-out
+preserves the physical silhouette while extinguishing faction glow.
+Five additional local independently recalculated pixel comparisons and the
+full per-faction alpha/RGBA metrics matched the Actions JSON exactly.
+
+**Limitations:** these are still first-pass airfield architecture, not
+approved production assets. At 80px, the Psionic critical debris is visually
+small, and the Federation critical roof fragments remain relatively clean;
+neither invalidates the quantitative gates. The asset register has an explicit
+Coalition Aerospace Operations Centre entry (`COA-BLD-007`) but no clearly
+equivalent Federation/Psionic airfield entry; do not invent IDs or mark
+unrelated structures completed. No production textures, live manifests or
+gameplay files were changed. **Next:** apply this isolated damage-state
+pipeline to the three beam-defense structures, then reconcile canonical
+asset-register naming before any proposed integration.
