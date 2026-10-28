@@ -201,7 +201,9 @@ def pose(parts,state,facing):
                 "roof shield","battlement tooth","command cupola",
                 "sponson gun receiver","forward gun barrel",
                 "cyan muzzle ferrule","side reinforced armor skirt",
-                "forward wedge glacis")):
+                "forward wedge glacis","shield firing aperture",
+                "recessed physical firing port","gunport cyan optical slit",
+                "cupola triple armored visor","side dark lower firing embrasure")):
                 o.hide_render=True
         for e in effects:e.hide_render=True
     bpy.context.view_layer.update()
