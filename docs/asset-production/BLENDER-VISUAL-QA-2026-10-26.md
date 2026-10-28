@@ -1435,3 +1435,14 @@ isolated read-only workflow, asset register and this QA document.
 Existing validated Viper, Warden and other preview atlases were not
 rerendered. No production textures, manifests or gameplay code were
 changed; the model is **preview-only, not game-integrated or approved**.
+
+## 2026-10-28 Coalition Camouflage Hunter original 32-facing pilot (verification pending)
+
+**Preview only; NOT approved or integrated.** The existing draft [Spindle Cannon preview](https://github.com/shukritobi/chrono-dominion/pull/86) already covers PSI-VEH-003, and [beam-defense extra states](https://github.com/shukritobi/chrono-dominion/pull/25) were validated previously. Rather than rerender either, this pass targets missing **COA-VEH-005 Camouflage Hunter**, which had no existing vehicle preview PR when checked.
+
+- [Original editable Blender modeling](../../tools/blender/preview_coalition_camouflage_hunter_32.py): closed faceted hull, eight independently articulated wheel pivots, 24 modeled tread cleats, four independently hinged irregular optical vanes, a dual-spectrum projector, three physical attack-only meshes, and **14 separately editable closed five-sided asymmetric wreckage volumes**.
+- [Strict PNG validation](../../tools/blender/qa_coalition_camouflage_hunter_32.py): all 128 RGBA 160×160 frames must have a nonclipped alpha bounding box; every 80px facing must show distinct move/attack/destroyed states and differ from adjacent facing. Thresholds remain fixed at 45 move RGBA, 55 attack RGBA, 100 destroyed alpha, and 30 adjacent-facing RGBA pixels.
+- [Targeted read-only Blender workflow](../../.github/workflows/coalition-camouflage-hunter-32-review.yml) renders **only this new vehicle**, reopens the editable source, asserts the independent 14/4/8/24 physical components, and uploads separate 160px/80px contact sheets, a preview atlas and quantitative JSON.
+- [Initial isolated workflow #40648427473](https://github.com/shukritobi/chrono-dominion/actions/runs/40648427473) was **queued when this record was authored**. [Draft PR #91](https://github.com/shukritobi/chrono-dominion/pull/91) is stacked on the unmerged Spindle branch because its shared Blender helper is not in main.
+
+**Unverified until Actions finishes:** the 80px readability, clipping, Blender source reopen, 128 rendered PNGs, and atlas hash. Do not infer success from committed code or queued status. If a gate fails, inspect the actual PNGs and correct physical geometry rather than relaxing thresholds. No previously validated models were rerendered; no production texture, manifest or gameplay path was changed.
