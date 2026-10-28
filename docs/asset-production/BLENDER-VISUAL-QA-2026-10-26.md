@@ -2087,7 +2087,7 @@ This is **not** a re-render of the validated Lynx, Hunter or Federation
 vehicles. It defines a custom sixteen-vertex arrowhead armored hull, ten
 independently rotating roadwheel pivots, twenty-six indexed track cleats, an
 independently traversing emitter saddle, three physically open diamond
-focusing cages, four individually hinged and notched focusing prongs, and
+focusing cages, four individually hinged tapered focusing prongs, and
 twelve independent closed irregular fracture meshes. Five separate attack-only
 coherent beam/fork geometries are parented to the emitter.
 
