@@ -74,6 +74,52 @@ assert.ok(groundHeat.size>0,'real ground infantry still generates traffic costs'
 assert.ok(game.findPath(8,15,16,15,ground).some(p=>p.y!==15),
   'ground traffic still causes collision-aware detours');
 
+// Congestion heat is now keyed by packed tile IDs inside the playable
+// grid. Compare every legal cell against the pre-change string-keyed
+// algorithm, including overlapping vehicles, a near-border blocker and
+// aircraft that must never affect ground traffic.
+for(const map of ['verdant','expanse']){
+  game.newMatch({playerFaction:'coalition',enemyFaction:'federation',
+    map,difficulty:'recruit',startingCredits:5000});
+  game.entities=[];game.water=()=>false;
+  const truck=game.add(0,'harvester',3.25,3.4);
+  game.add(0,'heavy',4.1,3.5);
+  game.add(1,'tank',3.75,4.3);
+  game.add(0,'soldier',1.1,1.2);
+  game.add(0,'aircraft',3.9,3.4);
+  const legacy=new Map(),oldKey=(x,y)=>x+','+y;
+  for(const other of game.entities){
+    if(other===truck||other.hp<=0||other.type!=='unit'||
+      other.kind==='aircraft')continue;
+    const radius=game.unitRadius(other)+game.unitRadius(truck);
+    const cx=Math.round(other.x),cy=Math.round(other.y);
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+      const x=cx+dx,y=cy+dy,d=Math.hypot(x-other.x,y-other.y);
+      if(d>radius+1.05)continue;
+      const penalty=d<radius+.14?7:d<radius+.65?2.6:.5;
+      const k=oldKey(x,y);
+      legacy.set(k,Math.min(18,(legacy.get(k)||0)+penalty));
+    }
+  }
+  const packed=game.trafficCosts(truck),size=game.worldSize;
+  let priced=0;
+  for(let y=1;y<size-1;y++)for(let x=1;x<size-1;x++){
+    const expected=legacy.get(oldKey(x,y))||0;
+    const actual=packed.get(y*size+x)||0;
+    assert.equal(actual,expected,
+      map+': packed traffic price at '+x+','+y+' must match legacy');
+    if(expected>0)priced++;
+  }
+  assert.ok(priced>0,map+': fixture must exercise congestion pricing');
+  assert.ok([...packed.keys()].every(k=>typeof k==='string'||
+    Number.isInteger(k)&&k>=0&&k<size*size),
+    'packed keys must not wrap around map rows or alias outside cells');
+  assert.ok([...packed.keys()].some(k=>typeof k==='string'),
+    'edge-of-map heat retains distinct out-of-bounds string keys');
+  assert.ok(game.findPath(3,3,12,3,truck).length>0,
+    'traffic-aware A* still returns a legal route with packed heat');
+}
+
 // Regression from the 720-second Frostline telemetry: loaded harvesters at
 // (23, 20.81) with a waypoint due north repeatedly accepted an X-only step
 // of *zero distance* while friendly Guard infantry blocked the real Y step.
