@@ -1,0 +1,110 @@
+name: Psionic Viper Four-Stage Destruction Blender Preview
+
+# PREVIEW ONLY: never write to game textures, manifests or production atlases.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - asset-preview/psionic-viper-four-stage-destruction-20261028
+    paths:
+      - .github/workflows/psionic-viper-four-stage-destruction-review.yml
+      - tools/blender/preview_psionic_viper_four_stage_destruction.py
+      - tools/blender/qa_psionic_viper_four_stage_destruction.py
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chrono-psionic-viper-four-stage-destruction
+  cancel-in-progress: true
+
+jobs:
+  destruction-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - name: Checkout isolated preview-only branch
+        uses: actions/checkout@v4
+
+      - name: Compile model and strict actual-PNG QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/blender/preview_psionic_viper_four_stage_destruction.py tools/blender/qa_psionic_viper_four_stage_destruction.py
+          python -m pip install --quiet Pillow
+
+      - name: Download validated Viper source and baseline PNGs, no rerender
+        uses: actions/download-artifact@v4
+        with:
+          name: chrono-psionic-viper-light-tank-32-preview
+          run-id: 40508990419
+          github-token: ${{ github.token }}
+          path: archived-viper-source
+
+      - name: Check immutable archived atlas and editable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s archived-viper-source/psionic-viper-light-tank.blend
+          test -s archived-viper-source/psionic-viper-light-tank-32-preview.png
+          test -s archived-viper-source/frames/idle/00.png
+          test -s archived-viper-source/frames/destroyed/31.png
+          echo '0c1229bd01f0e874822546a6ef53780b2f5ef1ddc41466a74cdd994176acee78  archived-viper-source/psionic-viper-light-tank-32-preview.png' | sha256sum --check
+          sha256sum archived-viper-source/psionic-viper-light-tank-32-preview.png > "$RUNNER_TEMP/immutable-viper.sha256"
+
+      - name: Cache official Blender 4.2.23 LTS
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chrono-blender/blender-4.2.23-linux-x64.tar.xz
+          key: chrono-blender-4.2.23-linux-x64-official
+
+      - name: Install checksum-verified official Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=4.2.23
+          name="blender-$version-linux-x64.tar.xz"
+          base="https://download.blender.org/release/Blender4.2"
+          mkdir -p "$HOME/.cache/chrono-blender" "$RUNNER_TEMP/chrono-blender"
+          archive="$HOME/.cache/chrono-blender/$name"
+          if [[ ! -s "$archive" ]]; then
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 25 --max-time 480 "$base/$name" --output "$archive"
+          fi
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 90 "$base/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          grep -F "$name" "$RUNNER_TEMP/blender.sha256" | head -1 | (cd "$HOME/.cache/chrono-blender" && sha256sum --check)
+          tar -xJf "$archive" -C "$RUNNER_TEMP/chrono-blender" --strip-components=1
+          echo "$RUNNER_TEMP/chrono-blender" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/chrono-blender/blender" --version | head -2
+
+      - name: Render only 128 NEW Viper destruction frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 4 archived-viper-source/psionic-viper-light-tank.blend --python-exit-code 1 --python tools/blender/preview_psionic_viper_four_stage_destruction.py -- --output generated/psionic-viper-destruction
+
+      - name: Reopen saved editable Blender source and verify hidden physical fractures
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --threads 2 generated/psionic-viper-destruction/psionic-viper-four-stage-destruction.blend --python-exit-code 1 --python-expr 'import bpy; d=[o for o in bpy.data.objects if o.get("viper_destruction_only")]; w=[o for o in bpy.data.objects if o.get("wreckage_only")]; s=[o for o in bpy.data.objects if o.name.startswith("Viper independently articulated gravitic skid")]; j=[o for o in bpy.data.objects if o.name.startswith("Viper independently articulated crescent mandible")]; assert len(d)==20 and len(w)==8 and len(s)==2 and len(j)==2,(len(d),len(w),len(s),len(j)); assert all(o.type=="MESH" and len(o.data.vertices)==8 and len(o.data.polygons)==6 and o.hide_render for o in d); assert all(o.hide_render for o in w); assert sum(o.get("damage_role")=="seam" for o in d)==3; print("PASS REOPEN: 20 closed Viper fracture meshes, 8 original wrecks, 2 skids, 2 jaws")'
+
+      - name: Inspect 160px and 80px real PNGs and immutable baseline SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/blender/qa_psionic_viper_four_stage_destruction.py --stage generated/psionic-viper-destruction --baseline archived-viper-source
+          sha256sum --check "$RUNNER_TEMP/immutable-viper.sha256"
+          test -s generated/psionic-viper-destruction/psionic-viper-destruction-contact-160.png
+          test -s generated/psionic-viper-destruction/psionic-viper-destruction-contact-80.png
+          test -s generated/psionic-viper-destruction/psionic-viper-destruction-facing04-80px.gif
+          test -s generated/psionic-viper-destruction/pixel-qa.json
+
+      - name: Upload preview-only Blender source, 128 frames and QA, even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrono-psionic-viper-four-stage-destruction-preview
+          path: generated/psionic-viper-destruction/
+          if-no-files-found: warn
+          retention-days: 30
