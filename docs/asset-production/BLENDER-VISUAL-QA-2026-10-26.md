@@ -1923,3 +1923,17 @@ unit collision/hitbox integration, live texture or gameplay integration exists.
 branch-scoped workflow, asset-register entry and this QA document differ
 from the stacked parent preview branch. **Draft PR #103 remains unapproved;
 never merge/publish this art without owner approval.**
+
+
+## 2026-10-28 FED-VEH-006 Federation Mammoth Siege Tank — original Blender preview (verification pending)
+
+**PREVIEW ONLY; not approved for publication or gameplay integration.** This new original Iron Federation heavy siege vehicle was missing from the validated preview roster. The independent source at [preview_federation_mammoth_siege_32.py](../../tools/blender/preview_federation_mammoth_siege_32.py) authors a custom 16-vertex chamfered hull, a separate 12-vertex faceted turret, two physically recoiling twin siege rails, two separately articulated shoulder missile cassettes, ten independently rotating roadwheels, 28 indexed track cleats, 12 distinct closed irregular fracture meshes, and two physical attack-only muzzle flashes. This is editable 3D geometry, not a reused game sprite.
+
+- [Isolated preview-only workflow](../../.github/workflows/federation-mammoth-siege-32-review.yml) is branch/path scoped, read-only, and renders **only FED-VEH-006** as 32 facings x idle/move/attack/destroyed (128 new 160x160 RGBA PNGs). It preserves all previously validated art and never writes game manifests, runtime or production sprite paths.
+- [Pixel QA](../../tools/blender/qa_federation_mammoth_siege_32.py) independently checks 160px and actual downsampled 80px PNGs. Predeclared minimum changed 80px pixels for every facing: movement RGBA **65**, attack RGBA **100**, attack alpha **25**, destroyed alpha **110**, adjacent-facing RGBA **50**. Every frame must be RGBA, unique by raw-pixel SHA-256, nonempty and at least 2px inside the canvas. These are **acceptance criteria**, not achieved results.
+- Saved compressed editable .blend must reopen under Blender 4.2.23 with **12 hidden closed manifold 12-vertex/8-face fracture meshes**, one 16-vertex custom hull, two independent cannon rails, two missile pods, ten independent roadwheels and 28 track cleats.
+- The final artifact should contain the editable .blend, 128 separate PNGs, a separate 5120x640 RGBA preview atlas, 160px and 80px contact sheets and machine-readable pixel QA. **Do not mark PASSED until workflow succeeds, real PNGs are visually inspected and independent pixel measurements match.**
+- Artistic hypotheses requiring inspection: twin gun barrels should remain readable at 80px, physical muzzle flashes must not dominate, damaged upper hull should be clearly removed, and 32-direction silhouettes must remain unclipped. If a gate fails, change geometry or render composition rather than reducing thresholds.
+- Parent validated preview: [Federation Hunter Spider Drone workflow #40694099269](https://github.com/shukritobi/chrono-dominion/actions/runs/40694099269). This new branch is stacked on its draft art branch, not on live production assets.
+
+**Status: original geometry/QA/workflow authored; targeted render and independent visual QA pending. Never merge or publish without owner approval.**
