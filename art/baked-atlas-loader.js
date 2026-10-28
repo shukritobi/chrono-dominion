@@ -9,7 +9,7 @@
   const validFaction=new Set(['coalition','federation','psionic']);
   const validKinds=new Set(['soldier','specialist','tank','heavy','recon','harvester','aircraft',
     'hq','generator','refinery','barracks','factory','radar','tech','turret','beam','airfield']);
-  const validStates=new Set(['idle','move','attack','construct','damaged']);
+  const validStates=new Set(['idle','move','attack','construct','damaged','destroyed']);
   let started=false,assetCount=0;
   const finite=v=>Number.isFinite(v)?v:0;
   function suitable(manifest){
@@ -31,7 +31,7 @@
         for(const [kind,spec] of Object.entries(unitMap)){
           if(!validKinds.has(kind)||typeof spec?.file!=='string'||
               !/^[a-z]+-[a-z]+\.png$/.test(spec.file)||
-              ![1,8].includes(spec.directions)||!spec.states)continue;
+              ![1,8,32].includes(spec.directions)||!spec.states)continue;
           const states=spec.states;
           if(Object.keys(states).some(key=>!validStates.has(key)||!Number.isInteger(states[key])||
             states[key]<1||states[key]>12))continue;
