@@ -1923,3 +1923,45 @@ unit collision/hitbox integration, live texture or gameplay integration exists.
 branch-scoped workflow, asset-register entry and this QA document differ
 from the stacked parent preview branch. **Draft PR #103 remains unapproved;
 never merge/publish this art without owner approval.**
+
+
+## 2026-10-28 FED-VEH-006 Federation Mammoth Siege Tank — original Blender preview (verification pending)
+
+**PREVIEW ONLY; not approved for publication or gameplay integration.** This new original Iron Federation heavy siege vehicle was missing from the validated preview roster. The independent source at [preview_federation_mammoth_siege_32.py](../../tools/blender/preview_federation_mammoth_siege_32.py) authors a custom 16-vertex chamfered hull, a separate 12-vertex faceted turret, two physically recoiling twin siege rails, two separately articulated shoulder missile cassettes, ten independently rotating roadwheels, 28 indexed track cleats, 12 distinct closed irregular fracture meshes, and two physical attack-only muzzle flashes. This is editable 3D geometry, not a reused game sprite.
+
+- [Isolated preview-only workflow](../../.github/workflows/federation-mammoth-siege-32-review.yml) is branch/path scoped, read-only, and renders **only FED-VEH-006** as 32 facings x idle/move/attack/destroyed (128 new 160x160 RGBA PNGs). It preserves all previously validated art and never writes game manifests, runtime or production sprite paths.
+- [Pixel QA](../../tools/blender/qa_federation_mammoth_siege_32.py) independently checks 160px and actual downsampled 80px PNGs. Predeclared minimum changed 80px pixels for every facing: movement RGBA **65**, attack RGBA **100**, attack alpha **25**, destroyed alpha **110**, adjacent-facing RGBA **50**. Every frame must be RGBA, unique by raw-pixel SHA-256, nonempty and at least 2px inside the canvas. These are **acceptance criteria**, not achieved results.
+- Saved compressed editable .blend must reopen under Blender 4.2.23 with **12 hidden closed manifold 12-vertex/8-face fracture meshes**, one 16-vertex custom hull, two independent cannon rails, two missile pods, ten independent roadwheels and 28 track cleats.
+- The final artifact should contain the editable .blend, 128 separate PNGs, a separate 5120x640 RGBA preview atlas, 160px and 80px contact sheets and machine-readable pixel QA. **Do not mark PASSED until workflow succeeds, real PNGs are visually inspected and independent pixel measurements match.**
+- Artistic hypotheses requiring inspection: twin gun barrels should remain readable at 80px, physical muzzle flashes must not dominate, damaged upper hull should be clearly removed, and 32-direction silhouettes must remain unclipped. If a gate fails, change geometry or render composition rather than reducing thresholds.
+- Parent validated preview: [Federation Hunter Spider Drone workflow #40694099269](https://github.com/shukritobi/chrono-dominion/actions/runs/40694099269). This new branch is stacked on its draft art branch, not on live production assets.
+
+**Status: original geometry/QA/workflow authored; targeted render and independent visual QA pending. Never merge or publish without owner approval.**
+
+
+### Mammoth first-render visual correction (28 October 2026)
+
+[First targeted render #40703272036](https://github.com/shukritobi/chrono-dominion/actions/runs/40703272036) **passed** Python compilation, saved-source Blender reopen, all 128 PNGs and the numeric 80px QA gates, but **manual inspection found an artistic failure**: the bright muzzle flashes were visibly detached from the recoiling barrels. This is a real visual issue that numerical state-difference checks did not detect. Original first-pass 80px pixel ranges were movement RGBA 1,157–1,640; attack RGBA 975–1,506; attack alpha 119–402; destroyed alpha 546–876; adjacent-facing RGBA 1,393–1,881. All 128 hashes were unique and minimum margin was 8px, but these measurements alone do not justify artistic approval.
+
+**Targeted correction:** parent each physical flash to its respective moving siege rail at local x=2.24 (muzzle tip at x=2.09), shrink the flare from 0.64 to 0.42 world units, and reduce cannon recoil displacement from 0.70 to 0.22 world units. The reopened-source workflow now explicitly verifies that both attack-only meshes are gun children and physically near their barrel tips. Only the new Mammoth preview is rerendered; no earlier validated vehicle or published atlas is touched. Corrected run and independent 160px/80px inspection **pending**.
+
+
+### Final FED-VEH-006 corrected Blender render and independent visual QA — 28 October 2026 (PASSED)
+
+- [Corrected successful Blender 4.2.23 workflow #40703722103](https://github.com/shukritobi/chrono-dominion/actions/runs/40703722103), [complete 133-file preview artifact #12823480653](https://github.com/shukritobi/chrono-dominion/actions/runs/40703722103/artifacts/12823480653). The original [run #40703272036](https://github.com/shukritobi/chrono-dominion/actions/runs/40703272036) was numerically successful but failed manual artistic review because its flashes floated ahead of the recoiling barrels. **Exactly two targeted Mammoth rendering runs** were executed; no older validated asset was rendered.
+- The **144,218-byte editable compressed .blend reopened successfully** in Blender 4.2.23. Reopened-source topology checks confirmed **12 hidden manifold closed 12-vertex/8-face fracture meshes**, one 16-vertex custom hull, **2 independent siege rails**, **2 separate shoulder missile cassettes**, **10 independent roadwheel pivots**, **28 separate indexed track cleats**, and **2 attack-only flash meshes physically parented to the gun rails** at local x=2.24, near the muzzle x=2.09.
+- The corrected render produced **128 unique, nonempty, unclipped transparent 160x160 RGBA PNGs** (32 directions x idle/move/attack/destroyed). Minimum 160px alpha margin was **14px**. Both actual **160px and 80px contact sheets** were downloaded and visually inspected. The twin gun silhouette and attached flashes are now aligned at every sampled direction; the destroyed state visibly removes the turret and leaves an asymmetric fractured chassis. At 80px the missile tubes and fine track links are small, and the destroyed silhouette resembles an open lower hull rather than a complete crushed turret.
+- A separate Pillow/NumPy audit independently recalculated **all 128 pixel hashes, all 32 directions x six state metrics, all 32 adjacent-direction metrics and every frame's alpha margin** from downloaded PNGs. **Zero discrepancies** with the workflow JSON. Comparing both actual ZIPs proved **32/32 idle, 32/32 move and 32/32 destroyed frames are pixel-identical** to the initial Mammoth preview; only **32/32 attack frames** changed (1,933–4,447 RGBA pixels at 160px). The corrective workflow did regenerate the same Mammoth 128 frames, but no previously validated different asset was touched.
+- Corrected atlas SHA-256: f9b2841e768c31799c8fcb814ae7c1d20c134ad075155d8f6a8dd25f72b03ef8. Downloaded corrected ZIP SHA-256: 09d16d4513cca8cf363a3962bc8f8e4080a9ba0868a2807432143f328398c601.
+
+| Independently verified corrected 80px measurements, all 32 facings | Minimum | Maximum |
+|---|---:|---:|
+| Idle to move RGBA | **1,157** | 1,640 |
+| Idle to attack RGBA | **952** | 1,461 |
+| Idle to attack alpha | **119** | 364 |
+| Idle to destroyed RGBA | **1,168** | 1,651 |
+| Idle to destroyed alpha | **546** | 876 |
+| Idle to destroyed alpha at 160px | **1,353** | 2,455 |
+| Adjacent idle facings RGBA | **1,393** | 1,881 |
+
+**Safety and limitations:** This pass changes only the new Mammoth source, its isolated workflow, strict QA, asset-register entry and QA documentation relative to its stacked Spider Drone preview parent. **No published texture, manifest, loader, gameplay or runtime file was changed.** The new artwork is preview-only, not playable, and the draft PR must not be merged without explicit owner approval. Current four states are single poses rather than full multi-beat track movement, cannon cycling or destruction animations. Next priority: missing Federation/Coalition/Psionic vehicles or remaining building damage states, not needless rerenders of already validated art.
