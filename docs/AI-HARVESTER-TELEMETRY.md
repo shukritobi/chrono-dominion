@@ -472,3 +472,31 @@ projectile impacts, immediate tactical orders, the unchanged strategic
 schedule, unseen shooters, cooldown and save/load. **A passing targeted test
 does not prove improved survival.** Compare the revised full 720-second
 progression, ore-income guard and baseline before claiming a gameplay gain.
+
+## Pre-impact warning from an observed tank shot (29 October 2026)
+
+The emergency escort planner introduced above previously waited for a
+projectile to **hit** a surviving AI ore truck. The production combat engine
+already knows when a tank actually fires a projectile at that truck. Its
+travel time can be used to send a defender toward the attacker sooner.
+
+The same bounded tactical response now runs at **projectile launch**, only
+when the shooter is a living player Battle Tank/Siege Tank currently visible
+to AI sensors, the target is a living AI harvester, an eligible nearby
+defender exists and the ordinary four-second response cooldown permits it.
+If a previously hidden shooter becomes visible by impact, the existing
+impact response remains a fallback. No unseen enemy position is read by
+the AI; no prediction based on merely nearby enemies is introduced.
+The source of the projectile and its target are actual combat events.
+
+The strategic AI schedule, ore economy, production choices, projectile
+damage, fog, save schema, existing attack orders and original assets remain
+unchanged. Three-faction regression tests assert that an escort receives
+an attack order **before the first hit**, no damage is fabricated, hidden
+launches cannot trigger orders, later visible impacts still work, and
+non-tank or non-harvester attacks do not broaden the emergency response.
+
+**Unproven outcome:** earlier defensive orders are not proof that a worker
+survives. Compare the complete 720-second natural-match worker losses and
+income against the established six-loss baseline, and reject any revision
+that fails the existing economy regression gate.
