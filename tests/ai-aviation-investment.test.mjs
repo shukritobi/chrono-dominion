@@ -111,6 +111,25 @@ for(const faction of ['coalition','federation','psionic']){
   assert.ok(g.queues.some(q=>q.side===1&&q.key!=='aircraft'),
     faction+': visible local attack must override single-tank saving');
 
+  // At the exact affordable Air Command threshold, an observed assault
+  // must take precedence over optional aviation infrastructure. Previously
+  // the construction branch could buy an airfield even while threatened.
+  reset();prerequisites();g.time=150;g.players[1].credits=2400;
+  const attackedHq=g.entities.find(e=>e.owner===1&&e.kind==='hq');
+  const attacker=g.add(0,'soldier',attackedHq.x+1,attackedHq.y+1);
+  assert.ok(g.sideCanSee(1,attacker),
+    faction+': the base attacker must be legitimately observed');
+  g.runAI();
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield'&&e.hp>0).length,0,
+    faction+': do not buy an Air Command during a visible base invasion');
+  attacker.hp=0;
+  g.players[1].credits=2400;
+  g.runAI();
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield'&&e.hp>0).length,1,
+    faction+': aviation investment resumes after the observed threat ends');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': resumed paid construction survives existing saves');
+
   reset();prerequisites();g.time=150;g.players[1].credits=2399;
   g.runAI();
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,0,
