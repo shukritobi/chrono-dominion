@@ -90,7 +90,8 @@ delete g.walkable;
 g._movementNavCache={blocked:null};
 const firstWalk=g.navigationWalk();
 const sharedFootprint=g._movementNavCache.blocked;
-assert.ok(sharedFootprint instanceof Set,'movement phase creates an indexed footprint');
+assert.equal(Object.prototype.toString.call(sharedFootprint),'[object Set]',
+  'movement phase creates an indexed footprint');
 assert.equal(firstWalk(23,23),false,'active blocker remains impassable');
 const secondWalk=g.navigationWalk();
 assert.equal(g._movementNavCache.blocked,sharedFootprint,
