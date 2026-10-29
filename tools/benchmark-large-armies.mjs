@@ -52,6 +52,14 @@ for(const side of [0,1]){
 }
 const initial=new Map(units.map(u=>[u.id,{x:u.x,y:u.y}]));
 let pathQueries=0,occupancyChecks=0,pathTimeMs=0;
+let directRouteAttempts=0,directRouteHits=0;
+const directOctilePath=g.directOctilePath.bind(g);
+g.directOctilePath=(...args)=>{
+  directRouteAttempts++;
+  const route=directOctilePath(...args);
+  if(route)directRouteHits++;
+  return route;
+};
 const findPath=g.findPath.bind(g),occupy=g.canOccupyUnit.bind(g);
 // Attribute expensive simulation ticks to the actual production A* calls.
 // This is headless diagnostic instrumentation, not an engine modification.
@@ -98,7 +106,8 @@ const report={
   fixture:'xl-120-unit-movement',map:'expanse',worldSize:g.worldSize,
   initialStressUnits:units.length,simulatedSeconds:ticks*dt,ticks,
   movedStressUnits:moved,liveUnits,entitiesBeforeSave:beforeSave,
-  pathQueries,occupancyChecks,wallMs:round(wallMs),
+  pathQueries,occupancyChecks,directRouteAttempts,directRouteHits,
+  wallMs:round(wallMs),
   meanMsPerTick:round(wallMs/ticks),
   p95TickMs:round(p95TickMs),
   maxTickMs:round(maxTickMs),

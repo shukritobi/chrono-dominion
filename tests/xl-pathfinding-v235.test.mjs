@@ -80,6 +80,56 @@ for(const route of [nearGate,costlyGate]){
   }
 }
 
+// An ordinary player move through clear XL terrain can use an exact-cost
+// diagonal-then-straight route without expanding an A* heap. A blocked
+// diagonal shoulder must fall back to full A* and still reach the goal.
+let shortcutAttempts=0,shortcutHits=0;
+const originalShortcut=g.directOctilePath.bind(g);
+g.directOctilePath=(...args)=>{
+  shortcutAttempts++;
+  const route=originalShortcut(...args);
+  if(route)shortcutHits++;
+  return route;
+};
+const openTile=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
+  x>0&&y>0&&x<47&&y<47;
+g.walkable=openTile;
+const clearRoute=g.findPath(4,4,40,30,null,null,true);
+assert.equal(clearRoute.length,36,'clear route has optimal octile step count');
+assert.equal(clearRoute.at(-1)?.x,40);
+assert.equal(clearRoute.at(-1)?.y,30);
+assert.equal(shortcutAttempts,1);
+assert.equal(shortcutHits,1,'clear route must avoid A* fallback');
+let previousClear={x:4,y:4};
+for(const point of clearRoute){
+  assert.ok(Math.abs(point.x-previousClear.x)<=1&&
+    Math.abs(point.y-previousClear.y)<=1,'shortcut stays adjacent');
+  previousClear=point;
+}
+g.walkable=(x,y)=>openTile(x,y)&&!(x===5&&y===5);
+const obstructed=g.findPath(4,4,40,30,null,null,true);
+assert.equal(shortcutAttempts,2);
+assert.equal(shortcutHits,1,'blocked diagonal must use full A*');
+assert.equal(obstructed.at(-1)?.x,40);
+assert.equal(obstructed.at(-1)?.y,30);
+let previousBlocked={x:4,y:4};
+for(const point of obstructed){
+  assert.ok(g.walkable(point.x,point.y),'fallback never enters blocked cell');
+  if(point.x!==previousBlocked.x&&point.y!==previousBlocked.y)
+    assert.ok(g.walkable(point.x,previousBlocked.y)&&
+      g.walkable(previousBlocked.x,point.y),'fallback respects corners');
+  previousBlocked=point;
+}
+// Weighted searches and legacy Euclidean callers must not take the shortcut.
+g.walkable=openTile;
+const weighted=g.findPath(4,4,40,30,null,
+  p=>p.x===5&&p.y===5?1000:0,true);
+assert.ok(!weighted.some(p=>p.x===5&&p.y===5),
+  'hazard costs cannot be bypassed by the clear-corridor shortcut');
+g.findPath(4,4,40,30);
+assert.equal(shortcutAttempts,2,'weighted and non-opt-in searches use A*');
+g.directOctilePath=originalShortcut;
+
 // A genuinely unreachable target still returns a safe partial route.
 g.walkable=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
   x>0&&y>0&&x<47&&y<47&&x!==24;
