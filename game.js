@@ -1660,10 +1660,16 @@
         color:psychic?'#bb78ff':faction==='psionic'?'#a3f5c8':source.type==='building'?'#77d9ff':'#f4b36c'
       });
       this.particles.push({x:source.x,y:source.y,life:.2,type:'muzzle',color:faction==='psionic'?'#ba84ee':'#ffd698'});
+      // The launch itself is observable combat evidence. React while the
+      // projectile is still in flight rather than waiting for the first hit.
+      // The same sensor, escort and cooldown checks protect impact fallback.
+      this.respondToAIHarvesterAttack(this.projectiles[this.projectiles.length-1],target);
     }
-    respondToAIHarvesterHit(shot,target){
-      // A tank can hit a worker immediately after an eight-second strategic
-      // decision. Reuse only the EXISTING tactical escort planner here:
+    respondToAIHarvesterAttack(shot,target){
+      // A tank can fire at a worker immediately after an eight-second
+      // strategic decision. Respond on a confirmed shot launch when visible,
+      // or on impact if it only becomes visible later. Reuse only the
+      // EXISTING tactical escort planner:
       // advancing the entire strategic AI tick changed production timing and
       // failed the natural-match economy regression on Desert.
       if(this.state!=='playing'||target.owner!==1||
@@ -1713,7 +1719,7 @@
           continue;
         }
         target.hp-=shot.damage;
-        this.respondToAIHarvesterHit(shot,target);
+        this.respondToAIHarvesterAttack(shot,target);
         if(target.owner===0&&target.type==='unit'&&this.time-(target.lastHurtVoiceAt??-100)>7){
           target.lastHurtVoiceAt=this.time;
           this.audio?.play('underFire',{kind:target.kind,faction:this.players[0]?.faction});
