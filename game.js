@@ -964,8 +964,15 @@
       const tileKey=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
         x>=0&&y>=0&&x<WORLD_SIZE&&y<WORLD_SIZE?
         y*WORLD_SIZE+x:x+','+y;
-      const blocked=standard?new Set():null;
-      if(standard)for(const b of this.entities){
+      // Buildings cannot be added or destroyed during step()'s movement phase:
+      // construction, projectiles and production run after it. Reuse the
+      // immutable footprint across the many unit routes in that phase only.
+      // Outside step(), every query still sees live building changes.
+      const frame=this._movementNavCache;
+      let blocked=standard?frame?.blocked:null;
+      if(standard&&!blocked){
+        blocked=new Set();
+        for(const b of this.entities){
         if(b.hp<=0||b.type!=='building')continue;
         const minX=Math.max(1,Math.floor(b.x-1.5)+1);
         const maxX=Math.min(WORLD_SIZE-2,Math.ceil(b.x+1.5)-1);
@@ -974,7 +981,11 @@
         for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)
           if(Math.abs(b.x-x)<1.5&&Math.abs(b.y-y)<1.5)
             blocked.add(tileKey(x,y));
+        }
+        if(frame)frame.blocked=blocked;
       }
+      // Tile and water decisions remain per-query; only building footprints
+      // are shared, so terrain changes and custom hooks never go stale.
       const passable=new Map();
       return (x,y)=>{
         const k=tileKey(x,y);
@@ -1929,6 +1940,8 @@
     }
     step(dt){
       this.time+=dt;
+      // Reset before movement; the previous tick's buildings are never reused.
+      this._movementNavCache={blocked:null};
       this.unitBuckets=new UnitBuckets().rebuild(this.entities);
       // One building index for the movement/separation phase; collision
       // checks still read live HP and the index is discarded every tick.
@@ -2011,6 +2024,9 @@
       }
       this.separateUnits();
       this.advanceLaneReservations();
+      // Projectiles can destroy buildings, and production can add them. Drop
+      // the shared footprint before either phase so all later queries are live.
+      this._movementNavCache=null;
       this.unitBuckets=null;this.buildingBuckets=null;this.sensorBuckets=null;
       this.updateProjectiles(dt);
       this.repairBuildings(dt);
