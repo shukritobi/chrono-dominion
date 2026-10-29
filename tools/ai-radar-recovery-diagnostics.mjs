@@ -10,7 +10,11 @@ export function classifyRadarRecovery(before,after){
   // The AI buys an emergency turret ahead of radar only when affordable.
   if(before.threatened&&before.turretsBuilt<2&&before.credits>=900)
     return 'base-defense-priority';
-  if(before.refineryBuilt&&!before.harvesters)return 'harvester-recovery-priority';
+  if(before.refineryBuilt&&!before.harvesters){
+    if(before.harvesterQueued)return 'harvester-replacement-queued';
+    if(before.credits<900)return 'harvester-replacement-unaffordable';
+    return 'harvester-recovery-priority';
+  }
   if(before.criticalHarvester)return 'critical-harvester-priority';
   // The current AI purchases a missing factory before a missing radar.
   if(!before.factoryOwned)return 'factory-recovery-priority';
