@@ -1014,6 +1014,23 @@
       }
       return heat;
     }
+    directOctilePath(start,goal,walk){
+      // A clear eight-way grid corridor has the exact octile lower-bound
+      // length: take diagonal steps while both axes differ, then straight
+      // steps. Check both shoulders before every diagonal, as A* does.
+      // A blocked corridor returns null so normal A* finds a detour or
+      // reachable partial route; never skip weighted traffic/hazard searches.
+      const route=[];
+      let x=start.x,y=start.y;
+      while(x!==goal.x||y!==goal.y){
+        const dx=Math.sign(goal.x-x),dy=Math.sign(goal.y-y);
+        const nx=x+dx,ny=y+dy;
+        if(!walk(nx,ny)||(dx&&dy&&(!walk(nx,y)||!walk(x,ny))))return null;
+        route.push({x:nx,y:ny});
+        x=nx;y=ny;
+      }
+      return route;
+    }
     findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
       // open list. During congestion replans it also prices nearby unit traffic.
@@ -1023,6 +1040,14 @@
       // thousands of coordinate strings per large-army path query.
       const key=(x,y)=>y*WORLD_SIZE+x,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
       const walk=this.navigationWalk();
+      // Only ordinary player move orders opt into octile. On a fully clear
+      // corridor, avoid allocating the A* heap/maps; every returned step is
+      // an optimal legal eight-way grid move. AI, harvesters, recon, combat,
+      // traffic-priced recovery and hazard-weighted queries keep A* intact.
+      if(useOctile&&!avoidUnit&&!extraCost){
+        const direct=this.directOctilePath(start,goal,walk);
+        if(direct)return direct;
+      }
       const open=[],push=node=>{
         open.push(node);let i=open.length-1;
         while(i>0){

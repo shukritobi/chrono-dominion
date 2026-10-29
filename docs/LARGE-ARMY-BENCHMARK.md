@@ -180,3 +180,27 @@ neighbor probes, not the ordinary first-path calculation. It should not be
 reported as a solution to the 124-query initial routing burst or a measured
 FPS improvement without controlled browser benchmarks. Traffic pricing only
 runs when a unit requests congestion recovery.
+
+## Clear-corridor octile fast path (29 October 2026)
+
+Ordinary **player-owned move** routes already opt into the octile A* heuristic.
+When such a query has no traffic or hazard weighting, the engine first probes
+a diagonal-then-straight grid corridor. If every destination tile and both
+shoulders of each diagonal step are walkable, this route is exactly the
+obstacle-free octile lower bound, so no A* heap or search-node maps are needed.
+If **any** step or corner is blocked, the full original A* runs unchanged,
+including reachable-partial-route fallback. Each query builds a fresh
+walkability snapshot; building destruction, water and custom walkable hooks
+are never cached across requests.
+
+This is intentionally **not** enabled for AI, harvesters, reconnaissance,
+attack-move, direct combat pursuit, traffic-priced recovery, or
+hazard-weighted queries. The original save schema, movement collision checks,
+unit orders and costs are unchanged. The XL navigation regression tests open
+corridors, blocked diagonal shoulders, weighted hazards and legacy callers.
+The 120-unit report now includes `directRouteAttempts` and
+`directRouteHits` so the experiment can be measured instead of inferred.
+A successful fast-path hit reduces *per-query A* work*, **not the number of
+initial movement orders**: the 124-query first-tick burst is not eliminated.
+Compare matched CI benchmark artifacts and economy gates before claiming a
+measured speedup or browser FPS benefit.

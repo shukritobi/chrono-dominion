@@ -14,6 +14,12 @@ try{
   assert.equal(result.simulatedSeconds,8);
   assert.ok(result.movedStressUnits>=60,'at least half the stress units must move');
   assert.ok(result.pathQueries>0&&result.occupancyChecks>0,'real navigation exercised');
+  assert.ok(Number.isInteger(result.directRouteAttempts)&&
+    Number.isInteger(result.directRouteHits)&&
+    result.directRouteAttempts>0&&result.directRouteHits>=0&&
+    result.directRouteHits<=result.directRouteAttempts&&
+    result.directRouteAttempts<=result.pathQueries,
+    'clear-route shortcut accounting must match real path queries');
   assert.ok(result.finitePositions&&result.saveRestored&&result.restoredPositionsMatch,
     'finite positions, unit identities and v1 save compatibility');
   assert.ok(Number.isFinite(result.meanMsPerTick)&&result.meanMsPerTick>=0);
