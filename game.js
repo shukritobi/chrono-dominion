@@ -1694,9 +1694,13 @@
       const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&
         e.hp>0&&e.kind!=='harvester'&&structures.some(b=>dist(b,e)<8)&&
         this.sideCanSee(1,e));
-      this.nextHarvesterResponseAt=this.time+4;
       const assignments=this.assignAIEngagements(fighters,invaders,base);
-      return [...assignments.values()].includes(attacker.id);
+      // An observed shot can have no eligible interception (for example,
+      // nearby guards are committed to an assault). Do not suppress a later,
+      // actionable shot for four seconds when this one went unserved.
+      const intercepted=[...assignments.values()].includes(attacker.id);
+      if(intercepted)this.nextHarvesterResponseAt=this.time+4;
+      return intercepted;
     }
     updateProjectiles(dt){
       for(const shot of this.projectiles){
