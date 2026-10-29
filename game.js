@@ -1727,7 +1727,7 @@
       return intercepted;
     }
     respondToAIHarvesterAttack(shot,target){
-      // A tank can fire at a worker immediately after an eight-second
+      // A hostile tank can fire at a worker immediately after an eight-second
       // strategic decision. Respond on a confirmed shot launch when visible,
       // or on impact if it only becomes visible later. Reuse only the
       // EXISTING tactical escort planner:
@@ -1747,9 +1747,14 @@
       // Only nearby ground escorts can help this worker. Never call the
       // strategic planner, recruit units, change income or invent a target
       // from the projectile's hidden coordinates.
+      // The archived Verdant match lost a worker with an idle tank 8.47
+      // tiles away. For a CONFIRMED, AI-visible shot only, allow a nearby
+      // reserve escort slightly longer to respond. Ordinary strategic AI
+      // decisions retain their tighter local engagement limits.
       const fighters=this.entities.filter(e=>e.owner===1&&e.type==='unit'&&
         e.hp>0&&e.built&&e.kind!=='harvester'&&e.kind!=='aircraft'&&
-        e.kind!=='recon'&&dist(e,attacker)<=8.5&&dist(e,target)<=9);
+        e.kind!=='recon'&&(e.retreatUntil||0)<=this.time&&
+        dist(e,attacker)<=11&&dist(e,target)<=11);
       if(!fighters.length)return false;
       const base=this.entities.find(e=>e.owner===1&&e.kind==='hq'&&e.hp>0);
       if(!base)return false;
@@ -1758,7 +1763,7 @@
       const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&
         e.hp>0&&e.kind!=='harvester'&&structures.some(b=>dist(b,e)<8)&&
         this.sideCanSee(1,e));
-      const assignments=this.assignAIEngagements(fighters,invaders,base);
+      const assignments=this.assignAIEngagements(fighters,invaders,base,attacker.id);
       // Rate-limit repeated shots from the same unserved attacker, but
       // permit ONE different observed shooter during that four-second window.
       // A successful response (or the second attempt) closes the exception.
@@ -2480,7 +2485,7 @@
       }
       return withdrawing;
     }
-    assignAIEngagements(fighters,invaders,base){
+    assignAIEngagements(fighters,invaders,base,urgentHarvesterShooterId=null){
       // Build one assignment table per AI decision tick. Only observed units
       // are candidates: unseen enemies never become omniscient attack orders.
       const side=1,available=new Map(fighters.filter(u=>u.hp>0&&u.built&&
@@ -2537,8 +2542,12 @@
         if(escorts>=2)break;
         if(committed.has(enemy.id))continue;
         const siege=this.stat(enemy,'range')>=4.5;
+        // Only an observed, actual shot at a worker may call in an escort
+        // from the slightly wider reserve radius. The ordinary AI tick and
+        // other ore threats keep the original 8.5/9-tile limits.
+        const urgent=enemy.id===urgentHarvesterShooterId;
         const candidates=[...available.values()].filter(u=>
-          dist(u,enemy)<=8.5&&dist(u,worker)<=9&&
+          dist(u,enemy)<=(urgent?11:8.5)&&dist(u,worker)<=(urgent?11:9)&&
           (u.order?.type!=='attackMove'||dist(u,enemy)<=4.5))
           .sort((a,b)=>{
             // Prioritise armour able to contest a siege firing line; retain
