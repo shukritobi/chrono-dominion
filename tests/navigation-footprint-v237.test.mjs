@@ -85,7 +85,51 @@ assert.equal(custom(23,23),true,'custom hook overrides indexed building rules');
 assert.equal(customCalls,2);
 delete g.walkable;
 
+// Many paths during one movement tick must share a single immutable building
+// footprint, while retaining a separate water/tile cache for every request.
+g._movementNavCache={blocked:null};
+const firstWalk=g.navigationWalk();
+const sharedFootprint=g._movementNavCache.blocked;
+assert.equal(Object.prototype.toString.call(sharedFootprint),'[object Set]',
+  'movement phase creates an indexed footprint');
+assert.equal(firstWalk(23,23),false,'active blocker remains impassable');
+const secondWalk=g.navigationWalk();
+assert.equal(g._movementNavCache.blocked,sharedFootprint,
+  'second route reuses the same building footprint');
+assert.equal(secondWalk(23,23),false);
+g.water=(x,y)=>x===26&&y===23;
+assert.equal(g.navigationWalk()(26,23),false,
+  'a new route observes current water even with a shared building footprint');
+g.water=()=>false;
+assert.equal(g.navigationWalk()(26,23),true,
+  'water probes are not shared across navigation queries');
+g._movementNavCache=null;
+blocker.hp=0;
+assert.equal(g.navigationWalk()(23,23),true,
+  'after movement, a destroyed building is immediately passable');
+blocker.hp=100;
+
 g.entities=originalEntities;g.water=originalWater;
+// The real step() must establish and release the frame cache, including when
+// multiple ordinary units request their initial route in the same tick.
+g.nextAI=Infinity;g.updateUI=noop;
+const navWalk=g.navigationWalk.bind(g),phaseFootprints=[];
+g.navigationWalk=(...args)=>{
+  const walk=navWalk(...args);
+  if(g._movementNavCache?.blocked)phaseFootprints.push(g._movementNavCache.blocked);
+  return walk;
+};
+const moverA=g.add(0,'soldier',12,17),moverB=g.add(0,'soldier',12,19);
+moverA.order={type:'move',x:32,y:17};
+moverB.order={type:'move',x:32,y:19};
+g.step(.2);
+assert.ok(phaseFootprints.length>=2,
+  'two real movement orders must query navigation during the same tick');
+assert.ok(phaseFootprints.every(blocked=>blocked===phaseFootprints[0]),
+  'all real movement-phase routes reuse one building footprint');
+assert.equal(g._movementNavCache,null,
+  'the footprint is discarded before projectiles and production');
+g.navigationWalk=navWalk;
 assert.equal(g.saveGame(),true);
 assert.equal(g.loadGame(),true);
 assert.equal(window.ChronoDominion.version,'2.42.0');

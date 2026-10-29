@@ -267,3 +267,30 @@ Acceptance requires the full PR CI suite (nine balance scenarios, three natural
 progression matches, economy guard, aviation tests, and 120-unit benchmark).
 Compare direct-route hits and per-tick A* work with the prior CI artifact;
 **a shortcut hit is not a measured browser FPS improvement**.
+
+
+## Shared building footprints within one movement tick (29 October 2026)
+
+The initial 120-unit movement workload previously called `navigationWalk()`
+for every path request. Each call reconstructed the same set of living building
+footprints by scanning the entity roster, even though buildings cannot be added
+or destroyed until the projectile and production phases **after** movement.
+A busy first tick therefore repeated this setup for roughly 124 path requests.
+
+The engine now builds the standard building-footprint index lazily once per
+movement phase and reuses that immutable set for subsequent path and formation
+queries **within the same simulation tick**. Every query still owns its own
+walkability memo and checks current water. Custom `walkable()` overrides bypass
+the shared index. The cache is explicitly discarded **before** projectiles,
+repairs, production and strategic AI can modify buildings. Calls outside
+`step()`, including user orders, map tools and save/load tests, continue to
+build fresh indexes and immediately observe moved or destroyed structures.
+
+`tests/navigation-footprint-v237.test.mjs` covers same-phase identity reuse,
+independent water decisions, post-phase destruction and real two-unit movement
+with cache teardown. The XL benchmark now records `navFootprintBuilds` overall
+and per tick; its regression requires no more than one build per movement tick
+and one build for the initial 120-unit order burst. These counters measure
+avoided *building-roster scans*, not fewer path requests or browser FPS.
+Full CI, AI economy, natural progression and aviation verification are required
+before merging. No save fields, artwork, costs or unit orders are changed.
