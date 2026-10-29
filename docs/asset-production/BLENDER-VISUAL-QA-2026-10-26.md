@@ -2773,3 +2773,77 @@ interior and brighter 80px fracture edges, then tackle the three-faction
 beam-defense extra states. Do not create canonical Federation/Psionic
 airfield IDs or integrate any preview art without separate roster/design
 approval. Multi-frame building destruction is still missing.
+
+## 2026-10-29 Federation airfield MK-II physically breached hangar — verified
+
+**PREVIEW ONLY; Federation airfield is an experimental class, not an approved canonical structure.**
+This pass reuses the exact prior successful three-faction airfield artifact
+[run #40791963017](https://github.com/shukritobi/chrono-dominion/actions/runs/40791963017)
+without rerendering any existing five-frame baseline atlas or other faction.
+Only the Federation **destroyed** 160x160 RGBA PNG was rendered again.
+The other **eight extra-state PNGs**, all **three original atlases** and
+`packed/manifest.json` were independently confirmed **12/12 byte-identical**
+to the previous artifact.
+
+- [Successful corrected targeted Blender run #40798442382](https://github.com/shukritobi/chrono-dominion/actions/runs/40798442382),
+  [complete editable source + PNG comparison artifact #12864772598](https://github.com/shukritobi/chrono-dominion/actions/runs/40798442382/artifacts/12864772598),
+  [draft preview PR #128](https://github.com/shukritobi/chrono-dominion/pull/128).
+- [Original irregular custom geometry](../../tools/blender/preview_federation_airfield_breached_mk2.py),
+  [reopened-source manifold verification](../../tools/blender/verify_federation_airfield_breached_mk2.py),
+  [strict pixel regression QA](../../tools/blender/qa_federation_airfield_breached_mk2.py),
+  [isolated workflow](../../.github/workflows/federation-airfield-breached-mk2-review.yml).
+- The original 121,055-byte extended airfield source was reopened; **ten**
+  new independent custom solid meshes were added: irregular maintenance floor,
+  torn rear bulkhead, jagged far-side wall, sheared low near-side wall,
+  collapsed rear roof cantilever, snapped portal stanchion, split internal
+  cradle, two copper shear caps and a grounded forward brace. The previously
+  obstructing fallen roof panel and crossbeam are hidden **only in the new
+  destroyed pose**. The saved **125,615-byte editable .blend** was independently
+  reopened; all ten new meshes are **closed-manifold** and hidden in its
+  intact pose. The original eight fracture meshes remain intact and editable.
+- Geometric BVH raycasts against **all render-visible scene meshes** confirm
+  a genuinely open front (first hit at **x=-1.39**, rear bulkhead) and
+  near-side cutaway (first hit at **y=1.11**, far wall), not a dark painted door.
+  Rays are checked before rendering.
+- Actual 160px and downsampled 80px before/after PNGs were downloaded and
+  visually inspected. The 80px silhouette now shows an open dark central
+  hangar cavity with copper/steel fractures rather than the prior flattened
+  low bunker. At 160px the irregular rear wall, broken portal and exposed
+  maintenance cradle are clearer. Some wall fragments still overlap, and
+  a single destruction pose is not a multi-frame collapse.
+  **Measured trade-off:** the outer alpha silhouette is actually *closer*
+  to idle than the previous low wreck: idle-to-destroyed alpha change falls
+  from **2,093 to 1,564 at 160px**, and from **532 to 401 at 80px**.
+  The artistic improvement is the exposed dark interior and visibly broken
+  walls, not a larger silhouette delta. Keep this limitation explicit.
+
+| Independent pixel check | 160px | 80px |
+|---|---:|---:|
+| Original destroyed vs MK-II destroyed, changed RGBA pixels | **3,077** | **959** |
+| Original destroyed vs MK-II destroyed, changed alpha pixels | **529** | **131** |
+| Intact idle vs MK-II destroyed, changed alpha pixels | **1,564** | **401** |
+| Critical vs MK-II destroyed, changed RGBA pixels | **4,582** | **1,318** |
+
+All **eight** values were independently recomputed from downloaded
+Pillow/LANCZOS PNGs using NumPy and matched the workflow JSON **exactly**.
+MK-II destroyed alpha bounds are **(24, 60, 136, 141)** at 160px;
+no clipping. Strict predeclared gates passed (80px old/new RGBA >=150,
+old/new alpha >=35, idle/destroyed alpha >=350, critical/destroyed RGBA >=150,
+and 160px old/new RGBA >=500), with no lowered thresholds.
+New destroyed PNG SHA-256:
+`fbb7fdc6591bc8e4f6e69ba816a94282fee54c905e8dfd7d9ea4c6f8b04e91ee`.
+
+**Failure and actual repair:** initial
+[run #40798348889](https://github.com/shukritobi/chrono-dominion/actions/runs/40798348889)
+failed **before rendering** because the near-side BVH ray missed the far wall:
+the original jagged wall had a top notch below the 1.31-unit inspection
+ray. The physical far-wall polygon was raised at that notch in
+[geometry repair dfb0790](https://github.com/shukritobi/chrono-dominion/commit/dfb079021661578b9b60a2b4d3eab6bb69bd67f5),
+not by weakening or bypassing the raycast. The corrected workflow passed.
+
+**Publication safety:** exactly one new 160px destroyed preview was rendered.
+No production textures, atlases, manifests, sprite loaders, gameplay code or
+website files were modified. Keep PR #128 draft; do not publish or invent
+a canonical Federation airfield ID. Next: apply the same exact-source,
+targeted-render, 80px QA discipline to missing three-faction beam-defense
+critical/destroyed/power-out states. Preserve validated baselines.
