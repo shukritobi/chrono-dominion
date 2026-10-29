@@ -84,6 +84,15 @@ def main():
         "dark":bpy.data.materials.get(args.faction+"_black_titanium"),
         "bronze":bpy.data.materials.get(args.faction+"_ore"),
     }
+    # Blender omits unused materials from the serialized .blend. Airfields
+    # do not use the ore/bronze palette, so author a new copper fracture
+    # highlight from the existing textured steel instead of assuming it exists.
+    if materials["bronze"] is None:
+        assert materials["light"]
+        copper=materials["light"].copy()
+        copper.name=args.faction+"_preview_fracture_copper"
+        copper.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value=(.83,.43,.16,1)
+        materials["bronze"]=copper
     assert all(materials.values()),materials
     emissive=bpy.data.materials.get(args.faction+"_emissive")
     assert emissive and emissive.use_nodes
