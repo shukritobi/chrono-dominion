@@ -13,6 +13,10 @@
 
 - Mouse-wheel zoom now keeps the terrain under the pointer stationary, consistent with the existing touchscreen pinch gesture. Horizontal-only trackpad wheel events no longer cause accidental zoom-out; paused games ignore wheel zoom. Existing zoom limits, camera bounds, selection and legacy saves remain unchanged. [Camera regression](tests/expanse-camera-v222.test.mjs). Real-device browser testing is still pending.
 
+### Focus-safe camera controls (post-v2.42)
+
+- Switching browser windows or hiding the tab releases held movement keys and unfinished mouse/touch gestures. Pause, return-to-menu and new-match transitions also clear held keys, preventing unexpected camera movement when play resumes. This changes only transient input state, not gameplay simulation, save fields or artwork. [Camera regression](tests/expanse-camera-v222.test.mjs). Real-device validation remains pending.
+
 ### Touch and stylus camera boundaries (post-v2.42)
 
 - One-finger/stylus drags and two-finger pinch/pan now obey the same battlefield camera limits as mouse dragging and wheel zoom. Away from map edges, midpoint-anchored pinch remains unchanged; at an edge, the camera stops instead of exposing unbounded off-map space. No saved fields or command semantics changed. [Touch regression](tests/touch-v28.test.mjs). Physical-device validation remains pending.

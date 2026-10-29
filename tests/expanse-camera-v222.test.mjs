@@ -5,7 +5,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const script=read('game.js').replace('  new Game();','  window.__game=new Game();');
 const noop=()=>{},canvas=new Proxy({},{get:(o,k)=>o[k]??noop,set:(o,k,v)=>{o[k]=v;return true;}});
 const elements=new Map(),listeners=new Map(),memory=new Map();
-const document={getElementById(id){
+const document={hidden:false,addEventListener:(event,fn)=>listeners.set('document:'+event,fn),getElementById(id){
   if(!elements.has(id))elements.set(id,{
     id,value:'',disabled:false,style:{},dataset:{},
     classList:{add:noop,remove:noop,toggle:noop,contains:()=>false},
@@ -153,6 +153,38 @@ keyEvent({key:' ',target:null,preventDefault:noop});
 assert.equal(g.keys.has(' '),true,'space enters hold-to-pan mode');
 listeners.get('window:keyup')({key:' '});
 assert.equal(g.keys.has(' '),false);
+// Switching apps or losing browser focus can drop keyup/pointerup events.
+const focusLost=listeners.get('window:blur');
+const visibilityChanged=listeners.get('document:visibilitychange');
+assert.equal(typeof focusLost,'function','window blur clears held controls');
+assert.equal(typeof visibilityChanged,'function','tab visibility clears held controls');
+keyEvent({key:'w',target:null,preventDefault:noop});
+g.pointerDown(pointer(30,480,320));
+assert.ok(g.keys.has('w')&&g.mousePan?.id===30);
+focusLost();
+assert.equal(g.keys.size,0,'blur releases held keyboard pan');
+assert.equal(g.mousePan,null,'blur releases middle-button drag');
+assert.equal(g.dragStart,null,'blur clears stale selection drag');
+g.pointerUp(pointer(30,480,320));
+g.pointerDown(touch(31,450,320));g.pointerDown(touch(32,550,320));
+assert.equal(g.touchPoints.size,2);
+g.keys.add('a');
+document.hidden=true;visibilityChanged();
+assert.equal(g.keys.size,0,'hidden tab releases held movement keys');
+assert.equal(g.touchPoints.size,0,'hidden tab releases pinch pointers');
+assert.equal(g.touchPointer,null,'hidden tab releases touch tap');
+document.hidden=false;
+g.keys.add('d');visibilityChanged();
+assert.ok(g.keys.has('d'),'visible-tab notification does not cancel active controls');
+g.keys.clear();
+g.keys.add('w');g.pause();
+assert.equal(g.keys.size,0,'pausing clears held camera movement');
+g.pause();
+g.keys.add('w');g.returnMenu();
+assert.equal(g.keys.size,0,'returning to menu clears held keys');
+g.keys.add('w');g.newMatch(settings);
+assert.equal(g.keys.size,0,'starting a new match cannot inherit held keys');
+assert.ok(g.saveGame()&&g.loadGame(),'input cleanup preserves existing saves');
 assert.match(read('index.html'),/Frontier Expanse XL/);
 assert.match(read('index.html'),/Space\+drag or middle-drag/);
 assert.match(read('maps/catalog.js'),/48/);
