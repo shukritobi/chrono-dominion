@@ -439,30 +439,36 @@ Use the actual lethal sources and existing defensive-order snapshots before
 changing AI escort or ore routing. The six historical natural-match losses
 and absent natural aircraft remain unresolved until separately measured.
 
-## Prompt response to observed tank hits (29 October 2026)
+## Prompt tactical response to observed tank hits (29 October 2026)
 
 **Root-cause hypothesis:** the ordinary strategic AI planner runs every eight
 seconds on standard difficulty. A player tank can damage a worker shortly
-after that decision, leaving several seconds before existing reactive escort
-assignments are reconsidered. The preceding lethal-impact diagnostics
-attributed all six natural-match worker deaths to actual player tank shots;
-that attribution does **not** prove planner latency caused the deaths.
+after that decision, leaving several seconds before reactive escorts are
+reconsidered. The preceding lethal-impact diagnostics attributed all six
+historical natural-match worker deaths to player tank shots; that evidence
+does **not** establish that planner latency caused the deaths.
 
-When a **living** AI harvester takes a real projectile hit from a currently
-visible, living enemy Battle Tank or Siege Tank, the game now advances the
-next existing AI planning tick to the current simulation time. The regular
-planner still decides whether any nearby escort can respond, preserving its
-base-defense-first priorities, two-escort limit, attack-move protections and
-fog-of-war rules. A four-second transient cooldown prevents repeated shots
-from triggering excessive full planning passes. Dead harvesters, hidden or
-destroyed shooters, other unit types and projectiles without an attributable
-living attacker cannot trigger an early response.
+An initial attempt advanced the **entire strategic AI planner** on visible
+tank hits. Although the 720-second matches recorded four rather than six
+harvester losses, Desert AI income dropped to **10,080** credits, below the
+existing **15,120** baseline's 80% floor. The economy gate correctly failed
+in [PR #136's initial CI run](https://github.com/shukritobi/chrono-dominion/actions/runs/40839500027).
+That broad approach was rejected before merge.
 
-This changes **reaction latency**, not AI production rules, credits, unit
-statistics, pathfinding, projectile damage, assets or saved orders. The
-cooldown is intentionally excluded from the version-1 save schema and reset
-on new/load. No extra AI passes are scheduled if the existing planner is
-already due. Targeted three-faction tests exercise real projectile impacts,
-next-step tactical orders, unseen shooters, throttling and save/load.
-Compare the full 720-second progression and economy regression before
-claiming that harvester losses or aircraft production improved.
+The revised candidate runs **only the existing tactical escort assignment**
+when a surviving AI harvester takes an actual projectile hit from a living,
+currently visible enemy Battle Tank or Siege Tank. It considers only nearby
+ground defenders and retains the original base-first priorities, two-escort
+budget, committed-assault protections and fog-of-war restrictions. It does
+not call the strategic AI early, change production or credits, or schedule
+extra movement ticks. A four-second transient cooldown prevents repeated
+projectiles from spamming tactical reassignment. Hidden or destroyed shooters,
+dead workers and shots without eligible nearby defenders cannot trigger
+new orders.
+
+No unit statistics, damage, pathfinding, assets or version-1 saved fields
+change. The cooldown resets on new/load. Three-faction tests check real
+projectile impacts, immediate tactical orders, the unchanged strategic
+schedule, unseen shooters, cooldown and save/load. **A passing targeted test
+does not prove improved survival.** Compare the revised full 720-second
+progression, ore-income guard and baseline before claiming a gameplay gain.
