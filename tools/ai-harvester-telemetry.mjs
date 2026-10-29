@@ -22,7 +22,7 @@ export function newHarvesterTelemetry(){
 }
 
 /** Pre-step, AI-sensor-visible exposure context; never a killer attribution. */
-export function inspectHarvesterLoss(prior,visibleHostiles=[],defenders=[],refineries=[],time=0){
+export function inspectHarvesterLoss(prior,visibleHostiles=[],defenders=[],refineries=[],time=0,lethalProjectile=null){
   if(!prior||![prior.x,prior.y,time].every(Number.isFinite))
     throw Error('Invalid harvester loss context');
   const distance=e=>Math.hypot(e.x-prior.x,e.y-prior.y);
@@ -38,6 +38,9 @@ export function inspectHarvesterLoss(prior,visibleHostiles=[],defenders=[],refin
     id:prior.id,time:round(time),position:{x:round(prior.x),y:round(prior.y)},
     lastSeenHp:Number.isFinite(prior.hp)?round(prior.hp):null,
     lastSeenCargo:Number.isFinite(prior.load)?Math.max(0,round(prior.load)):null,
+    // An exact production projectile impact, when available; never infer a
+    // killer from nearby units or from sensor visibility alone.
+    lethalProjectile,
     nearestOperationalRefineryId:refinery?.id??null,
     refineryDistance:refinery?round(distance(refinery)):null,
     visibleThreats:threats.slice(0,4).map(e=>({id:e.id,kind:e.kind,distance:round(distance(e))})),

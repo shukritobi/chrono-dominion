@@ -16,6 +16,7 @@ import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
 import {newHarvesterTelemetry,observeHarvesterStep,
   observeHarvesterThreatSample,inspectHarvesterLoss} from './ai-harvester-telemetry.mjs';
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
+import {traceHarvesterLethalImpacts} from './harvester-impact-telemetry.mjs';
 import {newHarvesterSeparationTelemetry,observeHarvesterSeparationStep,
   summarizeHarvesterSeparation} from './harvester-separation-telemetry.mjs';
 import {newHarvesterMoveTelemetry,traceHarvesterMoves,
@@ -208,6 +209,7 @@ function runScenario(map,difficulty,mi,di){
       .map(kind=>[kind,{startedAt:null,operationalAt:null}]));
   let firstAircraftQueuedAt=null,firstAircraftDeployedAt=null;
   const aiHarvesterTelemetry=newHarvesterTelemetry();
+  const lethalHarvesterImpacts=traceHarvesterLethalImpacts(g);
   const aiHarvesterSeparation=newHarvesterSeparationTelemetry();
   const aiHarvesterMove=newHarvesterMoveTelemetry();
   traceHarvesterMoves(g,aiHarvesterMove);
@@ -266,7 +268,9 @@ function runScenario(map,difficulty,mi,di){
         moveDecision:summarizeHarvesterMove(aiHarvesterMove,truck.id,g.time)
       }),
       prior=>inspectHarvesterLoss(prior,beforeVisibleHostiles,beforeDefenders,
-        beforeRefineries,g.time));
+        beforeRefineries,g.time,lethalHarvesterImpacts.get(prior.id)??null));
+    // Only impacts from this exact step may be attributed to its losses.
+    lethalHarvesterImpacts.clear();
     peak=Math.max(peak,g.entities.length);
     peakAIHarvesters=Math.max(peakAIHarvesters,g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0).length);

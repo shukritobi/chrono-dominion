@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {traceHarvesterLethalImpacts} from '../tools/harvester-impact-telemetry.mjs';
 
 // Exercise the production AI engagement planner, sensors, orders and legacy saves.
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
@@ -281,4 +282,27 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entityById(scout.id)?.kind,'recon');
 }
 
-console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');
+// Observe the actual projectile that kills an AI ore truck. A nearby enemy
+// is not automatically the killer, and non-projectile losses stay unattributed.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,worker}=game(faction);
+  const attacker=g.add(0,'tank',worker.x+.5,worker.y);
+  const bystander=g.add(0,'soldier',worker.x+.7,worker.y);
+  worker.hp=1;
+  const impacts=traceHarvesterLethalImpacts(g);
+  g.shoot(attacker,worker);
+  g.updateProjectiles(.2);
+  assert.ok(worker.hp<=0,faction+': real projectile killed the worker');
+  assert.deepEqual(impacts.get(worker.id),{
+    sourceId:attacker.id,sourceKind:'tank',attackerOwner:0,
+    damage:Number(g.stat(attacker,'damage').toFixed(2))
+  },faction+': record actual lethal shot, not closer bystander');
+  assert.equal(impacts.has(bystander.id),false);
+  const unrelated=g.add(1,'harvester',worker.x+2,worker.y);
+  unrelated.hp=0;
+  g.recordLoss(unrelated,0,false);
+  assert.equal(impacts.has(unrelated.id),false,
+    faction+': unrelated non-projectile death has no invented shooter');
+}
+
+console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense across three factions');
