@@ -80,12 +80,12 @@ for(const faction of ['coalition','federation','psionic']){
   {
     const {g,worker}=game(faction);
     worker.hp=worker.maxHp-100;
-    const {spent,ore}=deliver(g,worker,300);
+    const {spent,ore}=deliver(g,worker,280);
     assert.equal(ore,360,faction+': low cash must not cancel ore delivery');
     assert.equal(worker.hp,worker.maxHp-100,
       faction+': cannot repair below emergency generator reserve');
     assert.equal(spent,0);
-    assert.equal(g.players[1].credits,660);
+    assert.equal(g.players[1].credits,640);
   }
   {
     const {g,worker}=game(faction);
