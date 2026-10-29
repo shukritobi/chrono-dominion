@@ -2969,7 +2969,10 @@
         me.credits>=BUILD.flak.cost+500)choice='flak';
       // Air Command requires factory + radar, not optional Technology Lab.
       // Keep enough cash for an emergency generator after buying aviation.
-      else if(aviationReady&&
+      // A detected invasion must never be answered with optional aviation
+      // construction. Preserve the credits for immediate base defense and
+      // resume normal Air Command investment once the threat is gone.
+      else if(aviationReady&&!threatened&&
         me.credits>=BUILD.airfield.cost+BUILD.generator.cost)choice='airfield';
       else if(!owned('tech').length&&this.prereq(side,'tech')&&
         me.credits>4000&&!aviationInvestment)choice='tech';
