@@ -433,9 +433,11 @@ for(const faction of ['coalition','federation','psionic']){
     enemy.hp=0;guard.x=12;guard.y=14;g.nextAI=g.time+8;
     const rifle=g.add(0,'soldier',17,14);
     g.shoot(rifle,worker);
-    assert.equal(guard.order?.id,undefined,
-      faction+': infantry launch does not expand the tank-only emergency rule');
-    assert.equal(g.nextHarvesterResponseAt,0);
+    assert.equal(guard.order?.id,rifle.id,
+      faction+': observed infantry launch now triggers harvester defense');
+    assert.equal(g.nextHarvesterResponseAt,g.time+4);
+    // Isolate the non-harvester shot from the previous legitimate response.
+    guard.order=null;g.nextHarvesterResponseAt=0;
     const tank=g.add(0,'tank',18,16);
     const defender=g.add(1,'tank',14,16);
     g.shoot(tank,defender);
