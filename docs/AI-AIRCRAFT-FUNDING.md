@@ -19,3 +19,26 @@ Run `node tests/ai-aircraft-funding.test.mjs` for a real-engine three-faction re
 The two-tank requirement still applies when saving for an **unbuilt** Air Command. After paying for the airfield, however, losing one of those tanks no longer cancels aviation savings: one surviving tank or heavy and no observed local invasion are sufficient to continue banking for the first or second aircraft. Without any surviving ground armour, ordinary defensive recruitment resumes. Power shortages, harvester loss and observed attacks still override the reserve. This targets the observed gap between controlled aircraft-production tests and contested matches without creating free aircraft or changing saves.
 
 The expanded `tests/ai-aircraft-funding.test.mjs` verifies all three factions at 1,800 and 2,250 credits after losing one tank, paid deployment, saving for the second plane, and zero-tank recruitment. The 720-second progression laboratory remains the arbiter of **actual natural-match deployment**; do not infer a guaranteed improvement from the isolated regression alone.
+
+## Recover ore income before optional infrastructure (29 October 2026)
+
+**Verified source failure mode:** when the AI has a completed refinery but
+no surviving harvester, it can still satisfy the Air Command prerequisites.
+At the ordinary 2,400-credit threshold, buying its 1,750-credit Air Command
+first leaves 650 credits, below the 900 required for a replacement truck.
+Because the AI has no free periodic income, this can strand recovery.
+
+The construction planner now defers nonessential factory, radar, technology,
+airfield and routine turret purchases while a completed refinery has no
+living harvester. Its existing production planner then queues a **paid**
+900-credit replacement if affordable. Generator/brownout recovery, missing
+refinery construction and observed emergency base defense retain priority.
+Once a replacement deploys, normal construction and aviation investment
+resume. No credit grants, saved fields, unit costs or artwork are changed.
+
+`tests/ai-aviation-investment.test.mjs` checks the real three-faction AI
+planner at 2,400, 5,000 and 899 credits, paid refinery production, Air Command
+resumption and legacy save/load. The deterministic unit test establishes the
+economic deadlock prevention, **not** that natural 720-second matches gain
+additional aircraft or fewer harvester losses. Full progression and economy
+regression checks must pass before merging.
