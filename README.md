@@ -13,6 +13,10 @@
 
 - Mouse-wheel zoom now keeps the terrain under the pointer stationary, consistent with the existing touchscreen pinch gesture. Horizontal-only trackpad wheel events no longer cause accidental zoom-out; paused games ignore wheel zoom. Existing zoom limits, camera bounds, selection and legacy saves remain unchanged. [Camera regression](tests/expanse-camera-v222.test.mjs). Real-device browser testing is still pending.
 
+### Touch and stylus camera boundaries (post-v2.42)
+
+- One-finger/stylus drags and two-finger pinch/pan now obey the same battlefield camera limits as mouse dragging and wheel zoom. Away from map edges, midpoint-anchored pinch remains unchanged; at an edge, the camera stops instead of exposing unbounded off-map space. No saved fields or command semantics changed. [Touch regression](tests/touch-v28.test.mjs). Physical-device validation remains pending.
+
 ### XL 120-unit movement and collision benchmark (post-v2.42)
 
 - A repeatable **120-unit, 48×48-map** production-engine workload exercises movement, A*, building collisions, combat updates and legacy save/load. Reports include mean, p95 and worst simulation tick times, actual movement and restored unit coordinates; these are **headless Node timings, not browser FPS**. Run `npm run perf:armies`; CI archives `large-army-report.json`. [Methodology](docs/LARGE-ARMY-BENCHMARK.md) · [regression](tests/large-army-perf.test.mjs).
