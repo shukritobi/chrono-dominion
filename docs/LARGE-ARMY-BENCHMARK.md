@@ -230,3 +230,19 @@ burst can be separated into cheap successful shortcuts and full A* fallbacks.
 Total path request count is not expected to drop merely because a request
 uses the shortcut. Compare CI artifacts before claiming a measured speedup;
 headless Node timings are not browser FPS.
+
+## Narrow AI ordinary-move direct-route trial (29 October 2026)
+
+The initial 120-unit benchmark has 124 path queries in tick one, but only
+60 eligible player shortcut attempts; most other initial requests are AI
+ordinary move orders. This trial permits **AI ordinary ground move** orders
+to use the same collision-checked exact-cost direct corridor. Crucially,
+when the corridor is blocked, the AI continues to use its existing **Euclidean
+A*** heuristic and its existing partial-path fallback, not the octile A*
+heuristic that previously caused a natural-match economic regression.
+Harvester, recon, attack-move, traffic-priced and weighted routes remain
+excluded. The regression checks AI opt-in, harvester/combat exclusion and
+identical Euclidean fallback. Only merge if the complete economy, progression,
+aviation and XL tests pass. More shortcut hits do not necessarily imply lower
+wall time or fewer path requests; use the per-tick counts and matched CI
+reports to interpret the effect.

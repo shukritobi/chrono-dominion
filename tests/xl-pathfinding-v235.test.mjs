@@ -179,6 +179,35 @@ g.findPath(4,4,40,30);
 assert.equal(shortcutAttempts,5,'weighted and non-opt-in searches use A*');
 g.directOctilePath=originalShortcut;
 
+// AI ordinary move orders may use a clear exact-cost route without changing
+// the original Euclidean A* fallback. Harvesters and combat orders are excluded.
+g.entities=[];
+g.walkable=openTile;
+let aiShortcutAttempts=0;
+g.directOctilePath=(...args)=>{
+  aiShortcutAttempts++;
+  return originalShortcut(...args);
+};
+const aiMover=g.add(1,'tank',4,4);
+aiMover.order={type:'move',x:40,y:30};
+g.move(aiMover,40,30,.2);
+assert.equal(aiShortcutAttempts,1,'AI ordinary ground movement can take direct route');
+const aiHarvester=g.add(1,'harvester',4,7);
+aiHarvester.order={type:'move',x:40,y:30};
+g.move(aiHarvester,40,30,.2);
+assert.equal(aiShortcutAttempts,1,'AI harvesters retain existing pathfinding');
+const aiAttacker=g.add(1,'tank',4,10);
+aiAttacker.order={type:'attackMove',x:40,y:30};
+g.move(aiAttacker,40,30,.2);
+assert.equal(aiShortcutAttempts,1,'AI combat movement retains existing pathfinding');
+g.directOctilePath=()=>{aiShortcutAttempts++;return null;};
+const euclidean=g.findPath(4,4,40,30);
+const aiFallback=g.findPath(4,4,40,30,null,null,false,true);
+assert.equal(aiShortcutAttempts,2,'AI tries the shortcut once before A*');
+assert.equal(JSON.stringify(aiFallback),JSON.stringify(euclidean),
+  'blocked AI shortcut falls back to unchanged Euclidean A* route');
+g.directOctilePath=originalShortcut;
+
 // A genuinely unreachable target still returns a safe partial route.
 g.walkable=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&
   x>0&&y>0&&x<47&&y<47&&x!==24;

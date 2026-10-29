@@ -1047,7 +1047,7 @@
       // use it when both edge orderings fail. No obstacle/corner shortcuts.
       return spanX&&spanY&&spanX!==spanY?(trace(1)||trace(2)):null;
     }
-    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false){
+    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false,allowDirect=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
       // open list. During congestion replans it also prices nearby unit traffic.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
@@ -1056,11 +1056,11 @@
       // thousands of coordinate strings per large-army path query.
       const key=(x,y)=>y*WORLD_SIZE+x,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
       const walk=this.navigationWalk();
-      // Only ordinary player move orders opt into octile. On a fully clear
-      // corridor, avoid allocating the A* heap/maps; every returned step is
-      // an optimal legal eight-way grid move. AI, harvesters, recon, combat,
+      // Only ordinary unweighted ground move orders opt into a direct
+      // exact-cost corridor. AI ordinary movers may use it without changing
+      // their Euclidean A* heuristic if blocked. Harvesters, recon, combat,
       // traffic-priced recovery and hazard-weighted queries keep A* intact.
-      if(useOctile&&!avoidUnit&&!extraCost){
+      if((useOctile||allowDirect)&&!avoidUnit&&!extraCost){
         const direct=this.directOctilePath(start,goal,walk);
         if(direct)return direct;
       }
@@ -1376,6 +1376,8 @@
           (this.scoutPath(e,{x:tx,y:ty},new Map(),e.trafficRepath?e:null)?.path||[]):
           this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null,null,
             e.owner===0&&e.order?.type==='move'&&
+            e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath,
+            e.owner===1&&e.order?.type==='move'&&
             e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath);
         // Routine new move orders need an immediate first A* route, but
         // identical 1.6s refresh timers synchronize large formations. Spread
