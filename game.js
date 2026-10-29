@@ -106,7 +106,7 @@
       this.camera={x:0,y:545,zoom:1};this.keys=new Set();this.mousePan=null;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.orders=[];this.queues=[];this.nextId=1;this.unitBuckets=null;this.buildingBuckets=null;this.sensorBuckets=null;
       this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.dragStart=null;this.dragEnd=null;this.touchPointer=null;this.touchPoints=new Map();this.touchGesture=null;this.placing=null;this.tab='structures';
-      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextUi=0;this.nextFog=0;this.fog=[];
+      this.players=[];this.stats=[];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.state='menu';this.last=performance.now();this.time=0;this.nextAI=0;this.nextHarvesterResponseAt=0;this.nextUi=0;this.nextFog=0;this.fog=[];
       this.perfFrames=0;this.lastPerfAt=null;
       this.mouse={x:0,y:0,worldX:0,worldY:0};this.toastTimer=null;this.audio=window.ChronoAudio||null;
       this.sprites={};this.buildingSprites={};this.defenseSprites={};this.infantrySprites={};this.specialistSprites={};this.reconSprites={};this.loadPilotSprites();
@@ -411,6 +411,7 @@
       this.particles=Array.isArray(saved.particles)?saved.particles.filter(x=>x&&Number.isFinite(x.x)&&Number.isFinite(x.y)).map(x=>({...x})):[];
       this.time=Number.isFinite(saved.time)?Math.max(0,saved.time):0;
       this.nextAI=Number.isFinite(saved.nextAI)?Math.max(this.time,saved.nextAI):this.time+5;
+      this.nextHarvesterResponseAt=0; // Tactical response cooldown is transient, not a v1 save field.
       this.nextId=Math.max(...this.entities.map(e=>e.id),0)+1;
       this.selected=Array.isArray(saved.selected)?saved.selected.filter(id=>this.entities.some(e=>e.id===id&&e.hp>0)):[];
       this.groups=saved.groups&&typeof saved.groups==='object'?saved.groups:{};
@@ -483,7 +484,7 @@
     newMatch(s){
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
       WORLD_SIZE=mapSize(s.map);
-      this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextUi=0;this.nextFog=0;this.nextId=1;
+      this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextHarvesterResponseAt=0;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.buildingBuckets=null;this.sensorBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.trafficYieldCount=0;this.laneReservations=new Map();
@@ -1660,6 +1661,24 @@
       });
       this.particles.push({x:source.x,y:source.y,life:.2,type:'muzzle',color:faction==='psionic'?'#ba84ee':'#ffd698'});
     }
+    scheduleAIHarvesterDefense(shot,target){
+      // A real tank hit can arrive just after the normal 8-second AI tick.
+      // Request the existing tactical planner immediately, without running
+      // economy/production logic more often than a four-second cooldown.
+      // The actual shooter must be alive and currently visible to AI sensors:
+      // projectile metadata alone must not grant hidden enemy positions.
+      if(this.state!=='playing'||target.owner!==1||
+         target.kind!=='harvester'||target.hp<=0||shot.owner!==0||
+         (shot.sourceKind!=='tank'&&shot.sourceKind!=='heavy')||
+         this.time<this.nextHarvesterResponseAt||this.nextAI<=this.time)return false;
+      const attacker=this.entityById(shot.sourceId);
+      if(!attacker||attacker.hp<=0||attacker.owner!==0||
+         attacker.type!=='unit'||attacker.kind!==shot.sourceKind||
+         !this.sideCanSee(1,attacker))return false;
+      this.nextAI=this.time;
+      this.nextHarvesterResponseAt=this.time+4;
+      return true;
+    }
     updateProjectiles(dt){
       for(const shot of this.projectiles){
         shot.prevX=shot.x;shot.prevY=shot.y;
@@ -1681,6 +1700,7 @@
           continue;
         }
         target.hp-=shot.damage;
+        this.scheduleAIHarvesterDefense(shot,target);
         if(target.owner===0&&target.type==='unit'&&this.time-(target.lastHurtVoiceAt??-100)>7){
           target.lastHurtVoiceAt=this.time;
           this.audio?.play('underFire',{kind:target.kind,faction:this.players[0]?.faction});
