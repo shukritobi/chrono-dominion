@@ -305,4 +305,69 @@ for(const faction of ['coalition','federation','psionic']){
     faction+': unrelated non-projectile death has no invented shooter');
 }
 
-console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense across three factions');
+// A tank projectile can land immediately after an eight-second strategic AI
+// decision. The next simulation step must react to that observed hit rather
+// than waiting for the ordinary planner interval; no separate combat orders
+// or serialized cooldown fields are introduced.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;
+    guard.x=12;guard.y=14;
+    const tank=g.add(0,'tank',18,14);
+    assert.ok(g.sideCanSee(1,tank),faction+': ore truck genuinely sees attacking tank');
+    g.nextAI=g.time+8;
+    g.shoot(tank,worker);
+    g.updateProjectiles(1);
+    assert.ok(worker.hp>0&&worker.hp<worker.maxHp,
+      faction+': actual tank projectile damaged but did not kill the worker');
+    assert.equal(g.nextAI,g.time,
+      faction+': observed tank impact schedules immediate strategic response');
+    assert.equal(g.nextHarvesterResponseAt,g.time+4,
+      faction+': tactical response is rate-limited');
+    let plannerCalls=0;
+    const planner=g.runAI.bind(g);
+    g.runAI=()=>{plannerCalls++;return planner();};
+    g.step(.05);
+    assert.equal(plannerCalls,1,
+      faction+': production engine runs the existing AI planner on the next step');
+    assert.equal(g.entityById(guard.id)?.order?.id,tank.id,
+      faction+': existing fog-honest escort planner intercepts actual tank shooter');
+  }
+  {
+    const {g,worker,enemy}=game(faction);
+    enemy.hp=0;
+    const heavy=g.add(0,'heavy',19,14);
+    assert.equal(g.sideCanSee(1,heavy),false,
+      faction+': a siege tank at five tiles is outside worker sight');
+    g.nextAI=g.time+8;
+    g.shoot(heavy,worker);
+    g.updateProjectiles(1.1);
+    assert.equal(g.nextAI,g.time+8,
+      faction+': hidden shooter cannot accelerate AI using projectile metadata');
+    const scout=g.add(1,'recon',18,14);
+    assert.ok(g.sideCanSee(1,heavy),
+      faction+': legitimate scout contact now exposes the attacker');
+    g.shoot(heavy,worker);
+    g.updateProjectiles(1.1);
+    assert.equal(g.nextAI,g.time,
+      faction+': visible siege impact triggers the normal AI planner');
+    g.time+=1;g.nextAI=g.time+8;
+    g.shoot(heavy,worker);
+    g.updateProjectiles(1.1);
+    assert.equal(g.nextAI,g.time+8,
+      faction+': repeated impacts within four seconds cannot spam AI decisions');
+    g.time+=4;g.nextAI=g.time+8;
+    g.shoot(heavy,worker);
+    g.updateProjectiles(1.1);
+    assert.equal(g.nextAI,g.time,
+      faction+': a later observed impact can request another response');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': tactical reaction preserves the v1 save/load format');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': transient response cooldown resets after loading a save');
+    assert.equal(g.entityById(scout.id)?.kind,'recon');
+  }
+}
+
+console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and urgent tank-hit response across three factions');
