@@ -2372,13 +2372,23 @@
         // Reserve the second escort only for another threat that a remaining
         // defender can actually reach. An observed attacker across the map
         // must not prevent two nearby guards from stopping a lone siege tank.
-        const otherThreats=oreThreats.some(({enemy:other,worker:otherWorker})=>
-          other.id!==enemy.id&&!committed.has(other.id)&&
-          [...available.values()].some(u=>
-            dist(u,other)<=8.5&&dist(u,otherWorker)<=9&&
-            (u.order?.type!=='attackMove'||dist(u,other)<=4.5)));
-        const needed=siege&&!otherThreats?2:1;
-        for(const escort of candidates.slice(0,Math.min(needed,2-escorts))){
+        const otherCandidates=oreThreats.filter(({enemy:other})=>
+          other.id!==enemy.id&&!committed.has(other.id))
+          .map(({enemy:other,worker:otherWorker})=>
+            [...available.values()].filter(u=>
+              dist(u,other)<=8.5&&dist(u,otherWorker)<=9&&
+              (u.order?.type!=='attackMove'||dist(u,other)<=4.5)))
+          .filter(list=>list.length);
+        // If one defender is the ONLY eligible escort for another visible
+        // ore threat, avoid consuming it on this threat when another local
+        // guard can handle the current one. Otherwise a second tank can
+        // remain idle while a different harvester goes undefended.
+        const uniqueOther=otherCandidates.find(list=>list.length===1&&
+          candidates.some(u=>u.id===list[0].id))?.[0];
+        const preferred=uniqueOther&&candidates.length>1?
+          candidates.filter(u=>u.id!==uniqueOther.id):candidates;
+        const needed=siege&&!otherCandidates.length?2:1;
+        for(const escort of preferred.slice(0,Math.min(needed,2-escorts))){
           assign(escort,enemy);escorts++;
         }
       }
