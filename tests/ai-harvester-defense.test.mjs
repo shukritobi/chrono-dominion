@@ -305,10 +305,9 @@ for(const faction of ['coalition','federation','psionic']){
     faction+': unrelated non-projectile death has no invented shooter');
 }
 
-// A tank projectile can land immediately after an eight-second strategic AI
-// decision. The next simulation step must react to that observed hit rather
-// than waiting for the ordinary planner interval; no separate combat orders
-// or serialized cooldown fields are introduced.
+// An actual tank hit should trigger only the nearby tactical escort planner.
+// Running the entire strategic AI early was rejected after the 720-second
+// economy gate detected a severe Desert income regression.
 for(const faction of ['coalition','federation','psionic']){
   {
     const {g,worker,guard,enemy}=game(faction);
@@ -320,52 +319,60 @@ for(const faction of ['coalition','federation','psionic']){
     g.shoot(tank,worker);
     g.updateProjectiles(1);
     assert.ok(worker.hp>0&&worker.hp<worker.maxHp,
-      faction+': actual tank projectile damaged but did not kill the worker');
-    assert.equal(g.nextAI,g.time,
-      faction+': observed tank impact schedules immediate strategic response');
+      faction+': real tank projectile damaged but did not kill worker');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': urgent tactical reaction must not accelerate strategic AI spending');
     assert.equal(g.nextHarvesterResponseAt,g.time+4,
       faction+': tactical response is rate-limited');
-    let plannerCalls=0;
-    const planner=g.runAI.bind(g);
-    g.runAI=()=>{plannerCalls++;return planner();};
+    assert.equal(guard.order?.id,tank.id,
+      faction+': existing base-first escort planner reacts to actual tank impact');
+    let strategicCalls=0;
+    g.runAI=()=>{strategicCalls++;};
     g.step(.05);
-    assert.equal(plannerCalls,1,
-      faction+': production engine runs the existing AI planner on the next step');
+    assert.equal(strategicCalls,0,
+      faction+': ordinary production and strategy remain on original schedule');
     assert.equal(g.entityById(guard.id)?.order?.id,tank.id,
-      faction+': existing fog-honest escort planner intercepts actual tank shooter');
+      faction+': escort attack order persists into real simulation movement');
   }
   {
-    const {g,worker,enemy}=game(faction);
-    enemy.hp=0;
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=13;guard.y=14;
     const heavy=g.add(0,'heavy',19,14);
     assert.equal(g.sideCanSee(1,heavy),false,
-      faction+': a siege tank at five tiles is outside worker sight');
+      faction+': siege at five tiles is outside worker and escort sight');
     g.nextAI=g.time+8;
     g.shoot(heavy,worker);
     g.updateProjectiles(1.1);
-    assert.equal(g.nextAI,g.time+8,
-      faction+': hidden shooter cannot accelerate AI using projectile metadata');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': hidden shooter cannot trigger tactical orders from projectile metadata');
+    assert.equal(guard.order?.id,undefined,
+      faction+': no omniscient attack order on hidden siege');
     const scout=g.add(1,'recon',18,14);
     assert.ok(g.sideCanSee(1,heavy),
-      faction+': legitimate scout contact now exposes the attacker');
+      faction+': scout now legitimately exposes attacker');
     g.shoot(heavy,worker);
     g.updateProjectiles(1.1);
-    assert.equal(g.nextAI,g.time,
-      faction+': visible siege impact triggers the normal AI planner');
+    assert.equal(guard.order?.id,heavy.id,
+      faction+': observed siege hit receives immediate local escort');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': local defense leaves strategic planning unchanged');
+    guard.order=null;
     g.time+=1;g.nextAI=g.time+8;
     g.shoot(heavy,worker);
     g.updateProjectiles(1.1);
-    assert.equal(g.nextAI,g.time+8,
-      faction+': repeated impacts within four seconds cannot spam AI decisions');
+    assert.equal(guard.order,null,
+      faction+': repeated impacts inside cooldown do not replan tactical orders');
     g.time+=4;g.nextAI=g.time+8;
     g.shoot(heavy,worker);
     g.updateProjectiles(1.1);
-    assert.equal(g.nextAI,g.time,
-      faction+': a later observed impact can request another response');
+    assert.equal(guard.order?.id,heavy.id,
+      faction+': later observed hit may reassign a local escort');
     assert.ok(g.saveGame()&&g.loadGame(),
-      faction+': tactical reaction preserves the v1 save/load format');
+      faction+': tactical orders preserve legacy save/load');
     assert.equal(g.nextHarvesterResponseAt,0,
-      faction+': transient response cooldown resets after loading a save');
+      faction+': transient cooldown resets after loading');
+    assert.equal(g.entityById(guard.id)?.order?.id,heavy.id,
+      faction+': saved attack order remains intact');
     assert.equal(g.entityById(scout.id)?.kind,'recon');
   }
 }
