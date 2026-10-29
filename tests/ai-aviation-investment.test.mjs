@@ -128,4 +128,60 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield').length,0,
     faction+': power recovery must precede aviation');
 }
+
+// A destroyed ore economy must be rebuilt BEFORE optional construction.
+// At exactly 2,400 credits, buying a 1,750-credit Air Command first would
+// strand the AI with only 650, unable to afford its 900-credit harvester.
+for(const faction of ['coalition','federation','psionic']){
+  const g=game();
+  const reset=()=>g.newMatch({map:'verdant',difficulty:'standard',
+    playerFaction:'coalition',enemyFaction:faction,startingCredits:5000});
+  const removeWorkers=()=>{
+    for(const worker of g.entities.filter(e=>e.owner===1&&e.kind==='harvester'))
+      worker.hp=0;
+  };
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'radar',23,25);
+  g.add(1,'generator',21,24);g.add(1,'generator',22,20);
+  g.time=150;g.queues=[];removeWorkers();
+  assert.equal(g.power(1).low,false,faction+': recovery fixture is powered');
+  assert.equal(g.prereq(1,'harvester'),true,
+    faction+': living refinery can build a paid replacement');
+  assert.equal(g.prereq(1,'airfield'),true,
+    faction+': aviation is technically available but must wait for income');
+  g.players[1].credits=2400;
+  const spent=g.stats[1].creditsSpent;
+  g.runAI();
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield'&&e.hp>0).length,0,
+    faction+': never spend recovery credits on an Air Command');
+  assert.equal(g.queues.find(q=>q.side===1)?.key,'harvester',
+    faction+': prioritize a paid ore truck over optional construction');
+  assert.equal(g.players[1].credits,1500,
+    faction+': preserve enough credits after the 900-credit replacement');
+  assert.equal(g.stats[1].creditsSpent-spent,900,
+    faction+': record the real harvester purchase without free income');
+  g.advanceProduction(10);
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='harvester'&&e.hp>0).length,1,
+    faction+': replacement must actually deploy through the refinery');
+  assert.ok(g.saveGame()&&g.loadGame(),faction+': recovery must preserve legacy saves');
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='harvester'&&e.hp>0).length,1);
+  g.players[1].credits=2400;g.runAI();
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='airfield'&&e.hp>0).length,1,
+    faction+': aviation construction resumes once ore income is restored');
+
+  reset();removeWorkers();g.time=150;g.queues=[];g.players[1].credits=5000;
+  g.runAI();
+  assert.equal(g.entities.filter(e=>e.owner===1&&e.kind==='factory'&&e.hp>0).length,0,
+    faction+': do not buy a factory before replacing a lost harvester');
+  assert.equal(g.queues.find(q=>q.side===1)?.key,'harvester',
+    faction+': a refinery can produce the replacement without a factory');
+
+  reset();removeWorkers();g.time=150;g.queues=[];g.players[1].credits=899;
+  g.runAI();
+  assert.equal(g.players[1].credits,899,
+    faction+': insufficient replacement funds must not be spent on optional tech');
+  assert.equal(g.queues.filter(q=>q.side===1).length,0,
+    faction+': no free harvester when credits are insufficient');
+}
+
 console.log('PASS: affordable AI aviation across three factions, power reserve, prerequisites and saves');

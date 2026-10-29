@@ -2931,7 +2931,12 @@
         Number.isFinite(r.time)&&r.time<=this.time&&this.time-r.time<=28
       ).map(r=>r.id)).size;
       const skyguardGoal=Math.min(2,airThreatCount);
-      const aviationReady=!owned('airfield').length&&built('factory')&&
+      // A refinery without a living ore truck has no sustainable income.
+      // Reserve the next affordable production slot for a paid replacement
+      // before buying optional technology, factory, radar or aviation.
+      // Brownout recovery and observed base defense still take precedence.
+      const oreRecoveryNeeded=built('refinery')&&!owned('harvester').length;
+      const aviationReady=!oreRecoveryNeeded&&!owned('airfield').length&&built('factory')&&
         built('radar')&&this.time>130;
       // Once an airfield is purchased, keep the aviation budget intact until
       // the first two planes are deployed. Never bank at the expense of a
@@ -2951,6 +2956,10 @@
         if(!generatorPending)choice='generator';
       }else if(!owned('refinery').length)choice='refinery';
       else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
+      // Do not strand a lost harvester behind an optional building purchase:
+      // an Air Command would leave only 650 of the 900 credits needed to
+      // restore ore income at the usual 2,400-credit investment threshold.
+      else if(oreRecoveryNeeded)choice=null;
       else if(!owned('factory').length)choice='factory';
       // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
       // bases after the second harvester purchase. Keep a generator reserve.
