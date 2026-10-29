@@ -52,7 +52,14 @@ for(const side of [0,1]){
 }
 const initial=new Map(units.map(u=>[u.id,{x:u.x,y:u.y}]));
 let pathQueries=0,occupancyChecks=0,pathTimeMs=0;
-let directRouteAttempts=0,directRouteHits=0;
+let directRouteAttempts=0,directRouteHits=0,navFootprintBuilds=0;
+const originalNavigationWalk=g.navigationWalk.bind(g);
+g.navigationWalk=(...args)=>{
+  const before=g._movementNavCache?.blocked;
+  const walk=originalNavigationWalk(...args);
+  if(g._movementNavCache?.blocked&&!before)navFootprintBuilds++;
+  return walk;
+};
 const directOctilePath=g.directOctilePath.bind(g);
 g.directOctilePath=(...args)=>{
   directRouteAttempts++;
@@ -74,6 +81,7 @@ const ticks=40,dt=.2,start=performance.now(),tickMetrics=[];
 for(let i=0;i<ticks;i++){
   const beforePaths=pathQueries,beforeOccupancy=occupancyChecks,beforePathMs=pathTimeMs;
   const beforeDirectAttempts=directRouteAttempts,beforeDirectHits=directRouteHits;
+  const beforeFootprints=navFootprintBuilds;
   const tickStart=performance.now();
   g.step(dt);
   tickMetrics.push({
@@ -82,6 +90,7 @@ for(let i=0;i<ticks;i++){
     pathQueries:pathQueries-beforePaths,
     directRouteAttempts:directRouteAttempts-beforeDirectAttempts,
     directRouteHits:directRouteHits-beforeDirectHits,
+    navFootprintBuilds:navFootprintBuilds-beforeFootprints,
     occupancyChecks:occupancyChecks-beforeOccupancy,
     pathMs:pathTimeMs-beforePathMs
   });
@@ -110,6 +119,7 @@ const report={
   initialStressUnits:units.length,simulatedSeconds:ticks*dt,ticks,
   movedStressUnits:moved,liveUnits,entitiesBeforeSave:beforeSave,
   pathQueries,occupancyChecks,directRouteAttempts,directRouteHits,
+  navFootprintBuilds,
   wallMs:round(wallMs),
   meanMsPerTick:round(wallMs/ticks),
   p95TickMs:round(p95TickMs),
