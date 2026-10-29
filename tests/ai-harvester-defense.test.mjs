@@ -377,4 +377,72 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
-console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and urgent tank-hit response across three factions');
+// A tank firing at a visible AI worker is confirmed hostile intent before
+// its moving projectile arrives. The existing tactical planner should act at
+// launch, without waiting for damage or advancing the economic AI schedule.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=12;guard.y=14;
+    const tank=g.add(0,'tank',18,14);
+    g.nextAI=g.time+8;
+    const hp=worker.hp;
+    g.shoot(tank,worker);
+    assert.equal(worker.hp,hp,faction+': no damage occurs at launch');
+    assert.equal(g.projectiles.length,1,faction+': real projectile is in flight');
+    assert.equal(g.projectiles[0].age,0,faction+': threat was observed before impact');
+    assert.equal(guard.order?.id,tank.id,
+      faction+': nearby escort reacts to visible tank launch before first hit');
+    assert.equal(g.nextHarvesterResponseAt,g.time+4,
+      faction+': early interception shares existing four-second cooldown');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': launching a shot cannot accelerate economic decisions');
+    g.updateProjectiles(.1);
+    assert.equal(worker.hp,hp,faction+': early interception does not fabricate damage');
+    assert.equal(guard.order?.id,tank.id);
+    guard.order=null;
+    g.updateProjectiles(1);
+    assert.ok(worker.hp<hp,faction+': projectile eventually resolves normal damage');
+    assert.equal(guard.order,null,
+      faction+': impact inside cooldown cannot issue duplicate escort orders');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': unchanged v1 save format accepts early-response combat state');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': early-response cooldown is transient across reload');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=12;guard.y=14;
+    const heavy=g.add(0,'heavy',19,14);
+    g.nextAI=g.time+8;
+    assert.equal(g.sideCanSee(1,heavy),false,
+      faction+': ranged shooter is initially outside AI sensors');
+    g.shoot(heavy,worker);
+    assert.equal(guard.order?.id,undefined,
+      faction+': projectile launch cannot reveal a hidden attacker');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': hidden launch must not consume tactical cooldown');
+    g.add(1,'recon',18,14);
+    assert.ok(g.sideCanSee(1,heavy));
+    g.updateProjectiles(1.1);
+    assert.equal(guard.order?.id,heavy.id,
+      faction+': later visible impact still activates fallback response');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=12;guard.y=14;g.nextAI=g.time+8;
+    const rifle=g.add(0,'soldier',17,14);
+    g.shoot(rifle,worker);
+    assert.equal(guard.order?.id,undefined,
+      faction+': infantry launch does not expand the tank-only emergency rule');
+    assert.equal(g.nextHarvesterResponseAt,0);
+    const tank=g.add(0,'tank',18,16);
+    const defender=g.add(1,'tank',14,16);
+    g.shoot(tank,defender);
+    assert.equal(guard.order?.id,undefined,
+      faction+': ordinary combat against defenders is not a harvester emergency');
+    assert.equal(g.nextHarvesterResponseAt,0);
+  }
+}
+
+console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response and impact fallback across three factions');
