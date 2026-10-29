@@ -167,6 +167,14 @@ assert.equal(loss.refineryDistance,3);
 assert.equal(loss.lastSeenHp,85);
 assert.equal(loss.lastSeenCargo,240);
 assert.equal(loss.time,44.2);
+assert.equal(loss.lethalProjectile,null,
+  'nearby visible enemies alone cannot establish a killing shot');
+const exact={sourceId:90,sourceKind:'tank',attackerOwner:0,damage:35};
+const attributed=inspectHarvesterLoss(prior,[],[],[],44.2,exact);
+assert.deepEqual(attributed.lethalProjectile,exact,
+  'a verified projectile remains attributable even without a nearby sensor contact');
+assert.deepEqual(attributed.visibleThreats,[],
+  'projectile attribution must not create omniscient AI-visible contacts');
 assert.equal(inspectHarvesterLoss(prior,[],[],[],44.2).visibleThreats.length,0,
   'unseen contacts must not be inferred from omniscient positions');
 assert.equal(inspectHarvesterLoss(prior,[],[],[],44.2).refineryDistance,null);
