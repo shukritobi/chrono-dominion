@@ -27,3 +27,9 @@ The three-faction `tests/ai-ore-economy.test.mjs` exercises banking, actual paid
 The AI previously selected a new generator on every planning pass during a brownout, even if a paid generator was already under construction. The planner now waits for that unfinished generator before purchasing another. It does not change ordinary unit-production priorities, save fields, power statistics or assets.
 
 An initial broader experiment also paused optional recruitment while banking the 650-credit generator price. Although that passed targeted checks, the three 720-second natural matches lost substantial ore income (Desert: 10,440 versus 15,120 baseline; Frostline: 6,120 versus 9,000), so **the broad reserve was removed**. The merged candidate is limited to avoiding duplicate unfinished-generator purchases. The existing `tests/ai-ore-economy.test.mjs` covers all three factions, paid construction, repeated AI decisions, save/load and power recovery. CI progression and the economy regression guard must pass before merging.
+
+## Earlier radar banking for aviation prerequisites (30 October 2026)
+
+The prior reserve started only after 240 seconds even though Air Command becomes eligible after 130 seconds. A powered AI base with a factory, refinery, harvester and armoured defender could therefore spend its 900-credit radar budget on optional units for up to 110 seconds. The reserve now starts after 130 seconds, with the existing 1,550-credit purchase threshold and the same immediate-defense, lost-harvester, missing-armour and brownout overrides. Radar is still constructed and paid for normally, and neither saved fields nor unit costs change.
+
+The three-faction regression now checks this 130–240-second gap, actual paid construction, preserved emergency credits and save/load. This is a targeted funding-priority hypothesis; natural-match survival and aircraft production must be compared with the pre-change CI report before claiming an improvement.
