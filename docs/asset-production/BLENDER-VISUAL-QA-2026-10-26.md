@@ -2686,3 +2686,86 @@ and destruction are still single poses per direction, **not multi-frame
 animations**. Ore collection and labor gameplay are not implemented.
 Next: outstanding defense/airfield extra-state geometry and remaining
 vehicle subclasses; preserve validated baselines, avoid redundant renders.
+
+
+## 2026-10-29 Three-faction airfield extra-state pilot — independently verified
+
+**PREVIEW ONLY; do not publish or overwrite game atlases.** This pass extends
+the separate critical/destroyed/power-out experiment to the Coalition,
+Federation and Psionic **airfield class**. These are original Blender class
+concepts, not a claim that three canonical roster buildings or their gameplay
+are complete. Only the Coalition Aerospace Operations Centre
+(`COA-BLD-007`) has a direct airfield-role mapping in the current register.
+
+- [Successful targeted Blender render, source reopen and 160/80px QA #40791963017](https://github.com/shukritobi/chrono-dominion/actions/runs/40791963017);
+  [download 42-file preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40791963017/artifacts/12862316543);
+  [draft PR #126](https://github.com/shukritobi/chrono-dominion/pull/126).
+- [Original editable eight-fracture modeling](../../tools/blender/preview_airfield_extended_states.py),
+  [strict alpha/RGBA and contact-sheet QA](../../tools/blender/qa_airfield_extended_states.py),
+  [reopened-source closed-manifold verification](../../tools/blender/verify_airfield_extended_source.py),
+  and [preview-only workflow](../../.github/workflows/airfield-extended-states-review.yml).
+- For each faction the workflow first rendered the **previously unrendered**
+  baseline five-frame 160×800 RGBA atlas and saved original Blender source;
+  then produced **three separate 160×160 RGBA extra-state PNGs** and a
+  second editable .blend. No pre-existing validated vehicle or building
+  preview was rerendered by this workflow.
+- Each saved extra-state source was reopened in Blender. The **three
+  critical-only and five destroyed-only** fracture meshes per faction are
+  independently editable, hidden in the saved intact state and have **closed
+  manifold topology** (24 verified custom meshes total, not simple cubes).
+  Extended .blend source sizes: **121,004 / 121,055 / 130,112 bytes**
+  (Coalition / Federation / Psionic).
+- State-specific geometry hides the Coalition roof/control tower, Federation
+  anti-air roof/cupola and Psionic launch guides/field; destroyed states
+  additionally remove major upper equipment and replace it with physically
+  separate bent roof slabs, fractured support members and low debris.
+  Power-out preserves intact geometry while extinguishing emission.
+- Downloaded and visually inspected actual **80px and 160px** contact
+  sheets for all three factions. At 80px the critical and destroyed states
+  have clearly different upper silhouettes. Power-out reads as darkened
+  lighting without changing any alpha pixels. Visual limitations: Federation
+  destroyed still resembles a low bunker, Coalition's wreck retains much of
+  its apron and Psionic's compact wreck can resemble a small vehicle;
+  copper fracture seams are subtle at 80px.
+
+| Faction | Critical changed alpha 160 / 80 | Destroyed changed alpha 160 / 80 | Power-out changed alpha 160 / 80 | Power-out changed RGBA 160 / 80 |
+|---|---:|---:|---:|---:|
+| Coalition | **715 / 176** | **1,395 / 352** | **0 / 0** | **5,042 / 1,297** |
+| Federation | **808 / 203** | **2,093 / 532** | **0 / 0** | **5,442 / 1,385** |
+| Psionic | **657 / 177** | **728 / 196** | **0 / 0** | **3,829 / 1,080** |
+
+- Strict 80px gates passed without lowering thresholds: critical alpha
+  >=35, destroyed alpha >=85, power-out alpha <=12, power-out RGBA >=120;
+  every PNG was nonblank, RGBA and unclipped. Independent local Pillow/NumPy
+  recomputation matched **all 36** reported per-state alpha/RGBA measurements
+  at 160px and 80px exactly.
+- Within the successful workflow the original preview atlas hashes remained
+  unchanged after extra-state rendering:
+  Coalition `a8ecb6c799cd9549fa1a73ea3323261ba845a211766f2c7c946a5952fdfe7fdf`;
+  Federation `b0dde06c0e7793b577b10d7561765b184d2a6c07a48e6c140ff53fc3b9a0f60f`;
+  Psionic `9ed15ec2461ae6bba3dba0ab2d61814761771933c6db628b123eaef63e3a3c91`.
+- **Failure and root cause:** [initial run #40791837002](https://github.com/shukritobi/chrono-dominion/actions/runs/40791837002)
+  rendered the three base atlases but failed before extra-state rendering:
+  Blender omitted the unused `coalition_ore` material from its serialized
+  airfield source. The preview script incorrectly assumed it existed. The
+  fix creates an original textured copper fracture material in the reopened
+  source when absent. The corrected workflow passed; the failure is not
+  hidden and no QA threshold was relaxed.
+- **Independent cross-run observation:** despite unchanged baseline modeling
+  code, initial-versus-corrected baseline atlases differed by **2 Coalition,
+  0 Federation and 153 Psionic decoded RGBA pixels** (maximum channel
+  differences 1, 0 and 6 respectively), with **zero alpha-pixel changes**
+  across all three. This is *consistent with* stochastic Cycles color noise,
+  not independently proven as the cause. Do not claim cross-run byte
+  identity; the **same-run** atlas checksums did pass.
+- **Publication constraint:** exactly four new Blender/QA/workflow source
+  files were authored for the pilot; the QA document and limited register
+  annotation are documentation only. No live art, approved atlas, manifest,
+  loader, gameplay code or deployed site was modified. PR #126 remains
+  draft and stacked on unapproved asset-preview work.
+
+**Next:** Improve the Federation wreck with an actual breached hangar
+interior and brighter 80px fracture edges, then tackle the three-faction
+beam-defense extra states. Do not create canonical Federation/Psionic
+airfield IDs or integrate any preview art without separate roster/design
+approval. Multi-frame building destruction is still missing.
