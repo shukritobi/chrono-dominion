@@ -3013,7 +3013,10 @@
       // the 650-credit generator reserve, defer optional unit purchases.
       // Continue banking through construction; release the reserve when
       // threatened, short of power, without income or without ground cover.
-      const savingForRadar=this.time>240&&!built('radar')&&
+      // Radar unlocks Air Command after 130 seconds; banking only after
+      // 240 left a 110-second window for optional recruitment to drain
+      // otherwise viable radar funding. Keep the same defensive overrides.
+      const savingForRadar=this.time>130&&!built('radar')&&
         built('factory')&&built('refinery')&&
         owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>0&&
