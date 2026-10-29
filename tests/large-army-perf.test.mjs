@@ -35,6 +35,17 @@ try{
     result.directRouteAttempts,'per-tick shortcut attempts must reconcile');
   assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.directRouteHits,0),
     result.directRouteHits,'per-tick shortcut hits must reconcile');
+  assert.ok(Number.isInteger(result.navFootprintBuilds)&&
+    result.navFootprintBuilds>0&&result.navFootprintBuilds<=result.ticks,
+    'at most one shared navigation footprint is built per movement tick');
+  assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.navFootprintBuilds,0),
+    result.navFootprintBuilds,'per-tick footprint builds must reconcile');
+  assert.ok(result.tickProfile.every(t=>
+    Number.isInteger(t.navFootprintBuilds)&&t.navFootprintBuilds>=0&&
+    t.navFootprintBuilds<=1&&(t.navFootprintBuilds===0||t.pathQueries>0)),
+    'a tick with paths shares one footprint; idle ticks build none');
+  assert.equal(result.tickProfile[0].navFootprintBuilds,1,
+    'all initial army orders share one footprint on the first tick');
   assert.ok(result.tickProfile.every(t=>Number.isInteger(t.directRouteAttempts)&&
     Number.isInteger(t.directRouteHits)&&t.directRouteHits>=0&&
     t.directRouteHits<=t.directRouteAttempts&&
