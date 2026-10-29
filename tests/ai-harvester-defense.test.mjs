@@ -445,6 +445,41 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
+// A verified visible tank shot can summon an otherwise idle reserve escort
+// slightly beyond the ordinary strategic engagement radius. This addresses
+// the archived Verdant worker loss with an idle defender 8.47 tiles away,
+// without broadening every normal AI tick or using hidden enemy coordinates.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,hq,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=8;guard.y=14;
+    const tank=g.add(0,'tank',18,14);
+    g.nextAI=g.time+8;
+    assert.ok(g.sideCanSee(1,tank),faction+': worker observes real shooter');
+    assert.equal(g.assignAIEngagements([guard],[],hq).has(guard.id),false,
+      faction+': ordinary AI tick retains its original local escort radius');
+    g.shoot(tank,worker);
+    assert.equal(guard.order?.id,tank.id,
+      faction+': actual observed shot recruits the slightly farther idle escort');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': urgent response must not accelerate economic AI decisions');
+    assert.equal(g.nextHarvesterResponseAt,g.time+4);
+    assert.ok(g.saveGame()&&g.loadGame(),faction+': reserve escort order survives v1 saves');
+    assert.equal(g.entityById(guard.id)?.order?.id,tank.id);
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=5;guard.y=14;
+    const tank=g.add(0,'tank',18,14);
+    g.nextAI=g.time+8;
+    g.shoot(tank,worker);
+    assert.equal(guard.order?.id,undefined,
+      faction+': a genuinely distant reserve guard must not be recalled');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': no eligible escort means no wasted tactical cooldown');
+  }
+}
+
 // An observed tank shot can be too far from an available assault-committed
 // escort to justify an emergency order. It must not consume the global
 // tactical cooldown and suppress a second, genuinely interceptable shooter.

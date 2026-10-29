@@ -517,3 +517,11 @@ plus the bounded cooldown against a third shot,
 plus legacy save/load. This fixes a missed-response edge case, **not a proven
 reduction in natural-match harvester deaths**; compare CI progression reports
 before making that claim.
+
+## Confirmed-shot reserve escort radius (30 October 2026)
+
+The archived 720-second [PR #148 progression report](https://github.com/shukritobi/chrono-dominion/actions/runs/40946811155) shows two Verdant worker deaths at 63.8s and 74.2s, both from actual player tank projectiles. At the first loss, the nearest surviving AI tank was **8.47 tiles from the worker with no order**, while two visible hostile tanks were roughly 3.5 tiles away. The proximity snapshot alone cannot prove that this defender could have arrived in time or that range was the sole cause.
+
+When a real player tank/heavy projectile targets a living AI harvester and the shooter is currently visible, the emergency-only tactical planner now considers idle ground escorts within **11 tiles of both the attacker and worker** instead of 8.5/9. Normal eight-second strategic decisions, other engagements, base-first priorities, the two-escort budget, retreat/assault protections and the four-second response cooldown retain their previous behavior. This never creates units, grants credits, changes projectile damage or reads hidden attackers. No save fields or assets change.
+
+Three-faction regression tests distinguish ordinary strategic radius from confirmed-shot reserve response, assert no distant recall, and verify unchanged economic scheduling and v1 save/load. The natural-match progression and ore-economy guard must be checked before merge; improved harvester survival is **not established** by targeted tests alone.
