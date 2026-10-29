@@ -196,6 +196,7 @@ function radarRecoverySnapshot(g){
     hqAlive:!!hq,generatorOwned:owned('generator').length>0,
     refineryOwned:owned('refinery').length>0,refineryBuilt:built('refinery').length>0,
     harvesters:workers.length,
+    harvesterQueued:g.queues.some(q=>q.side===1&&q.key==='harvester'),
     criticalHarvester:built('refinery').length>0&&workers.length===1&&
       workers[0].hp/workers[0].maxHp<.45&&!threatened&&!powerLow&&credits>=1550,
     factoryOwned:owned('factory').length>0,turretsBuilt:built('turret').length,
