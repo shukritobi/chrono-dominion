@@ -409,3 +409,32 @@ The harvester-loss diagnostics repeatedly found workers exposed to nearby hostil
 This does **not** retreat loaded trucks, teleport units, create escorts, read hidden enemy positions, change the player's harvesting or alter saved fields. The visible-threat test covers three factions, hidden contacts, fallback and v1 saves. The 720-second natural-match ore income and worker-loss results must be checked before claiming this reduces losses; even a safe deposit may have a dangerous approach route.
 
 Two broader ore-avoidance experiments were rejected after the 720-second economy gate detected reduced Frostline ore income (6,480 versus the 9,000 baseline), and one also reduced Desert income. This narrower emergency-only variant must pass the same gate; it is not evidence of improved survival until the natural-match telemetry demonstrates it.
+
+
+## Exact lethal-projectile attribution (29 October 2026)
+
+The natural-match laboratory already captured nearby **AI-visible** threats
+and defenders at the final observed position of each lost ore truck. Those
+proximity snapshots cannot identify who actually fired the killing shot.
+
+A headless-only wrapper now observes the production `recordLoss()` call
+*during* `updateProjectiles()`. It matches the currently resolved, expired
+projectile by target ID and attacker owner, recording `sourceId`,
+`sourceKind`, `attackerOwner` and projectile damage in the existing bounded
+`lossCases[].lethalProjectile` field. Non-projectile losses and cases with
+no verified matching impact report `null`. Impact attribution does **not**
+alter fog-of-war contacts: the `visibleThreats` field still includes only
+enemy units visible to the AI before the lethal tick. An unseen shooter may
+appear in the offline diagnostic field, never in AI decision-making.
+
+The wrapper is installed only by `tools/simulate-matches.mjs`, not the
+browser engine. Per-step attribution is cleared immediately after loss
+inspection, and no persistent or saved state is added. This is **diagnostic
+coverage**, not a harvester survival improvement.
+
+Verify with `node tests/ai-harvester-defense.test.mjs` (three-faction real
+projectile impacts), `node tests/ai-harvester-telemetry.test.mjs` (no
+proximity-based false attribution), and `npm run balance:progression`.
+Use the actual lethal sources and existing defensive-order snapshots before
+changing AI escort or ore routing. The six historical natural-match losses
+and absent natural aircraft remain unresolved until separately measured.
