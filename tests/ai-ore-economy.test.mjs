@@ -72,7 +72,72 @@ for(const faction of ['coalition','federation','psionic']){
   reset();g.time=121;
   g.runAI();
   assert.equal(queued(g,'harvester').length,0,
-    faction+': no late-game expansion after the early economy window');
+    faction+': no late-game expansion for a healthy worker');
+
+  // A sole worker near death can strand the economy when killed. At any
+  // match age, preemptively purchase ONE backup if it leaves generator funds.
+  // Test the real AI, queue, production clock and legacy save schema.
+  const backupSetup=()=>{
+    reset();g.time=300;g.queues=[];
+    g.add(1,'factory',24,23);g.add(1,'radar',23,25);
+    g.add(1,'generator',21,24);g.add(1,'generator',22,20);
+    g.add(1,'tank',23,21);g.add(1,'tank',23,20);
+    assert.equal(g.power(1).low,false,faction+': backup fixture needs power');
+    return alive(g,'harvester')[0];
+  };
+  let worker=backupSetup();
+  worker.hp=worker.maxHp*.4;g.players[1].credits=1550;
+  const backupSpent=g.stats[1].creditsSpent;
+  g.runAI();
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': critically wounded sole worker must trigger a paid backup');
+  assert.equal(g.players[1].credits,650,
+    faction+': emergency generator reserve survives backup purchase');
+  assert.equal(g.stats[1].creditsSpent-backupSpent,900,
+    faction+': backup worker must cost 900 credits');
+  assert.equal(alive(g,'airfield').length,0,
+    faction+': optional aviation must wait for a critical ore backup');
+  g.runAI();
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': repeated decisions must not duplicate the backup queue');
+  g.advanceProduction(10);
+  assert.equal(alive(g,'harvester').length,2,
+    faction+': backup must deploy through normal production');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': backup worker must survive legacy save/load');
+  assert.equal(alive(g,'harvester').length,2);
+
+  worker=backupSetup();worker.hp=worker.maxHp*.4;
+  g.players[1].credits=1549;g.runAI();
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': insufficient reserve must never create a free backup');
+
+  worker=backupSetup();worker.hp=worker.maxHp*.8;
+  g.players[1].credits=1550;g.runAI();
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': a healthy sole worker must not trigger late expansion');
+
+  worker=backupSetup();worker.hp=worker.maxHp*.4;
+  g.add(1,'harvester',23,22);
+  g.players[1].credits=1550;g.runAI();
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': do not exceed two living workers');
+
+  worker=backupSetup();worker.hp=worker.maxHp*.4;
+  const backupHq=alive(g,'hq')[0];
+  g.add(0,'soldier',backupHq.x+1,backupHq.y+1);
+  g.players[1].credits=1550;g.runAI();
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': observed base attack takes priority over backup workers');
+
+  reset();g.time=300;g.queues=[];
+  g.add(1,'factory',24,23);g.add(1,'radar',23,25);
+  alive(g,'harvester')[0].hp=alive(g,'harvester')[0].maxHp*.4;
+  g.players[1].credits=1550;
+  assert.equal(g.power(1).low,true,faction+': brownout fixture must lack power');
+  g.runAI();
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': emergency power recovery takes priority over backup workers');
 
   reset();
   const hq=alive(g,'hq')[0];
