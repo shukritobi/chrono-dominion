@@ -112,6 +112,7 @@ jobs:
           node tests/ai-radar-recovery-diagnostics.test.mjs
           node tests/ai-harvester-telemetry.test.mjs
           node tests/ai-harvester-defense.test.mjs
+          node tests/ai-harvester-refinery-service.test.mjs
           node tests/harvester-separation-telemetry.test.mjs
           node tests/harvester-move-telemetry.test.mjs
           node tests/ai-economy-guard.test.mjs

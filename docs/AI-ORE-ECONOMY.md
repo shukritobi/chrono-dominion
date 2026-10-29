@@ -41,3 +41,27 @@ A late-game AI base with exactly one living ore truck can lose its last source o
 When a **single** living worker has less than 45% hull, a completed refinery is available, the base is powered, no **currently visible** invader threatens the base and the AI has at least 1,550 credits, it can purchase one normal 900-credit backup harvester while retaining 650 for emergency power. This temporary priority takes precedence over optional radar, factory and aviation investment, but not visible base defense, generator recovery or an already occupied production queue. A healthy worker, two living workers, insufficient funds or a brownout cannot trigger the contingency. No unit costs, free income, hidden enemy information, persistent state, save schema or assets change.
 
 `tests/ai-ore-economy.test.mjs` exercises the actual three-faction AI planner, exact spending, single queue, production deployment, existing save/load, power, observed threats, health threshold, insufficient funds and two-worker cap. Compare the full 720-second progression and economy guard before claiming any reduction in natural harvester deaths or improvement in aircraft production.
+
+## Paid refinery hull service on actual ore delivery (30 October 2026)
+
+A surviving AI ore truck can now repair **up to 60 HP** when it completes a
+normal full-cargo unload within its operational refinery's existing 3.6-tile
+range. The repair costs **0.75 credits per HP**, debited from the same earned
+ore income, and never spends below the **650-credit emergency generator
+reserve**. Repairs are recorded as normal `creditsSpent`. An undamaged truck,
+an empty truck, a distant truck, or an AI without sufficient funds receives
+no repair. Human harvesters do not incur automatic charges.
+
+The mechanic deliberately does **not** introduce a new retreat route, modify
+ore selection, delay unloading, grant credits or change saved entity fields.
+The prior broad harvester-retreat experiment damaged natural-match income,
+so this narrower service operates only at the already-established refinery
+delivery event. Existing hull HP and credits serialize through v1 saves.
+
+Verification: `node tests/ai-harvester-refinery-service.test.mjs` covers all
+three factions, actual cargo accounting, paid/partial/no repairs, generator
+reserve, range, repeated ticks and save/load. The nine-scenario balance,
+720-second natural progression, economy regression gate and aviation
+laboratory must still pass before merging. **Improved natural survival is
+not established by targeted tests**; compare observed losses and income
+against the previous four-loss, 98-delivery baseline.

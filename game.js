@@ -1995,6 +1995,22 @@
           this.players[e.owner].credits+=e.load;
           if(this.stats[e.owner])this.stats[e.owner].oreHarvested+=e.load;
           e.load=0;e.work=.6;
+          // Enemy ore trucks can pay for modest hull repairs during an
+          // ordinary refinery delivery. This never reroutes a worker, adds
+          // free health or spends the 650-credit emergency generator reserve.
+          // Repair only on an actual unload, not on every simulation frame.
+          if(e.owner===1&&e.hp<e.maxHp){
+            const owner=this.players[e.owner],reserve=BUILD.generator.cost;
+            const pricePerHp=.75;
+            const healed=Math.min(60,e.maxHp-e.hp,
+              Math.max(0,(owner.credits-reserve)/pricePerHp));
+            if(healed>0){
+              const paid=healed*pricePerHp;
+              e.hp=Math.min(e.maxHp,e.hp+healed);
+              owner.credits-=paid;
+              this.stats[e.owner].creditsSpent+=paid;
+            }
+          }
           e.oreScanAt=0;e.oreLastDistance=null;
           if(e.owner===0)this.particles.push({x:refinery.x,y:refinery.y,life:1,color:'#9fe29d',type:'cash'});
         }
