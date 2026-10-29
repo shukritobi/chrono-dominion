@@ -445,4 +445,44 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
+// An observed tank shot can be too far from an available assault-committed
+// escort to justify an emergency order. It must not consume the global
+// tactical cooldown and suppress a second, genuinely interceptable shooter.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,worker,guard,enemy}=game(faction);
+  enemy.hp=0;guard.x=10;guard.y=14;
+  guard.order={type:'attackMove',x:5,y:5};
+  const distant=g.add(0,'tank',18,14);
+  g.nextAI=g.time+8;
+  assert.ok(g.sideCanSee(1,distant),
+    faction+': first tank is genuinely visible from the worker');
+  g.shoot(distant,worker);
+  assert.equal(guard.order?.type,'attackMove',
+    faction+': distant shooter cannot steal an assault-committed guard');
+  assert.equal(g.nextHarvesterResponseAt,g.time+4,
+    faction+': first unserved shooter remains rate-limited');
+  assert.equal(g.unservedHarvesterShooterId,distant.id,
+    faction+': only a different shooter can trigger one fallback response');
+  const close=g.add(0,'tank',15,14);
+  assert.ok(g.sideCanSee(1,close),
+    faction+': second tank is also genuinely visible');
+  g.shoot(close,worker);
+  assert.equal(guard.order?.id,close.id,
+    faction+': follow-up shooter gets the available local response');
+  assert.equal(g.nextHarvesterResponseAt,g.time+4,
+    faction+': successful interception still activates rate limit');
+  assert.equal(g.unservedHarvesterShooterId,0,
+    faction+': fallback exception closes after successful interception');
+  guard.order=null;
+  g.shoot(distant,worker);
+  assert.equal(guard.order,null,
+    faction+': third shot cannot bypass cooldown after fallback is consumed');
+  guard.order={type:'attack',id:close.id};
+  assert.equal(g.nextAI,g.time+8,
+    faction+': neither shot advances economic AI scheduling');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': follow-up attack order remains compatible with v1 saves');
+  assert.equal(g.entityById(guard.id)?.order?.id,close.id);
+}
+
 console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response and impact fallback across three factions');

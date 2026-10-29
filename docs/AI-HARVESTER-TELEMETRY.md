@@ -500,3 +500,20 @@ non-tank or non-harvester attacks do not broaden the emergency response.
 survives. Compare the complete 720-second natural-match worker losses and
 income against the established six-loss baseline, and reject any revision
 that fails the existing economy regression gate.
+
+## Ineffective shot responses do not consume tactical cooldown (29 October 2026)
+
+A visible tank can fire at an AI ore truck while all nearby ground guards are
+committed to distant attack-move orders. The emergency planner correctly
+refuses to divert those guards, but previously consumed the shared four-second
+cooldown anyway. A second, genuinely interceptable tank shot during that window
+was then ignored. The response now retains the normal four-second cooldown, but allows one
+additional observed **different** shooter to trigger a tactical re-evaluation
+if the first shooter received no escort. Repeated shots from the same attacker
+remain rate-limited and the exception closes after the second attempt. It still rejects hidden shooters, preserves the global two-escort
+budget and never advances strategic AI production. Three-faction real-engine
+tests cover an unserved first shot followed immediately by an actionable one,
+plus the bounded cooldown against a third shot,
+plus legacy save/load. This fixes a missed-response edge case, **not a proven
+reduction in natural-match harvester deaths**; compare CI progression reports
+before making that claim.
