@@ -1694,14 +1694,14 @@
       this.respondToAIRadarAttack(this.projectiles[this.projectiles.length-1],target);
     }
     respondToAIRadarAttack(shot,target){
-      // A radar is the prerequisite for aviation. A visible tank firing on it
-      // should not wait for the next eight-second economic/strategic AI tick.
+      // A radar is the prerequisite for aviation. Any visible ground attacker
+      // firing on it should not wait for the next strategic AI tick.
       // Only reuse the existing base-first tactical engagement planner; never
       // accelerate construction, recruitment or use hidden projectile intel.
       if(this.state!=='playing'||!target||target.owner!==1||
          target.kind!=='radar'||target.type!=='building'||!target.built||
          target.hp<=0||shot.owner!==0||
-         (shot.sourceKind!=='tank'&&shot.sourceKind!=='heavy')||
+         !['tank','heavy','soldier','specialist'].includes(shot.sourceKind)||
          this.nextAI<=this.time||this.time<this.nextRadarResponseAt)return false;
       const attacker=this.entityById(shot.sourceId);
       if(!attacker||attacker.hp<=0||attacker.owner!==0||

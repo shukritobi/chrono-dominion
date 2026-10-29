@@ -541,21 +541,56 @@ for(const faction of ['coalition','federation','psionic']){
       faction+': impact fallback intercepts a newly visible attacker');
   }
   {
+    // An unseen infantry launch cannot reveal the shooter. An actual scout
+    // contact at impact can still authorize a bounded radar interception.
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=8;guard.y=10;
+    const radar=g.add(1,'radar',10,10);
+    const rifle=g.add(0,'soldier',16,10);
+    g.nextAI=g.time+8;
+    assert.equal(g.sideCanSee(1,rifle),false,
+      faction+': distant infantry is not initially visible');
+    g.shoot(rifle,radar);
+    assert.equal(guard.order?.id,undefined,
+      faction+': hidden infantry shot cannot leak enemy position');
+    assert.equal(g.nextRadarResponseAt,0);
+    g.add(1,'recon',13,10);
+    assert.ok(g.sideCanSee(1,rifle));
+    g.updateProjectiles(1.2);
+    assert.equal(guard.order?.id,rifle.id,
+      faction+': newly observed infantry can be intercepted on impact');
+  }
+  {
     const {g,worker,guard,enemy}=game(faction);
     enemy.hp=0;worker.hp=0;guard.x=19;guard.y=24;
     const radar=g.add(1,'radar',24,24);
     const rifle=g.add(0,'soldier',24,28);
     g.nextAI=g.time+8;
+    const beforeCredits=g.players[1].credits;
     g.shoot(rifle,radar);
-    assert.equal(g.nextRadarResponseAt,0,
-      faction+': ordinary infantry shots do not trigger tank-only emergency');
-    assert.equal(guard.order?.id,undefined);
+    assert.equal(guard.order?.id,rifle.id,
+      faction+': visible infantry firing at radar must receive an immediate escort');
+    assert.equal(g.nextRadarResponseAt,g.time+4,
+      faction+': infantry interception uses the same bounded cooldown');
+    assert.equal(g.players[1].credits,beforeCredits,
+      faction+': infantry response must not spend AI credits');
+    guard.order=null;
+    g.nextRadarResponseAt=0;
+    rifle.hp=0; // Isolate the second shooter from the prior visible threat.
+    const specialist=g.add(0,'specialist',24,29);
+    g.shoot(specialist,radar);
+    assert.equal(guard.order?.id,specialist.id,
+      faction+': visible specialist attacks must also defend radar');
+    guard.order=null;
+    g.nextRadarResponseAt=0;
     const tank=g.add(0,'tank',24,29);
     const factory=g.add(1,'factory',24,25);
     g.shoot(tank,factory);
     assert.equal(g.nextRadarResponseAt,0,
       faction+': non-radar infrastructure cannot trigger radar response');
+    assert.equal(guard.order,null,
+      faction+': non-radar shots cannot issue emergency radar orders');
   }
 }
 
-console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, radar defense and impact fallback across three factions');
+console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, all-ground radar defense and impact fallback across three factions');
