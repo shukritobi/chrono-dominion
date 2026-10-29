@@ -373,3 +373,30 @@ to split escorts when both threats are serviceable. This is a narrowly
 scoped tactical correction, **not** evidence of improved natural-match
 harvester survival; compare the 720-second economic guard, six recorded
 harvester losses and aviation milestones before claiming an outcome.
+
+## Unique-defender preservation across two visible ore threats (29 October 2026)
+
+A second edge case remained after the reachable-threat allocation fix: both
+attackers can be serviceable, but **only one** available escort can reach the
+second attacker. The previous first-threat assignment could spend that
+versatile escort on a siege tank even when a different tank could handle
+siege, leaving the second worker undefended and a siege-capable tank idle.
+
+The reactive planner now checks the *eligible-defender sets* of the other
+currently visible ore threats. When one has exactly one eligible escort,
+and another candidate can handle the current threat, it preserves that
+unique escort for the other threat. The existing danger ranking, weapon-aware
+siege preferences, two-escort cap, visibility, base-first response, distance
+limits and committed-assault restrictions remain. It does not reposition
+defenders, create resources, modify saves or alter unit stats.
+
+The three-faction regression creates two simultaneously visible threats:
+one siege tank that either defender can reach, and a second rifleman that
+only the versatile defender can reach. It asserts that the siege-only tank
+handles siege, the versatile defender covers the second worker, and both
+orders survive legacy save/load. Existing lone-siege and multiple-threat
+tests continue to guard the other allocation cases.
+
+This is a source-level tactical correctness improvement. Natural-match
+harvester losses, ore income and aircraft production must be measured
+separately; do not claim they improve solely because this test passes.
