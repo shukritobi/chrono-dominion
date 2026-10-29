@@ -129,6 +129,32 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(queued(g,'harvester').length,1,
     faction+': replacing the only lost harvester remains higher priority');
 
+  // Air Command becomes eligible after 130 seconds. Without a radar,
+  // protect its paid 900+650 budget as soon as aviation can be pursued,
+  // rather than spending optional recruitment throughout seconds 130-240.
+  reset();
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.time=150;g.players[1].credits=1200;
+  assert.ok(alive(g,'tank').length+alive(g,'heavy').length>0,
+    faction+': midgame radar reserve requires surviving armour');
+  assert.equal(g.power(1).low,false,
+    faction+': midgame radar reserve fixture must be powered');
+  g.runAI();g.runAI();
+  assert.equal(queued(g,'recon').length+queued(g,'soldier').length+
+    queued(g,'tank').length+queued(g,'specialist').length,0,
+    faction+': do not drain radar funds during the 130-240 second window');
+  assert.equal(g.players[1].credits,1200,
+    faction+': midgame radar savings must preserve credits');
+  g.players[1].credits=1550;g.runAI();
+  assert.equal(alive(g,'radar').length,1,
+    faction+': funded midgame radar must enter paid construction');
+  assert.equal(g.players[1].credits,650,
+    faction+': radar must preserve the emergency power reserve');
+  assert.equal(alive(g,'radar')[0].built,false,
+    faction+': midgame radar uses ordinary construction time');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': midgame radar recovery survives legacy saves');
+
   // Lost or not-yet-built radar should not be perpetually postponed by
   // cheap optional recruitment. Exercise the real AI and construction.
   reset();
