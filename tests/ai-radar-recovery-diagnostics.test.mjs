@@ -23,9 +23,9 @@ const cases=[
   [{legalRadarSite:false},'no-legal-placement']
 ];
 for(const [patch,expected] of cases){
-  const before={...ready,...patch};
-  const after=patch.radarBuilt?{...before,radarBuilt:true}:
-    patch.radarOwned?{...before,radarOwned:true}:{...before};
+  const before=expected==='radar-construction-started'||
+    expected==='radar-operational'?{...ready}:{...ready,...patch};
+  const after={...ready,...patch};
   assert.equal(classify(before,after),expected,JSON.stringify(patch));
 }
 assert.equal(classify({...ready,radarOwned:true},{...ready,radarOwned:true}),
