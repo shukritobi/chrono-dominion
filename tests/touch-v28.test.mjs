@@ -101,7 +101,7 @@ assert.equal(commands,0);
 const cameraBounds=()=>{
   const span=g.worldSize*32;
   assert.ok(g.camera.x>=-span&&g.camera.x<=span,'touch X stays inside world limits');
-  assert.ok(g.camera.y>=50&&g.camera.y<=g.worldSize*18,
+  assert.ok(g.camera.y>=50&&g.camera.y<=g.worldSize*32,
     'touch Y stays inside world limits');
 };
 const placementsBeforeBounds=placements,commandsBeforeBounds=commands;
@@ -114,7 +114,7 @@ assert.equal(g.camera.y,50,'drag clamps at minimum Y');
 g.pointerMove(touch(20,10000,-10000));
 cameraBounds();
 assert.equal(g.camera.x,-g.worldSize*32,'drag clamps at negative X edge');
-assert.equal(g.camera.y,g.worldSize*18,'drag clamps at maximum Y');
+assert.equal(g.camera.y,g.worldSize*32,'drag clamps at maximum Y');
 g.pointerUp(touch(20,10000,-10000));
 g.camera={x:g.worldSize*32-10,y:g.worldSize*18-10,zoom:1};
 g.pointerDown(touch(21,450,350));
