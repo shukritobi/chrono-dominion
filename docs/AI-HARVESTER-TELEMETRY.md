@@ -525,3 +525,28 @@ The archived 720-second [PR #148 progression report](https://github.com/shukrito
 When a real player tank/heavy projectile targets a living AI harvester and the shooter is currently visible, the emergency-only tactical planner now considers idle ground escorts within **11 tiles of both the attacker and worker** instead of 8.5/9. Normal eight-second strategic decisions, other engagements, base-first priorities, the two-escort budget, retreat/assault protections and the four-second response cooldown retain their previous behavior. This never creates units, grants credits, changes projectile damage or reads hidden attackers. No save fields or assets change.
 
 Three-faction regression tests distinguish ordinary strategic radius from confirmed-shot reserve response, assert no distant recall, and verify unchanged economic scheduling and v1 save/load. The natural-match progression and ore-economy guard must be checked before merge; improved harvester survival is **not established** by targeted tests alone.
+
+## Confirmed-shot target selection with multiple harvesters (30 October 2026)
+
+Source inspection identified a tactical mismatch when a visible tank fires at one
+AI harvester while a *different* living harvester is closer to the shooter.
+The ordinary escort planner groups visible threats by nearest worker, which is
+appropriate for periodic proximity-based patrols but not for a confirmed
+projectile aimed at a specific worker. The urgent 11-tile reserve-escort check
+could therefore reject a defender near the actual target solely because it
+was too far from the unrelated, closer worker.
+
+The confirmed-shot call now passes the attacked worker's ID to the existing
+engagement planner. Only that observed shooter uses the actual living target
+worker for the urgent escort distance check. Routine AI decisions, other
+threats, base-first assignments, the two-escort budget, current sensor
+visibility, assault-commitment restrictions and four-second cooldown remain
+unchanged. This changes no unit stats, damage, credits, saved fields or art.
+
+Three-faction real-engine regression tests use two ore trucks with the shooter
+closer to the *other* truck, verify an eligible defender receives the shot
+target's interception order, and reject a defender that is too far from the
+actual attacked worker. They also check normal patrol limits, strategic AI
+scheduling and legacy save/load. **Natural-match survival improvement is
+unproven** until the 720-second progression, economic guard and full CI
+verification pass; targeted coverage alone does not establish fewer deaths.

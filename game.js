@@ -1763,7 +1763,7 @@
       const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&
         e.hp>0&&e.kind!=='harvester'&&structures.some(b=>dist(b,e)<8)&&
         this.sideCanSee(1,e));
-      const assignments=this.assignAIEngagements(fighters,invaders,base,attacker.id);
+      const assignments=this.assignAIEngagements(fighters,invaders,base,attacker.id,target.id);
       // Rate-limit repeated shots from the same unserved attacker, but
       // permit ONE different observed shooter during that four-second window.
       // A successful response (or the second attempt) closes the exception.
@@ -2485,7 +2485,7 @@
       }
       return withdrawing;
     }
-    assignAIEngagements(fighters,invaders,base,urgentHarvesterShooterId=null){
+    assignAIEngagements(fighters,invaders,base,urgentHarvesterShooterId=null,urgentHarvesterTargetId=null){
       // Build one assignment table per AI decision tick. Only observed units
       // are candidates: unseen enemies never become omniscient attack orders.
       const side=1,available=new Map(fighters.filter(u=>u.hp>0&&u.built&&
@@ -2518,8 +2518,13 @@
         e.type==='unit'&&e.hp>0&&e.built);
       const oreThreats=visible.filter(enemy=>enemy.kind!=='harvester'&&
         enemy.kind!=='aircraft').map(enemy=>({
-          enemy,worker:workers.reduce((best,h)=>
-            !best||dist(h,enemy)<dist(best,enemy)?h:best,null)
+          // On a confirmed shot, defend the actual target worker, not
+          // whichever other harvester happens to be closest to the shooter.
+          // All candidates still require current AI sensor visibility.
+          enemy,worker:(enemy.id===urgentHarvesterShooterId?
+            workers.find(h=>h.id===urgentHarvesterTargetId):null)||
+            workers.reduce((best,h)=>
+              !best||dist(h,enemy)<dist(best,enemy)?h:best,null)
         })).filter(({enemy,worker})=>worker&&
           // An observed siege tank can fire from beyond the old fixed 4.5-tile
           // escort trigger. Intercept within its weapon reach plus a short

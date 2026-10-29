@@ -480,6 +480,51 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
+// A shooter can be closer to a DIFFERENT ore truck than the one it actually
+// fires on. The confirmed-shot reserve response must use the attacked worker
+// for escort eligibility; nearest-worker triage is only for routine patrols.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,hq,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=9;guard.y=8;
+    const tank=g.add(0,'tank',18,14);
+    const otherWorker=g.add(1,'harvester',19,17);
+    assert.ok(Math.hypot(tank.x-otherWorker.x,tank.y-otherWorker.y)<
+      Math.hypot(tank.x-worker.x,tank.y-worker.y),
+      faction+': the other worker is closer to the actual shooter');
+    assert.ok(Math.hypot(guard.x-tank.x,guard.y-tank.y)<=11&&
+      Math.hypot(guard.x-worker.x,guard.y-worker.y)<=11&&
+      Math.hypot(guard.x-otherWorker.x,guard.y-otherWorker.y)>11,
+      faction+': escort can reach shot target, not the nearer worker');
+    assert.ok(g.sideCanSee(1,tank),faction+': actual shooter is visible');
+    assert.equal(g.assignAIEngagements([guard],[],hq).has(guard.id),false,
+      faction+': routine nearest-worker patrol retains the old limits');
+    g.nextAI=g.time+8;
+    g.shoot(tank,worker);
+    assert.equal(guard.order?.id,tank.id,
+      faction+': confirmed shot protects the actual attacked worker');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': shot response does not accelerate strategic spending');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': both workers and escort order survive legacy save/load');
+    assert.equal(g.entityById(guard.id)?.order?.id,tank.id);
+    assert.equal(g.entityById(otherWorker.id)?.kind,'harvester');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;guard.x=9;guard.y=8;
+    const tank=g.add(0,'tank',18,14);
+    const otherWorker=g.add(1,'harvester',19,17);
+    g.nextAI=g.time+8;
+    g.shoot(tank,otherWorker);
+    assert.equal(guard.order?.id,undefined,
+      faction+': cannot claim an escort that is too far from shot target');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': no eligible escort must not consume emergency cooldown');
+    assert.equal(worker.hp,worker.maxHp);
+  }
+}
+
 // An observed tank shot can be too far from an available assault-committed
 // escort to justify an emergency order. It must not consume the global
 // tactical cooldown and suppress a second, genuinely interceptable shooter.
