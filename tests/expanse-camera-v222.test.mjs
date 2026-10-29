@@ -44,6 +44,60 @@ assert.ok(g.ores.some(o=>o.x>34&&o.amount>0),
   'larger battlefield actually has resource deposits outside old playable area');
 assert.ok(g.walkable(45,45),'outer XL terrain is traversable');
 const cam={...g.camera};
+
+const wheel=listeners.get('world:wheel');
+assert.equal(typeof wheel,'function','mouse wheel listener exists');
+const worldCanvas=document.getElementById('world');
+const oldBounds=worldCanvas.getBoundingClientRect;
+worldCanvas.getBoundingClientRect=()=>({left:91,top:43,width:1024,height:700});
+g.camera={x:0,y:420,zoom:1};
+const wx=91+715,wy=43+245;
+const worldUnderCursor=()=>({
+  x:g.camera.x+(wx-91-g.w/2)/g.camera.zoom,
+  y:g.camera.y+(wy-43-g.h/2)/g.camera.zoom
+});
+const anchored=worldUnderCursor();
+let wheelPrevented=0;
+const wheelEvent=deltaY=>({clientX:wx,clientY:wy,deltaY,deltaX:0,
+  preventDefault(){wheelPrevented++;}});
+wheel(wheelEvent(-120));
+assert.ok(g.camera.zoom>1,'scroll up zooms in');
+assert.ok(Math.abs(worldUnderCursor().x-anchored.x)<1e-7,
+  'scroll up preserves terrain under cursor in X');
+assert.ok(Math.abs(worldUnderCursor().y-anchored.y)<1e-7,
+  'scroll up preserves terrain under cursor in Y');
+wheel(wheelEvent(120));
+assert.ok(Math.abs(worldUnderCursor().x-anchored.x)<1e-7,
+  'scroll down preserves terrain under cursor in X');
+assert.ok(Math.abs(worldUnderCursor().y-anchored.y)<1e-7,
+  'scroll down preserves terrain under cursor in Y');
+const unchanged=JSON.stringify(g.camera);
+wheel(wheelEvent(0));
+assert.equal(JSON.stringify(g.camera),unchanged,
+  'horizontal-only trackpad wheel must not zoom out');
+wheel(wheelEvent(NaN));
+assert.equal(JSON.stringify(g.camera),unchanged,'invalid wheel delta is ignored');
+g.camera.zoom=1.8;
+const maxZoom=JSON.stringify(g.camera);
+wheel(wheelEvent(-120));
+assert.equal(JSON.stringify(g.camera),maxZoom,'upper zoom bound does not drift');
+g.camera.zoom=.65;
+const minZoom=JSON.stringify(g.camera);
+wheel(wheelEvent(120));
+assert.equal(JSON.stringify(g.camera),minZoom,'lower zoom bound does not drift');
+g.camera={x:1088,y:1088,zoom:1};
+wheel(wheelEvent(-120));
+assert.ok(g.camera.x<=1088&&g.camera.x>=-1088&&
+  g.camera.y>=50&&g.camera.y<=1088,'zoom respects world camera bounds');
+g.pause();
+const pausedCamera=JSON.stringify(g.camera);
+wheel(wheelEvent(-120));
+assert.equal(JSON.stringify(g.camera),pausedCamera,'paused match does not zoom');
+g.pause();
+assert.ok(wheelPrevented>=8,'wheel events prevent browser scrolling');
+worldCanvas.getBoundingClientRect=oldBounds;
+g.camera={...cam};
+
 const pointer=(id,x,y,button=1)=>({pointerId:id,pointerType:'mouse',
   button,clientX:x,clientY:y,preventDefault:noop});
 g.pointerDown(pointer(1,400,300));
