@@ -1015,21 +1015,30 @@
       return heat;
     }
     directOctilePath(start,goal,walk){
-      // A clear eight-way grid corridor has the exact octile lower-bound
-      // length: take diagonal steps while both axes differ, then straight
-      // steps. Check both shoulders before every diagonal, as A* does.
-      // A blocked corridor returns null so normal A* finds a detour or
-      // reachable partial route; never skip weighted traffic/hazard searches.
-      const route=[];
-      let x=start.x,y=start.y;
-      while(x!==goal.x||y!==goal.y){
-        const dx=Math.sign(goal.x-x),dy=Math.sign(goal.y-y);
-        const nx=x+dx,ny=y+dy;
-        if(!walk(nx,ny)||(dx&&dy&&(!walk(nx,y)||!walk(x,ny))))return null;
-        route.push({x:nx,y:ny});
-        x=nx;y=ny;
-      }
-      return route;
+      // Both diagonal-first and straight-first corridors have the exact
+      // unobstructed octile cost. Preserve the original diagonal-first route;
+      // if blocked, try the other legal ordering before invoking A*.
+      const trace=straightFirst=>{
+        const route=[];
+        let x=start.x,y=start.y;
+        while(x!==goal.x||y!==goal.y){
+          let dx=Math.sign(goal.x-x),dy=Math.sign(goal.y-y);
+          if(straightFirst&&dx&&dy){
+            if(Math.abs(goal.x-x)>Math.abs(goal.y-y))dy=0;
+            else if(Math.abs(goal.y-y)>Math.abs(goal.x-x))dx=0;
+          }
+          const nx=x+dx,ny=y+dy;
+          if(!walk(nx,ny)||(dx&&dy&&(!walk(nx,y)||!walk(x,ny))))return null;
+          route.push({x:nx,y:ny});
+          x=nx;y=ny;
+        }
+        return route;
+      };
+      const direct=trace(false);
+      if(direct)return direct;
+      const dx=Math.abs(goal.x-start.x),dy=Math.abs(goal.y-start.y);
+      // Equal-axis and single-axis routes have no distinct second ordering.
+      return dx&&dy&&dx!==dy?trace(true):null;
     }
     findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
