@@ -111,4 +111,47 @@ assert.equal(returnRoute.refinery.id,soleDepot.id);
 assert.equal(returnRoute.x,soleDepot.x+1.9);
 assert.equal(returnRoute.y,soleDepot.y+1.3);
 
-console.log('PASS: blocked ore, reachable multi-refinery returns, cache invalidation and legacy saves');
+
+// An AI harvester should not repeatedly select a visible enemy's firing
+// position when a comparably near, reachable ore deposit is available.
+// Hidden enemies, player workers and single-deposit fallback remain unchanged.
+for(const faction of ['coalition','federation','psionic']){
+  g.newMatch({...settings,enemyFaction:faction});
+  g.entities=[];g.water=()=>false;g.time=100;
+  const worker=g.add(1,'harvester',14,14);
+  const attacker=g.add(0,'soldier',17,14);
+  g.ores=[
+    {x:16,y:14,amount:1200,max:1200},
+    {x:12,y:18,amount:1200,max:1200}
+  ];
+  assert.ok(g.sideCanSee(1,attacker),
+    faction+': only a genuinely visible enemy can mark ore as unsafe');
+  assert.equal(g.chooseHarvestDeposit(worker),1,
+    faction+': select nearby safe ore instead of a visible firing position');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': threat-aware ore selection must not add save fields');
+  const restored=g.entityById(worker.id);
+  assert.equal(g.chooseHarvestDeposit(restored),1,
+    faction+': the same ore choice survives legacy save/load');
+  const hostile=g.entityById(attacker.id);
+  hostile.x=20;
+  g.ores[0].x=17;
+  assert.equal(g.sideCanSee(1,hostile),false,
+    faction+': distant hostile is outside the worker sensor radius');
+  assert.equal(g.chooseHarvestDeposit(restored),0,
+    faction+': never avoid ore using an enemy hidden from AI sensors');
+  hostile.x=17;g.ores[0].x=16;g.ores=[g.ores[0]];
+  assert.equal(g.chooseHarvestDeposit(restored),0,
+    faction+': keep harvesting when every available deposit is contested');
+
+  g.entities=[];g.ores=[
+    {x:16,y:14,amount:1200,max:1200},
+    {x:12,y:18,amount:1200,max:1200}
+  ];
+  const playerWorker=g.add(0,'harvester',14,14);
+  g.add(1,'soldier',17,14);
+  assert.equal(g.chooseHarvestDeposit(playerWorker),0,
+    faction+': player ore selection retains original nearest-first behavior');
+}
+
+console.log('PASS: reachable ore, visible-threat avoidance, multi-refinery returns and saves');

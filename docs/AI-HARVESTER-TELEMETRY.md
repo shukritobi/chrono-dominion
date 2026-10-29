@@ -400,3 +400,10 @@ tests continue to guard the other allocation cases.
 This is a source-level tactical correctness improvement. Natural-match
 harvester losses, ore income and aircraft production must be measured
 separately; do not claim they improve solely because this test passes.
+
+
+## AI-visible ore deposit safety preference (29 October 2026)
+
+The harvester-loss diagnostics repeatedly found workers exposed to nearby hostile combat units while no friendly escort was in range. A limited **AI-only** ore-choice change now considers enemy units that the AI can *currently see* when selecting an empty truck's next deposit. If a reachable deposit within five extra tiles of the nearest candidate is outside every observed enemy's weapon range plus a short margin, it is tried before exposed deposits. Existing pathfinding still verifies reachability. When the alternatives are unreachable, too far away or all threatened, the original nearest-reachable behavior remains available.
+
+This does **not** retreat loaded trucks, teleport units, create escorts, read hidden enemy positions, change the player's harvesting or alter saved fields. The visible-threat test covers three factions, hidden contacts, fallback and v1 saves. The 720-second natural-match ore income and worker-loss results must be checked before claiming this reduces losses; even a safe deposit may have a dangerous approach route.

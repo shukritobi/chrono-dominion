@@ -1791,7 +1791,20 @@
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
           this.canOccupyUnit(e,ore.x,ore.y,true))
         .sort((a,b)=>a.d-b.d||a.index-b.index);
-      for(const {ore,index} of candidates){
+      // Enemy ore trucks may prefer a nearby reachable deposit outside the
+      // firing envelope of a CURRENTLY visible combat unit. Do not inspect
+      // hidden enemies, alter player harvesting, or travel across the map
+      // merely to avoid a contested patch. If safe ore is unreachable or too
+      // distant, retain the original nearest-reachable fallback.
+      const threats=e.owner===1?this.entities.filter(other=>
+        other.owner!==e.owner&&other.hp>0&&other.type==='unit'&&
+        other.kind!=='harvester'&&this.sideCanSee(e.owner,other)):[];
+      const nearestDistance=candidates[0]?.d??Infinity;
+      const safe=threats.length?candidates.filter(({ore,d})=>
+        d<=nearestDistance+5&&!threats.some(enemy=>
+          dist(enemy,ore)<=Math.min(7,Math.max(3.5,this.stat(enemy,'range')+1.2)))):[];
+      const ordered=safe.length?[...safe,...candidates.filter(c=>!safe.includes(c))]:candidates;
+      for(const {ore,index} of ordered){
         const path=this.findPath(e.x,e.y,ore.x,ore.y);
         const landing=path.at(-1)||{x:e.x,y:e.y};
         if(Math.hypot(landing.x-ore.x,landing.y-ore.y)<=1.05)return index;
