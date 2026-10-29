@@ -1015,32 +1015,39 @@
       return heat;
     }
     directOctilePath(start,goal,walk){
-      // Both diagonal-first and straight-first corridors have the exact
-      // unobstructed octile cost. Preserve the original diagonal-first route;
-      // if blocked, try the other legal ordering before invoking A*.
-      const trace=straightFirst=>{
+      // Diagonal-first, straight-first and balanced corridors all have the
+      // same unobstructed octile cost. Preserve existing first preferences;
+      // only try the balanced corridor if both edge orderings are blocked.
+      const spanX=Math.abs(goal.x-start.x),spanY=Math.abs(goal.y-start.y);
+      const major=Math.max(spanX,spanY),diagonals=Math.min(spanX,spanY);
+      const trace=mode=>{
         const route=[];
-        let x=start.x,y=start.y;
+        let x=start.x,y=start.y,step=0;
         while(x!==goal.x||y!==goal.y){
           let dx=Math.sign(goal.x-x),dy=Math.sign(goal.y-y);
-          if(straightFirst&&dx&&dy){
+          if(mode===1&&dx&&dy){
             if(Math.abs(goal.x-x)>Math.abs(goal.y-y))dy=0;
             else if(Math.abs(goal.y-y)>Math.abs(goal.x-x))dx=0;
+          }else if(mode===2&&dx&&dy&&
+            Math.floor((step+1)*diagonals/major)===Math.floor(step*diagonals/major)){
+            // Distribute the same optimal diagonal/straight steps across the
+            // middle of the corridor when both edge orderings are blocked.
+            if(spanX>spanY)dy=0;else dx=0;
           }
           const nx=x+dx,ny=y+dy;
           if(!walk(nx,ny)||(dx&&dy&&(!walk(nx,y)||!walk(x,ny))))return null;
           route.push({x:nx,y:ny});
-          x=nx;y=ny;
+          x=nx;y=ny;step++;
         }
         return route;
       };
-      const direct=trace(false);
+      const direct=trace(0);
       if(direct)return direct;
-      const dx=Math.abs(goal.x-start.x),dy=Math.abs(goal.y-start.y);
-      // Equal-axis and single-axis routes have no distinct second ordering.
-      return dx&&dy&&dx!==dy?trace(true):null;
+      // The central interleaving is another exact-cost octile corridor; only
+      // use it when both edge orderings fail. No obstacle/corner shortcuts.
+      return spanX&&spanY&&spanX!==spanY?(trace(1)||trace(2)):null;
     }
-    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false){
+    findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false,allowDirect=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
       // open list. During congestion replans it also prices nearby unit traffic.
       const start={x:clamp(Math.round(sx),1,WORLD_SIZE-2),y:clamp(Math.round(sy),1,WORLD_SIZE-2)};
@@ -1049,11 +1056,11 @@
       // thousands of coordinate strings per large-army path query.
       const key=(x,y)=>y*WORLD_SIZE+x,begin=key(start.x,start.y),finish=key(goal.x,goal.y);
       const walk=this.navigationWalk();
-      // Only ordinary player move orders opt into octile. On a fully clear
-      // corridor, avoid allocating the A* heap/maps; every returned step is
-      // an optimal legal eight-way grid move. AI, harvesters, recon, combat,
+      // Only ordinary unweighted ground move orders opt into a direct
+      // exact-cost corridor. AI ordinary movers may use it without changing
+      // their Euclidean A* heuristic if blocked. Harvesters, recon, combat,
       // traffic-priced recovery and hazard-weighted queries keep A* intact.
-      if(useOctile&&!avoidUnit&&!extraCost){
+      if((useOctile||allowDirect)&&!avoidUnit&&!extraCost){
         const direct=this.directOctilePath(start,goal,walk);
         if(direct)return direct;
       }
@@ -1369,6 +1376,8 @@
           (this.scoutPath(e,{x:tx,y:ty},new Map(),e.trafficRepath?e:null)?.path||[]):
           this.findPath(e.x,e.y,tx,ty,e.trafficRepath?e:null,null,
             e.owner===0&&e.order?.type==='move'&&
+            e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath,
+            e.owner===1&&e.order?.type==='move'&&
             e.kind!=='harvester'&&e.kind!=='recon'&&!e.trafficRepath);
         // Routine new move orders need an immediate first A* route, but
         // identical 1.6s refresh timers synchronize large formations. Spread

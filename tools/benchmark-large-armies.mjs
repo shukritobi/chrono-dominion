@@ -73,12 +73,15 @@ g.canOccupyUnit=(...args)=>{occupancyChecks++;return occupy(...args);};
 const ticks=40,dt=.2,start=performance.now(),tickMetrics=[];
 for(let i=0;i<ticks;i++){
   const beforePaths=pathQueries,beforeOccupancy=occupancyChecks,beforePathMs=pathTimeMs;
+  const beforeDirectAttempts=directRouteAttempts,beforeDirectHits=directRouteHits;
   const tickStart=performance.now();
   g.step(dt);
   tickMetrics.push({
     tick:i+1,simulatedSeconds:Math.round((i+1)*dt*100)/100,
     wallMs:performance.now()-tickStart,
     pathQueries:pathQueries-beforePaths,
+    directRouteAttempts:directRouteAttempts-beforeDirectAttempts,
+    directRouteHits:directRouteHits-beforeDirectHits,
     occupancyChecks:occupancyChecks-beforeOccupancy,
     pathMs:pathTimeMs-beforePathMs
   });

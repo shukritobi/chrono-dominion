@@ -31,6 +31,15 @@ try{
   assert.equal(result.slowestTicks.length,5,'retain five worst ticks for investigation');
   assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.pathQueries,0),result.pathQueries,
     'per-tick A* query counts must reconcile with total');
+  assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.directRouteAttempts,0),
+    result.directRouteAttempts,'per-tick shortcut attempts must reconcile');
+  assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.directRouteHits,0),
+    result.directRouteHits,'per-tick shortcut hits must reconcile');
+  assert.ok(result.tickProfile.every(t=>Number.isInteger(t.directRouteAttempts)&&
+    Number.isInteger(t.directRouteHits)&&t.directRouteHits>=0&&
+    t.directRouteHits<=t.directRouteAttempts&&
+    t.directRouteAttempts<=t.pathQueries),
+    'every tick must account for its own eligible route shortcuts');
   assert.equal(result.tickProfile.reduce((sum,t)=>sum+t.occupancyChecks,0),result.occupancyChecks,
     'per-tick occupancy checks must reconcile with total');
   assert.equal(result.ticksWithPathQueries,
