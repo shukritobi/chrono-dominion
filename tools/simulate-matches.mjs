@@ -13,6 +13,8 @@ import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {classifyAviationBlocker} from './ai-aviation-diagnostics.mjs';
+import {classifyRadarRecovery,newRadarLifecycle,observeRadarLifecycle}
+  from './ai-radar-recovery-diagnostics.mjs';
 import {newHarvesterTelemetry,observeHarvesterStep,
   observeHarvesterThreatSample,inspectHarvesterLoss} from './ai-harvester-telemetry.mjs';
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
@@ -164,18 +166,65 @@ function aviationSnapshot(g){
     queueKey:g.queues.find(q=>q.side===1)?.key??null
   };
 }
+function radarRecoverySnapshot(g){
+  const owned=kind=>g.entities.filter(e=>e.owner===1&&e.kind===kind&&e.hp>0);
+  const built=kind=>owned(kind).filter(e=>e.built);
+  const hq=owned('hq')[0];
+  const structures=g.entities.filter(e=>e.owner===1&&e.type==='building'&&e.hp>0&&e.built);
+  const workers=owned('harvester'),radars=owned('radar');
+  const credits=Math.floor(g.players[1].credits);
+  const powerLow=g.power(1).low;
+  const threatened=g.entities.some(e=>e.owner===0&&e.type==='unit'&&e.hp>0&&
+    e.kind!=='harvester'&&structures.some(b=>Math.hypot(b.x-e.x,b.y-e.y)<8)&&
+    g.sideCanSee(1,e));
+  // Mirror the AI's exact placement candidates without placing or charging.
+  let legalRadarSite=null;
+  if(!radars.length&&credits>=1550&&hq){
+    const origins=[hq,...structures.filter(b=>b.id!==hq.id)];
+    legalRadarSite=origins.some(origin=>{
+      for(let j=0;j<48;j++){
+        const angle=j*2.39996,radius=4.2+Math.floor(j/8)*.85;
+        const x=Math.round(origin.x+Math.cos(angle)*radius);
+        const y=Math.round(origin.y+Math.sin(angle)*radius);
+        if(g.canPlace(x,y,1))return true;
+      }
+      return false;
+    });
+  }
+  return {time:Number(g.time.toFixed(1)),credits,
+    radarOwned:radars.length>0,radarBuilt:radars.some(e=>e.built),
+    hqAlive:!!hq,generatorOwned:owned('generator').length>0,
+    refineryOwned:owned('refinery').length>0,refineryBuilt:built('refinery').length>0,
+    harvesters:workers.length,
+    harvesterQueued:g.queues.some(q=>q.side===1&&q.key==='harvester'),
+    criticalHarvester:built('refinery').length>0&&workers.length===1&&
+      workers[0].hp/workers[0].maxHp<.45&&!threatened&&!powerLow&&credits>=1550,
+    factoryOwned:owned('factory').length>0,turretsBuilt:built('turret').length,
+    powerLow,threatened,radarPrereq:g.prereq(1,'radar'),legalRadarSite};
+}
 function runScenario(map,difficulty,mi,di){
   const playerFaction=FACTIONS[(mi+di)%3];
   const enemyFaction=FACTIONS[(mi+di+1)%3];
   const {game:g}=createGame();
   g.newMatch({map,difficulty,playerFaction,enemyFaction,startingCredits:5000});
   const aiAviation={decisions:{},recent:[],maxCreditsAfterAirfield:0,airfieldDecisionTicks:0};
+  const aiRadarRecovery={decisions:{},recent:[]};
+  const radarLifecycle=newRadarLifecycle();
   let hadFactory=false,hadRadar=false;
   if(progression){
     // Record post-decision state at real planner ticks, without altering its logic.
     const originalRunAI=g.runAI.bind(g);
     g.runAI=()=>{
+      const radarBefore=radarRecoverySnapshot(g);
       const result=originalRunAI();
+      const radarAfter=radarRecoverySnapshot(g);
+      const radarReason=classifyRadarRecovery(radarBefore,radarAfter);
+      aiRadarRecovery.decisions[radarReason]=(aiRadarRecovery.decisions[radarReason]||0)+1;
+      aiRadarRecovery.recent.push({time:radarAfter.time,reason:radarReason,
+        creditsBefore:radarBefore.credits,creditsAfter:radarAfter.credits,
+        radarOwned:radarAfter.radarOwned,radarBuilt:radarAfter.radarBuilt,
+        legalRadarSite:radarBefore.legalRadarSite});
+      if(aiRadarRecovery.recent.length>12)aiRadarRecovery.recent.shift();
       const state=aviationSnapshot(g);
       hadFactory ||= state.hasFactory;
       hadRadar ||= state.hasRadar;
@@ -285,6 +334,8 @@ function runScenario(map,difficulty,mi,di){
       if(e.kind==='aircraft'&&firstAircraftDeployedAt===null)
         firstAircraftDeployedAt=Number(g.time.toFixed(1));
     }
+    if(progression)observeRadarLifecycle(radarLifecycle,
+      g.entities.filter(e=>e.owner===1&&e.kind==='radar'),g.time);
     if(firstAircraftQueuedAt===null&&g.queues.some(q=>q.side===1&&q.key==='aircraft'))
       firstAircraftQueuedAt=Number(g.time.toFixed(1));
     if(g.aiPlatoon){
@@ -343,7 +394,10 @@ function runScenario(map,difficulty,mi,di){
     reconAlive,reconLost:Math.max(0,observedRecon.size-reconAlive),
     airfieldSeen,aircraftBuilt:observedAircraft.size,aircraftAlive,
     aircraftLost:Math.max(0,observedAircraft.size-aircraftAlive),
-    aiMilestones,aiAviation,firstAircraftQueuedAt,firstAircraftDeployedAt};
+    aiMilestones,aiAviation,
+    aiRadarRecovery:{...aiRadarRecovery,losses:radarLifecycle.losses,
+      restorations:radarLifecycle.restorations},
+    firstAircraftQueuedAt,firstAircraftDeployedAt};
 }
 const results=[];
 for(let mi=0;mi<MAPS.length;mi++)for(let di=0;di<DIFFICULTIES.length;di++){
@@ -463,6 +517,10 @@ if(progression&&!options.includes('--json'))for(const r of results){
     aircraftQueuedAt:r.firstAircraftQueuedAt,
     maxCreditsAfterAirfield:r.aiAviation.maxCreditsAfterAirfield,
     blockers:r.aiAviation.decisions}));
+  console.log('AI RADAR RECOVERY SCENARIO:',JSON.stringify({map:r.map,
+    faction:r.enemyFaction,losses:r.aiRadarRecovery.losses,
+    restorations:r.aiRadarRecovery.restorations,
+    blockers:r.aiRadarRecovery.decisions,recent:r.aiRadarRecovery.recent}));
 }
 assert.equal(results.length,progression?3:9,
   'complete '+(progression?'three-faction natural progression':'three-map/three-difficulty')+' matrix');
@@ -473,6 +531,13 @@ if(progression){
     'each natural progression match must observe AI planning decisions');
   assert.ok(results.every(r=>r.aiAviation.recent.every(s=>Number.isFinite(s.credits)&&s.credits>=0&&Number.isFinite(s.time))),
     'aviation samples must have valid credits and time');
+  assert.ok(results.every(r=>Object.values(r.aiRadarRecovery.decisions)
+    .reduce((n,v)=>n+v,0)===Object.values(r.aiAviation.decisions)
+      .reduce((n,v)=>n+v,0)),
+    'radar recovery diagnostics must sample every real AI decision');
+  assert.ok(results.every(r=>r.aiRadarRecovery.losses.every(e=>
+    Number.isFinite(e.time)&&Number.isInteger(e.id))),
+    'radar losses must identify actual operational radar entities');
   assert.ok(report.summary.casesWithAIFactories>=1,
     'extended progression must reach an operational AI factory in at least one scenario');
 }
