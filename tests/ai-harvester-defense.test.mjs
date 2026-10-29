@@ -576,6 +576,7 @@ for(const faction of ['coalition','federation','psionic']){
       faction+': infantry response must not spend AI credits');
     guard.order=null;
     g.nextRadarResponseAt=0;
+    rifle.hp=0; // Isolate the second shooter from the prior visible threat.
     const specialist=g.add(0,'specialist',24,29);
     g.shoot(specialist,radar);
     assert.equal(guard.order?.id,specialist.id,
