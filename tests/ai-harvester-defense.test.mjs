@@ -245,4 +245,40 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entityById(scout.id)?.kind,'recon');
 }
 
+// Two threats may both be reachable, yet only one escort can reach the
+// second threat. Preserve that uniquely eligible escort instead of assigning
+// the nearest tank to siege and leaving its partner unable to defend worker #2.
+for(const faction of ['coalition','federation','psionic']){
+  const {g,hq,worker,guard,enemy}=game(faction);
+  enemy.hp=0;
+  guard.x=14;guard.y=16;
+  const siegeOnly=g.add(1,'tank',12,14);
+  const scout=g.add(1,'recon',18,14);
+  const siege=g.add(0,'heavy',20,14);
+  const otherWorker=g.add(1,'harvester',18,22);
+  const rifle=g.add(0,'soldier',18,23);
+  assert.ok(g.sideCanSee(1,siege)&&g.sideCanSee(1,rifle),
+    faction+': both attackers are genuinely visible to AI sensors');
+  assert.ok(Math.hypot(guard.x-rifle.x,guard.y-rifle.y)<=8.5,
+    faction+': the versatile escort can reach the second attacker');
+  assert.ok(Math.hypot(siegeOnly.x-rifle.x,siegeOnly.y-rifle.y)>8.5,
+    faction+': the other tank cannot reach the second attacker');
+  assert.ok(Math.hypot(siegeOnly.x-siege.x,siegeOnly.y-siege.y)<=8.5,
+    faction+': the second tank can instead engage siege');
+  const assignments=g.assignAIEngagements([guard,siegeOnly],[],hq);
+  assert.equal(assignments.size,2,
+    faction+': use both escorts to cover both serviceable threats');
+  assert.equal(assignments.get(siegeOnly.id),siege.id,
+    faction+': siege-only tank must be assigned to the siege threat');
+  assert.equal(assignments.get(guard.id),rifle.id,
+    faction+': unique versatile escort must protect the second worker');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': both distinct attack orders survive legacy saves');
+  assert.equal(g.entityById(siegeOnly.id)?.order?.id,siege.id);
+  assert.equal(g.entityById(guard.id)?.order?.id,rifle.id);
+  assert.equal(g.entityById(worker.id)?.kind,'harvester');
+  assert.equal(g.entityById(otherWorker.id)?.kind,'harvester');
+  assert.equal(g.entityById(scout.id)?.kind,'recon');
+}
+
 console.log('PASS: bounded, fog-honest AI harvester escorts and base-first defense across three factions');
