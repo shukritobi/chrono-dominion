@@ -1015,9 +1015,9 @@
       return heat;
     }
     directOctilePath(start,goal,walk){
-      // Diagonal-first, straight-first and balanced corridors all have the
-      // same unobstructed octile cost. Preserve existing first preferences;
-      // only try the balanced corridor if both edge orderings are blocked.
+      // Diagonal-first, straight-first, interleaved and centered corridors
+      // all have exact unobstructed octile cost. Try alternatives only after
+      // the preceding corridor fails; never bypass diagonal corner checks.
       const spanX=Math.abs(goal.x-start.x),spanY=Math.abs(goal.y-start.y);
       const major=Math.max(spanX,spanY),diagonals=Math.min(spanX,spanY);
       const trace=mode=>{
@@ -1030,8 +1030,12 @@
             else if(Math.abs(goal.y-y)>Math.abs(goal.x-x))dx=0;
           }else if(mode===2&&dx&&dy&&
             Math.floor((step+1)*diagonals/major)===Math.floor(step*diagonals/major)){
-            // Distribute the same optimal diagonal/straight steps across the
-            // middle of the corridor when both edge orderings are blocked.
+            // Interleave diagonal and straight steps across the corridor.
+            if(spanX>spanY)dy=0;else dx=0;
+          }else if(mode===3&&dx&&dy&&
+            step<Math.floor((major-diagonals)/2)){
+            // A centered diagonal band: half the straight-only steps first,
+            // then diagonals, then the rest. Still exact-cost octile routing.
             if(spanX>spanY)dy=0;else dx=0;
           }
           const nx=x+dx,ny=y+dy;
@@ -1043,9 +1047,10 @@
       };
       const direct=trace(0);
       if(direct)return direct;
-      // The central interleaving is another exact-cost octile corridor; only
-      // use it when both edge orderings fail. No obstacle/corner shortcuts.
-      return spanX&&spanY&&spanX!==spanY?(trace(1)||trace(2)):null;
+      // Additional exact-cost corridors can avoid local obstacles without
+      // invoking A*. Every step, including diagonal shoulders, is checked.
+      return spanX&&spanY&&spanX!==spanY?
+        (trace(1)||trace(2)||trace(3)):null;
     }
     findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false,allowDirect=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large

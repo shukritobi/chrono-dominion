@@ -153,12 +153,44 @@ for(const point of balanced){
     'balanced route cannot clip a blocked diagonal shoulder');
   previousBalanced=point;
 }
+// A centered diagonal band is a fourth optimal corridor. All three older
+// routes are blocked, but a centered route with straight steps at both ends
+// remains clear. The same geometry must work for X-major and Y-major orders.
+const verifyCentered=(route,sx,sy,tx,ty,label)=>{
+  assert.equal(route.length,36,label+': exact octile step count');
+  assert.equal(route.at(-1)?.x,tx,label+': reaches target X');
+  assert.equal(route.at(-1)?.y,ty,label+': reaches target Y');
+  let prev={x:sx,y:sy};
+  for(const p of route){
+    assert.ok(g.walkable(p.x,p.y),label+': traverses only walkable cells');
+    const dx=Math.abs(p.x-prev.x),dy=Math.abs(p.y-prev.y);
+    assert.ok(dx<=1&&dy<=1&&dx+dy>0,label+': adjacent steps');
+    if(dx&&dy)assert.ok(g.walkable(p.x,prev.y)&&g.walkable(prev.x,p.y),
+      label+': diagonal shoulders must be clear');
+    prev=p;
+  }
+};
+g.walkable=(x,y)=>openTile(x,y)&&
+  !(x===9&&y===9)&&!(x===11&&y===4)&&!(x===6&&y===5);
+const centeredX=g.findPath(4,4,40,30,null,null,true);
+assert.equal(shortcutAttempts,5);
+assert.equal(shortcutHits,5,'centered X-major corridor avoids full A*');
+verifyCentered(centeredX,4,4,40,30,'X-major centered');
+assert.ok(centeredX.some(p=>p.x===9&&p.y===4),
+  'centered route starts with half the straight-only steps');
+g.walkable=(x,y)=>openTile(x,y)&&
+  !(x===9&&y===9)&&!(x===4&&y===11)&&!(x===5&&y===6);
+const centeredY=g.findPath(4,4,30,40,null,null,true);
+assert.equal(shortcutAttempts,6);
+assert.equal(shortcutHits,6,'centered Y-major corridor avoids full A*');
+verifyCentered(centeredY,4,4,30,40,'Y-major centered');
+
 // Blocking both possible first steps forces the original A* fallback.
 g.walkable=(x,y)=>openTile(x,y)&&
   !(x===5&&y===5)&&!(x===5&&y===4);
 const obstructed=g.findPath(4,4,40,30,null,null,true);
-assert.equal(shortcutAttempts,5);
-assert.equal(shortcutHits,4,'all three blocked corridors must fall back to A*');
+assert.equal(shortcutAttempts,7);
+assert.equal(shortcutHits,6,'all four blocked corridors must fall back to A*');
 assert.equal(obstructed.at(-1)?.x,40);
 assert.equal(obstructed.at(-1)?.y,30);
 let previousBlocked={x:4,y:4};
@@ -176,7 +208,7 @@ const weighted=g.findPath(4,4,40,30,null,
 assert.ok(!weighted.some(p=>p.x===5&&p.y===5),
   'hazard costs cannot be bypassed by the clear-corridor shortcut');
 g.findPath(4,4,40,30);
-assert.equal(shortcutAttempts,5,'weighted and non-opt-in searches use A*');
+assert.equal(shortcutAttempts,7,'weighted and non-opt-in searches use A*');
 g.directOctilePath=originalShortcut;
 
 // AI ordinary move orders may use a clear exact-cost route without changing
