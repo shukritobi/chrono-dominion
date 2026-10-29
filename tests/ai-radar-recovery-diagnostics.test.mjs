@@ -3,7 +3,7 @@ import {classifyRadarRecovery as classify,newRadarLifecycle,observeRadarLifecycl
   from '../tools/ai-radar-recovery-diagnostics.mjs';
 const ready={radarOwned:false,radarBuilt:false,hqAlive:true,
   generatorOwned:true,powerLow:false,refineryOwned:true,refineryBuilt:true,
-  harvesters:1,criticalHarvester:false,threatened:false,turretsBuilt:0,
+  harvesters:1,harvesterQueued:false,criticalHarvester:false,threatened:false,turretsBuilt:0,
   factoryOwned:true,credits:1550,radarPrereq:true,legalRadarSite:true};
 const cases=[
   [{radarBuilt:true},'radar-operational'],
@@ -16,6 +16,8 @@ const cases=[
   [{threatened:true},'base-defense-priority'],
   [{threatened:true,credits:899},'funding-shortfall'],
   [{harvesters:0},'harvester-recovery-priority'],
+  [{harvesters:0,credits:160},'harvester-replacement-unaffordable'],
+  [{harvesters:0,credits:160,harvesterQueued:true},'harvester-replacement-queued'],
   [{criticalHarvester:true},'critical-harvester-priority'],
   [{factoryOwned:false},'factory-recovery-priority'],
   [{credits:1549},'funding-shortfall'],
