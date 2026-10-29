@@ -246,3 +246,24 @@ identical Euclidean fallback. Only merge if the complete economy, progression,
 aviation and XL tests pass. More shortcut hits do not necessarily imply lower
 wall time or fewer path requests; use the per-tick counts and matched CI
 reports to interpret the effect.
+
+## Centered optimal-corridor shortcut (29 October 2026)
+
+Ordinary unweighted ground movement already tries diagonal-first, straight-first
+and evenly interleaved exact-cost routes before invoking A*. A centered diagonal
+band is an additional deterministic shortest-route candidate: it takes half of
+the necessary straight-only steps first, the diagonal steps next, then the
+remaining straight-only steps. This can pass between obstacles that block the
+previous three candidates without changing octile travel cost.
+
+The new corridor is **only attempted after all previous candidates fail** and
+uses the same terrain, building and diagonal-shoulder collision probes. A*
+remains the fallback. Weighted, traffic-priced, harvester, reconnaissance and
+combat routes keep their prior behavior; saves and art are unchanged. The XL
+navigation regression covers both X-major and Y-major corridors where all
+three earlier candidates are blocked, plus forced A* fallback and corner safety.
+
+Acceptance requires the full PR CI suite (nine balance scenarios, three natural
+progression matches, economy guard, aviation tests, and 120-unit benchmark).
+Compare direct-route hits and per-tick A* work with the prior CI artifact;
+**a shortcut hit is not a measured browser FPS improvement**.
