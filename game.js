@@ -188,6 +188,13 @@
         if(this.state==='playing'&&k==='c'){e.preventDefault();this.centerSelection();return;}
         this.keys.add(k);if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(!this.cancelCurrentMode()&&(this.state==='playing'||this.state==='paused'))this.pause();}});
       window.addEventListener('keyup',e=>this.keys.delete(e.key.toLowerCase()));
+      // A lost keyup after switching windows can otherwise pan the battlefield
+      // indefinitely. Discard active mouse/touch gestures as well.
+      const releaseInput=()=>{this.keys.clear();this.resetTouch();};
+      window.addEventListener('blur',releaseInput);
+      document.addEventListener?.('visibilitychange',()=>{
+        if(document.hidden)releaseInput();
+      });
       this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
       this.canvas.addEventListener('pointerdown',e=>this.pointerDown(e));
       this.canvas.addEventListener('pointermove',e=>this.pointerMove(e));
@@ -317,8 +324,8 @@
       control.title=on?'Mute game sounds and soundtrack':'Enable game sounds and soundtrack (off by default)';
     }
     showMenu(which){['mainMenu','skirmishMenu','howMenu','pauseMenu','resultMenu'].forEach(id=>$(id).classList.toggle('hidden',id!==which));$('overlay').classList.remove('hidden');}
-    returnMenu(){this.audio?.setScene('menu');this.state='menu';this.resetTouch();this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
-    pause(){if(this.state==='playing'){this.audio?.setScene('pause');this.resetTouch();this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';this.audio?.setScene('battle');$('overlay').classList.add('hidden');}}
+    returnMenu(){this.audio?.setScene('menu');this.state='menu';this.keys.clear();this.resetTouch();this.selected=[];this.placing=null;this.showMenu('mainMenu');this.updateSaveButtons();this.updateUI(true);}
+    pause(){if(this.state==='playing'){this.audio?.setScene('pause');this.keys.clear();this.resetTouch();this.state='paused';this.showMenu('pauseMenu');this.updateSaveButtons();}else if(this.state==='paused'){this.state='playing';this.audio?.setScene('battle');$('overlay').classList.add('hidden');}}
     hasSave(){
       try{return typeof localStorage!=='undefined'&&!!localStorage.getItem(SAVE_KEY);}
       catch(err){return false;}
@@ -489,7 +496,7 @@
     newMatch(s){
       if(s.map==='custom'&&!MAPS.custom){this.notify('Open Map Forge and save a valid battlefield first');return false;}
       WORLD_SIZE=mapSize(s.map);
-      this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextHarvesterResponseAt=0;this.unservedHarvesterShooterId=0;this.nextUi=0;this.nextFog=0;this.nextId=1;
+      this.keys.clear();this.resetTouch();this.settings={...s,startingCredits:Number(s.startingCredits)||5000};this.state='playing';this.time=0;this.nextAI=6;this.nextHarvesterResponseAt=0;this.unservedHarvesterShooterId=0;this.nextUi=0;this.nextFog=0;this.nextId=1;
       this.entities=[];this.ores=[];this.particles=[];this.projectiles=[];this.queues=[];this.unitBuckets=null;this.buildingBuckets=null;this.sensorBuckets=null;this.fog=[];this.selected=[];this.groups={};this.attackMoveArmed=false;this.abilityArmedId=null;this.placing=null;this.tab='structures';
       this.players=[{faction:s.playerFaction,credits:this.settings.startingCredits},{faction:s.enemyFaction,credits:this.settings.startingCredits}];
       this.stats=[this.newStats(),this.newStats()];this.intel=[[],[]];this.aiExplored=new Set();this.reconAlerts=new Map();this.battleEvents=[];this.damageAlerts=new Map();this.nextBattleEventId=1;this.aiPlatoon=null;this.aiSupportPlatoon=null;this.aiAssaultProgress=new Map();this.aiAssaultReroutes=0;this.aiSiegeOrders=0;this.aiSiegeHits=0;this.aiRallyResumes=0;this.trafficYieldCount=0;this.laneReservations=new Map();
