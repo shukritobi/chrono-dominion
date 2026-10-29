@@ -2936,7 +2936,15 @@
       // before buying optional technology, factory, radar or aviation.
       // Brownout recovery and observed base defense still take precedence.
       const oreRecoveryNeeded=built('refinery')&&!owned('harvester').length;
-      const aviationReady=!oreRecoveryNeeded&&!owned('airfield').length&&built('factory')&&
+      // A critically damaged last worker risks total income loss. When safe
+      // and solvent, buy one paid backup even after the early expansion window.
+      // Preserve the emergency generator reserve and all threat priorities.
+      const soleHarvester=owned('harvester');
+      const criticalHarvester=built('refinery')&&soleHarvester.length===1&&
+        soleHarvester[0].hp/soleHarvester[0].maxHp<.45&&
+        !threatened&&!shortage&&
+        me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
+      const aviationReady=!oreRecoveryNeeded&&!criticalHarvester&&!owned('airfield').length&&built('factory')&&
         built('radar')&&this.time>130;
       // Once an airfield is purchased, keep the aviation budget intact until
       // the first two planes are deployed. Never bank at the expense of a
@@ -2945,7 +2953,7 @@
       // falls before the first sortie, keep banking for air support instead
       // of draining the budget on optional scouts, turrets or specialists.
       // A completely lost ground screen still permits normal recruitment.
-      const aviationInvestment=owned('airfield').length>0&&built('radar')&&
+      const aviationInvestment=!criticalHarvester&&owned('airfield').length>0&&built('radar')&&
         owned('aircraft').length<2&&owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>=1&&!threatened;
       // An unfinished generator already represents paid brownout recovery.
@@ -2959,7 +2967,7 @@
       // Do not strand a lost harvester behind an optional building purchase:
       // an Air Command would leave only 650 of the 900 credits needed to
       // restore ore income at the usual 2,400-credit investment threshold.
-      else if(oreRecoveryNeeded)choice=null;
+      else if(oreRecoveryNeeded||criticalHarvester)choice=null;
       else if(!owned('factory').length)choice='factory';
       // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
       // bases after the second harvester purchase. Keep a generator reserve.
@@ -3016,7 +3024,7 @@
       // Radar unlocks Air Command after 130 seconds; banking only after
       // 240 left a 110-second window for optional recruitment to drain
       // otherwise viable radar funding. Keep the same defensive overrides.
-      const savingForRadar=this.time>130&&!built('radar')&&
+      const savingForRadar=!criticalHarvester&&this.time>130&&!built('radar')&&
         built('factory')&&built('refinery')&&
         owned('harvester').length>0&&
         owned('tank').length+owned('heavy').length>0&&
@@ -3038,6 +3046,7 @@
         !savingForAirfield&&!savingForAircraft&&!savingForRadar){
         let unit='soldier';
         if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        else if(criticalHarvester)unit='harvester';
         else if(expandingOreEconomy)unit='harvester';
         else if(aviationInvestment&&built('airfield')&&!shortage&&
           me.credits>=UNITS.aircraft.cost+BUILD.generator.cost)unit='aircraft';
