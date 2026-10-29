@@ -85,10 +85,11 @@ g.camera.zoom=.65;
 const minZoom=JSON.stringify(g.camera);
 wheel(wheelEvent(120));
 assert.equal(JSON.stringify(g.camera),minZoom,'lower zoom bound does not drift');
-g.camera={x:1088,y:1088,zoom:1};
+const edge=g.worldSize*32;
+g.camera={x:edge,y:edge,zoom:1};
 wheel(wheelEvent(-120));
-assert.ok(g.camera.x<=1088&&g.camera.x>=-1088&&
-  g.camera.y>=50&&g.camera.y<=1088,'zoom respects world camera bounds');
+assert.ok(g.camera.x<=edge&&g.camera.x>=-edge&&
+  g.camera.y>=50&&g.camera.y<=edge,'zoom respects world camera bounds');
 g.pause();
 const pausedCamera=JSON.stringify(g.camera);
 wheel(wheelEvent(-120));
