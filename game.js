@@ -1665,7 +1665,12 @@
         shot.prevX=shot.x;shot.prevY=shot.y;
         shot.age+=dt;
         const target=this.entityById(shot.targetId);
-        if(!target||target.owner===shot.owner||shot.age>8){shot.expired=true;continue;}
+        // Multiple shots may arrive in one tick, before dead entities are
+        // removed at the end of step(). Discard follow-up impacts so a corpse
+        // cannot award extra veterancy, damage or duplicate hit effects.
+        if(!target||target.hp<=0||target.owner===shot.owner||shot.age>8){
+          shot.expired=true;continue;
+        }
         const distance=dist(shot,target);
         if(distance>shot.speed*dt+.25){
           const scale=shot.speed*dt/distance;
