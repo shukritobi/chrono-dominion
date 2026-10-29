@@ -210,3 +210,23 @@ measured speedup or browser FPS benefit.
 The player-only, unweighted octile shortcut previously tested only a diagonal-first corridor. An obstacle on that corridor could force full A* even when a different, equally short straight-first corridor was unobstructed. The shortcut now checks the original diagonal-first route first, then tries the straight-first octile ordering **only if both axes differ and the first route is blocked**. Every visited tile and both diagonal shoulders are checked against the same fresh walkability snapshot. If both routes are blocked, normal A* retains its full obstacle detour and partial-path behavior. Equal-axis and single-axis paths do not repeat an identical attempt.
 
 Weighted paths, AI, harvesters, reconnaissance, combat, traffic recovery, saved fields and unit costs remain unchanged. The XL regression covers X-major and Y-major alternatives, exact octile step counts, corner safety, two-blocker fallback, weighted-route exclusions and legacy save/load. The 120-unit benchmark already records direct-route attempts/hits; increased real-world hit rate is **not established** until its results are inspected. This does not eliminate the initial 124 movement orders or establish browser FPS improvement.
+
+## Balanced optimal player-route corridor (29 October 2026)
+
+After the diagonal-first and straight-first clear-route shortcuts, ordinary
+player move orders now try one **balanced** arrangement of the same number of
+orthogonal and diagonal steps before falling back to A*. It remains an exact
+minimum-cost octile route and checks every destination tile and both shoulders
+of every diagonal. This is intentionally limited to the existing unweighted,
+non-traffic player move shortcut: AI, harvesters, recon, attack-move, weighted
+hazards and traffic recovery continue to use their established routing.
+
+The XL navigation regression places separate obstacles in the two edge
+corridors while leaving the balanced corridor open, then verifies its optimal
+length and corner safety. It also checks the A* fallback when all three
+corridors fail, and preserves legacy save/load tests. The 120-unit benchmark
+now records shortcut attempts and hits **per tick**, so the initial 124-query
+burst can be separated into cheap successful shortcuts and full A* fallbacks.
+Total path request count is not expected to drop merely because a request
+uses the shortcut. Compare CI artifacts before claiming a measured speedup;
+headless Node timings are not browser FPS.

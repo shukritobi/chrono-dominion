@@ -81,8 +81,8 @@ for(const route of [nearGate,costlyGate]){
 }
 
 // An ordinary player move can use an exact-cost octile corridor. If
-// diagonal-first is blocked, the alternate straight-first corridor is still
-// optimal; if both are blocked, fall back to the original full A* search.
+// diagonal-first is blocked, straight-first remains optimal; a balanced
+// interleaving can also avoid both edge corridors. A* handles other obstacles.
 let shortcutAttempts=0,shortcutHits=0;
 const originalShortcut=g.directOctilePath.bind(g);
 g.directOctilePath=(...args)=>{
@@ -130,11 +130,35 @@ assert.equal(shortcutHits,3,'Y-major corridor uses alternate shortcut');
 assert.equal(verticalAlternate.length,36);
 assert.equal(verticalAlternate.at(-1)?.x,30);
 assert.equal(verticalAlternate.at(-1)?.y,40);
+// The diagonal-first route crosses (10,10), straight-first crosses (10,4).
+// A balanced exact-cost route crosses (10,8) instead of either blocked tile.
+g.walkable=(x,y)=>openTile(x,y)&&
+  !(x===10&&y===10)&&!(x===10&&y===4);
+const balanced=g.findPath(4,4,40,30,null,null,true);
+assert.equal(shortcutAttempts,4);
+assert.equal(shortcutHits,4,'balanced corridor avoids full A*');
+assert.equal(balanced.length,36,'balanced route retains optimal octile cost');
+assert.equal(balanced.at(-1)?.x,40);
+assert.equal(balanced.at(-1)?.y,30);
+assert.ok(balanced.some(p=>p.x===10&&p.y===8),
+  'balanced route crosses the unobstructed central corridor');
+let previousBalanced={x:4,y:4};
+for(const point of balanced){
+  assert.ok(g.walkable(point.x,point.y),'balanced route stays on walkable tiles');
+  const dx=Math.abs(point.x-previousBalanced.x);
+  const dy=Math.abs(point.y-previousBalanced.y);
+  assert.ok(dx<=1&&dy<=1&&dx+dy>0,'balanced route remains adjacent');
+  if(dx&&dy)assert.ok(g.walkable(point.x,previousBalanced.y)&&
+    g.walkable(previousBalanced.x,point.y),
+    'balanced route cannot clip a blocked diagonal shoulder');
+  previousBalanced=point;
+}
+// Blocking both possible first steps forces the original A* fallback.
 g.walkable=(x,y)=>openTile(x,y)&&
   !(x===5&&y===5)&&!(x===5&&y===4);
 const obstructed=g.findPath(4,4,40,30,null,null,true);
-assert.equal(shortcutAttempts,4);
-assert.equal(shortcutHits,3,'two blocked corridors must fall back to A*');
+assert.equal(shortcutAttempts,5);
+assert.equal(shortcutHits,4,'all three blocked corridors must fall back to A*');
 assert.equal(obstructed.at(-1)?.x,40);
 assert.equal(obstructed.at(-1)?.y,30);
 let previousBlocked={x:4,y:4};
@@ -152,7 +176,7 @@ const weighted=g.findPath(4,4,40,30,null,
 assert.ok(!weighted.some(p=>p.x===5&&p.y===5),
   'hazard costs cannot be bypassed by the clear-corridor shortcut');
 g.findPath(4,4,40,30);
-assert.equal(shortcutAttempts,4,'weighted and non-opt-in searches use A*');
+assert.equal(shortcutAttempts,5,'weighted and non-opt-in searches use A*');
 g.directOctilePath=originalShortcut;
 
 // A genuinely unreachable target still returns a safe partial route.

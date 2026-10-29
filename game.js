@@ -1015,30 +1015,37 @@
       return heat;
     }
     directOctilePath(start,goal,walk){
-      // Both diagonal-first and straight-first corridors have the exact
-      // unobstructed octile cost. Preserve the original diagonal-first route;
-      // if blocked, try the other legal ordering before invoking A*.
-      const trace=straightFirst=>{
+      // Diagonal-first, straight-first and balanced corridors all have the
+      // same unobstructed octile cost. Preserve existing first preferences;
+      // only try the balanced corridor if both edge orderings are blocked.
+      const spanX=Math.abs(goal.x-start.x),spanY=Math.abs(goal.y-start.y);
+      const major=Math.max(spanX,spanY),diagonals=Math.min(spanX,spanY);
+      const trace=mode=>{
         const route=[];
-        let x=start.x,y=start.y;
+        let x=start.x,y=start.y,step=0;
         while(x!==goal.x||y!==goal.y){
           let dx=Math.sign(goal.x-x),dy=Math.sign(goal.y-y);
-          if(straightFirst&&dx&&dy){
+          if(mode===1&&dx&&dy){
             if(Math.abs(goal.x-x)>Math.abs(goal.y-y))dy=0;
             else if(Math.abs(goal.y-y)>Math.abs(goal.x-x))dx=0;
+          }else if(mode===2&&dx&&dy&&
+            Math.floor((step+1)*diagonals/major)===Math.floor(step*diagonals/major)){
+            // Distribute the same optimal diagonal/straight steps across the
+            // middle of the corridor when both edge orderings are blocked.
+            if(spanX>spanY)dy=0;else dx=0;
           }
           const nx=x+dx,ny=y+dy;
           if(!walk(nx,ny)||(dx&&dy&&(!walk(nx,y)||!walk(x,ny))))return null;
           route.push({x:nx,y:ny});
-          x=nx;y=ny;
+          x=nx;y=ny;step++;
         }
         return route;
       };
-      const direct=trace(false);
+      const direct=trace(0);
       if(direct)return direct;
-      const dx=Math.abs(goal.x-start.x),dy=Math.abs(goal.y-start.y);
-      // Equal-axis and single-axis routes have no distinct second ordering.
-      return dx&&dy&&dx!==dy?trace(true):null;
+      // The central interleaving is another exact-cost octile corridor; only
+      // use it when both edge orderings fail. No obstacle/corner shortcuts.
+      return spanX&&spanY&&spanX!==spanY?(trace(1)||trace(2)):null;
     }
     findPath(sx,sy,tx,ty,avoidUnit=null,extraCost=null,useOctile=false){
       // A* uses a binary minimum heap to avoid repeatedly scanning a large
