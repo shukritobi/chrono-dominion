@@ -485,4 +485,77 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(g.entityById(guard.id)?.order?.id,close.id);
 }
 
-console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response and impact fallback across three factions');
+
+
+// An observed tank firing at an operational AI radar is a technology-critical
+// base attack. Respond locally at launch, without accelerating the strategic
+// planner or reading hidden shooter coordinates from projectile metadata.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;
+    guard.x=19;guard.y=24;
+    const radar=g.add(1,'radar',24,24);
+    const tank=g.add(0,'tank',24,28);
+    assert.ok(g.sideCanSee(1,tank),faction+': radar attacker must be observed');
+    g.nextAI=g.time+8;
+    const hp=radar.hp,credits=g.players[1].credits;
+    g.shoot(tank,radar);
+    assert.equal(radar.hp,hp,faction+': launch does not deal premature damage');
+    assert.equal(guard.order?.id,tank.id,
+      faction+': local defender intercepts visible radar attacker at launch');
+    assert.equal(g.nextRadarResponseAt,g.time+4,
+      faction+': successful radar response uses a four-second cooldown');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': radar response does not advance the economic AI scheduler');
+    assert.equal(g.players[1].credits,credits,
+      faction+': tactical response cannot spend production credits');
+    guard.order=null;
+    g.updateProjectiles(1);
+    assert.ok(radar.hp<hp,faction+': actual projectile deals ordinary damage');
+    assert.equal(guard.order,null,
+      faction+': impact inside cooldown must not duplicate the assignment');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': radar engagement preserves legacy save compatibility');
+    assert.equal(g.nextRadarResponseAt,0,
+      faction+': radar cooldown is transient after load');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=8;guard.y=10;
+    const radar=g.add(1,'radar',10,10);
+    const heavy=g.add(0,'heavy',16,10);
+    g.nextAI=g.time+8;
+    assert.equal(g.sideCanSee(1,heavy),false,
+      faction+': distant siege shooter must initially be hidden');
+    g.shoot(heavy,radar);
+    assert.equal(guard.order?.id,undefined,
+      faction+': hidden projectile launch cannot reveal a shooter');
+    assert.equal(g.nextRadarResponseAt,0,
+      faction+': hidden shooter must not consume radar response cooldown');
+    g.add(1,'recon',13,10);
+    assert.ok(g.sideCanSee(1,heavy),
+      faction+': actual scout now reveals siege shooter');
+    g.updateProjectiles(1.5);
+    assert.equal(guard.order?.id,heavy.id,
+      faction+': impact fallback intercepts a newly visible attacker');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=19;guard.y=24;
+    const radar=g.add(1,'radar',24,24);
+    const rifle=g.add(0,'soldier',24,28);
+    g.nextAI=g.time+8;
+    g.shoot(rifle,radar);
+    assert.equal(g.nextRadarResponseAt,0,
+      faction+': ordinary infantry shots do not trigger tank-only emergency');
+    assert.equal(guard.order?.id,undefined);
+    const tank=g.add(0,'tank',24,29);
+    const factory=g.add(1,'factory',24,25);
+    g.shoot(tank,factory);
+    assert.equal(g.nextRadarResponseAt,0,
+      faction+': non-radar infrastructure cannot trigger radar response');
+  }
+}
+
+console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, radar defense and impact fallback across three factions');
