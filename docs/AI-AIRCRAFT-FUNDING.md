@@ -20,6 +20,24 @@ The two-tank requirement still applies when saving for an **unbuilt** Air Comman
 
 The expanded `tests/ai-aircraft-funding.test.mjs` verifies all three factions at 1,800 and 2,250 credits after losing one tank, paid deployment, saving for the second plane, and zero-tank recruitment. The 720-second progression laboratory remains the arbiter of **actual natural-match deployment**; do not infer a guaranteed improvement from the isolated regression alone.
 
+## Base-defense priority at the Air Command purchase threshold (29 October 2026)
+
+The AI already suspended **saving** for an Air Command while a sensor-visible
+enemy unit was within eight tiles of an operational friendly building. However,
+once credits reached the 1,750-credit Air Command price plus the 650-credit
+generator reserve, the **purchase** branch no longer checked that threat.
+An AI could therefore build optional aviation infrastructure while its base
+was under an observed attack, despite its own defensive recruitment policy.
+
+The paid Air Command purchase now requires no such observed base invasion.
+Existing emergency turret construction and ordinary ground recruitment remain
+eligible during an attack. When the attacker dies or retreats, the normal
+aviation purchase threshold and prerequisite checks apply again. This changes
+neither fog-of-war detection nor unit/building costs, saved fields, or assets.
+The three-faction regression checks both the contested 2,400-credit boundary
+and resumption after a threat disappears. This is a narrowly scoped tactical
+priority fix, not evidence of improved survival in natural matches.
+
 ## Recover ore income before optional infrastructure (29 October 2026)
 
 **Verified source failure mode:** when the AI has a completed refinery but
