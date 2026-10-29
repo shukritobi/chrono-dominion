@@ -124,10 +124,15 @@ for(const faction of ['coalition','federation','psionic']){
     {x:16,y:14,amount:1200,max:1200},
     {x:13,y:17,amount:1200,max:1200}
   ];
+  worker.hp=worker.maxHp*.6;
   assert.ok(g.sideCanSee(1,attacker),
     faction+': only a genuinely visible enemy can mark ore as unsafe');
   assert.equal(g.chooseHarvestDeposit(worker),1,
-    faction+': select nearby safe ore instead of a visible firing position');
+    faction+': wounded truck under visible fire should select nearby safe ore');
+  worker.hp=worker.maxHp;
+  assert.equal(g.chooseHarvestDeposit(worker),0,
+    faction+': healthy trucks must keep normal nearest-first harvesting');
+  worker.hp=worker.maxHp*.6;
   assert.ok(g.saveGame()&&g.loadGame(),
     faction+': threat-aware ore selection must not add save fields');
   const restored=g.entityById(worker.id);

@@ -1791,16 +1791,16 @@
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
           this.canOccupyUnit(e,ore.x,ore.y,true))
         .sort((a,b)=>a.d-b.d||a.index-b.index);
-      // Enemy ore trucks may prefer a nearby reachable deposit outside the
-      // firing envelope of a CURRENTLY visible combat unit. Do not inspect
-      // hidden enemies, alter player harvesting, or travel across the map
-      // merely to avoid a contested patch. If safe ore is unreachable or too
-      // distant, retain the original nearest-reachable fallback.
-      const threats=e.owner===1?this.entities.filter(other=>
+      // A substantially wounded enemy ore truck under CURRENTLY visible fire
+      // may try a nearby reachable deposit outside that firing envelope.
+      // Ordinary harvesting and hidden enemies retain nearest-first routing.
+      // Do not travel across the map or introduce persistent retreat state.
+      const threats=e.owner===1&&e.hp<e.maxHp*.7?this.entities.filter(other=>
         other.owner!==e.owner&&other.hp>0&&other.type==='unit'&&
         other.kind!=='harvester'&&this.sideCanSee(e.owner,other)):[];
       const nearestDistance=candidates[0]?.d??Infinity;
-      const safe=threats.length?candidates.filter(({ore,d})=>
+      const underFire=threats.some(enemy=>dist(enemy,e)<=this.stat(enemy,'range')+.8);
+      const safe=underFire?candidates.filter(({ore,d})=>
         d<=nearestDistance+2.5&&!threats.some(enemy=>
           dist(enemy,ore)<=Math.min(7,Math.max(3.5,this.stat(enemy,'range')+1.2)))):[];
       const ordered=safe.length?[...safe,...candidates.filter(c=>!safe.includes(c))]:candidates;
