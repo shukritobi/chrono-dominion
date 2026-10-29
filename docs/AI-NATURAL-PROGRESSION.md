@@ -70,3 +70,19 @@ Next action: use these per-scenario classifications and real ore-loss telemetry 
 The eight-second normal AI decision interval could leave an operational radar exposed after an enemy tank began firing. Radar is required for Air Command, so this can prolong aviation recovery. The tactical AI now checks a real tank/heavy projectile at launch (or at impact if its shooter only becomes visible later) and asks the existing base-first engagement planner to assign **already nearby** ground defenders. It does not call the strategic AI planner early, purchase units, change income, or infer unseen enemies from projectile data. A successful response has a four-second cooldown; a failed interception does not block a later genuinely serviceable shot. The transient cooldown resets on new matches and legacy save/load. The existing three-faction `tests/ai-harvester-defense.test.mjs` now covers visible launch, hidden-launch rejection, later-visible impact, non-radar exclusions, unchanged credits and saves.
 
 This is a targeted tactical intervention, **not yet evidence** of fewer destroyed radars or more naturally produced aircraft. Compare the three 720-second progression matches and economic regression gate before claiming those outcomes.
+
+## Radar defense against infantry fire (30 October 2026)
+
+The early radar projectile-response handler previously accepted only tanks and
+heavy tanks. Source inspection showed that visible infantry and specialists could
+fire at an operational AI radar without invoking this tactical response. The
+same bounded local interception now accepts soldier and specialist projectile
+launches, including the existing impact fallback when a hidden shooter becomes
+visible later. The response still requires the AI's own live sensor visibility,
+a nearby available ground defender, and the existing four-second successful
+interception cooldown. It does not advance the economic planner, grant credits,
+change weapon damage, or add saved fields. Three-faction targeted regression
+coverage is in `tests/ai-harvester-defense.test.mjs`.
+
+The deterministic natural matches must still establish whether this reduces
+radar losses; a targeted interception test alone does not prove survival gains.
