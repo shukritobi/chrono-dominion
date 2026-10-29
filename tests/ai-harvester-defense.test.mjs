@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {traceHarvesterLethalImpacts} from '../tools/harvester-impact-telemetry.mjs';
 
 // Exercise the production AI engagement planner, sensors, orders and legacy saves.
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
