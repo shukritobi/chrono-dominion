@@ -84,4 +84,58 @@ g.runAI();
 assert.equal(ai.credits,0,'AI has no free periodic income');
 ai.credits=1600;g.runAI();
 assert.ok(g.queues.some(q=>q.side===1&&q.key==='harvester'),'AI replaces a destroyed harvester');
-console.log('PASS: projectile flight, delayed hits, smooth turning, repairs, selling, AI ore economy and harvester recovery');
+// Two legitimate attackers can land lethal projectiles in the same engine
+// update, before step() removes the victim. Only the first impact may award
+// veterancy, damage credit or destruction effects.
+for(const faction of ['coalition','federation','psionic']){
+  g.newMatch({playerFaction:faction,enemyFaction:'federation',
+    map:'verdant',difficulty:'standard'});
+  const lead=g.entities.find(e=>e.owner===0&&e.kind==='tank');
+  const victim=g.entities.find(e=>e.owner===1&&e.kind==='tank');
+  const wingman=g.add(0,'soldier',18.1,16);
+  assert.ok(lead&&victim&&wingman,faction+': actual combat units exist');
+  lead.x=18;lead.y=16;victim.x=18.4;victim.y=16;victim.hp=1;
+  const before={kills:g.stats[0].enemyUnitsDestroyed,
+    losses:g.stats[1].unitsLost,damage:g.stats[0].damageDealt,
+    lead:lead.kills||0,wingman:wingman.kills||0};
+  g.shoot(lead,victim);
+  g.shoot(wingman,victim);
+  assert.equal(g.projectiles.length,2,faction+': both shots are in flight');
+  g.updateProjectiles(.2);
+  assert.equal(g.projectiles.length,0,
+    faction+': all same-frame shots are consumed, including corpse impacts');
+  assert.equal(g.stats[0].enemyUnitsDestroyed,before.kills+1,
+    faction+': destroyed target counts once');
+  assert.equal(g.stats[1].unitsLost,before.losses+1,
+    faction+': the victim is lost once');
+  assert.equal(g.stats[0].damageDealt,before.damage+1,
+    faction+': damage credit cannot include overkill on a corpse');
+  assert.equal(lead.kills,before.lead+1,
+    faction+': the actual first killer earns veterancy');
+  assert.equal(wingman.kills||0,before.wingman,
+    faction+': follow-up shot must not award phantom veterancy');
+
+  // A distant projectile that was already flying when the target died must
+  // expire on its next update rather than keep tracking a destroyed entity.
+  g.newMatch({playerFaction:faction,enemyFaction:'federation',
+    map:'verdant',difficulty:'standard'});
+  const finisher=g.entities.find(e=>e.owner===0&&e.kind==='tank');
+  const target=g.entities.find(e=>e.owner===1&&e.kind==='tank');
+  const distant=g.add(0,'soldier',5,16);
+  finisher.x=18;finisher.y=16;target.x=18.4;target.y=16;target.hp=1;
+  g.shoot(distant,target); // slow-arriving shot is first in the array.
+  g.shoot(finisher,target);
+  g.updateProjectiles(.2);
+  assert.equal(g.projectiles.length,1,
+    faction+': long-range shot is still in flight after the lethal impact');
+  const credited=g.stats[0].damageDealt;
+  g.updateProjectiles(.2);
+  assert.equal(g.projectiles.length,0,
+    faction+': in-flight shot to a dead target is discarded next tick');
+  assert.equal(g.stats[0].damageDealt,credited,
+    faction+': discarded projectile cannot add damage');
+  assert.equal(distant.kills||0,0,
+    faction+': distant attacker receives no phantom kill');
+}
+
+console.log('PASS: corpse-safe projectiles, projectile flight, delayed hits, smooth turning, repairs, selling, AI ore economy and harvester recovery');
