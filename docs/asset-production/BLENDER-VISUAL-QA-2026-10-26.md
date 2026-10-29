@@ -2700,6 +2700,10 @@ are complete. Only the Coalition Aerospace Operations Centre
 - [Successful targeted Blender render, source reopen and 160/80px QA #40791963017](https://github.com/shukritobi/chrono-dominion/actions/runs/40791963017);
   [download 42-file preview artifact](https://github.com/shukritobi/chrono-dominion/actions/runs/40791963017/artifacts/12862316543);
   [draft PR #126](https://github.com/shukritobi/chrono-dominion/pull/126).
+- Source [modeling commit 1a4775e](https://github.com/shukritobi/chrono-dominion/commit/1a4775e2219d32c010d8844cf9329c46194fafa3),
+  [material repair fcdb9af](https://github.com/shukritobi/chrono-dominion/commit/fcdb9af79437a00a22deaef5fd1cb9d3acc49108),
+  [targeted workflow 0275b3d](https://github.com/shukritobi/chrono-dominion/commit/0275b3dd730d02280a4df57a142917ae07bbb6d5),
+  and [asset-register annotation 408e28f](https://github.com/shukritobi/chrono-dominion/commit/408e28fe34dde1589735f250d398fa24ee7f709e).
 - [Original editable eight-fracture modeling](../../tools/blender/preview_airfield_extended_states.py),
   [strict alpha/RGBA and contact-sheet QA](../../tools/blender/qa_airfield_extended_states.py),
   [reopened-source closed-manifold verification](../../tools/blender/verify_airfield_extended_source.py),
