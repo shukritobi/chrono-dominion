@@ -438,3 +438,31 @@ proximity-based false attribution), and `npm run balance:progression`.
 Use the actual lethal sources and existing defensive-order snapshots before
 changing AI escort or ore routing. The six historical natural-match losses
 and absent natural aircraft remain unresolved until separately measured.
+
+## Prompt response to observed tank hits (29 October 2026)
+
+**Root-cause hypothesis:** the ordinary strategic AI planner runs every eight
+seconds on standard difficulty. A player tank can damage a worker shortly
+after that decision, leaving several seconds before existing reactive escort
+assignments are reconsidered. The preceding lethal-impact diagnostics
+attributed all six natural-match worker deaths to actual player tank shots;
+that attribution does **not** prove planner latency caused the deaths.
+
+When a **living** AI harvester takes a real projectile hit from a currently
+visible, living enemy Battle Tank or Siege Tank, the game now advances the
+next existing AI planning tick to the current simulation time. The regular
+planner still decides whether any nearby escort can respond, preserving its
+base-defense-first priorities, two-escort limit, attack-move protections and
+fog-of-war rules. A four-second transient cooldown prevents repeated shots
+from triggering excessive full planning passes. Dead harvesters, hidden or
+destroyed shooters, other unit types and projectiles without an attributable
+living attacker cannot trigger an early response.
+
+This changes **reaction latency**, not AI production rules, credits, unit
+statistics, pathfinding, projectile damage, assets or saved orders. The
+cooldown is intentionally excluded from the version-1 save schema and reset
+on new/load. No extra AI passes are scheduled if the existing planner is
+already due. Targeted three-faction tests exercise real projectile impacts,
+next-step tactical orders, unseen shooters, throttling and save/load.
+Compare the full 720-second progression and economy regression before
+claiming that harvester losses or aircraft production improved.
