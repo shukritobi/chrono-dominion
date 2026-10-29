@@ -193,7 +193,12 @@
       this.canvas.addEventListener('pointermove',e=>this.pointerMove(e));
       this.canvas.addEventListener('pointercancel',e=>this.pointerCancel(e));
       window.addEventListener('pointerup',e=>this.pointerUp(e));
-      this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.camera.zoom=clamp(this.camera.zoom*(e.deltaY<0?1.09:.91),.65,1.8);},{passive:false});
+      this.canvas.addEventListener('wheel',e=>{
+        e.preventDefault();
+        // Horizontal-only trackpad scroll must not zoom the battlefield.
+        if(this.state!=='playing'||!Number.isFinite(e.deltaY)||e.deltaY===0)return;
+        this.zoomAtClientPoint(e.clientX,e.clientY,e.deltaY<0?1.09:.91);
+      },{passive:false});
       this.radar.addEventListener('click',e=>{if(this.state!=='playing')return;const r=this.radar.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*WORLD_SIZE,y=(e.clientY-r.top)/r.height*WORLD_SIZE;const p=iso(x,y);this.camera.x=p.x;this.camera.y=p.y;});
       $('reconStatus').addEventListener('click',e=>{const b=e.target.closest?.('button[data-contact-id]');if(b)this.centerIntelContact(Number(b.dataset.contactId));});
       $('battleEventList').addEventListener('click',e=>{const b=e.target.closest?.('button[data-event-id]');if(b)this.centerBattleEvent(Number(b.dataset.eventId));});
@@ -628,6 +633,17 @@
         player.credits=Math.max(0,player.credits-healing*unitCost);
         if(e.hp>=e.maxHp-.01){e.hp=e.maxHp;e.repairing=false;}
       }
+    }
+    zoomAtClientPoint(clientX,clientY,factor){
+      const oldZoom=this.camera.zoom,nextZoom=clamp(oldZoom*factor,.65,1.8);
+      if(nextZoom===oldZoom)return;
+      const bounds=this.canvas.getBoundingClientRect();
+      const dx=clientX-bounds.left-this.w/2,dy=clientY-bounds.top-this.h/2;
+      // Preserve the world point under the cursor, like touchscreen pinch.
+      this.camera.x+=dx/oldZoom-dx/nextZoom;
+      this.camera.y+=dy/oldZoom-dy/nextZoom;
+      this.camera.zoom=nextZoom;
+      this.clampCamera();
     }
     pointerPosition(e){
       const r=this.canvas.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
