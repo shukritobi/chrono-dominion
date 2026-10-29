@@ -1661,12 +1661,11 @@
       });
       this.particles.push({x:source.x,y:source.y,life:.2,type:'muzzle',color:faction==='psionic'?'#ba84ee':'#ffd698'});
     }
-    scheduleAIHarvesterDefense(shot,target){
-      // A real tank hit can arrive just after the normal 8-second AI tick.
-      // Request the existing tactical planner immediately, without running
-      // economy/production logic more often than a four-second cooldown.
-      // The actual shooter must be alive and currently visible to AI sensors:
-      // projectile metadata alone must not grant hidden enemy positions.
+    respondToAIHarvesterHit(shot,target){
+      // A tank can hit a worker immediately after an eight-second strategic
+      // decision. Reuse only the EXISTING tactical escort planner here:
+      // advancing the entire strategic AI tick changed production timing and
+      // failed the natural-match economy regression on Desert.
       if(this.state!=='playing'||target.owner!==1||
          target.kind!=='harvester'||target.hp<=0||shot.owner!==0||
          (shot.sourceKind!=='tank'&&shot.sourceKind!=='heavy')||
@@ -1675,9 +1674,23 @@
       if(!attacker||attacker.hp<=0||attacker.owner!==0||
          attacker.type!=='unit'||attacker.kind!==shot.sourceKind||
          !this.sideCanSee(1,attacker))return false;
-      this.nextAI=this.time;
+      // Only nearby ground escorts can help this worker. Never call the
+      // strategic planner, recruit units, change income or invent a target
+      // from the projectile's hidden coordinates.
+      const fighters=this.entities.filter(e=>e.owner===1&&e.type==='unit'&&
+        e.hp>0&&e.built&&e.kind!=='harvester'&&e.kind!=='aircraft'&&
+        e.kind!=='recon'&&dist(e,attacker)<=8.5&&dist(e,target)<=9);
+      if(!fighters.length)return false;
+      const base=this.entities.find(e=>e.owner===1&&e.kind==='hq'&&e.hp>0);
+      if(!base)return false;
+      const structures=this.entities.filter(e=>e.owner===1&&e.type==='building'&&
+        e.hp>0&&e.built);
+      const invaders=this.entities.filter(e=>e.owner===0&&e.type==='unit'&&
+        e.hp>0&&e.kind!=='harvester'&&structures.some(b=>dist(b,e)<8)&&
+        this.sideCanSee(1,e));
       this.nextHarvesterResponseAt=this.time+4;
-      return true;
+      const assignments=this.assignAIEngagements(fighters,invaders,base);
+      return [...assignments.values()].includes(attacker.id);
     }
     updateProjectiles(dt){
       for(const shot of this.projectiles){
@@ -1700,7 +1713,7 @@
           continue;
         }
         target.hp-=shot.damage;
-        this.scheduleAIHarvesterDefense(shot,target);
+        this.respondToAIHarvesterHit(shot,target);
         if(target.owner===0&&target.type==='unit'&&this.time-(target.lastHurtVoiceAt??-100)>7){
           target.lastHurtVoiceAt=this.time;
           this.audio?.play('underFire',{kind:target.kind,faction:this.players[0]?.faction});
