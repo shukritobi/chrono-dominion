@@ -2811,6 +2811,11 @@ to the previous artifact.
   low bunker. At 160px the irregular rear wall, broken portal and exposed
   maintenance cradle are clearer. Some wall fragments still overlap, and
   a single destruction pose is not a multi-frame collapse.
+  **Measured trade-off:** the outer alpha silhouette is actually *closer*
+  to idle than the previous low wreck: idle-to-destroyed alpha change falls
+  from **2,093 to 1,564 at 160px**, and from **532 to 401 at 80px**.
+  The artistic improvement is the exposed dark interior and visibly broken
+  walls, not a larger silhouette delta. Keep this limitation explicit.
 
 | Independent pixel check | 160px | 80px |
 |---|---:|---:|
