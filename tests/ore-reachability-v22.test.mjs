@@ -122,7 +122,7 @@ for(const faction of ['coalition','federation','psionic']){
   const attacker=g.add(0,'soldier',17,14);
   g.ores=[
     {x:16,y:14,amount:1200,max:1200},
-    {x:12,y:18,amount:1200,max:1200}
+    {x:13,y:17,amount:1200,max:1200}
   ];
   assert.ok(g.sideCanSee(1,attacker),
     faction+': only a genuinely visible enemy can mark ore as unsafe');
@@ -146,7 +146,7 @@ for(const faction of ['coalition','federation','psionic']){
 
   g.entities=[];g.ores=[
     {x:16,y:14,amount:1200,max:1200},
-    {x:12,y:18,amount:1200,max:1200}
+    {x:13,y:17,amount:1200,max:1200}
   ];
   const playerWorker=g.add(0,'harvester',14,14);
   g.add(1,'soldier',17,14);

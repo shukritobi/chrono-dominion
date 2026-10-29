@@ -1801,7 +1801,7 @@
         other.kind!=='harvester'&&this.sideCanSee(e.owner,other)):[];
       const nearestDistance=candidates[0]?.d??Infinity;
       const safe=threats.length?candidates.filter(({ore,d})=>
-        d<=nearestDistance+5&&!threats.some(enemy=>
+        d<=nearestDistance+2.5&&!threats.some(enemy=>
           dist(enemy,ore)<=Math.min(7,Math.max(3.5,this.stat(enemy,'range')+1.2)))):[];
       const ordered=safe.length?[...safe,...candidates.filter(c=>!safe.includes(c))]:candidates;
       for(const {ore,index} of ordered){
