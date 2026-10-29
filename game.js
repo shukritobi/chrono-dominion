@@ -711,6 +711,9 @@
           const anchorX=this.camera.x+oldX/oldZoom,anchorY=this.camera.y+oldY/oldZoom;
           this.camera.zoom=nextZoom;
           this.camera.x=anchorX-newX/nextZoom;this.camera.y=anchorY-newY/nextZoom;
+          // Touch pan and pinch must obey the same world limits as mouse pan
+          // and cursor-wheel zoom. Preserve the midpoint anchor away from edges.
+          this.clampCamera();
           this.touchGesture=current;this.dragStart=null;this.dragEnd=null;
           return;
         }
@@ -721,6 +724,7 @@
         if(Math.hypot(e.clientX-t.startX,e.clientY-t.startY)>10)t.moved=true;
         if(t.moved){
           this.camera.x-=dx/this.camera.zoom;this.camera.y-=dy/this.camera.zoom;
+          this.clampCamera();
           this.dragStart=null;this.dragEnd=null;
         }
         t.lastX=e.clientX;t.lastY=e.clientY;

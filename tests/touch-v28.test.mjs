@@ -96,6 +96,47 @@ assert.ok(g.camera.zoom>=.65);
 g.pointerUp(touch(8,100,300));g.pointerUp(touch(9,100.1,300));
 assert.equal(commands,0);
 
+// Extremely long one-finger drags and two-finger gestures must not strand the
+// camera outside the map. Mouse panning and wheel zoom already clamp there.
+const cameraBounds=()=>{
+  const span=g.worldSize*32;
+  assert.ok(g.camera.x>=-span&&g.camera.x<=span,'touch X stays inside world limits');
+  assert.ok(g.camera.y>=50&&g.camera.y<=g.worldSize*32,
+    'touch Y stays inside world limits');
+};
+const placementsBeforeBounds=placements,commandsBeforeBounds=commands;
+g.camera={x:0,y:370,zoom:1};
+g.pointerDown(touch(20,500,350));
+g.pointerMove(touch(20,-10000,10000));
+cameraBounds();
+assert.equal(g.camera.x,g.worldSize*32,'drag clamps at positive X edge');
+assert.equal(g.camera.y,50,'drag clamps at minimum Y');
+g.pointerMove(touch(20,10000,-10000));
+cameraBounds();
+assert.equal(g.camera.x,-g.worldSize*32,'drag clamps at negative X edge');
+assert.equal(g.camera.y,g.worldSize*32,'drag clamps at maximum Y');
+g.pointerUp(touch(20,10000,-10000));
+g.camera={x:g.worldSize*32-10,y:g.worldSize*18-10,zoom:1};
+g.pointerDown(touch(21,450,350));
+g.pointerDown(touch(22,550,350));
+g.pointerMove(touch(21,5000,5000));
+cameraBounds();
+g.pointerMove(touch(22,5100,5000));
+cameraBounds();
+g.pointerUp(touch(22,5100,5000));
+g.pointerUp(touch(21,5000,5000));
+assert.equal(g.touchPoints.size,0,'edge pinch releases all pointers');
+assert.equal(placements,placementsBeforeBounds,'edge gestures never place structures');
+assert.equal(commands,commandsBeforeBounds,'edge gestures never issue orders');
+
+// Stylus drag follows the same bounded pan path, not a free camera escape.
+g.camera={x:0,y:370,zoom:1};
+g.pointerDown({...touch(23,500,350),pointerType:'pen'});
+g.pointerMove({...touch(23,-10000,10000),pointerType:'pen'});
+cameraBounds();
+g.pointerUp({...touch(23,-10000,10000),pointerType:'pen'});
+assert.equal(placements,placementsBeforeBounds);
+
 // New match, pause, return to menu and save/load clear transient gestures.
 g.pointerDown(touch(10,200,200));g.pause();
 assert.equal(g.touchPoints.size,0);
