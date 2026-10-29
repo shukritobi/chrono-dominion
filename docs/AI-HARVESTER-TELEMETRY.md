@@ -550,3 +550,29 @@ actual attacked worker. They also check normal patrol limits, strategic AI
 scheduling and legacy save/load. **Natural-match survival improvement is
 unproven** until the 720-second progression, economic guard and full CI
 verification pass; targeted coverage alone does not establish fewer deaths.
+
+## Infantry and specialist confirmed-shot ore defense (30 October 2026)
+
+The emergency harvester escort previously reacted at projectile launch only
+to visible player tanks and heavy tanks. A visible rifle squad or specialist
+could also fire at an AI ore truck between the ordinary eight-second AI
+decisions, but would receive no immediate tactical interception. The same
+existing local escort planner now accepts **soldier** and **specialist**
+projectiles aimed at a living worker. This is a narrow tactical extension,
+not a new retreat system or economic change.
+
+The attacker must be alive and currently visible to AI sensors. The existing
+11-tile confirmed-shot escort radius, actual attacked-worker targeting,
+base-first defense, two-escort budget, four-second cooldown, assault
+commitment protections and strategic AI schedule remain intact. No unit
+costs, movement, production, saved fields, fog visibility or original assets
+change. Hidden shooter positions cannot be used for orders.
+
+Three-faction real-engine regression tests cover both infantry classes,
+launch-before-impact orders, rate limiting, no premature damage, fog,
+non-harvester targets, unchanged credits/strategic scheduling and legacy
+save/load. The previous paid refinery repair experiment (PR #151) was
+rejected after CI recorded **zero natural Air Commands and six worker losses**,
+so it was not merged. This shot-response extension must independently pass
+the full balance and economy gates. Natural survival improvement remains
+unproven until measured.

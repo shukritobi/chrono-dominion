@@ -1727,15 +1727,15 @@
       return intercepted;
     }
     respondToAIHarvesterAttack(shot,target){
-      // A hostile tank can fire at a worker immediately after an eight-second
-      // strategic decision. Respond on a confirmed shot launch when visible,
+      // A hostile ground unit can fire at a worker immediately after an
+      // eight-second strategic decision. Respond on a confirmed visible shot,
       // or on impact if it only becomes visible later. Reuse only the
       // EXISTING tactical escort planner:
       // advancing the entire strategic AI tick changed production timing and
       // failed the natural-match economy regression on Desert.
       if(this.state!=='playing'||target.owner!==1||
          target.kind!=='harvester'||target.hp<=0||shot.owner!==0||
-         (shot.sourceKind!=='tank'&&shot.sourceKind!=='heavy')||
+         !['tank','heavy','soldier','specialist'].includes(shot.sourceKind)||
          this.nextAI<=this.time||
          (this.time<this.nextHarvesterResponseAt&&
           (!this.unservedHarvesterShooterId||

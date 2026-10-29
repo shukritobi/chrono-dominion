@@ -673,4 +673,64 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
+
+// Visible infantry and specialists can also destroy ore trucks between
+// strategic AI decisions. The existing urgent escort planner should react to
+// their actual shots, with the same fog, range and cooldown restrictions.
+for(const faction of ['coalition','federation','psionic']){
+  for(const kind of ['soldier','specialist']){
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;
+    const attacker=g.add(0,kind,17,14);
+    assert.ok(g.sideCanSee(1,attacker),
+      faction+': '+kind+' must be observed before emergency response');
+    g.nextAI=g.time+8;
+    const credits=g.players[1].credits,hp=worker.hp;
+    g.shoot(attacker,worker);
+    assert.equal(worker.hp,hp,
+      faction+': '+kind+' shot launch must not deal premature damage');
+    assert.equal(guard.order?.id,attacker.id,
+      faction+': '+kind+' harvester shot must summon a local defender');
+    assert.equal(g.nextHarvesterResponseAt,g.time+4,
+      faction+': '+kind+' successful response uses bounded cooldown');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': '+kind+' response must not accelerate economic decisions');
+    assert.equal(g.players[1].credits,credits,
+      faction+': tactical defense cannot spend credits');
+    guard.order=null;
+    g.shoot(attacker,worker);
+    assert.equal(guard.order,null,
+      faction+': repeated '+kind+' shots inside cooldown cannot spam orders');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': '+kind+' interception preserves legacy save compatibility');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': harvester tactical cooldown remains transient after load');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;
+    const hidden=g.add(0,'soldier',21,14);
+    assert.equal(g.sideCanSee(1,hidden),false,
+      faction+': distant infantry must not be visible');
+    g.nextAI=g.time+8;
+    g.shoot(hidden,worker);
+    assert.equal(guard.order?.id,undefined,
+      faction+': a hidden shooter cannot leak coordinates into escort orders');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': unseen shots cannot consume tactical cooldown');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;
+    const attacker=g.add(0,'specialist',17,14);
+    const refinery=g.add(1,'refinery',15,16);
+    g.nextAI=g.time+8;
+    g.shoot(attacker,refinery);
+    assert.equal(guard.order?.id,undefined,
+      faction+': attacks on other structures cannot trigger harvester escorts');
+    assert.equal(g.nextHarvesterResponseAt,0);
+    assert.equal(worker.hp,worker.maxHp);
+  }
+}
+
 console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, all-ground radar defense and impact fallback across three factions');
