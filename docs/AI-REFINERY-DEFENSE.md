@@ -95,3 +95,29 @@ Federation's 1.18 HP and 1.13 damage modifier. The candidate therefore
 limits the defensive reserve to Psionic commanders, leaving Coalition and
 Federation's existing assault allocation unchanged. CI must independently
 verify the narrowed candidate; do not infer the result from the broad run.
+
+### Narrowed candidate verification (PR #159)
+
+The full PR verification workflow at
+https://github.com/shukritobi/chrono-dominion/actions/runs/41007116015
+**passed**, including targeted platoon/recon regressions, all existing
+gameplay tests, nine 240-second ground scenarios, three 720-second natural
+matches, the AI economy regression gate and the XL 120-unit benchmark.
+
+Compared with the preceding successful main-branch progression run:
+
+| 720-second measure | Before | Psionic-only reserve |
+| --- | ---: | ---: |
+| Verdant/Psionic AI ore income | 5,040 | 7,200 |
+| Verdant refinery destruction time | 167.8s | 213.0s |
+| Desert/Coalition AI ore income | 21,960 | 21,960 |
+| Frostline/Federation AI ore income | 9,360 | 9,360 |
+| Total ore delivery ticks | 101 | 107 |
+| AI harvester losses | 5 | 5 |
+| Natural scenarios with aircraft | 1 | 1 |
+
+Verdant income increased 42.9% and the refinery survived 45.2 seconds
+longer. **It was still destroyed**, and at the final impact no eligible
+local defender remained. This supports a meaningful but incomplete defensive
+improvement, not a permanent survival fix. The early assault allocation
+changes for Psionic, and human-played match quality remains unverified.
