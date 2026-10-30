@@ -3305,10 +3305,17 @@
       // unguarded refinery collapse is specific to this fragile opening.
       // Keep Federation/Coalition's existing offensive allocation: the
       // all-faction reserve reduced Frostline ore income below CI's guard.
-      const refineryReserve=refinery&&me.faction==='psionic'?[...active].filter(e=>
-        ['tank','heavy'].includes(e.kind)&&e.hp/e.maxHp>=.36&&
-        (e.retreatCooldownAt||0)<=this.time&&dist(e,refinery)<=7)
-        .sort((a,b)=>dist(a,refinery)-dist(b,refinery)||a.id-b.id)[0]:null;
+      // If the last armoured guard falls, keep one surviving nearby
+      // infantryman on refinery duty rather than sending every replacement
+      // into an offensive platoon. Armour remains the preferred reserve;
+      // this only reallocates existing paid units, never creates new ones.
+      const localGuards=refinery&&me.faction==='psionic'?[...active].filter(e=>
+        ['tank','heavy','soldier','specialist'].includes(e.kind)&&
+        e.hp/e.maxHp>=.36&&(e.retreatCooldownAt||0)<=this.time&&
+        dist(e,refinery)<=7)
+        .sort((a,b)=>dist(a,refinery)-dist(b,refinery)||a.id-b.id):[];
+      const refineryReserve=localGuards.find(e=>['tank','heavy'].includes(e.kind))||
+        localGuards.find(e=>['soldier','specialist'].includes(e.kind))||null;
       if(refineryReserve){
         const target=refineryReserve.order?.type==='attack'?
           this.entityById(refineryReserve.order.id):null;
