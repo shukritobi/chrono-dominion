@@ -76,6 +76,52 @@ assert.equal(game.players[0].credits,money,'cancel returns full credits');
 assert.ok(!game.queues.some(q=>q.key==='tank'&&q.side===0));
 assert.equal(game.cancelProduction('tank'),false,'cannot cancel an already cancelled job');
 
+
+// A guard that chased outside its five-tile leash used to freeze when a
+// still-visible enemy left weapon range. It must return to the saved guard
+// anchor, without breaking Hold-position or explicitly ordered movement.
+const originalMove=game.move,originalFinish=game.finish;
+const guardMoves=[];
+game.move=function(unit,x,y){if(unit.owner===0)guardMoves.push({x,y});return false;};
+game.finish=()=>{};
+function guardLeashCase(stance,order,enemyOffset=4.75,anchorDistance=6){
+  start();
+  game.nextAI=Infinity;game.nextFog=Infinity;game.nextUi=Infinity;
+  const unit=game.entities.find(e=>e.owner===0&&e.kind==='tank');
+  game.entities=[unit];
+  const enemy=game.add(1,'soldier',unit.x+enemyOffset,unit.y);
+  assert.ok(game.sideCanSee(0,enemy),'fixture target must be sensor-visible');
+  unit.stance=stance;
+  unit.guardX=unit.x-anchorDistance;unit.guardY=unit.y;
+  unit.order=order?{...order,id:enemy.id}:null;
+  unit.ready=0;guardMoves.length=0;
+  game.step(.04);
+  return {unit,enemy,moves:[...guardMoves]};
+}
+let leashCase=guardLeashCase('guard',null);
+assert.equal(leashCase.moves.length,1,'out-of-leash guard must not freeze');
+assert.equal(leashCase.moves[0].x,leashCase.unit.guardX,
+  'out-of-leash guard returns to its original anchor');
+assert.equal(leashCase.moves[0].y,leashCase.unit.guardY);
+leashCase=guardLeashCase('guard',null,3.5);
+assert.equal(leashCase.moves.length,0,'guard may still fire in weapon range');
+assert.ok(leashCase.unit.ready>0,'guard fires at a visible target in range');
+leashCase=guardLeashCase('guard',{type:'attack'});
+assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
+  'explicit attack order overrides the defensive leash');
+leashCase=guardLeashCase('guard',{type:'move',x:25,y:25});
+assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
+  'explicit movement is not cancelled by the old guard anchor');
+leashCase=guardLeashCase('guard',{type:'attackMove',x:25,y:25});
+assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
+  'attack-move keeps its existing pursuit behavior');
+leashCase=guardLeashCase('hold',null);
+assert.equal(leashCase.moves.length,0,'Hold-position must never auto-chase');
+leashCase=guardLeashCase('guard',null,4.75,3);
+assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
+  'guard inside the leash still pursues visible enemies');
+game.move=originalMove;game.finish=originalFinish;
+
 // Saved tactical orders and faction stats survive normal simulation.
 start('psionic','federation');
 assert.ok(game.stat(game.entities.find(e=>e.owner===0&&e.kind==='tank'),'speed')>

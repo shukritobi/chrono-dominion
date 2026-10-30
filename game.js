@@ -2169,9 +2169,15 @@
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){
             const hold=stance==='hold'&&command?.type!=='attack'&&command?.type!=='attackMove';
-            const leash=stance==='guard'&&command?.type!=='attack'&&command?.type!=='attackMove'
-                &&Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>5;
+            // A guard beyond its five-tile leash must return home when the
+            // visible target leaves weapon range. Previously it stood frozen
+            // until the target disappeared. Explicit move/attack orders still
+            // override the leash, and Hold-position never auto-chases.
+            const leash=stance==='guard'&&command?.type!=='attack'&&
+                command?.type!=='attackMove'&&command?.type!=='move'&&
+                Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>5;
             if(!hold&&!leash&&dist(e,target)>range)this.move(e,target.x,target.y,dt);
+            else if(leash&&dist(e,target)>range)this.move(e,e.guardX,e.guardY,dt);
             else if(dist(e,target)<=range&&e.ready<=0)this.shoot(e,target);
           }
           else if(command?.type==='move'||command?.type==='attackMove'){
