@@ -242,8 +242,8 @@ assert.equal(game.queues.length,0,
 collapsedDefense();
 aiOwned('generator').forEach(g=>{g.hp=0;});
 game.runAI();
-assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,0,
-  'brownout recovery takes precedence over defensive recruitment');
+assert.ok(aiOwned('generator').some(e=>!e.built),
+  'brownout recovery still purchases an ordinary replacement generator');
 
 // Preserve the previous stronger-faction production choices. The earlier
 // all-faction defensive reserve failed the Frostline economy regression.
