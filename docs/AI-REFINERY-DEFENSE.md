@@ -121,3 +121,37 @@ longer. **It was still destroyed**, and at the final impact no eligible
 local defender remained. This supports a meaningful but incomplete defensive
 improvement, not a permanent survival fix. The early assault allocation
 changes for Psionic, and human-played match quality remains unverified.
+
+
+## Ground defender attrition and refinery coverage audit (30 October 2026)
+
+The Psionic-only armour reserve in PR #159 delayed Verdant's refinery loss to
+213.0 seconds and increased its ore income from 5,040 to 7,200, but the
+refinery still died without an eligible nearby defender. Before changing AI
+recruitment or tank stats, the natural-match laboratory now captures the
+**actual sequence of AI ground-defender removals and deployments** alongside
+local refinery coverage.
+
+`tools/ai-ground-defense-telemetry.mjs` reads production-engine states before
+and after each simulation step. It records the ID, kind, last HP, last order,
+retreat state and distance to the refinery for each disappeared AI ground
+combat unit; it records new ground units, nearby visible hostiles and the
+current paid queue. A local defender means a living, completed ground combat
+unit within nine tiles of an operational refinery. Exposure time is accumulated
+only when both adjacent simulation snapshots show an operational refinery
+without any local ground defender. Coverage gaps include their start and end
+and whether a defender returned or the refinery was lost. All detailed lists
+are capped; aggregate counts remain exact. A nearby enemy is **not** a proven
+killer: these records explicitly label unit removals as unattributed.
+
+The simulator adds `aiGroundDefenseTelemetry` per scenario and summary counts
+for ground losses, local losses, reinforcements and unguarded refinery seconds.
+The `AI GROUND DEFENSE SCENARIO` line is printed for each 720-second natural
+match. `tests/ai-ground-defense-telemetry.test.mjs` covers hidden-opponent
+exclusion, defender loss, paid-queue context, replacement, repeated empty
+coverage, refinery destruction, bounded reports and read-only behavior.
+
+This is **diagnostics only**. No change to `game.js`, player commands,
+credits, pathfinding, save formats, faction balance or art. CI results must be
+inspected to determine whether Verdant's reserved tank died, moved away,
+retreated or was never replaced before selecting the next gameplay patch.
