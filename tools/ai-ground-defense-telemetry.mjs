@@ -97,7 +97,7 @@ export function observeAIGroundDefenseStep(metrics,before,after){
   const dt=after.time-before.time;
   if(before.refinery&&after.refinery&&
     before.refinery.id===after.refinery.id&&beforeLocal===0&&afterLocal===0)
-    metrics.unguardedRefinerySeconds+=dt;
+    metrics.unguardedRefinerySeconds=round(metrics.unguardedRefinerySeconds+dt);
   if(after.refinery&&afterLocal===0&&!internal.openGap){
     const gap={startedAt:round(after.time),refineryId:after.refinery.id,
       endedAt:null,reason:null,creditsAtStart:Math.floor(after.credits),
@@ -112,10 +112,12 @@ export function observeAIGroundDefenseStep(metrics,before,after){
     gap.reason=!after.refinery?'refinery-lost':
       afterLocal>0?'defender-returned':'refinery-replaced';
     metrics.maxUnguardedSeconds=Math.max(metrics.maxUnguardedSeconds,
-      Math.max(0,after.time-gap.startedAt));
+      round(Math.max(0,after.time-gap.startedAt)));
     internal.openGap=null;
   }
-  if(after.time-internal.lastSampleAt>=8){
+  // Retain the last pre-destruction coverage history instead of filling the
+  // bounded ring with irrelevant post-refinery-loss samples.
+  if(after.refinery&&after.time-internal.lastSampleAt>=8){
     internal.lastSampleAt=after.time;
     const local=after.refinery?after.defenders.filter(e=>near(after,e)):[];
     metrics.recentCoverage.push({
@@ -130,5 +132,8 @@ export function observeAIGroundDefenseStep(metrics,before,after){
     });
     if(metrics.recentCoverage.length>16)metrics.recentCoverage.shift();
   }
+  if(internal.openGap&&after.refinery)
+    metrics.maxUnguardedSeconds=Math.max(metrics.maxUnguardedSeconds,
+      round(Math.max(0,after.time-internal.openGap.startedAt)));
   return metrics;
 }
