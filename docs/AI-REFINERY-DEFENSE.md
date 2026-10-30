@@ -245,3 +245,47 @@ at 232s with no eligible nearby defenders. Increased attrition (20 vs
 16 ground losses) and the persistent lack of Verdant aviation remain
 unresolved. A single deterministic scripted scenario does not establish
 human-play balance or a general survival guarantee.
+
+
+## Psionic single-armour-raider focus trial (30 October 2026)
+
+**Scope:** An operational Psionic refinery within 6.5 tiles of exactly one
+currently visible hostile tank or heavy tank may receive up to **three**
+existing ground defenders from the ordinary nine-tile base-interception pool,
+rather than two. The extra defender is already owned and must be able to
+participate in normal ground engagements. No defender is spawned or paid for,
+and the standard two-guard cap remains for Coalition/Federation, infantry
+raids, multiple visible attackers and hidden contacts.
+
+**Hypothesis, not yet a natural-match result:** A third local defender could
+help stop a lone armour attacker before the Psionic refinery's remaining
+screen is lost. The earlier telemetry shows 20 Psionic defender losses and a
+refinery destruction at 232 seconds; a targeted focus-fire test alone cannot
+prove better survival or reduced casualties. The rule intentionally avoids
+retaining additional infantry at home or modifying recruitment, since the
+broader infantry reserve experiment failed the natural economy guard.
+
+**Acceptance:** Three-faction focused tests must confirm the exact
+allocation boundaries, fog-of-war isolation, zero credit changes and v1
+save compatibility. The full GitHub Actions nine-scenario balance lab, three
+720-second natural matches and economy regression gate must pass before
+merging. Compare refinery destruction time, Verdant income, defender losses,
+harvester losses and Desert/Frostline income against the previous main
+baseline. Do not describe the rule as a proven survival improvement unless
+those matched simulations demonstrate it.
+
+
+### Multi-raider armour-first refinement
+
+The same trial now prioritizes a **currently visible tank/heavy within 6.5
+tiles of a completed Psionic refinery** ahead of closer infantry in the
+existing base-defense assignment order. It does not add defenders or change
+the two-per-target cap for multi-raider encounters. A third existing guard
+can still engage a different visible raider. Other factions retain the
+original nearest-invader ranking.
+
+This addresses the telemetry showing early Psionic ground casualties in
+engagements with several tanks and infantry, not merely the later isolated
+refinery-killing shot. It remains a hypothesis until the matched natural
+progression results and economic regression gate are reviewed. A failure
+must block merging even if focused assignment tests pass.

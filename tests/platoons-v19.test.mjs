@@ -265,5 +265,86 @@ assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
   'an observed base raid can trigger affordable emergency infantry');
 assert.equal(game.players[1].credits,100);
 
+// A lone, visible armoured raider within the Psionic refinery perimeter
+// warrants a third *existing* ground defender. The third guard is deliberately
+// outside the normal 6.5-tile opportunistic engagement radius but within the
+// nine-tile local base-defense radius. No units or credits are granted.
+function refineryFocusFixture(faction='psionic',enemyKind='tank'){
+  game.newMatch({...settings,enemyFaction:faction});game.time=110;
+  const refinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
+  const headquarters=game.entities.find(e=>e.owner===1&&e.kind==='hq');
+  for(const e of game.entities){
+    if(e.owner===1&&e.type==='unit'&&e.kind!=='harvester')e.hp=0;
+  }
+  refinery.x=17;refinery.y=17;
+  const attacker=game.add(0,enemyKind,18.5,17);
+  const guards=[game.add(1,'soldier',16,17),
+    game.add(1,'soldier',18,19),game.add(1,'soldier',26,17)];
+  assert.ok(game.sideCanSee(1,attacker),'the raider must be truly observed');
+  assert.ok(Math.hypot(guards[2].x-attacker.x,guards[2].y-attacker.y)>6.5);
+  return {refinery,headquarters,attacker,guards};
+}
+for(const faction of ['psionic','coalition','federation']){
+  const {headquarters,attacker,guards}=refineryFocusFixture(faction);
+  const credits=game.players[1].credits;
+  const assignments=game.assignAIEngagements(guards,[attacker],headquarters);
+  const expected=faction==='psionic'?3:2;
+  assert.equal([...assignments.values()].filter(id=>id===attacker.id).length,expected,
+    faction+': only Psionic may mobilize a third guard against lone armour');
+  assert.equal(guards[2].order?.id===attacker.id,faction==='psionic',
+    faction+': distant third guard must respect the faction-specific cap');
+  assert.equal(game.players[1].credits,credits,'tactical defense must not spend credits');
+}
+{
+  const {headquarters,attacker,guards}=refineryFocusFixture('psionic','soldier');
+  const assignments=game.assignAIEngagements(guards,[attacker],headquarters);
+  assert.equal([...assignments.values()].filter(id=>id===attacker.id).length,2,
+    'ordinary infantry raids retain the two-guard base-defense cap');
+}
+{
+  const {headquarters,attacker,guards}=refineryFocusFixture();
+  attacker.x=2;attacker.y=30;
+  assert.equal(game.sideCanSee(1,attacker),false,'remote attacker stays hidden');
+  const assignments=game.assignAIEngagements(guards,[attacker],headquarters);
+  assert.equal(assignments.size,0,'hidden attackers cannot cause defensive assignments');
+}
+{
+  const {headquarters,attacker,guards}=refineryFocusFixture();
+  const other=game.add(0,'soldier',17.5,19);
+  assert.ok(game.sideCanSee(1,other));
+  const assignments=game.assignAIEngagements(guards,[attacker,other],headquarters);
+  assert.ok([...assignments.values()].filter(id=>id===attacker.id).length<=2,
+    'multiple visible raiders retain the normal two-guard armour cap');
+  assert.ok([...assignments.values()].includes(other.id),
+    'another visible raider must still receive a defender');
+  assert.ok(game.saveGame()&&game.loadGame(),
+    'the focus-fire rule introduces no new save fields');
+}
+
+// A visible tank within the refinery perimeter should outrank a nearer
+// rifleman in Psionic base defense. The remaining guard still answers the
+// rifleman. Other factions preserve the existing nearest-threat policy.
+for(const faction of ['psionic','coalition','federation']){
+  const {refinery,headquarters,attacker,guards}=refineryFocusFixture(faction);
+  attacker.x=21;attacker.y=17; // tank 4 tiles from refinery
+  const rifle=game.add(0,'soldier',17.5,17); // rifle only .5 tiles away
+  guards[0].x=18;guards[0].y=17;
+  guards[1].x=19;guards[1].y=18;
+  guards[2].x=24;guards[2].y=17;
+  assert.ok(game.sideCanSee(1,attacker)&&game.sideCanSee(1,rifle));
+  const credits=game.players[1].credits;
+  const assigned=game.assignAIEngagements(guards,[rifle,attacker],headquarters);
+  if(faction==='psionic'){
+    assert.equal([...assigned.values()].filter(id=>id===attacker.id).length,2,
+      'Psionic defenders must prioritize the visible armoured refinery threat');
+    assert.ok([...assigned.values()].includes(rifle.id),
+      'the remaining guard must still answer the rifleman');
+  }else{
+    assert.equal([...assigned.values()].filter(id=>id===rifle.id).length,2,
+      faction+': ordinary nearest-invader allocation remains unchanged');
+  }
+  assert.equal(game.players[1].credits,credits,'focus fire spends no credits');
+}
+
 game.draw();
 console.log('PASS: fog-safe AI platoon rally, coordinated assault, stable orders, save recovery and prioritized defense');
