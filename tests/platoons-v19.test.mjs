@@ -208,6 +208,65 @@ assert.equal(aiOwned('soldier').length,1,
 assert.ok(game.saveGame()&&game.loadGame(),
   'emergency recruitment must retain the original save format');
 
+// A paid factory order cannot ever finish if its sole factory has been
+// destroyed. Previously that stale queue blocked the Psionic emergency
+// barracks order indefinitely, even when credits and a barracks survived.
+collapsedDefense('psionic',1550);
+aiOwned('factory')[0].hp=0;
+const strandedCredits=game.players[1].credits;
+const strandedSpent=game.stats[1].creditsSpent;
+game.players[1].credits-=850;
+game.stats[1].creditsSpent+=850;
+game.queues.push({side:1,key:'tank',elapsed:1,total:3.4});
+game.runAI();
+assert.equal(game.queues.some(q=>q.side===1&&q.key==='tank'),false,
+  'a destroyed factory cannot hold a paid AI tank order forever');
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
+  'refunded stranded production must unlock a paid emergency soldier');
+assert.equal(game.players[1].credits,strandedCredits-200,
+  'cancelled tank must refund exactly 850, then pay exactly 200 for infantry');
+assert.equal(game.stats[1].creditsSpent,strandedSpent+200,
+  'net production spending must equal only the replacement soldier');
+game.advanceProduction(3);
+assert.equal(aiOwned('soldier').length,1,
+  'recovered queue must actually deploy the ground defender');
+assert.ok(game.saveGame()&&game.loadGame(),
+  'queue recovery must preserve legacy saved matches');
+
+// A producer that is merely unfinished may resume its paid queue.
+// Never refund a potentially deployable order or touch a human queue.
+collapsedDefense('psionic',1550);
+aiOwned('factory')[0].built=false;
+game.queues.push({side:1,key:'tank',elapsed:1,total:3.4});
+const pausedCredits=game.players[1].credits;
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='tank').length,1,
+  'unfinished producer is not a destroyed producer');
+assert.equal(game.players[1].credits,pausedCredits,
+  'unfinished producer must not generate a refund');
+collapsedDefense('psionic',1550);
+aiOwned('factory')[0].hp=0;
+game.queues.push({side:0,key:'tank',elapsed:1,total:3.4});
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===0&&q.key==='tank').length,1,
+  'Psionic AI recovery must not cancel human production');
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
+  'a human queue must not prevent AI emergency recruitment');
+collapsedDefense('federation',1550);
+aiOwned('factory')[0].hp=0;
+game.queues.push({side:1,key:'tank',elapsed:1,total:3.4});
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='tank').length,1,
+  'other factions retain their existing queue policy');
+
+// A destroyed refinery is NOT a reason to refund an ore-truck order as
+// part of Psionic ground defense. Ore recovery owns that decision.
+collapsedDefense('psionic',1550);
+game.queues.push({side:1,key:'harvester',elapsed:1,total:3.6});
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='harvester').length,1,
+  'emergency defense cannot cancel an existing ore recovery order');
+
 // A destroyed barracks is more urgent than a new factory, radar or turret
 // when no ground combat unit remains. Construction and recruitment both pay.
 collapsedDefense();
