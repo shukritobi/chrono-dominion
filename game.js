@@ -3115,6 +3115,24 @@
         !this.entities.some(e=>e.owner===side&&e.type==='unit'&&
           e.hp>0&&e.built&&
           ['soldier','specialist','tank','heavy'].includes(e.kind));
+      // A destroyed factory or airfield can leave a fully prepaid unit in a
+      // queue that can NEVER deploy. Such a queue blocks the ordinary paid
+      // emergency infantry order even when a working barracks and credits
+      // remain. When the Psionic ground screen has collapsed, refund ONE
+      // stranded non-harvester order at its exact original cost, but only
+      // if its producer has been destroyed (not merely unfinished).
+      // Do not touch player queues or a queued ore-truck recovery.
+      if(groundDefenseCollapsed&&built('barracks')){
+        const strandedIndex=this.queues.findIndex(q=>q.side===side&&
+          UNITS[q.key]&&q.key!=='harvester'&&
+          !owned(UNITS[q.key].from).length);
+        if(strandedIndex>=0){
+          const [stranded]=this.queues.splice(strandedIndex,1);
+          const refund=UNITS[stranded.key].cost;
+          me.credits+=refund;
+          this.stats[side].creditsSpent-=refund;
+        }
+      }
       const aviationReady=!oreRecoveryNeeded&&!criticalHarvester&&!owned('airfield').length&&built('factory')&&
         built('radar')&&this.time>130;
       // Once an airfield is purchased, keep the aviation budget intact until
