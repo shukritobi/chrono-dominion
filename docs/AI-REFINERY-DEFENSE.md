@@ -213,3 +213,35 @@ Compare Verdant defender deployments after 121.4s, refinery loss time,
 credits, and ore income to main commit 022a9e2a4ac4c7e4d51168f0ac62e21df14bd381.
 If a complete Barracks already existed at 178s, investigate the production
 queue/credit decision timeline rather than claiming a Barracks loss.
+
+
+### Candidate PR #161: first complete CI comparison
+
+The full verification workflow
+https://github.com/shukritobi/chrono-dominion/actions/runs/41018679708
+passed the focused platoon tests, nine-scenario balance, three natural
+720-second matches, economy regression gate, aviation, save/load and
+120-unit performance benchmark.
+
+| Natural 720-second measurement | Main #160 | PR #161 candidate |
+| --- | ---: | ---: |
+| Verdant/Psionic ore credits | 7,200 | 7,560 |
+| Verdant refinery destruction | 213.0s | 232.0s |
+| Verdant ground reinforcements | 13 | 18 |
+| Verdant ground losses | 16 | 20 |
+| Verdant initial continuous uncovered interval | 91.6s until loss | 56.6s until new defender |
+| Desert/Coalition ore credits | 21,960 | 21,960 |
+| Frostline/Federation ore credits | 9,360 | 9,360 |
+| Total ore delivery ticks | 107 | 108 |
+| Harvester losses | 5 | 5 |
+| Scenarios with AI Air Command | 1 | 1 |
+
+The recovered defender appeared at 178s, followed by additional paid
+soldiers at 186.2s, 194.4s and 202.6s. This establishes that the
+candidate restored **actual paid ground production** after the previous
+121.4s collapse. The refinery survived 19 seconds longer, and Verdant
+earned 5% more ore credits. However, the refinery was still destroyed
+at 232s with no eligible nearby defenders. Increased attrition (20 vs
+16 ground losses) and the persistent lack of Verdant aviation remain
+unresolved. A single deterministic scripted scenario does not establish
+human-play balance or a general survival guarantee.
