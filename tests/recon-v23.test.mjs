@@ -51,6 +51,9 @@ g.water=originalWater;
 g.time=100;
 scout.x=9;scout.y=7;
 assert.ok(g.sideCanSee(1,playerHQ),'recon now observes enemy command base');
+// A healthy tank now guards the refinery; the ordinary three-fighter
+// standard platoon must be staffed by three other existing infantry.
+g.add(1,'soldier',25,23);
 g.runAI();
 const report=g.intel[1].find(k=>k.id===playerHQ.id);
 assert.ok(report&&report.type==='building','actual reconnaissance records enemy HQ');
