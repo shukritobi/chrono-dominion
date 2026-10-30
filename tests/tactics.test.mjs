@@ -82,15 +82,17 @@ assert.equal(game.cancelProduction('tank'),false,'cannot cancel an already cance
 // anchor, without breaking Hold-position or explicitly ordered movement.
 const originalMove=game.move,originalFinish=game.finish;
 const guardMoves=[];
-game.move=function(unit,x,y){if(unit.owner===0)guardMoves.push({x,y});return false;};
+let trackedGuard=null;
+game.move=function(unit,x,y){if(unit===trackedGuard)guardMoves.push({x,y});return false;};
 game.finish=()=>{};
-function guardLeashCase(stance,order,enemyOffset=4.75,anchorDistance=6){
+function guardLeashCase(stance,order,enemyOffset=4.75,anchorDistance=6,owner=0){
   start();
   game.nextAI=Infinity;game.nextFog=Infinity;game.nextUi=Infinity;
-  const unit=game.entities.find(e=>e.owner===0&&e.kind==='tank');
+  const unit=game.entities.find(e=>e.owner===owner&&e.kind==='tank');
   game.entities=[unit];
-  const enemy=game.add(1,'soldier',unit.x+enemyOffset,unit.y);
-  assert.ok(game.sideCanSee(0,enemy),'fixture target must be sensor-visible');
+  const enemy=game.add(1-owner,'soldier',unit.x+(owner===1?-enemyOffset:enemyOffset),unit.y);
+  assert.ok(game.sideCanSee(owner,enemy),'fixture target must be sensor-visible');
+  trackedGuard=unit;
   unit.stance=stance;
   unit.guardX=unit.x-anchorDistance;unit.guardY=unit.y;
   unit.order=order?{...order,id:enemy.id}:null;
@@ -120,6 +122,9 @@ assert.equal(leashCase.moves.length,0,'Hold-position must never auto-chase');
 leashCase=guardLeashCase('guard',null,4.75,3);
 assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
   'guard inside the leash still pursues visible enemies');
+leashCase=guardLeashCase('guard',null,4.75,6,1);
+assert.equal(leashCase.moves.length,0,
+  'AI guard pursuit/leash behavior remains unchanged until balance review');
 game.move=originalMove;game.finish=originalFinish;
 
 // Saved tactical orders and faction stats survive normal simulation.

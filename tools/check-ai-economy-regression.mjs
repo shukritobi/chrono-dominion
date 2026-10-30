@@ -16,6 +16,7 @@ export const BASELINE=Object.freeze({
   enemyOre:Object.freeze({verdant:7560,desert:21960,snow:9360}),
   aiOreDeliveryTicks:108,
   casesWithAIAirfields:1,
+  casesWithAIQueuedAircraft:1,
   aiHarvesterLosses:5,
   verdantRefinerySurvivalSeconds:232
 });
@@ -37,7 +38,8 @@ export function checkAIEconomyRegression(report){
     if(ore<baseline*.85)failures.push(
       map+': AI ore '+ore+' is below 85% of baseline '+baseline);
   }
-  for(const key of ['aiOreDeliveryTicks','casesWithAIAirfields','aiHarvesterLosses']){
+  for(const key of ['aiOreDeliveryTicks','casesWithAIAirfields',
+    'casesWithAIQueuedAircraft','aiHarvesterLosses']){
     if(!Number.isInteger(summary[key])||summary[key]<0)
       throw new Error('Missing valid AI metric '+key);
     actual[key]=summary[key];
@@ -48,6 +50,12 @@ export function checkAIEconomyRegression(report){
   if(summary.casesWithAIAirfields<BASELINE.casesWithAIAirfields)
     failures.push('AI Air Commands regressed ('+
       summary.casesWithAIAirfields+' vs '+BASELINE.casesWithAIAirfields+')');
+  // An operational Air Command is not proof that an AI actually queues a
+  // plane. The guard-leash trial retained one airfield but lost the only
+  // natural aircraft queue; fail that regression independently.
+  if(summary.casesWithAIQueuedAircraft<BASELINE.casesWithAIQueuedAircraft)
+    failures.push('AI aircraft production queues regressed ('+
+      summary.casesWithAIQueuedAircraft+' vs '+BASELINE.casesWithAIQueuedAircraft+')');
   if(summary.aiHarvesterLosses>BASELINE.aiHarvesterLosses+1)
     failures.push('AI harvester losses increased by more than one ('+
       summary.aiHarvesterLosses+' vs '+BASELINE.aiHarvesterLosses+')');
