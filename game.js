@@ -3026,6 +3026,25 @@
           this.stats[side].creditsSpent-=refund;
         }
       }
+      // A fully stranded ore economy can liquidate ONE completed, optional
+      // AI structure at the same 50% resale rate offered to the player.
+      // Only do so if that single sale can fully fund a real replacement
+      // harvester, after any paid-queue recovery opportunity has passed.
+      // Preserve refineries, generators, HQ, defenses, and active production;
+      // never sell during a visible attack or power shortage.
+      if(oreRecoveryNeeded&&!threatened&&!shortage&&
+         me.credits<UNITS.harvester.cost&&
+         !this.queues.some(q=>q.side===side)){
+        const disposable=['tech','airfield','factory'];
+        const asset=disposable.map(kind=>owned(kind).find(b=>b.built))
+          .find(b=>b&&me.credits+Math.floor(BUILD[b.kind].cost*.5)>=UNITS.harvester.cost);
+        if(asset){
+          const refund=Math.floor(BUILD[asset.kind].cost*.5);
+          me.credits+=refund;
+          this.recordLoss(asset,null,true);
+          asset.hp=0;asset.repairing=false;
+        }
+      }
       // A critically damaged last worker risks total income loss. When safe
       // and solvent, buy one paid backup even after the early expansion window.
       // Preserve the emergency generator reserve and all threat priorities.
