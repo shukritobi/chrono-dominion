@@ -3272,7 +3272,11 @@
       // engagements and confirmed-shot emergency responses.
       const refinery=this.entities.find(e=>e.owner===side&&e.kind==='refinery'&&
         e.hp>0&&e.built);
-      const refineryReserve=refinery?[...active].filter(e=>
+      // Psionic Vipers trade hull and damage for speed; the observed
+      // unguarded refinery collapse is specific to this fragile opening.
+      // Keep Federation/Coalition's existing offensive allocation: the
+      // all-faction reserve reduced Frostline ore income below CI's guard.
+      const refineryReserve=refinery&&me.faction==='psionic'?[...active].filter(e=>
         ['tank','heavy'].includes(e.kind)&&e.hp/e.maxHp>=.36&&
         (e.retreatCooldownAt||0)<=this.time&&dist(e,refinery)<=7)
         .sort((a,b)=>dist(a,refinery)-dist(b,refinery)||a.id-b.id)[0]:null;
