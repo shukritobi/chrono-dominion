@@ -33,3 +33,43 @@ Use `npm run balance:regression` to generate the production-engine natural progr
 ## Limits
 
 Deterministic scripted-player simulations are not human-played balance tests or real-device FPS measurements. The guard detects substantial regressions in its three fixed scenarios; it cannot prove that a gameplay change is good on other maps or difficulties. Always inspect full telemetry when touching AI mining, defense, pathfinding or production.
+
+## Rebased current-main protection (30 October 2026)
+
+The preceding table documents the original **27 October historical baseline**,
+not the latest gameplay state. PR #162 demonstrated why that was insufficient:
+the experimental Psionic infantry refinery reserve passed the historical gate
+while **Verdant income fell from 7,560 to 4,680 (−38.1%)** and the refinery
+was destroyed at **165.4s instead of 232.0s**. The experiment was closed
+unmerged. The successful candidate workflow is
+[run 41024510545](https://github.com/shukritobi/chrono-dominion/actions/runs/41024510545).
+
+The current guard is now based on **main commit
+`50bec225674592c530486baf52ae8066c88ae629`** and its independently
+retrieved successful [main CI run 41019124696](https://github.com/shukritobi/chrono-dominion/actions/runs/41019124696):
+
+| Natural 720-second measurement | Verified main | Minimum or maximum allowed |
+| --- | ---: | ---: |
+| Verdant AI ore income | 7,560 | ≥ 6,426 (85%) |
+| Desert AI ore income | 21,960 | ≥ 18,666 (85%) |
+| Frostline AI ore income | 9,360 | ≥ 7,956 (85%) |
+| AI ore delivery ticks | 108 | ≥ 92 (85%) |
+| AI harvester losses | 5 | ≤ 6 |
+| Operational AI Air Commands | 1/3 | ≥ 1 |
+| First operational Verdant refinery destruction | 232.0s | ≥ 197.2s (85%) |
+
+The refinery survival check uses the existing exact
+`results[].aiRefineryLossTelemetry.losses` trace, never a guessed nearby
+attacker. A refinery that survives all 720 seconds passes; a built refinery
+destroyed too early fails. Missing, truncated or malformed Verdant loss
+telemetry fails closed. These thresholds are **regression smoke floors**,
+not guaranteed victory, fair multiplayer balance or a claim that Verdant
+survives permanently. They may be deliberately rebased after a documented
+tradeoff, but must not silently drift as gameplay changes.
+
+The updated test fixture reproduces both the 4,680-credit and 165.4-second
+failures from PR #162, checks exact inclusive thresholds and validates
+missing telemetry. The existing CI job already runs the guard against the
+full natural progression report, so no workflow or save-format changes are
+needed. This improvement changes **test gates only**, not gameplay, credits,
+assets or player saves.

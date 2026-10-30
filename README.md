@@ -71,7 +71,7 @@
 
 ### Natural-match AI economy regression gate (post-v2.42)
 
-- The 720-second CI progression laboratory now fails when **enemy-only ore income** drops more than 20% on any baseline map, deliveries fall below 75%, worker losses exceed six, or all natural AI Air Commands disappear. This protects against ore-routing changes that pass unit tests but damage actual AI survival. Run `npm run balance:regression`. No gameplay, saves or assets changed. [Guard methodology](docs/AI-ECONOMY-REGRESSION-GATE.md) · [regression tests](tests/ai-economy-guard.test.mjs).
+- The 720-second CI progression laboratory now compares **enemy-only ore income** with the latest verified main baseline, rejecting drops greater than 15% on any map, delivery losses greater than 15%, more than six worker losses, lost natural AI Air Commands, or Verdant refinery destruction more than 15% earlier than its verified 232-second baseline. This catches green-but-regressive tactical changes, including the rejected Psionic infantry reserve experiment. Run `npm run balance:regression`. No gameplay, saves or assets changed. [Guard methodology](docs/AI-ECONOMY-REGRESSION-GATE.md) · [regression tests](tests/ai-economy-guard.test.mjs).
 
 ### AI harvester survival and income telemetry (post-v2.42)
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Guard against large, unintended AI-economy regressions in the deterministic
- * 720-second natural-progression matrix. Baseline: main 077f0d1841356a53,
- * GitHub Actions 40534935886 (27 Oct 2026).
+ * 720-second natural-progression matrix. Baseline: main 50bec225674592c5,
+ * GitHub Actions 41019124696 (30 Oct 2026). The older 27 Oct floors
+ * missed a 38% Verdant income regression in PR #162.
  *
  * A guard failure requests gameplay review, not an automatic balance change.
  * Update baseline values only after a documented intentional rebalance.
@@ -12,10 +13,11 @@ import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 
 export const BASELINE=Object.freeze({
-  enemyOre:Object.freeze({verdant:3960,desert:15120,snow:9000}),
-  aiOreDeliveryTicks:78,
+  enemyOre:Object.freeze({verdant:7560,desert:21960,snow:9360}),
+  aiOreDeliveryTicks:108,
   casesWithAIAirfields:1,
-  aiHarvesterLosses:4
+  aiHarvesterLosses:5,
+  verdantRefinerySurvivalSeconds:232
 });
 
 export function checkAIEconomyRegression(report){
@@ -32,23 +34,42 @@ export function checkAIEconomyRegression(report){
     const ore=summary.mapEconomy[map]?.enemyOre;
     if(!Number.isFinite(ore)||ore<0)throw new Error('Missing valid AI ore for '+map);
     actual[map]=ore;
-    if(ore<baseline*.80)failures.push(
-      map+': AI ore '+ore+' is below 80% of baseline '+baseline);
+    if(ore<baseline*.85)failures.push(
+      map+': AI ore '+ore+' is below 85% of baseline '+baseline);
   }
   for(const key of ['aiOreDeliveryTicks','casesWithAIAirfields','aiHarvesterLosses']){
     if(!Number.isInteger(summary[key])||summary[key]<0)
       throw new Error('Missing valid AI metric '+key);
     actual[key]=summary[key];
   }
-  if(summary.aiOreDeliveryTicks<BASELINE.aiOreDeliveryTicks*.75)
-    failures.push('AI ore deliveries fell below 75% of baseline ('+
+  if(summary.aiOreDeliveryTicks<BASELINE.aiOreDeliveryTicks*.85)
+    failures.push('AI ore deliveries fell below 85% of baseline ('+
       summary.aiOreDeliveryTicks+' vs '+BASELINE.aiOreDeliveryTicks+')');
   if(summary.casesWithAIAirfields<BASELINE.casesWithAIAirfields)
     failures.push('AI Air Commands regressed ('+
       summary.casesWithAIAirfields+' vs '+BASELINE.casesWithAIAirfields+')');
-  if(summary.aiHarvesterLosses>BASELINE.aiHarvesterLosses+2)
-    failures.push('AI harvester losses increased by more than two ('+
+  if(summary.aiHarvesterLosses>BASELINE.aiHarvesterLosses+1)
+    failures.push('AI harvester losses increased by more than one ('+
       summary.aiHarvesterLosses+' vs '+BASELINE.aiHarvesterLosses+')');
+  // The latest main refinery survives to 232s on Verdant. A regression
+  // to 165.4s passed the historical ore floors, despite losing the entire
+  // economy earlier. Check the exact production-engine destruction trace.
+  const verdant=report.results?.filter(r=>r.map==='verdant');
+  if(verdant?.length!==1)
+    throw new Error('Expected exactly one Verdant progression scenario');
+  const trace=verdant[0].aiRefineryLossTelemetry;
+  if(!trace||!Array.isArray(trace.losses)||
+     !Number.isInteger(trace.lossesOmitted)||trace.lossesOmitted!==0)
+    throw new Error('Missing complete Verdant refinery loss telemetry');
+  const losses=trace.losses.filter(loss=>loss.built);
+  if(losses.some(loss=>!Number.isFinite(loss.time)||
+     loss.time<0||loss.time>report.simulationSeconds))
+    throw new Error('Invalid Verdant refinery destruction time');
+  const firstLoss=losses.length?Math.min(...losses.map(loss=>loss.time)):null;
+  actual.verdantRefineryLossTime=firstLoss;
+  if(firstLoss!==null&&firstLoss<BASELINE.verdantRefinerySurvivalSeconds*.85)
+    failures.push('Verdant refinery destroyed at '+firstLoss+
+      's, below 85% of baseline survival '+BASELINE.verdantRefinerySurvivalSeconds+'s');
   return {ok:failures.length===0,failures,actual,baseline:BASELINE};
 }
 
