@@ -118,14 +118,22 @@ assert.ok(game.players[1].credits<=creditsBeforeReserve,
   'reserve selection cannot award credits or create units');
 assert.equal(game.entities.filter(e=>e.owner===1&&e.kind==='tank'&&e.hp>0).length,1);
 
-// A larger force can still mount its normal paid offensive platoon while
-// the original tank stays available to defend the operational refinery.
+// Two unreserved infantry may still form a small support detachment, but
+// that squad must not steal the refinery's armoured reserve.
+assert.ok(!game.aiSupportPlatoon?.ids.includes(tankId),
+  'support detachment cannot recruit the reserved tank');
+// In a fresh match with three infantry available at once, the normal
+// offensive platoon can still assemble without that tank.
+game.newMatch(settings);game.time=105;
+homeRefinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
+homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
+distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
 game.add(1,'soldier',homeRefinery.x-2,homeRefinery.y-2);
 game.intel[1]=[intelReport()];
 game.runAI();
 assert.ok(game.aiPlatoon?.ids.length===3,
   'three unreserved infantry can still assemble an offensive platoon');
-assert.equal(game.aiPlatoon.ids.includes(tankId),false,
+assert.equal(game.aiPlatoon.ids.includes(homeTank.id),false,
   'refinery tank is never enlisted in the offensive platoon');
 assert.equal(homeTank.order,null,'offensive rally cannot overwrite the reserve');
 
