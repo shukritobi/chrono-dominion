@@ -321,5 +321,30 @@ for(const faction of ['psionic','coalition','federation']){
     'the focus-fire rule introduces no new save fields');
 }
 
+// A visible tank within the refinery perimeter should outrank a nearer
+// rifleman in Psionic base defense. The remaining guard still answers the
+// rifleman. Other factions preserve the existing nearest-threat policy.
+for(const faction of ['psionic','coalition','federation']){
+  const {refinery,headquarters,attacker,guards}=refineryFocusFixture(faction);
+  attacker.x=21;attacker.y=17; // tank 4 tiles from refinery
+  const rifle=game.add(0,'soldier',17.5,17); // rifle only .5 tiles away
+  guards[0].x=18;guards[0].y=17;
+  guards[1].x=19;guards[1].y=18;
+  guards[2].x=24;guards[2].y=17;
+  assert.ok(game.sideCanSee(1,attacker)&&game.sideCanSee(1,rifle));
+  const credits=game.players[1].credits;
+  const assigned=game.assignAIEngagements(guards,[rifle,attacker],headquarters);
+  if(faction==='psionic'){
+    assert.equal([...assigned.values()].filter(id=>id===attacker.id).length,2,
+      'Psionic defenders must prioritize the visible armoured refinery threat');
+    assert.ok([...assigned.values()].includes(rifle.id),
+      'the remaining guard must still answer the rifleman');
+  }else{
+    assert.equal([...assigned.values()].filter(id=>id===rifle.id).length,2,
+      faction+': ordinary nearest-invader allocation remains unchanged');
+  }
+  assert.equal(game.players[1].credits,credits,'focus fire spends no credits');
+}
+
 game.draw();
 console.log('PASS: fog-safe AI platoon rally, coordinated assault, stable orders, save recovery and prioritized defense');
