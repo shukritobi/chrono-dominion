@@ -60,7 +60,7 @@ that no longer exists. Source inspection found that the initial AI tank is
 eligible for the same offensive platoon as both opening riflemen; all three
 can leave the economy undefended after an objective is discovered.
 
-The AI now withholds **one already-owned, healthy tank or heavy tank within
+The Psionic AI now withholds **one already-owned, healthy tank or heavy tank within
 seven tiles of a completed refinery** from offensive platoon and support
 formation. It prefers the nearest eligible armour, leaves other soldiers
 available for normal assaults, and does not change unit recruitment,
@@ -79,3 +79,19 @@ compared against the preceding main run before claiming better refinery
 survival. This is a defensive allocation hypothesis, **not** a proven
 survival improvement until those comparisons succeed. The cost may be
 slower early assaults. Real browser/mobile playtesting remains outstanding.
+
+### Regression-limited scope
+
+The initial all-faction version passed focused tactical tests but failed the
+three-map 720-second economy gate: Frostline/Federation ore fell from 9,360
+to 5,400 (below the 9,000 historical baseline's 80% floor). It also
+delayed Verdant/Psionic's refinery loss from 167.8 to 213 seconds and
+increased Verdant ore from 5,040 to 7,200, without preventing eventual
+refinery destruction. These are CI observations from the **rejected broader
+candidate**, not merged production results.
+
+Psionic's Viper tank has a 0.91 HP and 0.94 damage modifier, unlike
+Federation's 1.18 HP and 1.13 damage modifier. The candidate therefore
+limits the defensive reserve to Psionic commanders, leaving Coalition and
+Federation's existing assault allocation unchanged. CI must independently
+verify the narrowed candidate; do not infer the result from the broad run.
