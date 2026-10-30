@@ -70,6 +70,9 @@ assert.ok(g.sideCanSee(1,playerHQ));
 scout.hp=0;g.time+=1;g.updateIntel(1);
 assert.ok(!g.sideCanSee(1,playerHQ),'visibility ends when scout is removed');
 assert.ok(g.intel[1].some(x=>x.id===playerHQ.id),'brief last-seen position memory remains');
+// Recruit difficulty needs five unreserved fighters for an assault. The
+// existing base tank is now reserved for the operational refinery.
+g.add(1,'soldier',25,24);
 g.runAI();
 assert.ok(g.aiPlatoon?.phase==='rally'&&g.aiPlatoon.ids.length>=3,
   'AI forms a scouting-informed platoon instead of sending one fighter to attack');
