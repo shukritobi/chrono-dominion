@@ -273,3 +273,19 @@ merging. Compare refinery destruction time, Verdant income, defender losses,
 harvester losses and Desert/Frostline income against the previous main
 baseline. Do not describe the rule as a proven survival improvement unless
 those matched simulations demonstrate it.
+
+
+### Multi-raider armour-first refinement
+
+The same trial now prioritizes a **currently visible tank/heavy within 6.5
+tiles of a completed Psionic refinery** ahead of closer infantry in the
+existing base-defense assignment order. It does not add defenders or change
+the two-per-target cap for multi-raider encounters. A third existing guard
+can still engage a different visible raider. Other factions retain the
+original nearest-invader ranking.
+
+This addresses the telemetry showing early Psionic ground casualties in
+engagements with several tanks and infantry, not merely the later isolated
+refinery-killing shot. It remains a hypothesis until the matched natural
+progression results and economic regression gate are reviewed. A failure
+must block merging even if focused assignment tests pass.
