@@ -245,3 +245,29 @@ at 232s with no eligible nearby defenders. Increased attrition (20 vs
 16 ground losses) and the persistent lack of Verdant aviation remain
 unresolved. A single deterministic scripted scenario does not establish
 human-play balance or a general survival guarantee.
+
+## Psionic infantry fallback reserve (30 October 2026, candidate)
+
+The preceding Psionic recovery change purchased and deployed replacement
+soldiers but still lost the Verdant refinery at 232 seconds. The existing
+offensive-platoon logic excluded a nearby tank or heavy from attacks, but once
+both Vipers died there was no equivalent infantry fallback. Two or more paid
+soldiers could leave the economy together for an offensive support platoon.
+
+This candidate preserves the **same single-unit reserve** around a completed
+Psionic refinery, preferring a healthy nearby tank/heavy and falling back to
+one healthy nearby soldier/specialist only when no eligible armour survives.
+A guard must already be within seven tiles, above 36% health, and outside
+retreat cooldown. It is excluded from offensive squads but can still engage
+a visible enemy within nine tiles of the refinery. There are no free units,
+new AI observations, altered stats, credit changes, new save fields or art
+replacements. Coalition and Federation remain unchanged.
+
+Focused tests in `tests/platoons-v19.test.mjs` cover armour loss, infantry
+fallback, normal three-soldier offensive capacity, visible local response,
+missing refinery, paid economy isolation and save/load. This is a tactical
+hypothesis until CI's nine-scenario matrix, three 720-second natural matches
+and economy regression guard are inspected. Compare Verdant refinery loss
+time, income, defensive losses, Desert/Frostline income, ore deliveries and
+aviation against the prior `50bec225` baseline; do not equate a passing
+unit test with improved natural-match survival.
