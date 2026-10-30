@@ -177,3 +177,39 @@ lethal ground-unit projectile attribution is implemented yet.
 A follow-up change retains the final pre-destruction coverage samples rather
 than overwriting them with post-refinery-loss frames, and rounds accumulated
 exposure durations. Confirm the final PR workflow again before merging.
+
+
+## Paid Psionic ground-screen recovery candidate (30 October 2026)
+
+The main-branch 720-second Verdant trace after PR #160 showed no ground
+defenders from 121.4s until refinery destruction at 213.0s. Its final
+pre-loss coverage samples recorded zero defenders, no production queue,
+and credits increasing from 808 at 161.6s to 1,528 at 178.0s.
+The AI's construction priority previously never rebuilt a destroyed
+**Barracks**: it could attempt factories, radar, technology and turrets
+without restoring the cheapest infantry producer. This is a source-backed
+recovery gap, but the trace does not establish whether the Barracks was
+destroyed at the exact sampled time. The AI may also have lacked enough
+credits at earlier decision ticks.
+
+The proposed change applies **only to Psionic AI commanders** with a
+completed refinery, at least one living harvester, no brownout, no critical
+sole harvester, and zero surviving soldier/specialist/tank/heavy units.
+It suspends optional construction and prioritizes a normally priced
+500-credit Barracks if missing, preserving 650 credits for a generator.
+Once a Barracks is complete, it buys one normally priced 200-credit soldier
+through the existing queue. Optional radar/aviation banking cannot prevent
+that first replacement; the power reserve is preserved unless a visible
+base attack is underway. Queued units are never duplicated, and the
+normal emergency ore-harvester purchase still takes precedence.
+
+This does not spawn free defenders, modify faction stats, infer hidden
+opponent locations, alter save schemas, or change Coalition/Federation's
+established production priorities. It is a narrow **candidate gameplay
+fix**, not proven refinery survival. Validate the focused platoon
+regression, nine-scenario ground balance, three 720-second natural matches,
+ore economy guard, save/load, and XL performance benchmark before merging.
+Compare Verdant defender deployments after 121.4s, refinery loss time,
+credits, and ore income to main commit 022a9e2a4ac4c7e4d51168f0ac62e21df14bd381.
+If a complete Barracks already existed at 178s, investigate the production
+queue/credit decision timeline rather than claiming a Barracks loss.
