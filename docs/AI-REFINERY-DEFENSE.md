@@ -21,3 +21,32 @@ The repository's full CI workflow additionally runs the 9-scenario ground balanc
 ## Follow-up
 
 Compare the new progression artifact against the preceding successful main run. If refinery destruction persists, inspect attacker position, defensive force proximity and whether the refinery is exposed beyond the 9-tile local response. Do not blindly widen the interception radius or introduce paid repairs: earlier economic experiments degraded natural income.
+
+## Exact refinery-loss diagnostics (30 October 2026)
+
+The headless match laboratory now installs `tools/refinery-loss-telemetry.mjs`
+on each real game instance. It observes the **actual** `recordLoss` call and
+the matching projectile's impact callback, rather than inferring refinery
+destruction from radar blockers or nearby attackers. Every AI refinery loss
+records the time, position, pre-impact HP, projectile damage, exact source ID
+and kind, whether the shooter was visible to the AI, and up to eight nearby
+ground defenders with their distance, eligibility and current attack target.
+
+The record distinguishes successful launch/impact interceptions, absent or
+hidden shooters, no eligible local defender, and eligible defenders that
+were not targeting the shooter. These are diagnostic classifications, **not**
+proof of the root cause of death. A defender targeting the shooter may still
+lose the damage race. The tracer separately counts sold refineries and
+unattributed losses; it never treats a sale as a hostile kill or guesses a
+projectile source for a non-projectile loss. Reports cap captured deaths at
+12 per scenario and count omitted records.
+
+The new `aiRefineryLossTelemetry` scenario field and
+`summary.aiRefineryLosses` / `summary.aiRefinerySales` counters are
+additive. This change does not modify game.js, AI decisions, combat, sensors,
+production costs, saves, or original assets. Three-faction integration tests
+exercise a real lethal tank projectile, exact source attribution, tactical
+response, sale isolation and unattributed losses. The existing CI natural
+progression run will supply the first exact Verdant death evidence. Review
+those artifacts **before** selecting a tactical change; passing regression
+tests alone does not demonstrate improved refinery survival.
