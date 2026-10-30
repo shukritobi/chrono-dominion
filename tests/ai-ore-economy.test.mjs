@@ -194,6 +194,72 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(queued(g,'harvester').length,1,
     faction+': replacing the only lost harvester remains higher priority');
 
+
+  // Emergency income restoration can reclaim PREPAID optional recruitment,
+  // but only if cancelling that single queue actually funds a replacement.
+  // No unit is created for free, and enemy queues/player queues stay isolated.
+  reset();g.time=300;
+  alive(g,'harvester')[0].hp=0;
+  g.players[1].credits=650;
+  g.stats[1].creditsSpent+=850; // existing prepaid tank order
+  g.queues=[{side:1,key:'tank',elapsed:1,total:3},
+    {side:0,key:'soldier',elapsed:1,total:2}];
+  const beforeRecoverySpent=g.stats[1].creditsSpent;
+  g.runAI();
+  assert.equal(queued(g,'tank').length,0,
+    faction+': cancel the prepaid optional tank after total income loss');
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': recovered credits buy a real 900-credit harvester');
+  assert.equal(g.players[1].credits,600,
+    faction+': refund 850 and spend 900, no invented income');
+  assert.equal(g.stats[1].creditsSpent-beforeRecoverySpent,50,
+    faction+': net expenditure reflects exact cancellation and replacement');
+  assert.equal(g.queues.filter(q=>q.side===0&&q.key==='soldier').length,1,
+    faction+': never cancel player production');
+  g.runAI();
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': no duplicate recovery purchase');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': refunded queue and replacement survive legacy save/load');
+  assert.equal(queued(g,'harvester').length,1);
+  g.advanceProduction(10);
+  assert.equal(alive(g,'harvester').length,1,
+    faction+': recovered ore truck deploys through ordinary refinery production');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.players[1].credits=100;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2}];
+  g.runAI();
+  assert.equal(queued(g,'soldier').length,1,
+    faction+': do not cancel a queue if its refund cannot fund a worker');
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': insufficient funds cannot grant a free harvester');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.players[1].credits=100;
+  g.queues=[{side:1,key:'harvester',elapsed:1,total:3}];
+  g.runAI();
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': keep an already paid replacement worker in its queue');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.players[1].credits=650;
+  g.queues=[{side:1,key:'tank',elapsed:1,total:3}];
+  const threatenedHq=alive(g,'hq')[0];
+  g.add(0,'soldier',threatenedHq.x+1,threatenedHq.y+1);
+  g.runAI();
+  assert.equal(queued(g,'tank').length,1,
+    faction+': visible base invasion keeps emergency ground recruitment');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);g.add(1,'radar',23,25);
+  assert.equal(g.power(1).low,true,faction+': brownout recovery fixture');
+  g.players[1].credits=650;
+  g.queues=[{side:1,key:'tank',elapsed:1,total:3}];
+  g.runAI();
+  assert.equal(queued(g,'tank').length,1,
+    faction+': power shortage must not cancel defensive production');
+
   // Air Command becomes eligible after 130 seconds. Without a radar,
   // protect its paid 900+650 budget as soon as aviation can be pursued,
   // rather than spending optional recruitment throughout seconds 130-240.
@@ -308,4 +374,4 @@ for(const faction of ['coalition','federation','psionic']){
   pending.built=true;pending.construction=1;
   assert.equal(g.power(1).low,false,'completed generator restores normal power');
 }
-console.log('PASS: three-faction ore expansion, radar reserves, paid brownout construction and saves');
+console.log('PASS: three-faction ore expansion, paid queue recovery, radar reserves, brownout construction and saves');

@@ -3007,6 +3007,25 @@
       // before buying optional technology, factory, radar or aviation.
       // Brownout recovery and observed base defense still take precedence.
       const oreRecoveryNeeded=built('refinery')&&!owned('harvester').length;
+      // If the last ore truck dies while another unit is still in a PAID
+      // production queue, the AI can be stranded below the 900-credit
+      // replacement cost. Only cancel an optional queued unit if its exact
+      // prepaid cost makes one replacement affordable. Do not cancel under
+      // observed base attack, brownout, or when a harvester is already queued.
+      // No free credits, new save fields, or changes to player queues.
+      if(oreRecoveryNeeded&&!threatened&&!shortage&&
+         me.credits<UNITS.harvester.cost&&
+         !this.queues.some(q=>q.side===side&&q.key==='harvester')){
+        const index=this.queues.findIndex(q=>q.side===side&&
+          q.key!=='harvester'&&UNITS[q.key]&&
+          me.credits+UNITS[q.key].cost>=UNITS.harvester.cost);
+        if(index>=0){
+          const [cancelled]=this.queues.splice(index,1);
+          const refund=UNITS[cancelled.key].cost;
+          me.credits+=refund;
+          this.stats[side].creditsSpent-=refund;
+        }
+      }
       // A critically damaged last worker risks total income loss. When safe
       // and solvent, buy one paid backup even after the early expansion window.
       // Preserve the emergency generator reserve and all threat priorities.
