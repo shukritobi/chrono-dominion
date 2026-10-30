@@ -2563,7 +2563,14 @@
       for(const enemy of defenders){
         const defenders=[...available.values()].filter(u=>dist(u,enemy)<=9)
           .sort((a,b)=>dist(a,enemy)-dist(b,enemy)||a.id-b.id);
-        const cap=Math.min(2,defenders.length);
+        // When a lone observed armoured raider reaches a Psionic refinery,
+        // allow a third already-owned local defender to join the interception.
+        // The usual two-defender cap remains for other factions, infantry,
+        // hidden contacts and multi-attacker raids so escorts are not stripped.
+        const refineryAtRisk=this.players[side].faction==='psionic'&&
+          ['tank','heavy'].includes(enemy.kind)&&defenders.length===1&&
+          structures.some(b=>b.kind==='refinery'&&b.built&&dist(b,enemy)<=6.5);
+        const cap=Math.min(refineryAtRisk?3:2,defenders.length);
         for(let i=0;i<cap;i++)assign(defenders[i],enemy);
       }
       // A distant ore truck is outside the HQ's invasion radius. Give up to
