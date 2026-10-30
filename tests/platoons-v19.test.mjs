@@ -93,5 +93,65 @@ assert.equal(game.aiPlatoon,null,'base threat suspends assault grouping');
 const defender=game.entities.filter(e=>e.owner===1&&e.type==='unit'&&e.kind!=='harvester')
   .filter(e=>e.order?.type==='attack'&&e.order.id===raid.id);
 assert.ok(defender.length>=1,'AI assigns nearby defenders to observed intruder');
+
+// A real opening tank must not abandon the ore economy with both riflemen
+// just because the AI discovered a distant objective. Keep the existing
+// combat planner and save format; reserve selection never creates a unit.
+game.newMatch(settings);game.time=105;
+let homeRefinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
+let homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
+let distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
+const intelReport=()=>({id:distantHQ.id,x:distantHQ.x,y:distantHQ.y,
+  time:game.time-1,type:'building',kind:'hq'});
+assert.ok(homeRefinery?.built&&homeTank?.hp>0);
+assert.ok(Math.hypot(homeTank.x-homeRefinery.x,homeTank.y-homeRefinery.y)<7);
+assert.equal(game.sideCanSee(1,distantHQ),false,'refinery reserve uses no hidden enemy positions');
+homeTank.order={type:'attackMove',x:distantHQ.x,y:distantHQ.y};
+game.intel[1]=[intelReport()];
+const creditsBeforeReserve=game.players[1].credits;
+const tankId=homeTank.id;
+game.runAI();
+assert.equal(homeTank.order,null,'nearby armoured defender must abandon an offensive order');
+assert.equal(homeTank.stance,'guard','reserved tank remains a normal responsive guard');
+assert.equal(game.aiPlatoon,null,'two riflemen alone cannot drain the last base tank');
+assert.ok(game.players[1].credits<=creditsBeforeReserve,
+  'reserve selection cannot award credits or create units');
+assert.equal(game.entities.filter(e=>e.owner===1&&e.kind==='tank'&&e.hp>0).length,1);
+
+// A larger force can still mount its normal paid offensive platoon while
+// the original tank stays available to defend the operational refinery.
+game.add(1,'soldier',homeRefinery.x-2,homeRefinery.y-2);
+game.intel[1]=[intelReport()];
+game.runAI();
+assert.ok(game.aiPlatoon?.ids.length===3,
+  'three unreserved infantry can still assemble an offensive platoon');
+assert.equal(game.aiPlatoon.ids.includes(tankId),false,
+  'refinery tank is never enlisted in the offensive platoon');
+assert.equal(homeTank.order,null,'offensive rally cannot overwrite the reserve');
+
+// Local sensor-confirmed attacks must still mobilize the reserve. It is
+// excluded only from assault formation, not from tactical engagements.
+const localRaider=game.add(0,'soldier',homeTank.x-1,homeTank.y);
+assert.ok(game.sideCanSee(1,localRaider));
+game.runAI();
+assert.equal(homeTank.order?.type,'attack');
+assert.equal(homeTank.order?.id,localRaider.id,
+  'reserved tank intercepts a visible local threat');
+assert.ok(game.saveGame()&&game.loadGame(),
+  'refinery reserve uses the existing v1 save schema');
+assert.equal(game.entityById(tankId)?.order?.id,localRaider.id);
+
+// Without an operational refinery there is no reserve: the existing
+// three-fighter assault formation remains available.
+game.newMatch(settings);game.time=105;
+homeRefinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
+homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
+distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
+homeRefinery.hp=0;
+game.intel[1]=[intelReport()];
+game.runAI();
+assert.ok(game.aiPlatoon?.ids.includes(homeTank.id),
+  'do not immobilize armour to protect a destroyed refinery');
+
 game.draw();
 console.log('PASS: fog-safe AI platoon rally, coordinated assault, stable orders, save recovery and prioritized defense');
