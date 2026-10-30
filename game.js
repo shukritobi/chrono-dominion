@@ -3264,9 +3264,44 @@
         e.kind!=='harvester'&&e.kind!=='aircraft');
       const wounded=this.retreatWoundedAI(fighters,base,side);
       const active=fighters.filter(e=>!wounded.has(e.id));
+      // The opening AI tank previously joined the entire assault platoon,
+      // leaving its refinery without a ground defender in the Verdant match.
+      // Keep ONE existing, healthy armoured unit already near an operational
+      // refinery out of offensive squads. This does not create a free unit or
+      // use hidden opponents; the guard remains available for normal local
+      // engagements and confirmed-shot emergency responses.
+      const refinery=this.entities.find(e=>e.owner===side&&e.kind==='refinery'&&
+        e.hp>0&&e.built);
+      // Psionic Vipers trade hull and damage for speed; the observed
+      // unguarded refinery collapse is specific to this fragile opening.
+      // Keep Federation/Coalition's existing offensive allocation: the
+      // all-faction reserve reduced Frostline ore income below CI's guard.
+      const refineryReserve=refinery&&me.faction==='psionic'?[...active].filter(e=>
+        ['tank','heavy'].includes(e.kind)&&e.hp/e.maxHp>=.36&&
+        (e.retreatCooldownAt||0)<=this.time&&dist(e,refinery)<=7)
+        .sort((a,b)=>dist(a,refinery)-dist(b,refinery)||a.id-b.id)[0]:null;
+      if(refineryReserve){
+        const target=refineryReserve.order?.type==='attack'?
+          this.entityById(refineryReserve.order.id):null;
+        const localDefense=target&&target.hp>0&&target.owner!==side&&
+          this.sideCanSee(side,target)&&dist(target,refinery)<=9;
+        if(!localDefense&&refineryReserve.order){
+          // A former assault member returns to its current nearby guard
+          // position, without repeatedly resetting paths for idle sentries.
+          refineryReserve.order=null;refineryReserve.path=[];
+          refineryReserve.pathTarget=null;refineryReserve.pathGoal=null;
+          refineryReserve.pathRecheck=0;refineryReserve.yieldOrder=null;
+          refineryReserve.laneWaiting=null;
+          refineryReserve.guardX=refineryReserve.x;
+          refineryReserve.guardY=refineryReserve.y;
+        }
+        refineryReserve.stance='guard';
+      }
+      const fieldFighters=refineryReserve?
+        active.filter(e=>e.id!==refineryReserve.id):active;
       const oldAttackers=threatened?new Set([...(this.aiPlatoon?.ids||[]),...(this.aiSupportPlatoon?.ids||[])]):new Set();
-      const platoonIds=this.coordinateAIPlatoon(active,knowledge,base,threatened);
-      const supportIds=this.coordinateAISupport(active,knowledge,base,threatened,platoonIds);
+      const platoonIds=this.coordinateAIPlatoon(fieldFighters,knowledge,base,threatened);
+      const supportIds=this.coordinateAISupport(fieldFighters,knowledge,base,threatened,platoonIds);
       const responders=[...active].filter(e=>e.kind!=='recon').sort((a,b)=>a.id-b.id);
       if(threatened){
         for(const fighter of responders){

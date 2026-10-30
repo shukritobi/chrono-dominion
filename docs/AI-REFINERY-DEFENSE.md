@@ -50,3 +50,74 @@ response, sale isolation and unattributed losses. The existing CI natural
 progression run will supply the first exact Verdant death evidence. Review
 those artifacts **before** selecting a tactical change; passing regression
 tests alone does not demonstrate improved refinery survival.
+
+## Existing ground-armour refinery reserve (30 October 2026)
+
+The exact Verdant death trace from main commit `e8b72c0164778b59ab93787d2829d04d98401888` records a visible
+enemy tank killing the operational refinery at 167.8 seconds, with **zero**
+surviving local ground defenders. Tactical interception cannot summon a unit
+that no longer exists. Source inspection found that the initial AI tank is
+eligible for the same offensive platoon as both opening riflemen; all three
+can leave the economy undefended after an objective is discovered.
+
+The Psionic AI now withholds **one already-owned, healthy tank or heavy tank within
+seven tiles of a completed refinery** from offensive platoon and support
+formation. It prefers the nearest eligible armour, leaves other soldiers
+available for normal assaults, and does not change unit recruitment,
+construction, costs or fog-of-war. The reserved unit remains eligible for
+ordinary local target assignments and confirmed-shot emergency interception.
+If it previously had a distant offensive order, it returns to guarding its
+current nearby position; a visible attacker within nine tiles of the
+refinery keeps its direct attack order. Retreating or distant armour is not
+magically recalled, and a destroyed/unfinished refinery gets no reserve.
+
+`tests/platoons-v19.test.mjs` exercises the actual strategic AI: initial
+three-fighter force, larger infantry assault, visible local attack, missing
+refinery, no free credits, and legacy save/load. The full CI economy guard,
+natural 720-second progression and nine-scenario balance matrix must be
+compared against the preceding main run before claiming better refinery
+survival. This is a defensive allocation hypothesis, **not** a proven
+survival improvement until those comparisons succeed. The cost may be
+slower early assaults. Real browser/mobile playtesting remains outstanding.
+
+### Regression-limited scope
+
+The initial all-faction version passed focused tactical tests but failed the
+three-map 720-second economy gate: Frostline/Federation ore fell from 9,360
+to 5,400 (below the 9,000 historical baseline's 80% floor). It also
+delayed Verdant/Psionic's refinery loss from 167.8 to 213 seconds and
+increased Verdant ore from 5,040 to 7,200, without preventing eventual
+refinery destruction. These are CI observations from the **rejected broader
+candidate**, not merged production results.
+
+Psionic's Viper tank has a 0.91 HP and 0.94 damage modifier, unlike
+Federation's 1.18 HP and 1.13 damage modifier. The candidate therefore
+limits the defensive reserve to Psionic commanders, leaving Coalition and
+Federation's existing assault allocation unchanged. CI must independently
+verify the narrowed candidate; do not infer the result from the broad run.
+
+### Narrowed candidate verification (PR #159)
+
+The full PR verification workflow at
+https://github.com/shukritobi/chrono-dominion/actions/runs/41007116015
+**passed**, including targeted platoon/recon regressions, all existing
+gameplay tests, nine 240-second ground scenarios, three 720-second natural
+matches, the AI economy regression gate and the XL 120-unit benchmark.
+
+Compared with the preceding successful main-branch progression run:
+
+| 720-second measure | Before | Psionic-only reserve |
+| --- | ---: | ---: |
+| Verdant/Psionic AI ore income | 5,040 | 7,200 |
+| Verdant refinery destruction time | 167.8s | 213.0s |
+| Desert/Coalition AI ore income | 21,960 | 21,960 |
+| Frostline/Federation AI ore income | 9,360 | 9,360 |
+| Total ore delivery ticks | 101 | 107 |
+| AI harvester losses | 5 | 5 |
+| Natural scenarios with aircraft | 1 | 1 |
+
+Verdant income increased 42.9% and the refinery survived 45.2 seconds
+longer. **It was still destroyed**, and at the final impact no eligible
+local defender remained. This supports a meaningful but incomplete defensive
+improvement, not a permanent survival fix. The early assault allocation
+changes for Psionic, and human-played match quality remains unverified.
