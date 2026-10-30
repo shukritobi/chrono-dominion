@@ -121,3 +121,59 @@ longer. **It was still destroyed**, and at the final impact no eligible
 local defender remained. This supports a meaningful but incomplete defensive
 improvement, not a permanent survival fix. The early assault allocation
 changes for Psionic, and human-played match quality remains unverified.
+
+
+## Ground defender attrition and refinery coverage audit (30 October 2026)
+
+The Psionic-only armour reserve in PR #159 delayed Verdant's refinery loss to
+213.0 seconds and increased its ore income from 5,040 to 7,200, but the
+refinery still died without an eligible nearby defender. Before changing AI
+recruitment or tank stats, the natural-match laboratory now captures the
+**actual sequence of AI ground-defender removals and deployments** alongside
+local refinery coverage.
+
+`tools/ai-ground-defense-telemetry.mjs` reads production-engine states before
+and after each simulation step. It records the ID, kind, last HP, last order,
+retreat state and distance to the refinery for each disappeared AI ground
+combat unit; it records new ground units, nearby visible hostiles and the
+current paid queue. A local defender means a living, completed ground combat
+unit within nine tiles of an operational refinery. Exposure time is accumulated
+only when both adjacent simulation snapshots show an operational refinery
+without any local ground defender. Coverage gaps include their start and end
+and whether a defender returned or the refinery was lost. All detailed lists
+are capped; aggregate counts remain exact. A nearby enemy is **not** a proven
+killer: these records explicitly label unit removals as unattributed.
+
+The simulator adds `aiGroundDefenseTelemetry` per scenario and summary counts
+for ground losses, local losses, reinforcements and unguarded refinery seconds.
+The `AI GROUND DEFENSE SCENARIO` line is printed for each 720-second natural
+match. `tests/ai-ground-defense-telemetry.test.mjs` covers hidden-opponent
+exclusion, defender loss, paid-queue context, replacement, repeated empty
+coverage, refinery destruction, bounded reports and read-only behavior.
+
+This is **diagnostics only**. No change to `game.js`, player commands,
+credits, pathfinding, save formats, faction balance or art. CI results must be
+inspected to determine whether Verdant's reserved tank died, moved away,
+retreated or was never replaced before selecting the next gameplay patch.
+
+### First observed Verdant attrition chronology (PR #160 verification)
+
+The first successful candidate workflow at
+https://github.com/shukritobi/chrono-dominion/actions/runs/41012529357
+recorded **16** Verdant/Psionic ground-combat unit losses, **11** within nine
+tiles of the refinery, and **13** later deployments. The initial tank (ID 15)
+disappeared at 55.0 seconds and a replacement tank (ID 36) at 74.4 seconds.
+The final local soldier (ID 53) disappeared at 121.4 seconds, leaving an
+uninterrupted unguarded-refinery interval until its destruction at 213.0
+seconds: **91.6 seconds**. No new ground defender deployed after 120.8
+seconds; the last gap began with 280 credits and no production queue.
+The three-map 720-second income and survival baseline was unchanged:
+Verdant 7,200, Desert 21,960, Frostline 9,360, five harvester losses and one
+scenario with aircraft. These are observations from the deterministic
+scripted-player benchmark, not human match balance or proof of the cause of
+each defender death. Visible nearby enemies were numerous, but no exact
+lethal ground-unit projectile attribution is implemented yet.
+
+A follow-up change retains the final pre-destruction coverage samples rather
+than overwriting them with post-refinery-loss frames, and rounds accumulated
+exposure durations. Confirm the final PR workflow again before merging.
