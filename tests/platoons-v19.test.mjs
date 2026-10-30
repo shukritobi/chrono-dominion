@@ -265,5 +265,67 @@ assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
   'an observed base raid can trigger affordable emergency infantry');
 assert.equal(game.players[1].credits,100);
 
+// When a Psionic refinery loses its last Viper, one *existing* infantry
+// defender stays home. Previously both opening riflemen could be committed
+// to the support assault, leaving no local guard despite surviving infantry.
+function infantryReserveFixture(){
+  game.newMatch(reserveSettings);game.time=105;
+  const refinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
+  const tank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
+  const playerHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
+  assert.ok(refinery?.built&&tank?.hp>0);
+  tank.hp=0;
+  const soldiers=game.entities.filter(e=>e.owner===1&&e.kind==='soldier'&&e.hp>0);
+  assert.equal(soldiers.length,2);
+  game.intel[1]=[{id:playerHQ.id,x:playerHQ.x,y:playerHQ.y,
+    time:game.time-1,type:'building',kind:'hq'}];
+  return {refinery,soldiers,playerHQ};
+}
+let fallback=infantryReserveFixture();
+let infantryGuard=[...fallback.soldiers].sort((a,b)=>
+  Math.hypot(a.x-fallback.refinery.x,a.y-fallback.refinery.y)-
+  Math.hypot(b.x-fallback.refinery.x,b.y-fallback.refinery.y)||a.id-b.id)[0];
+infantryGuard.order={type:'attackMove',x:fallback.playerHQ.x,y:fallback.playerHQ.y};
+const beforeInfantryReserve=game.players[1].credits;
+game.runAI();
+assert.equal(infantryGuard.order,null,
+  'one nearby infantryman abandons the distant assault after armour loss');
+assert.equal(infantryGuard.stance,'guard');
+assert.ok(!game.aiPlatoon?.ids.includes(infantryGuard.id));
+assert.ok(!game.aiSupportPlatoon?.ids.includes(infantryGuard.id));
+assert.ok(game.players[1].credits<=beforeInfantryReserve,
+  'fallback reserve never generates credits or free combat units');
+assert.ok(game.saveGame()&&game.loadGame(),
+  'infantry fallback does not change the v1 save schema');
+
+// Reserve exactly one infantryman: three others remain eligible to rally.
+fallback=infantryReserveFixture();
+const additional=game.add(1,'soldier',fallback.refinery.x-2,fallback.refinery.y-2);
+game.add(1,'soldier',fallback.refinery.x-3,fallback.refinery.y-2);
+game.runAI();
+assert.ok(game.aiPlatoon?.ids.length===3,
+  'the infantry reserve does not disable normal three-unit assaults');
+assert.ok(!game.aiPlatoon.ids.includes(additional.id)||
+  game.aiPlatoon.ids.length===3,
+  'three unreserved soldiers remain available for the offensive platoon');
+const reserveSoldier=game.entities.filter(e=>e.owner===1&&e.kind==='soldier'&&e.hp>0)
+  .find(e=>e.stance==='guard'&&!game.aiPlatoon.ids.includes(e.id));
+assert.ok(reserveSoldier,'one soldier is excluded from the assault');
+
+// A visible nearby enemy still draws the infantry guard into combat.
+const visibleRaider=game.add(0,'soldier',reserveSoldier.x-1,reserveSoldier.y);
+assert.ok(game.sideCanSee(1,visibleRaider));
+game.runAI();
+assert.equal(reserveSoldier.order?.type,'attack');
+assert.equal(reserveSoldier.order?.id,visibleRaider.id,
+  'fallback infantry reserve still fights sensor-visible local threats');
+
+// An operational refinery is required: do not guard a destroyed one.
+fallback=infantryReserveFixture();
+fallback.refinery.hp=0;
+game.runAI();
+assert.equal(game.aiSupportPlatoon?.ids.length,2,
+  'without a refinery the two infantry remain available for support assault');
+
 game.draw();
 console.log('PASS: fog-safe AI platoon rally, coordinated assault, stable orders, save recovery and prioritized defense');
