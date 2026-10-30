@@ -728,9 +728,12 @@ for(const faction of ['coalition','federation','psionic']){
     const refinery=g.add(1,'refinery',15,16);
     g.nextAI=g.time+8;
     g.shoot(attacker,refinery);
-    assert.equal(guard.order?.id,undefined,
-      faction+': attacks on other structures cannot trigger harvester escorts');
-    assert.equal(g.nextHarvesterResponseAt,0);
+    assert.equal(guard.order?.id,attacker.id,
+      faction+': visible refinery attacks receive their own local base defense');
+    assert.equal(g.nextRefineryResponseAt,g.time+4,
+      faction+': refinery defense uses a separate bounded cooldown');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': refinery shots cannot trigger the harvester cooldown');
     assert.equal(worker.hp,worker.maxHp);
   }
 }
@@ -798,4 +801,100 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
+// Refinery destruction can permanently halt ore income. Defend an actual
+// visible shot at launch, independently of radar/harvester cooldowns. All
+// cases use the production shoot(), impact, AI sensors and save/load paths.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=19;guard.y=24;
+    const refinery=g.add(1,'refinery',24,24);
+    const tank=g.add(0,'tank',24,28);
+    assert.ok(g.sideCanSee(1,tank),faction+': refinery sees the approaching tank');
+    g.nextAI=g.time+8;
+    const hp=refinery.hp,credits=g.players[1].credits;
+    g.shoot(tank,refinery);
+    assert.equal(refinery.hp,hp,faction+': projectile launch cannot damage refinery');
+    assert.equal(guard.order?.id,tank.id,
+      faction+': defender intercepts confirmed refinery shot before AI tick');
+    assert.equal(g.nextRefineryResponseAt,g.time+4,
+      faction+': successful interception sets a four-second cooldown');
+    assert.equal(g.nextRadarResponseAt,0,
+      faction+': refinery attack cannot consume radar defense cooldown');
+    assert.equal(g.nextHarvesterResponseAt,0,
+      faction+': refinery attack cannot consume worker defense cooldown');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': interception cannot advance economic AI decisions');
+    assert.equal(g.players[1].credits,credits,
+      faction+': interception cannot create or spend credits');
+    guard.order=null;
+    g.updateProjectiles(1);
+    assert.ok(refinery.hp<hp,faction+': ordinary projectile damage still applies');
+    assert.equal(guard.order,null,
+      faction+': impact within cooldown cannot repeat a successful order');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': existing attack orders and refinery persist in legacy saves');
+    assert.equal(g.nextRefineryResponseAt,0,
+      faction+': transient refinery cooldown is reset after load');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=8;guard.y=10;
+    const refinery=g.add(1,'refinery',10,10);
+    const heavy=g.add(0,'heavy',16,10);
+    g.nextAI=g.time+8;
+    assert.equal(g.sideCanSee(1,heavy),false,
+      faction+': hidden siege shooter is not revealed by refinery');
+    g.shoot(heavy,refinery);
+    assert.equal(guard.order?.id,undefined,
+      faction+': hidden launch cannot leak attacker location');
+    assert.equal(g.nextRefineryResponseAt,0,
+      faction+': hidden shooter cannot consume refinery cooldown');
+    g.add(1,'recon',13,10);
+    assert.ok(g.sideCanSee(1,heavy),
+      faction+': actual friendly scout reveals attacker before impact');
+    g.updateProjectiles(1.5);
+    assert.equal(guard.order?.id,heavy.id,
+      faction+': newly visible siege shooter is intercepted at impact');
+  }
+  for(const kind of ['soldier','specialist']){
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=19;guard.y=24;
+    const refinery=g.add(1,'refinery',24,24);
+    const attacker=g.add(0,kind,24,28);
+    g.nextAI=g.time+8;
+    assert.ok(g.sideCanSee(1,attacker));
+    g.shoot(attacker,refinery);
+    assert.equal(guard.order?.id,attacker.id,
+      faction+': '+kind+' refinery attack must receive immediate defense');
+    assert.equal(g.nextRefineryResponseAt,g.time+4);
+    guard.order=null;
+    g.shoot(attacker,refinery);
+    assert.equal(guard.order,null,
+      faction+': repeated '+kind+' shots cannot spam assignments');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=9;guard.y=14;
+    const refinery=g.add(1,'refinery',24,24);
+    const attacker=g.add(0,'tank',24,28);
+    g.nextAI=g.time+8;
+    g.shoot(attacker,refinery);
+    assert.equal(guard.order?.id,undefined,
+      faction+': remote defenders cannot teleport to refinery');
+    assert.equal(g.nextRefineryResponseAt,0,
+      faction+': failed interception does not consume cooldown');
+  }
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=19;guard.y=24;
+    const unfinished=g.add(1,'refinery',24,24,false);
+    const attacker=g.add(0,'tank',24,28);
+    g.nextAI=g.time+8;
+    g.shoot(attacker,unfinished);
+    assert.equal(guard.order?.id,undefined,
+      faction+': unfinished refineries cannot summon emergency guards');
+    assert.equal(g.nextRefineryResponseAt,0);
+  }
+}
 console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, all-ground radar defense and impact fallback across three factions');
