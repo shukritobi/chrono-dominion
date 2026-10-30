@@ -3087,6 +3087,17 @@
         soleHarvester[0].hp/soleHarvester[0].maxHp<.45&&
         !threatened&&!shortage&&
         me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
+      // A Psionic refinery with no surviving ground fighters cannot defend
+      // itself, even if the AI is saving for radar or aircraft. The Verdant
+      // progression trace recorded a 91.6-second gap with zero defenders.
+      // Recover a paid barracks/infantry screen before optional technology.
+      // No hidden enemy positions, new credits or saved state are involved.
+      const groundDefenseCollapsed=me.faction==='psionic'&&
+        built('refinery')&&owned('harvester').length>0&&
+        !criticalHarvester&&!shortage&&
+        !this.entities.some(e=>e.owner===side&&e.type==='unit'&&
+          e.hp>0&&e.built&&
+          ['soldier','specialist','tank','heavy'].includes(e.kind));
       const aviationReady=!oreRecoveryNeeded&&!criticalHarvester&&!owned('airfield').length&&built('factory')&&
         built('radar')&&this.time>130;
       // Once an airfield is purchased, keep the aviation budget intact until
@@ -3106,11 +3117,20 @@
       if(!owned('generator').length||shortage){
         if(!generatorPending)choice='generator';
       }else if(!owned('refinery').length)choice='refinery';
-      else if(threatened&&built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
+      else if(threatened&&!groundDefenseCollapsed&&
+        built('turret')<2&&me.credits>=BUILD.turret.cost+300)choice='turret';
       // Do not strand a lost harvester behind an optional building purchase:
       // an Air Command would leave only 650 of the 900 credits needed to
       // restore ore income at the usual 2,400-credit investment threshold.
       else if(oreRecoveryNeeded||criticalHarvester)choice=null;
+      else if(groundDefenseCollapsed){
+        // Rebuild the inexpensive infantry producer before another factory,
+        // radar or turret. A pending barracks is already paid for. Keep the
+        // normal generator reserve while not under immediate attack.
+        if(!owned('barracks').length&&
+          me.credits>=BUILD.barracks.cost+BUILD.generator.cost)
+          choice='barracks';
+      }
       else if(!owned('factory').length)choice='factory';
       // Radar costs 900; a 2,600-credit gate stranded otherwise solvent AI
       // bases after the second harvester purchase. Keep a generator reserve.
@@ -3185,10 +3205,19 @@
         !owned('airfield').length&&!savingForAirfield&&
         built('refinery')&&owned('harvester').length===1&&
         me.credits>=UNITS.harvester.cost+BUILD.generator.cost;
+      // An empty Psionic ground screen overrides optional aviation/radar
+      // savings, but still pays the standard infantry cost and preserves
+      // generator funds unless an actual visible base invasion is underway.
+      const emergencyGroundRecruit=groundDefenseCollapsed&&built('barracks')&&
+        me.credits>=UNITS.soldier.cost+
+          (threatened?0:BUILD.generator.cost);
       if(!this.queues.some(q=>q.side===side)&&
-        !savingForAirfield&&!savingForAircraft&&!savingForRadar){
+        (!groundDefenseCollapsed||emergencyGroundRecruit)&&
+        ((!savingForAirfield&&!savingForAircraft&&!savingForRadar)||
+          emergencyGroundRecruit)){
         let unit='soldier';
-        if(!owned('harvester').length&&built('refinery'))unit='harvester';
+        if(emergencyGroundRecruit)unit='soldier';
+        else if(!owned('harvester').length&&built('refinery'))unit='harvester';
         else if(criticalHarvester)unit='harvester';
         else if(expandingOreEconomy)unit='harvester';
         else if(aviationInvestment&&built('airfield')&&!shortage&&

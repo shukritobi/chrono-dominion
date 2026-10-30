@@ -175,5 +175,95 @@ for(const faction of ['federation','coalition']){
     faction+': preserve existing tank offensive participation');
 }
 
+
+
+// Production recovery after the last Psionic ground defender is lost.
+// The 720-second Verdant trace showed a 91.6s unguarded refinery gap;
+// no ground unit deployed after 120.8s despite later credits. Rebuilding
+// the infantry producer must outrank optional factory/radar spending.
+function collapsedDefense(faction='psionic',credits=1550){
+  game.newMatch({...settings,enemyFaction:faction});
+  game.time=178;game.queues=[];game.intel[1]=[];
+  for(const e of game.entities){
+    if(e.owner===1&&e.type==='unit'&&e.kind!=='harvester')e.hp=0;
+  }
+  game.add(1,'generator',22,27);
+  game.add(1,'factory',22,21);
+  game.players[1].credits=credits;
+  assert.equal(game.power(1).low,false,'defense fixture must be powered');
+}
+const aiOwned=kind=>game.entities.filter(e=>e.owner===1&&e.kind===kind&&e.hp>0);
+collapsedDefense();
+const noDefenseCredits=game.players[1].credits;
+game.runAI();
+assert.equal(aiOwned('radar').length,0,
+  'an empty Psionic ground screen must defer optional radar construction');
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
+  'an intact barracks must fund a real replacement infantry unit');
+assert.equal(game.players[1].credits,noDefenseCredits-200,
+  'emergency ground recruitment must debit the ordinary soldier cost');
+game.advanceProduction(3);
+assert.equal(aiOwned('soldier').length,1,
+  'the replacement must deploy from the real barracks');
+assert.ok(game.saveGame()&&game.loadGame(),
+  'emergency recruitment must retain the original save format');
+
+// A destroyed barracks is more urgent than a new factory, radar or turret
+// when no ground combat unit remains. Construction and recruitment both pay.
+collapsedDefense();
+const ruinedBarracks=aiOwned('barracks')[0];
+ruinedBarracks.hp=0;
+game.runAI();
+const replacementBarracks=aiOwned('barracks');
+assert.equal(replacementBarracks.length,1,
+  'Psionic AI must rebuild its lost ground-unit producer');
+assert.equal(replacementBarracks[0].built,false,
+  'barracks recovery uses ordinary paid construction');
+assert.equal(game.players[1].credits,1050,
+  'barracks reconstruction must cost 500 credits');
+assert.equal(game.queues.length,0,
+  'infantry cannot be queued before the replacement barracks is completed');
+replacementBarracks[0].built=true;
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
+  'a recovered barracks must unlock the next paid defensive soldier');
+
+// Never sacrifice ore recovery, brownout recovery, or the emergency power
+// reserve just to manufacture a new guard.
+collapsedDefense();
+aiOwned('harvester')[0].hp=aiOwned('harvester')[0].maxHp*.4;
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='harvester').length,1,
+  'a critically wounded last harvester takes priority over infantry');
+collapsedDefense('psionic',849);
+game.runAI();
+assert.equal(game.queues.length,0,
+  'without an immediate attack, preserve the generator reserve');
+collapsedDefense();
+aiOwned('generator').forEach(g=>{g.hp=0;});
+game.runAI();
+assert.ok(aiOwned('generator').some(e=>!e.built),
+  'brownout recovery still purchases an ordinary replacement generator');
+
+// Preserve the previous stronger-faction production choices. The earlier
+// all-faction defensive reserve failed the Frostline economy regression.
+for(const faction of ['coalition','federation']){
+  collapsedDefense(faction);
+  game.runAI();
+  assert.equal(aiOwned('radar').length,1,
+    faction+': ordinary optional construction must remain available');
+}
+
+// A visible immediate attack may use the emergency reserve for a paid
+// rifleman, but hidden attackers never influence the collapsed-screen flag.
+collapsedDefense('psionic',300);
+const psionicHQ=aiOwned('hq')[0];
+const nearbyEnemy=game.add(0,'soldier',psionicHQ.x-2,psionicHQ.y);
+assert.ok(game.sideCanSee(1,nearbyEnemy));
+game.runAI();
+assert.equal(game.queues.filter(q=>q.side===1&&q.key==='soldier').length,1,
+  'an observed base raid can trigger affordable emergency infantry');
+assert.equal(game.players[1].credits,100);
+
 game.draw();
 console.log('PASS: fog-safe AI platoon rally, coordinated assault, stable orders, save recovery and prioritized defense');
