@@ -1773,6 +1773,27 @@
       this.unservedHarvesterShooterId=!retrying&&!intercepted?attacker.id:0;
       return intercepted;
     }
+    rescanThreatenedAIHarvesterOre(shot,worker){
+      // Reuse the existing safe-deposit selector after actual damage rather
+      // than waiting up to six seconds on a now-dangerous ore destination.
+      // Never reroute a loaded delivery or react to a hidden shooter.
+      if(worker.owner!==1||worker.type!=='unit'||worker.kind!=='harvester'||
+         worker.hp<=0||worker.hp>=worker.maxHp*.7||worker.load>=360||
+         shot.owner!==0||!['soldier','specialist','tank','heavy'].includes(shot.sourceKind)||
+         (worker.oreScanAt||0)<=this.time)return false;
+      const attacker=this.entityById(shot.sourceId);
+      if(!attacker||attacker.owner!==0||attacker.type!=='unit'||
+         attacker.hp<=0||attacker.kind!==shot.sourceKind||
+         !this.sideCanSee(1,attacker)||
+         dist(attacker,worker)>this.stat(attacker,'range')+.8)return false;
+      // Impacts may arrive every second. Bound extra A* deposit searches to
+      // one per six seconds per worker, without adding any saved entity fields.
+      this.harvesterThreatRescanAt??=new WeakMap();
+      if(this.time<(this.harvesterThreatRescanAt.get(worker)||0))return false;
+      worker.oreScanAt=0;
+      this.harvesterThreatRescanAt.set(worker,this.time+6);
+      return true;
+    }
     updateProjectiles(dt){
       for(const shot of this.projectiles){
         shot.prevX=shot.x;shot.prevY=shot.y;
@@ -1794,6 +1815,7 @@
           continue;
         }
         target.hp-=shot.damage;
+        this.rescanThreatenedAIHarvesterOre(shot,target);
         this.respondToAIHarvesterAttack(shot,target);
         this.respondToAIRadarAttack(shot,target);
         if(target.owner===0&&target.type==='unit'&&this.time-(target.lastHurtVoiceAt??-100)>7){

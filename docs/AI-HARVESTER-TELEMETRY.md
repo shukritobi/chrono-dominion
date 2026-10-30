@@ -576,3 +576,8 @@ rejected after CI recorded **zero natural Air Commands and six worker losses**,
 so it was not merged. This shot-response extension must independently pass
 the full balance and economy gates. Natural survival improvement remains
 unproven until measured.
+
+
+## Impact-triggered wounded-worker ore rescan (30 October 2026)
+
+A wounded AI ore truck previously kept its cached ore destination for up to six seconds after taking damage, even when a currently visible ground attacker was firing on it. On a **confirmed projectile impact**, an empty AI harvester below 70% health now expires that cache, allowing the existing `chooseHarvestDeposit` logic to consider nearby reachable ore outside the observed firing envelope on its next work step. This is not an unconditional retreat and does not guarantee a safer deposit exists. Full-cargo refinery deliveries, healthy workers, the player's trucks, hidden attackers, construction, credits, saved fields and strategic AI timing are unchanged. A transient per-worker six-second throttle bounds additional path queries during sustained fire. Three-faction regressions cover actual safe-site selection, launch-versus-impact timing, repeated hits, visibility, loaded deliveries and legacy saves. The natural-match economy and harvester-loss impact must be evaluated from CI artifacts before calling this a survival improvement.

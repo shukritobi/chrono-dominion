@@ -735,4 +735,67 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
+
+
+// A damaged, empty AI truck must not wait on the six-second ore cache after
+// a visible hit. The existing safe-deposit planner, not a new retreat order,
+// decides whether a reachable nearby alternative is safer.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,worker,enemy}=game(faction);
+    worker.hp=worker.maxHp*.68;
+    worker.oreIndex=0;worker.oreScanAt=g.time+5;
+    g.ores=[{x:14,y:14,amount:800},{x:13,y:16,amount:800}];
+    // Keep this test about deposit ranking rather than map terrain geometry.
+    g.canOccupyUnit=()=>true;
+    g.findPath=(x,y,tx,ty)=>[{x:tx,y:ty}];
+    g.nextAI=g.time+8;
+    const credits=g.players[1].credits;
+    g.shoot(enemy,worker);
+    assert.equal(worker.oreScanAt,g.time+5,
+      faction+': projectile launch alone cannot force a deposit rescan');
+    g.updateProjectiles(1);
+    assert.equal(worker.oreScanAt,0,
+      faction+': visible damaging impact expires the unsafe ore cache');
+    g.processHarvester(worker,.2);
+    assert.equal(worker.oreIndex,1,
+      faction+': wounded worker selects a nearby ore site outside visible fire');
+    assert.equal(g.players[1].credits,credits,
+      faction+': a tactical rescan cannot grant or spend credits');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': rescan cannot advance strategic AI scheduling');
+    worker.oreScanAt=g.time+5;
+    g.shoot(enemy,worker);g.updateProjectiles(1);
+    assert.equal(worker.oreScanAt,g.time+5,
+      faction+': repeated impacts cannot repeatedly force expensive A* scans');
+    g.time+=6;worker.oreScanAt=g.time+5;
+    g.shoot(enemy,worker);g.updateProjectiles(1);
+    assert.equal(worker.oreScanAt,0,
+      faction+': a fresh impact may rescan after the six-second throttle');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': legacy save/load accepts the new transient rescan throttle');
+  }
+  for(const scenario of ['healthy','loaded','hidden','player']){
+    const {g,worker,enemy}=game(faction);
+    let target=worker,shooter=enemy;
+    worker.hp=worker.maxHp*(scenario==='healthy'?1:.68);
+    worker.oreScanAt=g.time+5;
+    if(scenario==='loaded')worker.load=360;
+    if(scenario==='hidden'){
+      enemy.hp=0;
+      shooter=g.add(0,'soldier',21,14);
+      assert.equal(g.sideCanSee(1,shooter),false);
+    }
+    if(scenario==='player'){
+      target=g.add(0,'harvester',14,14);
+      target.hp=target.maxHp*.68;
+      target.oreScanAt=g.time+5;
+      shooter=g.add(1,'soldier',17,14);
+    }
+    g.shoot(shooter,target);g.updateProjectiles(1);
+    assert.equal(target.oreScanAt,g.time+5,
+      faction+': '+scenario+' truck must retain its normal ore route');
+  }
+}
+
 console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, all-ground radar defense and impact fallback across three factions');
