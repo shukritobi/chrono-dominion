@@ -155,3 +155,25 @@ This is **diagnostics only**. No change to `game.js`, player commands,
 credits, pathfinding, save formats, faction balance or art. CI results must be
 inspected to determine whether Verdant's reserved tank died, moved away,
 retreated or was never replaced before selecting the next gameplay patch.
+
+### First observed Verdant attrition chronology (PR #160 verification)
+
+The first successful candidate workflow at
+https://github.com/shukritobi/chrono-dominion/actions/runs/41012529357
+recorded **16** Verdant/Psionic ground-combat unit losses, **11** within nine
+tiles of the refinery, and **13** later deployments. The initial tank (ID 15)
+disappeared at 55.0 seconds and a replacement tank (ID 36) at 74.4 seconds.
+The final local soldier (ID 53) disappeared at 121.4 seconds, leaving an
+uninterrupted unguarded-refinery interval until its destruction at 213.0
+seconds: **91.6 seconds**. No new ground defender deployed after 120.8
+seconds; the last gap began with 280 credits and no production queue.
+The three-map 720-second income and survival baseline was unchanged:
+Verdant 7,200, Desert 21,960, Frostline 9,360, five harvester losses and one
+scenario with aircraft. These are observations from the deterministic
+scripted-player benchmark, not human match balance or proof of the cause of
+each defender death. Visible nearby enemies were numerous, but no exact
+lethal ground-unit projectile attribution is implemented yet.
+
+A follow-up change retains the final pre-destruction coverage samples rather
+than overwriting them with post-refinery-loss frames, and rounds accumulated
+exposure durations. Confirm the final PR workflow again before merging.
