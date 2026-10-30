@@ -3212,6 +3212,7 @@
         me.credits>=UNITS.soldier.cost+
           (threatened?0:BUILD.generator.cost);
       if(!this.queues.some(q=>q.side===side)&&
+        (!groundDefenseCollapsed||emergencyGroundRecruit)&&
         ((!savingForAirfield&&!savingForAircraft&&!savingForRadar)||
           emergencyGroundRecruit)){
         let unit='soldier';
