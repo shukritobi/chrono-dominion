@@ -289,3 +289,31 @@ engagements with several tanks and infantry, not merely the later isolated
 refinery-killing shot. It remains a hypothesis until the matched natural
 progression results and economic regression gate are reviewed. A failure
 must block merging even if focused assignment tests pass.
+
+## Stranded paid production queue recovery (30 October 2026)
+
+**Source-backed failure mode:** `advanceProduction()` deliberately pauses a
+paid order when its producer is missing, preserving the player's investment.
+However, `runAI()` normally allows only one active AI queue. A queued tank
+whose only factory has been destroyed therefore blocks even the Psionic
+ground-screen recovery path indefinitely, regardless of available credits or
+an intact barracks. This is a real code-path deadlock; **whether it occurs in
+the archived Verdant match remains unverified**.
+
+When a Psionic AI has an operational refinery, a living harvester, no
+completed ground combat defenders, sufficient power and a completed barracks,
+it may cancel **one** AI-paid non-harvester order whose producer no longer
+exists. It refunds the original unit price exactly, reverses the corresponding
+`creditsSpent` accounting, and allows the existing normally priced infantry
+recruitment logic to proceed. A producer still under construction is not
+considered destroyed. Other factions, human queues and harvester orders
+are untouched. No new save fields, unit statistics, income or art are added.
+
+`tests/platoons-v19.test.mjs` covers the stranded-factory case, exact
+refund and net expenditure, actual paid soldier deployment, unfinished
+producer protection, player/faction isolation, harvester queue protection
+and legacy save/load. CI must verify nine ground-balance scenarios, three
+720-second natural matches, the economy regression gate and the XL benchmark
+before merge. A passing focused test proves deadlock recovery in the fixture,
+**not** improved natural-match refinery survival. Compare the new progression
+artifact against the 7,560-credit Verdant / 232-second refinery baseline.
