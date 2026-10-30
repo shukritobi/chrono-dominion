@@ -313,9 +313,10 @@ for(const faction of ['psionic','coalition','federation']){
   const other=game.add(0,'soldier',17.5,19);
   assert.ok(game.sideCanSee(1,other));
   const assignments=game.assignAIEngagements(guards,[attacker,other],headquarters);
-  assert.equal(guards[2].order?.id===attacker.id,false,
-    'multiple visible raiders retain the normal two-guard allocation');
-  assert.ok(assignments.size>=2,'multi-raider defense still engages attackers');
+  assert.ok([...assignments.values()].filter(id=>id===attacker.id).length<=2,
+    'multiple visible raiders retain the normal two-guard armour cap');
+  assert.ok([...assignments.values()].includes(other.id),
+    'another visible raider must still receive a defender');
   assert.ok(game.saveGame()&&game.loadGame(),
     'the focus-fire rule introduces no new save fields');
 }
