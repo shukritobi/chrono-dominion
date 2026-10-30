@@ -20,6 +20,8 @@ import {newHarvesterTelemetry,observeHarvesterStep,
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
 import {traceHarvesterLethalImpacts} from './harvester-impact-telemetry.mjs';
 import {traceAIRefineryLosses} from './refinery-loss-telemetry.mjs';
+import {newGroundDefenseTelemetry,snapshotAIGroundDefense,
+  observeAIGroundDefenseStep} from './ai-ground-defense-telemetry.mjs';
 import {newHarvesterSeparationTelemetry,observeHarvesterSeparationStep,
   summarizeHarvesterSeparation} from './harvester-separation-telemetry.mjs';
 import {newHarvesterMoveTelemetry,traceHarvesterMoves,
@@ -261,6 +263,7 @@ function runScenario(map,difficulty,mi,di){
   const aiHarvesterTelemetry=newHarvesterTelemetry();
   const lethalHarvesterImpacts=traceHarvesterLethalImpacts(g);
   const aiRefineryLossTelemetry=traceAIRefineryLosses(g);
+  const aiGroundDefenseTelemetry=newGroundDefenseTelemetry();
   const aiHarvesterSeparation=newHarvesterSeparationTelemetry();
   const aiHarvesterMove=newHarvesterMoveTelemetry();
   traceHarvesterMoves(g,aiHarvesterMove);
@@ -305,7 +308,10 @@ function runScenario(map,difficulty,mi,di){
       e.kind==='refinery'&&e.hp>0&&e.built)
       .map(e=>({id:e.id,x:e.x,y:e.y,hp:e.hp,built:e.built}));
     const oreBefore=g.stats[1].oreHarvested;
+    const groundDefenseBefore=snapshotAIGroundDefense(g);
     g.step(frame);
+    observeAIGroundDefenseStep(aiGroundDefenseTelemetry,groundDefenseBefore,
+      snapshotAIGroundDefense(g));
     const afterHarvesters=g.entities.filter(e=>
       e.owner===1&&e.kind==='harvester'&&e.hp>0);
     observeHarvesterMoveTick(aiHarvesterMove,beforeHarvesters,afterHarvesters,g.time);
@@ -385,7 +391,7 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,peakAIHarvesters,aiHarvesterTelemetry,
-    aiRefineryLossTelemetry,
+    aiRefineryLossTelemetry,aiGroundDefenseTelemetry,
     aiHarvesterSeparation,aiHarvesterMove,
     platoonSeen,supportSeen,assaultLaunched,
     assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
@@ -441,6 +447,11 @@ const report={
     aiRefineryLosses:results.reduce((n,r)=>
       n+r.aiRefineryLossTelemetry.losses.length+r.aiRefineryLossTelemetry.lossesOmitted,0),
     aiRefinerySales:results.reduce((n,r)=>n+r.aiRefineryLossTelemetry.sales,0),
+    aiGroundDefenderLosses:results.reduce((n,r)=>n+r.aiGroundDefenseTelemetry.losses,0),
+    aiLocalDefenderLosses:results.reduce((n,r)=>n+r.aiGroundDefenseTelemetry.localLosses,0),
+    aiGroundReinforcements:results.reduce((n,r)=>n+r.aiGroundDefenseTelemetry.reinforcements,0),
+    aiUnguardedRefinerySeconds:Number(results.reduce((n,r)=>
+      n+r.aiGroundDefenseTelemetry.unguardedRefinerySeconds,0).toFixed(1)),
     aiHarvesterLosses:results.reduce((n,r)=>n+r.aiHarvesterTelemetry.lost,0),
     aiHarvesterLossCasesCaptured:results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.lossCases.length,0),
@@ -529,6 +540,8 @@ if(progression&&!options.includes('--json'))for(const r of results){
     blockers:r.aiRadarRecovery.decisions,recent:r.aiRadarRecovery.recent}));
   console.log('AI REFINERY LOSS SCENARIO:',JSON.stringify({map:r.map,
     faction:r.enemyFaction,...r.aiRefineryLossTelemetry}));
+  console.log('AI GROUND DEFENSE SCENARIO:',JSON.stringify({map:r.map,
+    faction:r.enemyFaction,...r.aiGroundDefenseTelemetry}));
 }
 assert.equal(results.length,progression?3:9,
   'complete '+(progression?'three-faction natural progression':'three-map/three-difficulty')+' matrix');
@@ -560,6 +573,14 @@ for(const r of results){
     'AI aircraft must be purchased through a production queue before deployment');
 }
 assert.ok(results.every(r=>r.seconds>0&&r.samples>0));
+assert.ok(results.every(r=>{
+  const m=r.aiGroundDefenseTelemetry;
+  return m.losses===m.lossCases.length+m.lossCasesOmitted&&
+    m.localLosses<=m.losses&&
+    m.reinforcements===m.deploymentCases.length+m.deploymentCasesOmitted&&
+    m.unguardedRefinerySeconds>=0&&m.unguardedRefinerySeconds<=r.seconds+1&&
+    m.coverageGaps.every(g=>g.endedAt===null||g.endedAt>=g.startedAt);
+}), 'ground defender losses, reinforcements and refinery exposure must reconcile');
 assert.ok(results.every(r=>r.aiHarvesterTelemetry.deliveredOre===r.harvest[1]&&
   r.aiHarvesterTelemetry.lost>=0&&r.aiHarvesterTelemetry.cargoAtLoss>=0&&
   r.aiHarvesterTelemetry.lossCases.length<=12&&
