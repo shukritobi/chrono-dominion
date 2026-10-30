@@ -305,9 +305,11 @@ game.add(1,'soldier',fallback.refinery.x-3,fallback.refinery.y-2);
 game.runAI();
 assert.ok(game.aiPlatoon?.ids.length===3,
   'the infantry reserve does not disable normal three-unit assaults');
-assert.ok(!game.aiPlatoon.ids.includes(additional.id)||
-  game.aiPlatoon.ids.length===3,
-  'three unreserved soldiers remain available for the offensive platoon');
+assert.ok(game.aiPlatoon.ids.includes(additional.id),
+  'additional infantry is not blocked by the one-unit reserve');
+assert.equal(game.entities.filter(e=>e.owner===1&&e.kind==='soldier'&&e.hp>0&&
+  !game.aiPlatoon.ids.includes(e.id)).length,1,
+  'exactly one soldier remains on refinery duty');
 const reserveSoldier=game.entities.filter(e=>e.owner===1&&e.kind==='soldier'&&e.hp>0)
   .find(e=>e.stance==='guard'&&!game.aiPlatoon.ids.includes(e.id));
 assert.ok(reserveSoldier,'one soldier is excluded from the assault');
