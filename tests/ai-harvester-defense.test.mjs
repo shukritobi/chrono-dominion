@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {traceHarvesterLethalImpacts} from '../tools/harvester-impact-telemetry.mjs';
+import {traceAIRefineryLosses} from '../tools/refinery-loss-telemetry.mjs';
 
 // Exercise the production AI engagement planner, sensors, orders and legacy saves.
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
@@ -895,6 +896,63 @@ for(const faction of ['coalition','federation','psionic']){
     assert.equal(guard.order?.id,undefined,
       faction+': unfinished refineries cannot summon emergency guards');
     assert.equal(g.nextRefineryResponseAt,0);
+  }
+}
+
+// Observe actual lethal refinery impacts without changing the production
+// projectile or emergency-defense code. Check both exact attribution and
+// the distinction between a sold building and a destroyed building.
+for(const faction of ['coalition','federation','psionic']){
+  {
+    const {g,worker,guard,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;guard.x=19;guard.y=24;
+    const refinery=g.add(1,'refinery',24,24);
+    const tank=g.add(0,'tank',24,28);
+    g.nextAI=g.time+8;
+    const telemetry=traceAIRefineryLosses(g);
+    refinery.hp=1;
+    const credits=g.players[1].credits;
+    g.shoot(tank,refinery);
+    g.updateProjectiles(1);
+    assert.equal(telemetry.losses.length,1,
+      faction+': one actual refinery destruction is observed');
+    const loss=telemetry.losses[0];
+    assert.equal(loss.cause,'projectile');
+    assert.equal(loss.sourceId,tank.id,
+      faction+': exact lethal shooter is recorded');
+    assert.equal(loss.sourceKind,'tank');
+    assert.equal(loss.sourceVisibleToAI,true);
+    assert.equal(loss.launchResponded,true);
+    assert.equal(loss.eligibleDefenders,1);
+    assert.equal(loss.assignedDefenders,1);
+    assert.equal(loss.diagnostic,'local-defenders-targeting-shooter');
+    assert.equal(loss.hpBeforeImpact,1);
+    assert.equal(g.players[1].credits,credits,
+      faction+': headless tracing does not change the economy');
+    g.recordLoss(refinery,0);
+    assert.equal(telemetry.losses.length,1,
+      faction+': already-recorded deaths are not duplicated');
+  }
+  {
+    const {g,worker,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;
+    const refinery=g.add(1,'refinery',24,24);
+    const telemetry=traceAIRefineryLosses(g);
+    g.recordLoss(refinery,null,true);
+    assert.equal(telemetry.sales,1);
+    assert.equal(telemetry.losses.length,0,
+      faction+': economic liquidation is not hostile destruction');
+  }
+  {
+    const {g,worker,enemy}=game(faction);
+    enemy.hp=0;worker.hp=0;
+    const refinery=g.add(1,'refinery',24,24);
+    const telemetry=traceAIRefineryLosses(g);
+    refinery.hp=0;
+    g.recordLoss(refinery,0);
+    assert.equal(telemetry.unattributed,1);
+    assert.equal(telemetry.losses[0].cause,'unattributed',
+      faction+': non-projectile death must not invent a shooter');
   }
 }
 console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, all-ground radar defense and impact fallback across three factions');

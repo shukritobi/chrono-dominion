@@ -19,6 +19,7 @@ import {newHarvesterTelemetry,observeHarvesterStep,
   observeHarvesterThreatSample,inspectHarvesterLoss} from './ai-harvester-telemetry.mjs';
 import {inspectHarvesterReturnStall} from './harvester-stall-diagnostics.mjs';
 import {traceHarvesterLethalImpacts} from './harvester-impact-telemetry.mjs';
+import {traceAIRefineryLosses} from './refinery-loss-telemetry.mjs';
 import {newHarvesterSeparationTelemetry,observeHarvesterSeparationStep,
   summarizeHarvesterSeparation} from './harvester-separation-telemetry.mjs';
 import {newHarvesterMoveTelemetry,traceHarvesterMoves,
@@ -259,6 +260,7 @@ function runScenario(map,difficulty,mi,di){
   let firstAircraftQueuedAt=null,firstAircraftDeployedAt=null;
   const aiHarvesterTelemetry=newHarvesterTelemetry();
   const lethalHarvesterImpacts=traceHarvesterLethalImpacts(g);
+  const aiRefineryLossTelemetry=traceAIRefineryLosses(g);
   const aiHarvesterSeparation=newHarvesterSeparationTelemetry();
   const aiHarvesterMove=newHarvesterMoveTelemetry();
   traceHarvesterMoves(g,aiHarvesterMove);
@@ -383,6 +385,7 @@ function runScenario(map,difficulty,mi,di){
     kills:[...g.stats.map(s=>s.enemyUnitsDestroyed)],
     units:[units(0),units(1)],buildings:[buildings(0),buildings(1)],
     peakEntities:peak,peakAIHarvesters,aiHarvesterTelemetry,
+    aiRefineryLossTelemetry,
     aiHarvesterSeparation,aiHarvesterMove,
     platoonSeen,supportSeen,assaultLaunched,
     assaultReroutes:g.aiAssaultReroutes||0,rallyResumes:g.aiRallyResumes||0,
@@ -435,6 +438,9 @@ const report={
     casesWithObjectivesFound:results.filter(r=>r.firstObjectiveDiscovery!==null).length,
     casesWithRecon:results.filter(r=>r.reconBuilt>0).length,
     casesWithAIMultiHarvesters:results.filter(r=>r.peakAIHarvesters>=2).length,
+    aiRefineryLosses:results.reduce((n,r)=>
+      n+r.aiRefineryLossTelemetry.losses.length+r.aiRefineryLossTelemetry.lossesOmitted,0),
+    aiRefinerySales:results.reduce((n,r)=>n+r.aiRefineryLossTelemetry.sales,0),
     aiHarvesterLosses:results.reduce((n,r)=>n+r.aiHarvesterTelemetry.lost,0),
     aiHarvesterLossCasesCaptured:results.reduce((n,r)=>
       n+r.aiHarvesterTelemetry.lossCases.length,0),
@@ -521,6 +527,8 @@ if(progression&&!options.includes('--json'))for(const r of results){
     faction:r.enemyFaction,losses:r.aiRadarRecovery.losses,
     restorations:r.aiRadarRecovery.restorations,
     blockers:r.aiRadarRecovery.decisions,recent:r.aiRadarRecovery.recent}));
+  console.log('AI REFINERY LOSS SCENARIO:',JSON.stringify({map:r.map,
+    faction:r.enemyFaction,...r.aiRefineryLossTelemetry}));
 }
 assert.equal(results.length,progression?3:9,
   'complete '+(progression?'three-faction natural progression':'three-map/three-difficulty')+' matrix');
