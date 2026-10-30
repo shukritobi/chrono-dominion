@@ -2556,9 +2556,18 @@
       };
       const structures=this.entities.filter(e=>e.owner===side&&e.type==='building'&&e.hp>0);
       // A base assault takes precedence over a far-away field skirmish.
+      // Psionic bases are vulnerable to armour concentrating on their ore
+      // economy. When a tank is visibly inside an operational refinery's
+      // perimeter, intercept it before a less dangerous nearby rifleman.
+      // All other factions and threats retain the existing distance order.
+      const psionicRefineries=this.players[side].faction==='psionic'?
+        structures.filter(b=>b.kind==='refinery'&&b.built):[];
+      const refineryArmourPriority=e=>['tank','heavy'].includes(e.kind)&&
+        psionicRefineries.some(b=>dist(b,e)<=6.5)?1:0;
       const defenders=[...invaders].filter(e=>visible.some(t=>t.id===e.id)).sort((a,b)=>{
+        const priority=refineryArmourPriority(b)-refineryArmourPriority(a);
         const threatDistance=e=>Math.min(...structures.map(s=>dist(s,e)));
-        return threatDistance(a)-threatDistance(b)||a.hp-b.hp||a.id-b.id;
+        return priority||threatDistance(a)-threatDistance(b)||a.hp-b.hp||a.id-b.id;
       });
       const loneRaider=defenders.length===1;
       for(const enemy of defenders){
