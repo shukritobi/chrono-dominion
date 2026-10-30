@@ -94,10 +94,11 @@ const defender=game.entities.filter(e=>e.owner===1&&e.type==='unit'&&e.kind!=='h
   .filter(e=>e.order?.type==='attack'&&e.order.id===raid.id);
 assert.ok(defender.length>=1,'AI assigns nearby defenders to observed intruder');
 
-// A real opening tank must not abandon the ore economy with both riflemen
-// just because the AI discovered a distant objective. Keep the existing
-// combat planner and save format; reserve selection never creates a unit.
-game.newMatch(settings);game.time=105;
+// Psionic Vipers are fast but have reduced hull and damage. A real opening
+// Viper must not abandon the refinery with both riflemen; stronger factions
+// keep their original offensive strategy and income baseline.
+const reserveSettings={...settings,enemyFaction:'psionic'};
+game.newMatch(reserveSettings);game.time=105;
 let homeRefinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
 let homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
 let distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
@@ -124,7 +125,7 @@ assert.ok(!game.aiSupportPlatoon?.ids.includes(tankId),
   'support detachment cannot recruit the reserved tank');
 // In a fresh match with three infantry available at once, the normal
 // offensive platoon can still assemble without that tank.
-game.newMatch(settings);game.time=105;
+game.newMatch(reserveSettings);game.time=105;
 homeRefinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
 homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
 distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
@@ -151,7 +152,7 @@ assert.equal(game.entityById(tankId)?.order?.id,localRaider.id);
 
 // Without an operational refinery there is no reserve: the existing
 // three-fighter assault formation remains available.
-game.newMatch(settings);game.time=105;
+game.newMatch(reserveSettings);game.time=105;
 homeRefinery=game.entities.find(e=>e.owner===1&&e.kind==='refinery');
 homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
 distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
@@ -160,6 +161,19 @@ game.intel[1]=[intelReport()];
 game.runAI();
 assert.ok(game.aiPlatoon?.ids.includes(homeTank.id),
   'do not immobilize armour to protect a destroyed refinery');
+
+// Federation and Coalition have different opening tank statistics and keep
+// their established three-fighter assault policy. The broader experiment
+// harmed Frostline income, so no reserve applies to those factions.
+for(const faction of ['federation','coalition']){
+  game.newMatch({...settings,enemyFaction:faction});game.time=105;
+  homeTank=game.entities.find(e=>e.owner===1&&e.kind==='tank');
+  distantHQ=game.entities.find(e=>e.owner===0&&e.kind==='hq');
+  game.intel[1]=[intelReport()];
+  game.runAI();
+  assert.ok(game.aiPlatoon?.ids.includes(homeTank.id),
+    faction+': preserve existing tank offensive participation');
+}
 
 game.draw();
 console.log('PASS: fog-safe AI platoon rally, coordinated assault, stable orders, save recovery and prioritized defense');
