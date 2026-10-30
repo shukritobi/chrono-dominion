@@ -110,8 +110,8 @@ leashCase=guardLeashCase('guard',{type:'attack'});
 assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
   'explicit attack order overrides the defensive leash');
 leashCase=guardLeashCase('guard',{type:'move',x:25,y:25});
-assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
-  'explicit movement is not cancelled by the old guard anchor');
+assert.equal(leashCase.moves[0]?.x,25,
+  'explicit Move continues toward its destination, not a guard anchor');
 leashCase=guardLeashCase('guard',{type:'attackMove',x:25,y:25});
 assert.equal(leashCase.moves[0]?.x,leashCase.enemy.x,
   'attack-move keeps its existing pursuit behavior');
