@@ -460,5 +460,97 @@ for(const faction of ['coalition','federation','psionic']){
   assert.ok(pending,'pending paid generator survives load');
   pending.built=true;pending.construction=1;
   assert.equal(g.power(1).low,false,'completed generator restores normal power');
+  // A stranded paid queue can prevent BOTH ore replacement and optional
+  // infrastructure resale when its refund alone is below 900 credits.
+  // The producer is genuinely destroyed, not merely unfinished.
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  alive(g,'barracks')[0].hp=0;
+  g.add(1,'tech',23,25);
+  g.add(1,'generator',21,24);g.add(1,'generator',22,20);
+  assert.equal(g.power(1).low,false,
+    faction+': stranded-sale fixture must have working power');
+  g.players[1].credits=100;
+  g.stats[1].creditsSpent+=200;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2},
+    {side:0,key:'soldier',elapsed:1,total:2}];
+  const strandedSaleSpent=g.stats[1].creditsSpent;
+  const strandedSaleCount=g.stats[1].buildingsSold;
+  g.runAI();
+  assert.equal(queued(g,'soldier').length,0,
+    faction+': refund an impossible barracks order despite insufficient standalone refund');
+  assert.equal(alive(g,'tech').length,0,
+    faction+': unlocked optional tech resale must fund the worker');
+  assert.equal(alive(g,'refinery').length,1,
+    faction+': keep the only working ore refinery');
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': combine exact queue refund and normal paid resale for one ore truck');
+  assert.equal(g.players[1].credits,500,
+    faction+': 100 + 200 queue refund + 1100 resale - 900 harvester');
+  assert.equal(g.stats[1].creditsSpent-strandedSaleSpent,700,
+    faction+': net unit spending is 900 minus the original 200');
+  assert.equal(g.stats[1].buildingsSold-strandedSaleCount,1,
+    faction+': sell only one optional building at ordinary resale value');
+  assert.equal(g.queues.filter(q=>q.side===0&&q.key==='soldier').length,1,
+    faction+': never touch player production');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': combined queue refund and sale retain the v1 save format');
+  g.advanceProduction(10);
+  assert.equal(alive(g,'harvester').length,1,
+    faction+': funded harvester must actually deploy from the refinery');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  alive(g,'barracks')[0].hp=0;
+  g.players[1].credits=100;
+  g.stats[1].creditsSpent+=200;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2}];
+  g.runAI();
+  assert.equal(queued(g,'soldier').length,0,
+    faction+': impossible production must not permanently block ore recovery');
+  assert.equal(g.players[1].credits,300,
+    faction+': refund exact cost without inventing credits');
+  assert.equal(queued(g,'harvester').length,0,
+    faction+': no optional asset means no unaffordable free harvester');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  alive(g,'barracks')[0].built=false;
+  g.add(1,'tech',23,25);
+  g.add(1,'generator',21,24);g.add(1,'generator',22,20);
+  g.players[1].credits=100;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2}];
+  g.runAI();
+  assert.equal(queued(g,'soldier').length,1,
+    faction+': unfinished producer can resume production and must retain its order');
+  assert.equal(alive(g,'tech').length,1,
+    faction+': do not sell optional infrastructure behind a valid queue');
+  assert.equal(g.players[1].credits,100,
+    faction+': valid queue must not generate a refund');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  alive(g,'barracks')[0].hp=0;
+  g.add(1,'tech',23,25);
+  g.add(1,'generator',21,24);g.add(1,'generator',22,20);
+  g.players[1].credits=100;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2}];
+  const attackHQ=alive(g,'hq')[0];
+  g.add(0,'soldier',attackHQ.x+1,attackHQ.y+1);
+  g.runAI();
+  assert.equal(queued(g,'soldier').length,1,
+    faction+': visible invasion must not trigger stranded ore liquidation');
+  assert.equal(alive(g,'tech').length,1,
+    faction+': visible invasion must preserve defensive assets');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  alive(g,'barracks')[0].hp=0;
+  g.add(1,'tech',23,25);
+  assert.equal(g.power(1).low,true,
+    faction+': brownout fixture must lack sufficient power');
+  g.players[1].credits=100;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2}];
+  g.runAI();
+  assert.equal(queued(g,'soldier').length,1,
+    faction+': brownout must not cancel existing defensive production');
+  assert.equal(alive(g,'tech').length,1,
+    faction+': brownout must not liquidate optional assets');
+
 }
 console.log('PASS: three-faction ore expansion, paid queue recovery, radar reserves, brownout construction and saves');
