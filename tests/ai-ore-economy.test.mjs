@@ -260,6 +260,93 @@ for(const faction of ['coalition','federation','psionic']){
   assert.equal(queued(g,'tank').length,1,
     faction+': power shortage must not cancel defensive production');
 
+  // With no living harvester and no paid queue to refund, a solvent AI
+  // can sell ONE completed optional structure at the same 50% resale rate
+  // available to players, then pay full price for its replacement worker.
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  assert.equal(g.power(1).low,false,faction+': liquidation fixture needs power');
+  const playerCreditsBeforeSale=g.players[0].credits;
+  const spentBeforeSale=g.stats[1].creditsSpent;
+  const soldBeforeSale=g.stats[1].buildingsSold;
+  g.players[1].credits=160;
+  g.runAI();
+  assert.equal(alive(g,'factory').length,0,
+    faction+': optional factory may fund the last harvester');
+  assert.equal(alive(g,'refinery').length,1,
+    faction+': never sell the only ore refinery');
+  assert.ok(alive(g,'generator').length>0,
+    faction+': never liquidate power infrastructure');
+  assert.equal(queued(g,'harvester').length,1,
+    faction+': exact 850-credit resale must fund a paid worker');
+  assert.equal(g.players[1].credits,110,
+    faction+': 160+850 resale-900 purchase leaves 110 credits');
+  assert.equal(g.stats[1].creditsSpent-spentBeforeSale,900,
+    faction+': sale follows player rules without rewriting prior spending');
+  assert.equal(g.stats[1].buildingsSold-soldBeforeSale,1,
+    faction+': structure sale is not a combat destruction');
+  assert.equal(g.players[0].credits,playerCreditsBeforeSale,
+    faction+': never touch player credits');
+  g.runAI();
+  assert.equal(g.stats[1].buildingsSold-soldBeforeSale,1,
+    faction+': do not repeatedly liquidate infrastructure');
+  assert.ok(g.saveGame()&&g.loadGame(),
+    faction+': resale and worker queue survive legacy save/load');
+  g.advanceProduction(10);
+  assert.equal(alive(g,'harvester').length,1,
+    faction+': worker deploys through normal refinery production');
+
+  // Sell the optional tech lab before a productive factory when either
+  // asset alone is sufficient. No other buildings or production are lost.
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);g.add(1,'tech',23,25);
+  g.add(1,'generator',21,24);g.add(1,'generator',22,20);
+  assert.equal(g.power(1).low,false,faction+': tech resale fixture must be powered');
+  g.players[1].credits=160;g.runAI();
+  assert.equal(alive(g,'tech').length,0,
+    faction+': prefer optional tech lab liquidation');
+  assert.equal(alive(g,'factory').length,1,
+    faction+': retain factory when selling tech funds the worker');
+  assert.equal(g.players[1].credits,360,
+    faction+': tech resale is exactly 1100 credits');
+  assert.equal(queued(g,'harvester').length,1);
+
+  // Selling cannot create credits when one structure is insufficient.
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.players[1].credits=20;g.runAI();
+  assert.equal(alive(g,'factory').length,1,
+    faction+': 20+850 cannot pay for a 900-credit harvester');
+  assert.equal(queued(g,'harvester').length,0);
+
+  // Preserve combat readiness and the paid queue under observed pressure.
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.players[1].credits=160;
+  const liquidationHq=alive(g,'hq')[0];
+  g.add(0,'soldier',liquidationHq.x+1,liquidationHq.y+1);
+  g.runAI();
+  assert.equal(alive(g,'factory').length,1,
+    faction+': visible base attack prohibits selling infrastructure');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);
+  assert.equal(g.power(1).low,true,faction+': shortage fixture');
+  g.players[1].credits=160;g.runAI();
+  assert.equal(alive(g,'factory').length,1,
+    faction+': brownout recovery prohibits infrastructure sale');
+
+  reset();g.time=300;alive(g,'harvester')[0].hp=0;
+  g.add(1,'factory',24,23);g.add(1,'generator',21,24);
+  g.players[1].credits=160;
+  g.queues=[{side:1,key:'soldier',elapsed:1,total:2}];
+  g.runAI();
+  assert.equal(alive(g,'factory').length,1,
+    faction+': wait for existing paid production to finish');
+  assert.equal(queued(g,'soldier').length,1,
+    faction+': do not cancel an insufficiently refundable queue');
+  assert.equal(queued(g,'harvester').length,0);
+
   // Air Command becomes eligible after 130 seconds. Without a radar,
   // protect its paid 900+650 budget as soon as aviation can be pursued,
   // rather than spending optional recruitment throughout seconds 130-240.
