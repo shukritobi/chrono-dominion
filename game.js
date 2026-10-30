@@ -3058,6 +3058,25 @@
       // before buying optional technology, factory, radar or aviation.
       // Brownout recovery and observed base defense still take precedence.
       const oreRecoveryNeeded=built('refinery')&&!owned('harvester').length;
+      // A prepaid unit whose only producer was destroyed cannot ever
+      // deploy. If ore income has collapsed, release that stranded payment
+      // before attempting the normal single-queue refund or optional asset
+      // sale. Even a refund smaller than 900 credits can make a subsequent
+      // legal resale sufficient. Never cancel a queue whose producer is
+      // alive (including one still under construction), a harvester order,
+      // or a human order. Observed attacks and brownouts retain priority.
+      if(oreRecoveryNeeded&&!threatened&&!shortage&&
+         !this.queues.some(q=>q.side===side&&q.key==='harvester')){
+        const strandedIndex=this.queues.findIndex(q=>q.side===side&&
+          UNITS[q.key]&&q.key!=='harvester'&&
+          !owned(UNITS[q.key].from).length);
+        if(strandedIndex>=0){
+          const [stranded]=this.queues.splice(strandedIndex,1);
+          const refund=UNITS[stranded.key].cost;
+          me.credits+=refund;
+          this.stats[side].creditsSpent-=refund;
+        }
+      }
       // If the last ore truck dies while another unit is still in a PAID
       // production queue, the AI can be stranded below the 900-credit
       // replacement cost. Only cancel an optional queued unit if its exact
