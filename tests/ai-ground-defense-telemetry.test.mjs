@@ -31,6 +31,7 @@ game.time=11.2;game.queues=[{side:1,key:'tank'}];
 const still=snapshotAIGroundDefense(game);
 observeAIGroundDefenseStep(m,dead,still);
 assert.equal(m.unguardedRefinerySeconds,1);
+assert.equal(m.maxUnguardedSeconds,1,'open gaps track exposure before they close');
 assert.equal(m.coverageGaps.length,1,'same gap must not repeat each frame');
 game.time=12.2;game.entities=[refinery,hidden,
   {...guard,id:21,order:null}];
@@ -55,6 +56,11 @@ observeAIGroundDefenseStep(m,goneAgain,refineryGone);
 assert.equal(m.coverageGaps[1].reason,'refinery-lost');
 assert.equal(m.coverageGaps[1].endedAt,14.2);
 assert.equal(m.losses,2,'refinery destruction is not a ground-unit loss');
+game.time=30.2;
+observeAIGroundDefenseStep(m,refineryGone,snapshotAIGroundDefense(game));
+assert.equal(m.recentCoverage.length,1,
+  'post-destruction frames must not evict useful pre-loss history');
+assert.equal(m.recentCoverage[0].refineryId,10);
 assert.ok(!JSON.stringify(m).includes('_internal'),
   'transient tracker must not leak into reports or saves');
 assert.equal(game.players[1].credits,900,'telemetry never charges AI credits');
