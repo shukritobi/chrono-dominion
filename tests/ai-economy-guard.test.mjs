@@ -12,6 +12,7 @@ const fixture=()=>({
       .map(([map,enemyOre])=>[map,{enemyOre}])),
     aiOreDeliveryTicks:BASELINE.aiOreDeliveryTicks,
     casesWithAIAirfields:BASELINE.casesWithAIAirfields,
+    casesWithAIQueuedAircraft:BASELINE.casesWithAIQueuedAircraft,
     aiHarvesterLosses:BASELINE.aiHarvesterLosses
   }
 });
@@ -30,6 +31,12 @@ assert.match(checkAIEconomyRegression(report).failures.join(' '),/deliveries/,
 report=fixture();report.summary.casesWithAIAirfields=0;
 assert.match(checkAIEconomyRegression(report).failures.join(' '),/Air Commands/,
   'losing the only natural airfield must fail');
+report=fixture();report.summary.casesWithAIQueuedAircraft=0;
+assert.match(checkAIEconomyRegression(report).failures.join(' '),/aircraft production queues/,
+  'an Air Command without any naturally queued plane is an aviation regression');
+report=fixture();delete report.summary.casesWithAIQueuedAircraft;
+assert.throws(()=>checkAIEconomyRegression(report),/valid AI metric casesWithAIQueuedAircraft/,
+  'missing aircraft queue telemetry must not silently pass');
 report=fixture();report.summary.aiHarvesterLosses=7;
 assert.match(checkAIEconomyRegression(report).failures.join(' '),/harvester losses/,
   'large worker attrition increases must fail');

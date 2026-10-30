@@ -73,3 +73,17 @@ missing telemetry. The existing CI job already runs the guard against the
 full natural progression report, so no workflow or save-format changes are
 needed. This improvement changes **test gates only**, not gameplay, credits,
 assets or player saves.
+
+## Aircraft queue coverage after guard-leash experiment (30 October 2026)
+
+The broad guard-leash trial on PR #167 passed the existing economy gate but
+lost the only naturally queued AI aircraft (one to zero). Both versions still
+had one operational Air Command, so the old Air Command-only guard missed
+this important regression. The previous successful main
+`709759e61cba173ead02b0fc82d272b98dd6c786` had
+`summary.casesWithAIQueuedAircraft === 1` in its 720-second progression
+report. The regression gate now validates this metric and requires at least
+one naturally queued AI aircraft in the same fixed three-map matrix.
+A missing/non-integer metric fails closed. This checks paid queue progression,
+not successful takeoff or human-played aircraft balance. Any intentional
+rebalance needs an explicit baseline review.

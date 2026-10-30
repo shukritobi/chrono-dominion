@@ -2169,15 +2169,17 @@
           if(target)e.desiredTurretHeading=Math.atan2(target.y-e.y,target.x-e.x);
           if(target){
             const hold=stance==='hold'&&command?.type!=='attack'&&command?.type!=='attackMove';
-            // A guard beyond its five-tile leash must return home when the
-            // visible target leaves weapon range. Previously it stood frozen
-            // until the target disappeared. Explicit move/attack orders still
-            // override the leash, and Hold-position never auto-chases.
+            // Player guards beyond their leash return home when a visible
+            // target leaves firing range. Keep AI guard behavior unchanged:
+            // the all-faction trial changed natural aircraft progression.
+            // Explicit player Move/Attack/Attack-move orders override the leash.
             const leash=stance==='guard'&&command?.type!=='attack'&&
-                command?.type!=='attackMove'&&command?.type!=='move'&&
+                command?.type!=='attackMove'&&
+                (e.owner===1||command?.type!=='move')&&
                 Math.hypot(e.x-(e.guardX??e.x),e.y-(e.guardY??e.y))>5;
             if(!hold&&!leash&&dist(e,target)>range)this.move(e,target.x,target.y,dt);
-            else if(leash&&dist(e,target)>range)this.move(e,e.guardX,e.guardY,dt);
+            else if(e.owner===0&&leash&&dist(e,target)>range)
+              this.move(e,e.guardX,e.guardY,dt);
             else if(dist(e,target)<=range&&e.ready<=0)this.shoot(e,target);
           }
           else if(command?.type==='move'||command?.type==='attackMove'){
