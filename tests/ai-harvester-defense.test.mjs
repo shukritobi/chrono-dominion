@@ -775,10 +775,42 @@ for(const faction of ['coalition','federation','psionic']){
     assert.ok(g.saveGame()&&g.loadGame(),
       faction+': legacy save/load accepts the new transient rescan throttle');
   }
-  for(const scenario of ['healthy','loaded','hidden','player']){
+  {
+    // A full-health worker must respond to its first confirmed visible hit,
+    // before waiting for the old 70%-health wounded-worker threshold.
+    const {g,worker,enemy}=game(faction);
+    worker.oreIndex=0;worker.oreScanAt=g.time+5;
+    g.ores=[{x:14,y:14,amount:800},{x:13,y:16,amount:800}];
+    g.canOccupyUnit=()=>true;
+    g.findPath=(x,y,tx,ty)=>[{x:tx,y:ty}];
+    g.nextAI=g.time+8;
+    const credits=g.players[1].credits;
+    g.shoot(enemy,worker);
+    assert.equal(worker.oreScanAt,g.time+5,
+      faction+': visible launch alone must not expose an unconfirmed hit');
+    g.updateProjectiles(1);
+    assert.ok(worker.hp>worker.maxHp*.7,
+      faction+': first-hit response starts before substantial damage');
+    assert.equal(worker.oreScanAt,0,
+      faction+': first visible impact immediately expires cached ore target');
+    g.processHarvester(worker,.2);
+    assert.equal(worker.oreIndex,1,
+      faction+': recently hit healthy worker prefers reachable safe ore');
+    assert.equal(g.players[1].credits,credits,
+      faction+': first-hit routing cannot grant or spend credits');
+    assert.equal(g.nextAI,g.time+8,
+      faction+': first-hit routing cannot advance strategic AI');
+    worker.oreScanAt=g.time+5;
+    g.shoot(enemy,worker);g.updateProjectiles(1);
+    assert.equal(worker.oreScanAt,g.time+5,
+      faction+': repeat first-hit rescans are throttled');
+    assert.ok(g.saveGame()&&g.loadGame(),
+      faction+': first-hit routing remains compatible with legacy saves');
+  }
+  for(const scenario of ['loaded','hidden','player']){
     const {g,worker,enemy}=game(faction);
     let target=worker,shooter=enemy;
-    worker.hp=worker.maxHp*(scenario==='healthy'?1:.68);
+    worker.hp=worker.maxHp*.68;
     worker.oreScanAt=g.time+5;
     if(scenario==='loaded')worker.load=360;
     if(scenario==='hidden'){
@@ -798,4 +830,4 @@ for(const faction of ['coalition','federation','psionic']){
   }
 }
 
-console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts and base-first defense, and early visible tank-launch response, all-ground radar defense and impact fallback across three factions');
+console.log('PASS: lethal-impact attribution, bounded, fog-honest AI harvester escorts, first-hit safe-ore routing and base-first defense, all-ground radar defense and impact fallback across three factions');

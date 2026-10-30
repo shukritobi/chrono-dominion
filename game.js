@@ -1774,11 +1774,11 @@
       return intercepted;
     }
     rescanThreatenedAIHarvesterOre(shot,worker){
-      // Reuse the existing safe-deposit selector after actual damage rather
-      // than waiting up to six seconds on a now-dangerous ore destination.
+      // Reuse the existing safe-deposit selector after the FIRST actual hit,
+      // not only after a worker has already lost 30% of its health.
       // Never reroute a loaded delivery or react to a hidden shooter.
       if(worker.owner!==1||worker.type!=='unit'||worker.kind!=='harvester'||
-         worker.hp<=0||worker.hp>=worker.maxHp*.7||worker.load>=360||
+         worker.hp<=0||worker.load>=360||
          shot.owner!==0||!['soldier','specialist','tank','heavy'].includes(shot.sourceKind)||
          (worker.oreScanAt||0)<=this.time)return false;
       const attacker=this.entityById(shot.sourceId);
@@ -1944,11 +1944,13 @@
         .filter(({ore,index})=>ore.amount>0&&index!==excluded&&
           this.canOccupyUnit(e,ore.x,ore.y,true))
         .sort((a,b)=>a.d-b.d||a.index-b.index);
-      // A substantially wounded enemy ore truck under CURRENTLY visible fire
+      // A wounded AI ore truck, or one just hit by an observed enemy shot,
       // may try a nearby reachable deposit outside that firing envelope.
+      // A first hit must not wait until 30% of its health is gone.
       // Ordinary harvesting and hidden enemies retain nearest-first routing.
       // Do not travel across the map or introduce persistent retreat state.
-      const threats=e.owner===1&&e.hp<e.maxHp*.7?this.entities.filter(other=>
+      const recentHit=(this.harvesterThreatRescanAt?.get(e)||0)>this.time;
+      const threats=e.owner===1&&(e.hp<e.maxHp*.7||recentHit)?this.entities.filter(other=>
         other.owner!==e.owner&&other.hp>0&&other.type==='unit'&&
         other.kind!=='harvester'&&this.sideCanSee(e.owner,other)):[];
       const nearestDistance=candidates[0]?.d??Infinity;
