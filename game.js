@@ -2560,6 +2560,7 @@
         const threatDistance=e=>Math.min(...structures.map(s=>dist(s,e)));
         return threatDistance(a)-threatDistance(b)||a.hp-b.hp||a.id-b.id;
       });
+      const loneRaider=defenders.length===1;
       for(const enemy of defenders){
         const defenders=[...available.values()].filter(u=>dist(u,enemy)<=9)
           .sort((a,b)=>dist(a,enemy)-dist(b,enemy)||a.id-b.id);
@@ -2568,7 +2569,7 @@
         // The usual two-defender cap remains for other factions, infantry,
         // hidden contacts and multi-attacker raids so escorts are not stripped.
         const refineryAtRisk=this.players[side].faction==='psionic'&&
-          ['tank','heavy'].includes(enemy.kind)&&defenders.length===1&&
+          ['tank','heavy'].includes(enemy.kind)&&loneRaider&&
           structures.some(b=>b.kind==='refinery'&&b.built&&dist(b,enemy)<=6.5);
         const cap=Math.min(refineryAtRisk?3:2,defenders.length);
         for(let i=0;i<cap;i++)assign(defenders[i],enemy);
